@@ -5,11 +5,26 @@ import scipy as s
 from nodes import *
 from distributions import *
 
-"""
-This module is used to define Variational Nodes 
 
-TO-DO
-- Are we doing well the double parent class? Maybe use super class
+"""
+This module is used to define Nodes that undergo variational bayesian inference.
+
+Variational nodes have the following main variables:
+    Important methods:
+    - precompute: precompute some terms to speed up the calculations
+    - calculateELBO: calculate evidence lower bound using current estimates of expectations/params
+    - getParameters: return current parameters
+    - getExpectations: return current expectations
+    - update: general update function that calls the following two methods:
+        - updateParameters: update parameters using current estimates of expectations
+        - updateExpectations: update expectations using current estimates of parameters
+    - removeFactors: remove a set of latent variables from the node
+
+    Important attributes:
+    - markov_blanket: dictionary that defines the set of nodes that are in the markov blanket of the current node
+    - Q: an instance of Distribution() which contains the specification of the variational distribution 
+    - P: an instance of Distribution() which contains the specification of the prior distribution 
+    - dim: dimensionality of the node
 """
 
 

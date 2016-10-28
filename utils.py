@@ -2,7 +2,9 @@ import numpy as np
 import struct
 import os
 
-# from singleview_nodes import VariationalNode
+"""
+Module to define some useful util functions
+"""
 
 def logdet(X):
 	return np.log(np.linalg.det(X))

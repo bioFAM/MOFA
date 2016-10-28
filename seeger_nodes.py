@@ -1,14 +1,13 @@
 from __future__ import division
 import scipy as s
-# import scipy.stats as stats
-# from numpy.linalg import linalg
 
 from variational_nodes import Unobserved_Variational_Node
 from local_nodes import Local_Node
 from utils import sigmoid
 
 """
-Read: 'Fast Variational Bayesian Inference for Non-Conjugate Matrix Factorisation models' by Seeger and Bouchard (2012)
+Module to define updates for non-conjugate matrix factorisation models using the Seeger approach
+Reference: 'Fast Variational Bayesian Inference for Non-Conjugate Matrix Factorisation models' by Seeger and Bouchard (2012)
 """
 
 
@@ -17,6 +16,8 @@ class Zeta_Node(Local_Node):
     Abstract class for the local variational variable zeta that represents the location of the
     Taylor expansion for the upper bound on the log likelihood.
     It is required for the approximation that leads to closed-form VB updates in non-conjugate matrix factorisation models
+
+    Notice that Zeta is a local node, not a variational node!
     """
     def __init__(self, dim, initial_value=None):
         # 'initial_value' (ndarray): initial value of Zeta
@@ -30,9 +31,16 @@ class Zeta_Node(Local_Node):
     def getValue(self):
         return self.value
 
+################
+## Pseudodata ##
+################
+
 class PseudoY(Unobserved_Variational_Node):
     """
     General class for pseudodata nodes
+
+    Notice that they are defined as Variational Nodes because they have a lower bound associated,
+    but we are not using the .P and .Q distribution attributes
     """
     def __init__(self, dim, obs, E=None):
         # - dim (2d tuple): dimensionality of each view
@@ -130,7 +138,6 @@ class Poisson_PseudoY_Node(PseudoY):
         tmp = self.ratefn(s.dot(Z,W.T))
         lb = s.sum( self.obs*s.log(tmp) - tmp)
         return lb
-
 class Bernoulli_PseudoY_Node(PseudoY):
     """
     Class for a Bernoulli (0,1 data) pseudodata node with the following likelihood:
@@ -173,7 +180,6 @@ class Bernoulli_PseudoY_Node(PseudoY):
         lik = s.sum( self.obs*tmp - s.log(1+s.exp(tmp)) )
 
         return lik
-
 class Binomial_PseudoY_Node(PseudoY):
     """
     Class for a Binomial pseudodata node with the following likelihood:

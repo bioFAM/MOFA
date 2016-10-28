@@ -4,29 +4,36 @@ from nodes import Node
 from local_nodes import Local_Node
 from variational_nodes import Variational_Node
 
+"""
+Module to define multi-view nodes in a Bayesian network
+
+All multiview nodes (either variational or not variational) have two main attributes:
+- M: total number of views
+- idx: in some occasions a particular node is active in only a subset of the M views. This variable keeps track of which views contain the node.
+"""
+
 class Multiview_Node(Node):
     """ 
     General class for multiview nodes in a Bayesian network
     """
     def __init__(self, M, *nodes):
-        # nodes: list of M 'Node' instances
+        # nodes: list of M instances (or children) of the 'Node' class or None if the node is not defined in a particular view
         self.M = M
 
         # Some nodes are active in only a subset of views, this variables keeps track of these views.
         self.idx = [ idx for idx,node in enumerate(nodes) if node is not None]
 
         # Initialise nodes
-        # for node in nodes: assert isinstance(node,Node), "Nodes have to be instances of the general Node class"
         self.nodes = nodes
 
     def removeFactors(self,*idx):
-        # Remove factors
+        # Remove factors/latent variables
         for m in self.idx: self.nodes[m].removeFactors(idx)
 
 
 class Multiview_Local_Node(Multiview_Node,Local_Node):
     """ 
-    General class for multiview variational nodes
+    General class for multiview local nodes
     """
     def __init__(self, M, *nodes):
         # nodes: list of M 'Node' instances
@@ -50,7 +57,6 @@ class Multiview_Local_Node(Multiview_Node,Local_Node):
 class Multiview_Variational_Node(Multiview_Node, Variational_Node):
     """ 
     General class for multiview variational nodes.
-    It stores M variational nodes of the same type (observed or unobserved)
     """
     def __init__(self, M, *nodes):
         # nodes: list of M 'Node' instances
@@ -108,9 +114,6 @@ class Multiview_Mixed_Node(Multiview_Local_Node, Multiview_Variational_Node):
         for m in self.idx:
             if isinstance(self.nodes[m],Variational_Node):
                 tmp = self.nodes[m].getExpectations()
-                # dic["E"][m] = tmp["E"]
-                # dic["E2"][m] = tmp["E2"]
-                # dic["lnE"][m] = tmp["lnE"]
                 dic["E"][m], dic["E2"][m], dic["lnE"][m] = tmp["E"], tmp["E2"], tmp["lnE"]    
             elif isinstance(self.nodes[m],Local_Node):
                 dic["E"][m], dic["E2"][m], dic["lnE"][m] = None, None, None

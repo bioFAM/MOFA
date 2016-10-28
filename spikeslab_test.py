@@ -41,10 +41,16 @@ data['Z'][:,3] = stats.norm.rvs(loc=0, scale=1, size=N)
 data['Z'][:,4] = stats.norm.rvs(loc=0, scale=1, size=N)
 data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
 
-data['alpha'] = s.zeros((M,K))
-data['alpha'][0,:] = [1,1,1e6,1,1e6,1e6]
-data['alpha'][1,:] = [1,1e6,1,1e6,1,1e6]
-data['alpha'][2,:] = [1e6,1,1,1e6,1e6,1]
+# data['alpha'] = s.zeros((M,K))
+# data['alpha'][0,:] = [1,1,1e6,1,1e6,1e6]
+# data['alpha'][1,:] = [1,1e6,1,1e6,1,1e6]
+# data['alpha'][2,:] = [1e6,1,1,1e6,1e6,1]
+
+data['alpha'] = [ s.zeros(K,) for m in xrange(self.M) ]
+data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
+data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
+data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
+
 
 theta = [ s.ones(K)*0.5 for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])

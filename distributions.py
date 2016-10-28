@@ -8,10 +8,9 @@ import scipy.stats as stats
 from utils import *
 
 """
-This module is used to define statistical distributions
+This module is used to define statistical distributions in a general sense
 
-Each class can store an arbitrary number of distributions (except the MultivariateGaussian class, where the dimensionality is fixed. 
-The dimensionality have to be specified in the 'dim' argument
+Each Distribution class can store an arbitrary number of distributions of the same type, this is specified in the 'dim' argument 
 
 A Distribution class has two main types of attributes: parameters and expectations. Both have to be defined when initialising a class.
 Note that in some distributions (Gaussian mainly) a parameter is equal to an expectation. However, they are stored as separate
@@ -21,11 +20,6 @@ There are cases (mainly with the BernoulliGaussian distribution) where some expe
 require expectations from other distributions. In that case, I prefer to define the expectations together with the updates
 of the corresponding node, instead of doing it here.
 
-
-TO-DO: 
-- Initialise multivariateGaussian expectations correctly
-- Allow MultivariateGaussian to have an arbitrary number of distributions
-- Define BernoulliGaussian expectations here
 """
 
 # General class for probability distributions
@@ -428,7 +422,3 @@ class Beta(Distribution):
         pass
         # return s.sum (stats.binom.logpmf(x, self.N, self.theta) )
         # return s.sum( s.log(special.binom(self.N,x)) + x*s.log(self.theta) + (self.N-x)*s.log(1-self.theta) )
-
-# if __name__ == "__main__":
-#     a = Binomial( dim=(3,), N=s.asarray([10,5,8]), theta=s.asarray([0.5,0.5,0.5],dtype=float) )
-#     a.loglik(x=s.ones(3).astype(int))

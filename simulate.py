@@ -1,16 +1,23 @@
-
 from __future__ import division
 import scipy as s
 from scipy.stats import bernoulli, norm, gamma, uniform, poisson, binom
 from random import sample
+
 from utils import sigmoid
 
 """
-Script to simulate data to test the group factor analysis models
+Module to simulate test data
+
+To-do:
+- Currently non-gaussian likelihoods have no noise
 """
 
 class Simulate(object):
     def __init__(self, M, N, D, K):
+        # M (int): number of views
+        # N (int): number of samples
+        # D (list/tuple of length M): dimensionality of each view
+        # K (int): number of latent variables
 
         # Sanity checks
         assert len(D) == M
@@ -22,71 +29,76 @@ class Simulate(object):
         self.K = K
         self.D = D
 
-    def initAlpha(self, alpha=None):
-        if alpha is None:
-            alpha = bernoulli.rvs(p=0.5, size=self.M*self.K).reshape((self.M,self.K))
-            alpha[alpha==1] = 1.
-            alpha[alpha==0] = 1E5
-        else:
-            assert (alpha.shape[0] == self.M) and (alpha.shape[1] == self.K)
+    def initAlpha(self):
+        # ARD precision is initialised randomly using a Bernoulli distribution with p=0.5
+        alpha = [ s.zeros(self.K,) for m in xrange(self.M) ]
+        for m in xrange(self.M):
+            tmp = bernoulli.rvs(p=0.5, size=self.K)
+            tmp[tmp==1] = 1.
+            tmp[tmp==0] = 1E5
+            alpha[m] = tmp
         return alpha
 
     def initW_ard(self, alpha=None):
+        # ARD weights are initialised 
         if alpha is None:
             alpha = self.initAlpha()
         W = [ s.zeros((self.D[m],self.K)) for m in xrange(self.M) ]
         for m in xrange(self.M):
             for k in xrange(self.K):
-                W[m][:,k] = norm.rvs(loc=0, scale=1/s.sqrt(alpha[m,k]), size=self.D[m])
+                W[m][:,k] = norm.rvs(loc=0, scale=1/s.sqrt(alpha[m][k]), size=self.D[m])
         return W,alpha
 
     def initW_spikeslab(self, theta, alpha=None):
+        # Simulate bernoulli variable S
         S = [ s.zeros((self.D[m],self.K)) for m in xrange(self.M) ]
         for m in xrange(self.M):
             for k in xrange(self.K):
                 S[m][:,k] = bernoulli.rvs(p=theta[m][k], size=self.D[m])
 
+        # Simualte ARD precision
         if alpha is None:
             alpha = self.initAlpha()
 
+        # Simulate gaussian weights
         W_hat = [ s.empty((self.D[m],self.K)) for m in xrange(self.M) ]
         W = [ s.empty((self.D[m],self.K)) for m in xrange(self.M) ]
         for m in xrange(self.M):
             for k in xrange(self.K):
-                W_hat[m][:,k] = norm.rvs(loc=0, scale=s.sqrt(1/alpha[m,k]), size=self.D[m])
+                W_hat[m][:,k] = norm.rvs(loc=0, scale=s.sqrt(1/alpha[m][k]), size=self.D[m])
             W[m] = W_hat[m] * S[m]
         return S,W,W_hat,alpha
 
-    def initZ(self, Z=None):
-        if Z is None:
-            Z = s.empty((self.N,self.K))
-            for n in xrange(self.N):
-                for k in xrange(self.K):
-                    Z[n,k] = norm.rvs(loc=0, scale=1, size=1)
+    def initZ(self):
+        # Latent variables are initialised by default using a spherical gaussian distribution
+        Z = s.empty((self.N,self.K))
+        for n in xrange(self.N):
+            for k in xrange(self.K):
+                Z[n,k] = norm.rvs(loc=0, scale=1, size=1)
         return Z
 
-    def initTau(self, tau=None):
-        if tau is None:
-            tau = [ uniform.rvs(loc=1,scale=3,size=self.D[m]) for m in xrange(self.M) ]
-        else:
-            assert len(tau) == self.M
-            for m in range(self.M): assert tau[m].shape[0] == self.D[m]
-        return tau
+    def initTau(self):
+        # Precision of noise is initialised by default using a uniform distribution
+        return [ uniform.rvs(loc=1,scale=3,size=self.D[m]) for m in xrange(self.M) ]
 
     def initMu(self, mu=None):
-        if mu is None:
-            mu = [ s.zeros(self.D[m]) for m in xrange(self.M) ]
-        else:
-            assert len(mu) == self.M
-            for m in xrange(self.M): assert mu[m].shape[0] == self.D[m]
-        return mu
+        # Means are initialised to zero by default
+        return [ s.zeros(self.D[m]) for m in xrange(self.M) ]
 
     def generateData(self, W, Z, Tau, Mu, likelihood, min_trials=None, max_trials=None):
+        # W (list of length M where each element is a np array with shape (Dm,K)): weights
+        # Z (np array with shape (N,K): latent variables
+        # Tau (list of length M where each element is a np array with shape (Dm,)): precision of the normally-distributed noise
+        # Mu (list of length M where each element is a np array with shape (Dm,)): feature-wise means
+        # likelihood (str): type of likelihood
+        # min_trials (int): only for binomial likelihood, minimum number of total trials
+        # max_trials (int): only for binomial likelihood, maximum number of total trials
+
         Y = [ s.zeros((self.N,self.D[m])) for m in xrange(self.M) ]
 
         # Sample observations using a gaussian likelihood
         if likelihood == "gaussian":
-            # Fast way
+            # Fast way (I THINK THERE IS A PROBLEM WITH IT, NOT SURE WHY)
             # for m in xrange(self.M):
                 # Y[m] = s.dot(Z,W[m].T) + Mu[m] + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m])).T
             for m in xrange(self.M):

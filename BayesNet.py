@@ -10,12 +10,13 @@ from local_nodes import Local_Node
 from variational_nodes import Variational_Node
 
 """
-This module is used to define the class containing the entire Bayesian Network, and the corresponding attributes/methods
-to train the model, set algorithmic options, calculate lower bound, etc.
+This module is used to define the class containing the entire Bayesian Network, 
+and the corresponding attributes/methods to train the model, set algorithmic options, calculate lower bound, etc.
 
 A Bayesian network requires the following information:
 - Keyworded dimensionalities (N=10, D=100, ...)
-- Nodes
+- Nodes: instances (or children) of 'Node' class.
+    right now we have implemented two types of nodes: variational and local
 - Update schedule: order of nodes in the updates
 - Monitoring and algorithmic options: verbosity, tolerance for convergence, number of iterations, lower bound frequency...
 

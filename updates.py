@@ -1,10 +1,39 @@
 from __future__ import division
-# from time import time
 import numpy.linalg  as linalg
 
 from variational_nodes import *
 from utils import *
 
+"""
+###########################################
+## Updates for the Group Factor Analysis ##
+###########################################
+
+(Derivation of equations can be found in Ricard's MSc report)
+
+Current nodes: 
+    Y_Node: observed data
+    W_Node: weights
+    Tau_Node: precision of the noise
+    Alpha_Node: ARD precision
+    Z_Node: latent variables
+
+Each node is a Variational_Node() class with the following main variables:
+    Important methods:
+    - precompute: precompute some terms to speed up the calculations
+    - calculateELBO: calculate evidence lower bound using current estimates of expectations/params
+    - getParameters: return current parameters
+    - getExpectations: return current expectations
+    - updateParameters: update parameters using current estimates of expectations
+    - updateExpectations: update expectations using current estimates of parameters
+    - removeFactors: remove a set of latent variables from the node
+
+     Important attributes:
+    - markov_blanket: dictionary that defines the set of nodes that are in the markov blanket of the current node
+    - Q: an instance of Distribution() which contains the specification of the variational distribution 
+    - P: an instance of Distribution() which contains the specification of the prior distribution 
+    - dim: dimensionality of the node
+"""
 
 class Y_Node(Observed_Variational_Node):
     def __init__(self, dim, obs):
@@ -83,8 +112,7 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         WW = self.markov_blanket["W"].getExpectations()["E2"]
         Y = self.markov_blanket["Y"].getExpectation()
 
-        # N = Z.shape[0]
-        # self.Q.a[:] = self.P.a + N/2
+        # self.Q.a[:] = self.P.a + Z.shape[0]/2
         tmp = (Y**2).sum(axis=0) - 2*(Y*s.dot(Z,W.T)).sum(axis=0) + (WW*ZZ[None,:,:]).sum(axis=(1,2))
         self.Q.b = self.P.b + tmp/2
 

@@ -8,11 +8,10 @@ import scipy.special as special
 import scipy.stats as stats
 import numpy.linalg  as linalg
 
+# Import manually defined functions
 from simulate import Simulate
 from BayesNet import BayesNet
-from utils import save_npy
-
-# Import manually defined updates
+# from utils import save_npy
 from multiview_nodes import *
 from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node, Zeta_Node
 from local_nodes import Local_Node, Observed_Local_Node
@@ -46,7 +45,7 @@ data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
 # data['alpha'][1,:] = [1,1e6,1,1e6,1,1e6]
 # data['alpha'][2,:] = [1e6,1,1,1e6,1e6,1]
 
-data['alpha'] = [ s.zeros(K,) for m in xrange(self.M) ]
+data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
 data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
 data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
 data['alpha'][2] = [1e6,1,1,1e6,1e6,1]

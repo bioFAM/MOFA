@@ -1,16 +1,43 @@
 from __future__ import division
-# from time import time
 import numpy.linalg  as linalg
 
+# Import manually defined functions
 from variational_nodes import *
 from utils import *
 
 """
-This module is used to define the variational nodes and the corresponding updates for
-the element-wise spike and slab Group Factor Analysis.
-Two layers of sparsity:
-(1) Element-wise spike and slab
-(2) Group-wise ARD
+###################################################
+## Updates for the Sparse Group Factor Analysis ##
+###################################################
+
+Extensions with respect to the Gaussian Group Factor Analysis:
+- Element-wise spike and slab
+
+(Derivation of equations can be found in file XX)
+
+Current nodes: 
+    Y_Node: observed data
+    SW_Node: spike and slab weights
+    Tau_Node: precision of the noise
+    Alpha_Node: ARD precision
+    Z_Node: latent variables
+
+Each node is a Variational_Node() class with the following main variables:
+    Important methods:
+    - precompute: precompute some terms to speed up the calculations
+    - calculateELBO: calculate evidence lower bound using current estimates of expectations/params
+    - getParameters: return current parameters
+    - getExpectations: return current expectations
+    - updateParameters: update parameters using current estimates of expectations
+    - updateExpectations: update expectations using current estimates of parameters
+    - removeFactors: remove a set of latent variables from the node
+
+    Important attributes:
+    - markov_blanket: dictionary that defines the set of nodes that are in the markov blanket of the current node
+    - Q: an instance of Distribution() which contains the specification of the variational distribution 
+    - P: an instance of Distribution() which contains the specification of the prior distribution 
+    - dim: dimensionality of the node
+
 """
 
 class Y_Node(Observed_Variational_Node):
@@ -25,9 +52,9 @@ class Y_Node(Observed_Variational_Node):
         self.likconst = -0.5*self.N*self.D*s.log(2*s.pi)
 
     def calculateELBO(self):
+        # We make the assumption about broad prior
         tau_param = self.markov_blanket["tau"].getParameters()
         tau_exp = self.markov_blanket["tau"].getExpectations()
-        # We make the assumption that the prior is so broad that is negligible
         lik = self.likconst + self.N*s.sum(tau_exp["lnE"])/2 - s.dot(tau_exp["E"],tau_param["b"])
         return lik
 
@@ -55,7 +82,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         tmp = 1/((tau*SWW.T).sum(axis=1)+1)
         self.Q.var = s.repeat(tmp[None,:],self.N,0)
 
-        # Mean: factorised over K
+        # Mean
         for k in xrange(self.K):
             tmp1 = SW[:,k]*tau
             tmp2 = Y - s.dot( self.Q.mean[:,s.arange(self.K)!=k] , SW[:,s.arange(self.K)!=k].T )
@@ -69,7 +96,6 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         return (lb_p-lb_q)/2
 
     def removeFactors(self, *idx):
-        # Method to remove a set of (inactive) latent variables from the node
         keep = s.setdiff1d(s.arange(self.K),idx)
         self.Q.mean = self.Q.mean[:,keep]
         self.Q.var = self.Q.var[:,keep]
@@ -84,7 +110,6 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         self.precompute()
 
     def precompute(self):
-        # Precompute some terms to speed up the calculations
         self.D = self.dim[0]
         self.lbconst = s.sum(self.D*(self.P.a*s.log(self.P.b) - special.gammaln(self.P.a)))
 
@@ -100,10 +125,9 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         term2 = 2*(Y*Z.dot(SW.T)).sum(axis=0)
         term3 = (ZZ.dot(SWW.T)).sum(axis=0)
         term4 = s.diag(s.dot( SW.dot(Z.T), Z.dot(SW.T) )) - s.dot(Z**2,(SW**2).T).sum(axis=0)
-        tmp = term1 - term2 + term3 + term4 # THIS MIGHT BE WRONG, CHECK IT
-        # tmp = s.split( (term1 - term2 + term3 + term4) , s.cumsum(D))
+        tmp = term1 - term2 + term3 + term4 
 
-        # self.Q.a = self.P.a + N/2 # this is already updated in the initialisation
+        # self.Q.a = self.P.a + N/2 # Updated in the initialisation
         self.Q.b = self.P.b + tmp/2
 
         pass
@@ -122,7 +146,6 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
         self.precompute()
 
     def precompute(self):
-        # Precompute some terms to speed up the calculations
         self.K = self.dim[0]
         self.lbconst = self.K * ( self.P.a*s.log(self.P.b) - special.gammaln(self.P.a) )
 
@@ -131,21 +154,16 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
         S,SWW = tmp["ES"],tmp["ESWW"]
 
         # self.Q.a = self.P.a + D/2 # Updated in the initialisation
-        # self.Q.a = self.P.a + S.sum(axis=0)/2
         self.Q.b = self.P.b + SWW.sum(axis=0)/2
 
     def calculateELBO(self):
-        # Calculate Variational Evidence Lower Bound
         p = self.P
         q = self.Q
-
         lb_p = self.lbconst + (p.a-1)*s.sum(q.lnE) - p.b*s.sum(q.E)
         lb_q = s.sum(q.a*s.log(q.b)) + s.sum((q.a-1)*q.lnE) - s.sum(q.b*q.E) - s.sum(special.gammaln(q.a))
-
         return lb_p - lb_q
 
     def removeFactors(self, *idx):
-        # Method to remove a set of (inactive) latent variables from the node
         keep = s.setdiff1d(s.arange(self.K),idx)
         self.Q.a = self.Q.a[keep]
         self.Q.b = self.Q.b[keep]
@@ -173,7 +191,6 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         SW = self.Q.ESW[:]
 
         for k in xrange(self.K):
-            # term1 = s.log(self.P.theta/(1-self.P.theta))
             term1 = s.log(self.P_theta/(1-self.P_theta))
             term2 = 0.5*s.log(s.divide(alpha[k],tau))
             term3 = 0.5*s.log(s.sum(ZZ[:,k]) + s.divide(alpha[k],tau))
@@ -181,6 +198,8 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             term42 = s.dot( SW[:,s.arange(self.K)!=k] , (Z[:,k]*Z[:,s.arange(self.K)!=k].T).sum(axis=1) )                
             term43 = s.sum(ZZ[:,k]) + s.divide(alpha[k],tau)
             term4 = 0.5*tau * s.divide((term41-term42)**2,term43)
+
+            # Update S
             self.Q.theta[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
 
             # Update W

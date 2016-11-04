@@ -161,9 +161,11 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
         self.Q.lnE = self.Q.lnE[keep]
         self.K = len(keep)
         self.dim = (self.K,1)
-class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
-    def __init__(self, dim, pmean, pvar, qmean, qvar, qE=None, qE2=None):
-        UnivariateGaussian_Unobserved_Variational_Node.__init__(self, dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE, qE2=qE2)
+
+
+class Z_Node(MultivariateGaussian_Unobserved_Variational_Node):
+    def __init__(self, dim, qmean, qcov, qE=None, qE2=None):
+        MultivariateGaussian_Unobserved_Variational_Node.__init__(self, dim=dim, qmean=qmean, qcov=qcov, qE=qE, qE2=qE2)
         self.precompute()
 
     def precompute(self):
@@ -173,11 +175,11 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
     def updateParameters(self):
         # Method to update the parameters of the Q distribution of the node Z
         Y = self.markov_blanket["Y"].getExpectation()
+        M = len(Y)
         tau = self.markov_blanket["tau"].getExpectation()
         tmp = self.markov_blanket["W"].getExpectations()
-        W,WW = tmp["E"], tmp["E2"]
-
-        M = len(Y)
+        W = [ tmp[m]["E"]for m in xrange(M) ]
+        WW = [ tmp[m]["E2"]for m in xrange(M) ]
 
         # covariance
         cov = s.eye(self.K)
@@ -199,40 +201,6 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         lb_q = -self.N*logdet(self.Q.cov[0,:,:]) - self.N*self.K/2
         return lb_p - lb_q
 
-
-    def updateParameters(self):
-
-        ## vectorised ##
-        Y = self.markov_blanket["Y"].getExpectation()
-        tau = self.markov_blanket["tau"].getExpectation()
-        tmp = self.markov_blanket["W"].getExpectations()
-        W,WW = tmp["E"], tmp["E2"]
-
-        tau = s.concatenate([net.nodes["tau"].Q[m].E for m in xrange(M)],axis=0)
-        SWW = s.concatenate([net.nodes["SW"].Q[m].ESWW for m in xrange(M)],axis=0)
-        Y = s.concatenate([net.nodes["Y"].obs[m] for m in xrange(M)],axis=1)
-        SW = s.concatenate([net.nodes["SW"].Q[m].ESW for m in xrange(M)],axis=0)
-
-        # Variance
-        tmp = 1/((tau*SWW.T).sum(axis=1)+1)
-        self.Q.var = s.repeat(tmp[None,:],N,0)
-
-        # Mean: factorised over K
-        for k in xrange(K):
-            tmp1 = SW[:,k]*tau
-            tmp2 = Y - s.dot( self.Q.mean[:,s.arange(K)!=k] , SW[:,s.arange(K)!=k].T )
-            self.Q.mean[:,k] = self.Q.var[:,k] * s.dot(tmp2,tmp1)
-
-        # Mean: APPROXIMATED Fully factorised approach
-        # It is not correct because we have to use the updated latent variables
-        # term1 = (SW.T).dot(s.diag(tau)).dot(s.dot(SW,self.Q.mean.T)) # (K,N)
-        # term2 = Y.dot(s.diag(tau)).dot(SW) 
-        # term1 = (tau*SW.T).dot(s.dot(SW,self.Q.mean.T)) 
-        # term2 = (tau*Y).dot(SW)
-        # term3 = s.repeat( (tau*(SW**2).T).sum(axis=1)[None,:] ,N,0) * self.Q.mean
-        # self.Q.mean = self.Q.var * (-term1.T + term2 + term3)
-
-        pass
     def removeFactors(self, *idx):
         # Method to remove a set of (inactive) latent variables from the node
         keep = s.setdiff1d(s.arange(self.K),idx)

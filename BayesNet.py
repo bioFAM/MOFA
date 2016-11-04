@@ -130,7 +130,7 @@ class BayesNet(object):
 
     def iterate(self):
         # Method to start training the model
-        
+
         assert self.dim["K"] < self.dim["N"], "The number of latent variables have to be smaller than the number of samples"
         assert all(self.dim["D"] > self.dim["K"]), "The number of latent variables have to be smaller than the number of observed variables"
 

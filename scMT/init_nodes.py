@@ -1,100 +1,216 @@
-    def initZ(dim, type="random", Y=None):
-        # Function to initialise the latent variables
-        # - dim (dic): dictionary with the dimensionalities (N,K,D,M)
-        #  - type (str): random, orthogonal, pca
-        #  - Y (list of np arrays with dim (N,Dm)): observed data, only for pca
+import scipy as s
+import scipy.stats as stats
+from sys import path
+import sklearn.decomposition
 
+path.insert(0,"../")
+from multiview_nodes import *
+from local_nodes import *
+from seeger_nodes import *
+
+import updates as gfa
+import sparse_updates as scgfa
+
+# General class to initialise a GFA
+class initModel(object):
+    def __init__(self, dim, data, lik):
+        self.data = data
+        self.lik = lik
+
+        # self.dim = dim
+        self.N = dim["N"]
+        self.K = dim["K"]
+        self.M = dim["M"]
+        self.D = dim["D"]
+
+# Class to iniailise the (sparse) scGFA model
+class init_scGFA(initModel):
+    def __init__(self, dim, data, lik):
+        initModel.__init__(self, dim, data, lik)
+
+    def initZ(self, type="random"):
+        # Method to initialise the latent variables
+        #  - type (str): random, orthogonal, pca
+        Z_pmean = 0.
+        Z_pvar = 1.
         if type == "random":
-            Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(dim["N"],dim["K"]))
+            Z_qmean = stats.norm.rvs(loc=0, scale=1, size=(self.N,self.K))
         elif type == "orthogonal":
             print "Not implemented"
             exit()
         elif type == "pca":
+            pca = sklearn.decomposition.PCA(n_components=self.K, copy=True, whiten=True)
+            tmp = s.concatenate(self.data,axis=0).T
+            pca.fit(tmp)
+            Z_qmean = pca.components_.T
+        Z_qvar = s.ones((self.N,self.K))
+        self.Z = scgfa.Z_Node(dim=(self.N,self.K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar)
+        self.Z.updateExpectations()
+
+    def initSW(self, theta):
+        # Method to initialise the spike-slab prior
+        # -theta: prior level of sparsity
+        SW_list = [None]*self.M
+        S_ptheta= 0.5
+        for m in xrange(self.M):
+            S_qtheta = s.ones((self.D[m],self.K))*S_ptheta
+            W_qmean = stats.norm.rvs(loc=0, scale=1, size=(self.D[m],self.K))
+            W_qvar = s.ones((self.D[m],self.K))
+            SW_list[m] = scgfa.SW_Node(dim=(self.D[m],self.K), ptheta=S_ptheta, qtheta=S_qtheta, qmean=W_qmean, qvar=W_qvar)
+        self.SW = Multiview_Variational_Node(self.M, *SW_list)
+
+    def initAlpha(self, pa=1e-14, pb=1e-14, qb=1., qE=1.):
+        # Method to initialise the precision of the group-wise ARD prior
+        alpha_list = [None]*self.M
+        qb = s.ones(self.K)*qb
+        qE = s.ones(self.K)*qE
+        for m in xrange(self.M):
+            qa = pa + s.ones(self.K)*self.D[m]/2
+            alpha_list[m] = scgfa.Alpha_Node(dim=(self.K,), pa=pa, pb=pb, qa=qa, qb=s.ones(self.K)*qb, qE=s.ones(self.K)*qE)
+        self.Alpha = Multiview_Variational_Node((self.K,)*self.M, *alpha_list)
+
+    def initTau(self, pa=1e-14, pb=1e-14, qb=0., qE=100.):
+        # Method to initialise the precision of the noise
+        tau_list = [None]*self.M
+        for m in xrange(self.M):
+            if self.lik[m] == "poisson":
+                tmp = 0.25 + 0.17*s.amax(self.data[m],axis=0) 
+                tau_list[m] = Observed_Local_Node(dim=(self.D[m],), value=tmp)
+            elif self.lik[m] == "bernoulli":
+                tmp = s.ones(self.D[m])*0.25 
+                tau_list[m] = Observed_Local_Node(dim=(self.D[m],), value=tmp)
+            elif self.lik[m] == "binomial":
+                tmp = 0.25*s.amax(self.data["tot"][m],axis=0)
+                tau_list[m] = Observed_Local_Node(dim=(self.D[m],), value=tmp)
+            elif self.lik[m] == "gaussian":
+                qa = pa + s.ones(self.D[m])*self.N/2
+                qb = s.zeros(self.D[m]) + qb
+                qE = s.zeros(self.D[m]) + qE
+                tau_list[m] = scgfa.Tau_Node(dim=(self.D[m],), pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+        self.Tau = Multiview_Mixed_Node(self.M,*tau_list)
+
+    def initY(self):
+        # Method to initialise the observed data
+        Y_list = [None]*self.M
+        for m in xrange(self.M):
+            if self.lik[m]=="gaussian":
+                Y_list[m] = scgfa.Y_Node(dim=(self.N,self.D[m]), obs=self.data[m])
+            elif self.lik[m]=="poisson":
+                Y_list[m] = Poisson_PseudoY_Node(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
+            elif self.lik[m]=="bernoulli":
+                Y_list[m] = Bernoulli_PseudoY_Node(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
+            elif self.lik[m]=="binomial":
+                Y_list[m] = Binomial_PseudoY_Node(dim=(self.N,self.D[m]), tot=data["tot"][m], obs=data["obs"][m], E=None)
+        self.Y = Multiview_Mixed_Node(self.M, *Y_list)
+
+    def MarkovBlanket(self):
+        self.Z.addMarkovBlanket(SW=self.SW, tau=self.Tau, Y=self.Y)
+        for m in xrange(self.M):
+            self.Alpha.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m])
+            self.SW.nodes[m].addMarkovBlanket(Z=self.Z, tau=self.Tau.nodes[m], alpha=self.Alpha.nodes[m], Y=self.Y.nodes[m])
+            self.Y.nodes[m].addMarkovBlanket(Z=self.Z, SW=self.SW.nodes[m], tau=self.Tau.nodes[m])
+            self.Tau.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m], Z=self.Z, Y=self.Y.nodes[m])
+        # Update expectations of SW (we need to do it here because it requires 'alpha')
+        self.SW.updateExpectations()
+
+# Class to iniailise the (non-sparse) GFA model
+class init_GFA(initModel):
+    def __init__(self, dim, data, lik):
+        initModel.__init__(self, dim, data, lik)
+
+    def initZ(self, type="random"):
+        # Method to initialise the latent variables
+        #  - type (str): random, orthogonal, pca
+
+        if type == "random":
+            Z_qmean = stats.norm.rvs(loc=0, scale=1, size=(self.N,self.K))
+        elif type == "orthogonal":
             print "Not implemented"
             exit()
+        elif type == "pca":
+            pca = sklearn.decomposition.PCA(n_components=self.K, copy=True, whiten=True)
+            tmp = s.concatenate(self.data,axis=0).T
+            pca.fit(tmp)
+            Z_qmean = pca.components_.T
 
-        Z_qcov = s.repeat(s.eye(dim["K"])[None,:,:],dim["N"],0)
-        Z = Z_Node(dim=(dim["N"],dim["K"]), qmean=Z_qmean, qcov=Z_qcov)
-        # Z.updateExpectations()
-        return Z
+        Z_qcov = s.repeat(s.eye(self.K)[None,:,:],self.N,0)
+        self.Z = gfa.Z_Node(dim=(self.N,self.K), qmean=Z_qmean, qcov=Z_qcov)
+        self.Z.updateExpectations()
 
-    def initAlpha(dim, pa=1e-14, pb=1e-14, qb=1., qE=1.)
-        # Function to initialise the latent variables
-        # - dim (dic): dictionary with the dimensionalities (N,K,D,M)
-        alpha_list = [None]*dim["M"]
-        qb = s.ones(dim["K"])*qb
-        qE = s.ones(dim["K"])*qE
-        for m in xrange(dim["M"]):
-            qa = pa + s.ones(dim["K"])*dim["D"][m]/2
-            alpha_list[m] = Alpha_Node(dim=(dim["K"],), pa=pa, pb=pb, qa=qa, qb=s.ones(dim["K"])*qb, qE=s.ones(dim["K"])*qE)
-        alpha = Multiview_Variational_Node((dim["K"],)*dim["M"], *alpha_list)
-        return alpha
-
-    def initW(dim, type):
-        # Function to initialise the weights
+    def initW(self, type="random"):
+        # Method to initialise the weights of the ARD prior
         #  - type (str): random, pca
-        W_list = [None]*dim["M"]
-        for m in xrange(dim["M"]):
+        W_list = [None]*self.M
+        for m in xrange(self.M):
             if type == "random":
-                W_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(dim["D"][m],dim["K"]))
+                W_qmean = stats.norm.rvs(loc=0, scale=1, size=(self.D[m],self.K))
             elif type == "pca":
                 print "Not implemented"
                 exit()
-            W_qcov = s.repeat(a=s.eye(dim["K"])[None,:,:], repeats=dim["D"][m] ,axis=0)
-            W_list[m] = W_Node(dim=(dim["D"][m],dim["K"]), qmean=W_qmean, qcov=W_qcov, qE=W_qmean)
-        W = Multiview_Variational_Node(dim["M"], *W_list)
-        return W
+            W_qcov = s.repeat(a=s.eye(self.K)[None,:,:], repeats=self.D[m] ,axis=0)
+            W_list[m] = gfa.W_Node(dim=(self.D[m],self.K), qmean=W_qmean, qcov=W_qcov, qE=W_qmean)
+        self.W = Multiview_Variational_Node(self.M, *W_list)
 
+    def initAlpha(self, pa=1e-14, pb=1e-14, qb=1., qE=1.):
+        # Method to initialise the precision of the group-wise ARD prior
+        alpha_list = [None]*self.M
+        qb = s.ones(self.K)*qb
+        qE = s.ones(self.K)*qE
+        for m in xrange(self.M):
+            qa = pa + s.ones(self.K)*self.D[m]/2
+            alpha_list[m] = gfa.Alpha_Node(dim=(self.K,), pa=pa, pb=pb, qa=qa, qb=s.ones(self.K)*qb, qE=s.ones(self.K)*qE)
+        self.Alpha = Multiview_Variational_Node((self.K,)*self.M, *alpha_list)
 
-    def initTau(dim, lik, pa=1e-14, pb=1e-14, qb=0., qE=100.):
-        # Function to initialise the precision of the noise
-        # - dim (dic): dictionary with the dimensionalities (N,K,D,M)
-        # lik (list): likelihood of each view (poisson,gaussian,bernoulli,binomial)
-        tau_list = [None]*dim["M"]
-        for m in xrange(dim["M"]):
-            if lik[m] == "poisson"
-                tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0) 
-                tau_list[m] = Observed_Local_Node(dim=(dim["D"][m],), value=tmp)
-            elif lik[m] == "bernoulli"
-                tmp = s.ones(dim["D"][m])*0.25 
-                tau_list[m] = Observed_Local_Node(dim=(dim["D"][m],), value=tmp)
-            elif lik[m] == "binomial"
-                tmp = 0.25*s.amax(data["Y"]["tot"][m],axis=0)
-                tau_list[m] = Observed_Local_Node(dim=(dim["D"][m],), value=tmp)
-            elif lik[m] == "gaussian":
-                qa = pa + s.ones(dim["D"][m])*dim["N"]/2
-                qb = s.zeros(dim["D"][m]) + qb
-                qE = s.zeros(dim["D"][m]) + qE
-                tau_list[m] = Tau_Node(dim=(dim["D"][m],), pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
-        tau = Multiview_Mixed_Node(dim["M"],*tau_list)
+    def initTau(self, pa=1e-14, pb=1e-14, qb=0., qE=100.):
+        # Method to initialise the precision of the noise
+        tau_list = [None]*self.M
+        for m in xrange(self.M):
+            if self.lik[m] == "poisson":
+                tmp = 0.25 + 0.17*s.amax(self.data[m],axis=0) 
+                tau_list[m] = Observed_Local_Node(dim=(self.D[m],), value=tmp)
+            elif self.lik[m] == "bernoulli":
+                tmp = s.ones(self.D[m])*0.25 
+                tau_list[m] = Observed_Local_Node(dim=(self.D[m],), value=tmp)
+            elif self.lik[m] == "binomial":
+                tmp = 0.25*s.amax(self.data["tot"][m],axis=0)
+                tau_list[m] = Observed_Local_Node(dim=(self.D[m],), value=tmp)
+            elif self.lik[m] == "gaussian":
+                qa = pa + s.ones(self.D[m])*self.N/2
+                qb = s.zeros(self.D[m]) + qb
+                qE = s.zeros(self.D[m]) + qE
+                tau_list[m] = gfa.Tau_Node(dim=(self.D[m],), pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+        self.Tau = Multiview_Mixed_Node(self.M,*tau_list)
 
-        return tau
+    def initY(self):
+        # Method to initialise the observed data
+        Y_list = [None]*self.M
+        for m in xrange(self.M):
+            if self.lik[m]=="gaussian":
+                Y_list[m] = gfa.Y_Node(dim=(self.N,self.D[m]), obs=self.data[m])
+            elif self.lik[m]=="poisson":
+                Y_list[m] = Poisson_PseudoY_Node(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
+            elif self.lik[m]=="bernoulli":
+                Y_list[m] = Bernoulli_PseudoY_Node(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
+            elif self.lik[m]=="binomial":
+                Y_list[m] = Binomial_PseudoY_Node(dim=(self.N,self.D[m]), tot=data["tot"][m], obs=data["obs"][m], E=None)
+        self.Y = Multiview_Mixed_Node(self.M, *Y_list)
 
-    def initZeta(dim,lik):
-        # Function to initialise the local variable zeta of the seeger approach
-        # not initialised since it is the first update
-        Zeta_list = [None]*dim["M"]
-        for m in xrange(dim["M"]):
-            if lik[m] is not "gaussian":
-                Zeta_list[m] = Zeta_Node(dim=(dim["N"],dim["D"][m]), initial_value=None) 
-            else:
-                Zeta_list[m] = None
-        Zeta = Multiview_Local_Node(dim["M"], *Zeta_list)
-        return Zeta
+    def MarkovBlanket(self):
+        self.Z.addMarkovBlanket(W=self.W, tau=self.Tau, Y=self.Y)
+        for m in xrange(self.M):
+            self.Alpha.nodes[m].addMarkovBlanket(W=self.W.nodes[m])
+            self.W.nodes[m].addMarkovBlanket(Z=self.Z, tau=self.Tau.nodes[m], alpha=self.Alpha.nodes[m], Y=self.Y.nodes[m])
+            self.Y.nodes[m].addMarkovBlanket(Z=self.Z, W=self.W.nodes[m], tau=self.Tau.nodes[m])
+            self.Tau.nodes[m].addMarkovBlanket(W=self.W.nodes[m], Z=self.Z, Y=self.Y.nodes[m])
 
-    def initY(dim,lik):
-        # Function to initialise the observed data
-
-        # Y/Yhat (mixed node)
-        Y_list = [None]*dim["M"]
-        for m in xrange(dim["M"]):
-            if m in M_gaussian:
-                Y_list[m] = Y_Node(dim=(dim["N"],dim["D"][m]), obs=data['Y'][m])
-            elif m in M_poisson:
-                Y_list[m] = Poisson_PseudoY_Node(dim=(dim["N"],dim["D"][m]), obs=data['Y'][m], E=None)
-            elif m in M_bernoulli:
-                Y_list[m] = Bernoulli_PseudoY_Node(dim=(dim["N"],dim["D"][m]), obs=data['Y'][m], E=None)
-            elif m in M_binomial:
-                Y_list[m] = Binomial_PseudoY_Node(dim=(dim["N"],dim["D"][m]), tot=data['Y']["tot"][m], obs=data['Y']["obs"][m], E=None)
-        Y = Multiview_Mixed_Node(dim["M"], *Y_list)
-        return Y
+# def initZeta(dim,self.lik):
+#     # Function to initialise the local variable zeta of the seeger approach
+#     # not initialised since it is the first update
+#     Zeta_list = [None]*self.M
+#     for m in xrange(self.M):
+#         if self.lik[m] is not "gaussian":
+#             Zeta_list[m] = Zeta_Node(dim=(self.N,self.D[m]), initial_value=None) 
+#         else:
+#             Zeta_list[m] = None
+#     Zeta = Multiview_Local_Node(self.M, *Zeta_list)
+#     return Zeta

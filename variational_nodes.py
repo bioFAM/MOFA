@@ -18,7 +18,6 @@ Variational nodes have the following main variables:
     - update: general update function that calls the following two methods:
         - updateParameters: update parameters using current estimates of expectations
         - updateExpectations: update expectations using current estimates of parameters
-    - removeFactors: remove a set of latent variables from the node
 
     Important attributes:
     - markov_blanket: dictionary that defines the set of nodes that are in the markov blanket of the current node
@@ -63,9 +62,6 @@ class Variational_Node(Node):
     def getParameters(self):
         # General function to get the parameters of the distributions
         pass
-    def removeFactors(self,*idx):
-        # General function to remove factors
-        pass
 
 ###################################################################
 ## General classes for observed and unobserved variational nodes ##
@@ -84,6 +80,9 @@ class Observed_Variational_Node(Variational_Node):
         return self.obs
     def getExpectation(self):
         return self.getObservations()
+    def getExpectations(self):
+        return { "obs":self.getObservations() }
+
 class Unobserved_Variational_Node(Variational_Node):
     """ 
     Abstract class for an unobserved variational node in a Bayesian probabilistic model.
@@ -125,7 +124,7 @@ class UnivariateGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node
         self.Q = UnivariateGaussian(dim=dim, mean=qmean, var=qvar, E=qE, E2=qE2)
 
     def getParameters(self):
-        return dict({'mean': self.Q.mean, 'var': self.Q.var})
+        return { 'mean': self.Q.mean, 'var': self.Q.var }
     def getExpectations(self):
         return dict({'E':self.Q.E, 'E2':self.Q.E2, 'lnE':None})
 class MultivariateGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node):
@@ -148,9 +147,9 @@ class MultivariateGaussian_Unobserved_Variational_Node(Unobserved_Variational_No
         self.Q = MultivariateGaussian(dim=dim, mean=qmean, cov=qcov, E=qE, E2=qE2)
 
 	def getParameters(self):
-		return dict({'mean':self.Q.mean, 'cov':self.Q.cov})
+		return { 'mean':self.Q.mean, 'cov':self.Q.cov }
     def getExpectations(self):
-        return dict({'E':self.Q.E, 'E2':self.Q.E2, 'lnE':None})
+        return { 'E':self.Q.E, 'E2':self.Q.E2, 'lnE':None }
 class Gamma_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """ 
     Abstract class for a variational node where P(x) and Q(x) are both gamma distributions
@@ -169,9 +168,9 @@ class Gamma_Unobserved_Variational_Node(Unobserved_Variational_Node):
         self.Q = Gamma(dim=dim, a=qa, b=qb, E=qE)
 
     def getParameters(self):
-        return dict({'a':self.Q.a, 'b':self.Q.b})
+        return { 'a':self.Q.a, 'b':self.Q.b }
     def getExpectations(self):
-        return dict({'E':self.Q.E, 'lnE':self.Q.lnE, 'E2':None})
+        return { 'E':self.Q.E, 'lnE':self.Q.lnE, 'E2':None }
 
 class Bernoulli_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """ 
@@ -193,11 +192,11 @@ class Bernoulli_Unobserved_Variational_Node(Unobserved_Variational_Node):
         self.Q = Bernoulli(dim=dim, theta=qtheta, E=qE)
 
     def getParameters(self):
-        return dict({'theta':self.Q.theta})
+        return { 'theta':self.Q.theta }
     def getExpectation(self):
         return self.Q.E
     def getExpectations(self):
-        return dict({'E':self.Q.E, 'E2':None, 'lnE':None})
+        return { 'E':self.Q.E, 'E2':None, 'lnE':None }
 class BernoulliGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """ 
     Abstract class for a variational node where P(x) and Q(x)
@@ -224,6 +223,6 @@ class BernoulliGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node)
         self.Q = BernoulliGaussian(dim=dim, theta=qtheta, mean=qmean, var=qvar)
 
     def getParameters(self):
-        return dict({'theta':self.Q.theta, 'mean':self.Q.mean, 'var':self.Q.var})
+        return { 'theta':self.Q.theta, 'mean':self.Q.mean, 'var':self.Q.var }
     def getExpectation(self):
         return self.Q.ESW

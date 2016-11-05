@@ -4,6 +4,7 @@ from time import time
 import os
 import scipy as s
 import cPickle as pkl
+import pandas as pd
 
 from nodes import Node
 from local_nodes import Local_Node
@@ -20,9 +21,9 @@ A Bayesian network requires the following information:
 - Update schedule: order of nodes in the updates
 - Monitoring and algorithmic options: verbosity, tolerance for convergence, number of iterations, lower bound frequency...
 
-(To-do) 
-- Initialisation schedule: for each variable, except the first one to be updated which does not need to be initialised
-
+To-do:
+- More sanity checks (algorithmic options)
+- 
 """
 
 class BayesNet(object):
@@ -44,6 +45,9 @@ class BayesNet(object):
 
         # Load default options
         self.options = self.getDefaultOptions()
+
+        # Training flag
+        self.trained = False
 
     def getDefaultOptions(self):
         # Method to define the default algorithmic options
@@ -129,77 +133,71 @@ class BayesNet(object):
 
 
     def iterate(self):
-        # Method to start training the model
+        # Method to train the model
 
+        # Sanity checks
         assert self.dim["K"] < self.dim["N"], "The number of latent variables have to be smaller than the number of samples"
         assert all(self.dim["D"] > self.dim["K"]), "The number of latent variables have to be smaller than the number of observed variables"
 
-        if self.options['verbosity'] > 0: print "Start training"
+        # Initialise variables to monitor training
+        vb_nodes = self.getVariationalNodes()
+        elbo = pd.DataFrame(data = s.zeros( ((int(self.options['maxiter']/self.options['elbofreq'])-1), len(vb_nodes)+1 )),
+                            index = xrange(1,(int(self.options['maxiter']/self.options['elbofreq']))),
+                            columns = vb_nodes+["total"] )
+        activeK = s.zeros(self.options['maxiter'])
 
-        # Initialise some variables to monitor training
-        elbo = [None]*int(self.options['maxiter']/self.options['elbofreq'])
-
+        # Start training
         for iter in xrange(1,self.options['maxiter']):
             t = time();
 
             # Remove inactive latent variables
             if self.options['dropK'] and iter > 5:
                 self.removeInactiveFactors(self.options['dropK_threshold'])
+            activeK[iter] = self.dim["K"]
 
-            ## Option 2: update node by node, with E and M step merged ##
+            # Update node by node, with E and M step merged
             for node in self.schedule:
-
                 self.nodes[node].update()
 
-                # # Update Local variables 
-                # if isinstance(self.nodes[node], Local_Node):
-                #     # print "Updating local node %s" % node
-                #     self.nodes[node].update()
-
-                # # Update Variational variables
-                # if isinstance(self.nodes[node], Variational_Node):
-                #     # print "Updating parameters of %s" % node
-                #     self.nodes[node].updateParameters()
-                #     # print "Updating expectations of %s" % node
-                #     self.nodes[node].updateExpectations()
-
-
-            # Calculate Evidence Lower Bound (ELBO)
+            # Calculate Evidence Lower Bound
             if iter % self.options['elbofreq'] == 0:
                 i = int(iter/self.options['elbofreq']) - 1
-                elbo[i], elbo_terms = self.calculateELBO()
+                elbo.iloc[i] = self.calculateELBO(*vb_nodes)
 
                 if i > 0:
                     # Check convergence using the ELBO
-                    delta_elbo = elbo[i]-elbo[i-1]
+                    delta_elbo = elbo.iloc[i]["total"]-elbo.iloc[i-1]["total"]
 
                     # Print ELBO monitoring
                     if self.options['verbosity'] > 0:
-                        print "Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, K=%d" % (iter,time()-t,elbo[i], delta_elbo, self.dim["K"])
+                        print "Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, K=%d" % (iter,time()-t,elbo.iloc[i]["total"], delta_elbo, self.dim["K"])
                     if self.options['verbosity'] == 2:
-                        print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo_terms.iteritems() ]) + "\n"
+                        print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
 
+                    # Assess convergence
                     if (delta_elbo < self.options['tolerance']) and (not self.options['forceiter']):
                         print "Converged!\n"
                         break
                 else:
-                    print "Iteration 1: time=%.2f ELBO=%.2f, K=%d" % (time()-t,elbo[i], self.dim["K"])
+                    print "Iteration 1: time=%.2f ELBO=%.2f, K=%d" % (time()-t,elbo.iloc[i]["total"], self.dim["K"])
             else:
                 if self.options['verbosity'] > 0: print "Iteration %d: time=%.2f, K=%d" % (iter,time()-t,self.dim["K"])
 
             # Save the model
             if iter % self.options['savefreq'] == 0:
+                print "Check this"
+                exit()
                 savefile = "%s/%d_model.pkl" % (self.options['savefolder'], iter)
                 if self.options['verbosity'] == 2: print "Saving the model in %s" % savefile 
                 pkl.dump(self, open(savefile,"wb"))
 
-        # params = self.getParameters()
-        params = self.getParameters( *filter(lambda node: isinstance(self.nodes[node],Variational_Node),self.nodes.keys()) )
-        expectations = self.getExpectations()
-        return params,expectations
+        # Finish by collecting the training statistics
+        self.train_stats = { 'activeK':activeK, 'elbo':elbo["total"].values, 'elbo_terms':elbo.drop("total",1) }
+        self.trained = True
+        pass
 
     def getParameters(self, *nodes):
-        # Function to collect all parameters of a given set of nodes (all by default)
+        # Method to collect all parameters of a given set of nodes (all by default)
         # - nodes (str): name of the node
         if len(nodes) == 0: nodes = self.nodes.keys()
         params = {}
@@ -209,21 +207,34 @@ class BayesNet(object):
         return params
 
     def getExpectations(self, *nodes):
-        # Function to collect all expectations of a given set of nodes (all by default)
+        # Method to collect all expectations of a given set of nodes (all by default)
+        # - nodes (str): name of the node
         if len(nodes) == 0: nodes = self.nodes.keys()
         expectations = {}
         for node in nodes:
-            tmp = self.nodes[node].getExpectation()
-            # if tmp != None: expectations[node] = tmp
+            tmp = self.nodes[node].getExpectations()
+            # tmp = self.nodes[node].getExpectation()
             expectations[node] = tmp
         return expectations
 
-    def calculateELBO(self):
-        lb = 0.
-        lb_terms = {}
-        for node in self.nodes.keys():
-            if isinstance(self.nodes[node], Variational_Node):
-                # print "Lower bound %s" % node
-                lb_terms[node] = self.nodes[node].calculateELBO()
-                lb += lb_terms[node]
-        return lb,lb_terms
+    def getAllNodes(self):
+        # Method to return all nodes
+        return self.nodes
+
+    def getVariationalNodes(self):
+        # Method to return all variational nodes
+        return filter(lambda node: isinstance(self.nodes[node],Variational_Node), self.nodes.keys())
+
+    def getTrainingStats(self):
+        # Method to return training statistics
+        return self.train_stats
+
+    def calculateELBO(self, *nodes):
+        # Method to calculate the Evidence Lower Bound for a set of nodes
+        if len(nodes) == 0: nodes = self.nodes.keys()
+        elbo = pd.Series(s.zeros(len(nodes)+1), index=nodes+("total",))
+        for node in nodes:
+            elbo[node] = float(self.nodes[node].calculateELBO())
+            elbo["total"] += elbo[node]
+        return elbo
+        

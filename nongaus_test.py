@@ -1,4 +1,9 @@
 
+"""
+Script to test the non-gaussian likelihoods
+"""
+
+
 from __future__ import division
 from time import time
 import cPickle as pkl

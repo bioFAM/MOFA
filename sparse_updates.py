@@ -221,13 +221,10 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         pass
 
     def getExpectations(self):
-        ES = self.Q.ES
-        EW = self.Q.EW
-        ESW = self.Q.ESW
-        ESWW = self.Q.ESWW
-        EWW = self.Q.EWW
-        return dict({'ES':ES, 'EW':EW, 'ESW':ESW, 'ESWW':ESWW, 'EWW':EWW})
+        return dict({'ES':self.Q.ES, 'EW':self.Q.EW, 'ESW':self.Q.ESW,'ESWW':self.Q.ESWW, 'EWW':self.Q.EWW})
 
+    # def getExpectation(self):
+        # return self.Q.ESW
 
     def removeFactors(self, *idx):
         # Method to remove a set of (inactive) latent variables from the node

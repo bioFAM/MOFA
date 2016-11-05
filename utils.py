@@ -32,37 +32,61 @@ def ddot(d, mtx, left=True):
 	else:
 	    return d*mtx
 
-def save_npy(outdir, outprefix, data):
-    # Function to save parameter and expectations in .npy format and gzip compressed
-    # so that they can be loaded with R using the RcppCNPy package 
-    # Inputs: 
-    # - outdir (string): output directory
-    # - outprefix (string): output prefix
-    # - node (instance of Variational_Node): currently only works with unobserved ones
+def saveModel(model, outdir, compress=False):
+	# Function to save a trained model to be load in R:
+	# 	Expectations and parameters are stored as .npy objects to be loaded in R using the RcppCNPy package 
+	# 	Training statistics (lower bound, active factors) are stored as npy files
+	#	
+	# Inputs: 
+	# - model (BayesNet class): the trained model
+	# - outdir (string): output directory
+	# - compress (bool): compress files using gzip?
 
-    # assert isinstance(node,VariationalNode)
-    # assert isinstance(node,Unobserved_Node), "'node' has to be an instance of Variational_Node"
+	# Check that the model is trained
+	assert model.trained == True, "Model is not trained yet"
+	nodes = model.getAllNodes()
 
-    # Create output folder if it does not exist
+	# Create output folder if it does not exist
 	if not os.path.exists(outdir): os.makedirs(outdir)
 
+	#######################
+	## Save expectations ##
+	#######################
 
-	outfile = os.path.join(outdir,outprefix)
+	# Iterate over nodes
+	for node in nodes:
+		expectations = nodes[node].getExpectations()
 
-	if type(data) == list:
-		for m in xrange(len(data)):
-			filename = "%s_%d.npy" % (outfile,m+1)
-			print "Saving %s..." % filename
-			np.save(filename,data[m])
-	else:
-		filename = "%s.npy" % (outfile)
-		print "Saving %s..." % filename
-		np.save(filename,data)
+		# Multi-view nodes
+		if type(expectations) == list:
+			# Iterate over views
+			for m in xrange(len(expectations)):
+				# Iterate over expectations
+				for key,value in expectations[m].iteritems():
+					filename = os.path.join(outdir,"%s_%s_%d.npy" % (node,key,m+1))
+					print "Saving %s..." % filename
+					np.save(filename,value)
 
-	# Compress the files
-	# os.system("gzip %s/*" % outdir)
+		# Single-view nodes
+		else:
+			for key,value in expectations.iteritems():
+				filename = os.path.join(outdir,"%s_%s.npy" % (node,key))
+				print "Saving %s..." % filename
+				np.save(filename,value)
 
-	pass
+	if compress:
+		os.system("gzip %s/*.npy" % outdir)
+
+	##############################
+	## Save training statistics ##
+	##############################
+
+	stats = model.getTrainingStats()
+
+	np.save(file=os.path.join(outdir,"activeK.npy"), arr=stats["activeK"])
+	np.save(file=os.path.join(outdir,"elbo.npy"), arr=stats["elbo"])
+	stats["elbo_terms"].to_csv(os.path.join(outdir,"elbo_terms.txt"), sep="\t", header=True, index=False)
+
 
 
 # if __name__ == "__main__":

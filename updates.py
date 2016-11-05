@@ -161,8 +161,6 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
         self.Q.lnE = self.Q.lnE[keep]
         self.K = len(keep)
         self.dim = (self.K,1)
-
-
 class Z_Node(MultivariateGaussian_Unobserved_Variational_Node):
     def __init__(self, dim, qmean, qcov, qE=None, qE2=None):
         MultivariateGaussian_Unobserved_Variational_Node.__init__(self, dim=dim, qmean=qmean, qcov=qcov, qE=qE, qE2=qE2)

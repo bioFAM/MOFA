@@ -1,3 +1,6 @@
+"""
+Script to test the spike and slab updates with gaussian and non-gaussian likelihoods
+"""
 
 from __future__ import division
 from time import time
@@ -11,11 +14,11 @@ import numpy.linalg  as linalg
 # Import manually defined functions
 from simulate import Simulate
 from BayesNet import BayesNet
-# from utils import save_npy
 from multiview_nodes import *
 from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node, Zeta_Node
 from local_nodes import Local_Node, Observed_Local_Node
 from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node
+from utils import saveModel
 
 ###################
 ## Generate data ##
@@ -50,27 +53,31 @@ data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
 data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
 data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
-
 theta = [ s.ones(K)*0.5 for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
 
 data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 data['tau']= [ stats.uniform.rvs(loc=1,scale=5,size=D[m]) for m in xrange(M) ]
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="gaussian")
-# Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="poisson")
-# Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="bernoulli")
-# Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="binomial", min_trials=10, max_trials=50)
+Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="poisson")
+Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="bernoulli")
+Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="binomial", min_trials=10, max_trials=50)
 
-# data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
+data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 # data["Y"] = Y_bernoulli
 # data["Y"] = Y_poisson
 # data["Y"] = Y_binomial
-data["Y"] = Y_gaussian
+# data["Y"] = Y_gaussian
 
-M_bernoulli = []
-M_poisson = []
-M_gaussian = [0,1,2]
+M_bernoulli = [2]
+M_poisson = [1]
+M_gaussian = [0]
 M_binomial = []
+
+# M_bernoulli = []
+# M_poisson = []
+# M_gaussian = [0,1,2]
+# M_binomial = []
 
 # M_bernoulli = []
 # M_poisson = []
@@ -185,8 +192,8 @@ for m in xrange(M):
 		Y.nodes[m].addMarkovBlanket(Z=Z, SW=SW.nodes[m], tau=tau.nodes[m])
 		tau.nodes[m].addMarkovBlanket(SW=SW.nodes[m], Z=Z, Y=Y.nodes[m])
 	else:
-		Zeta.nodes[m].addMarkovBlanket(Z=Z, SW=SW.nodes[m])
-		Y.nodes[m].addMarkovBlanket(Z=Z, SW=SW.nodes[m], kappa=tau.nodes[m], zeta=Zeta.nodes[m])
+		Zeta.nodes[m].addMarkovBlanket(Z=Z, W=SW.nodes[m])
+		Y.nodes[m].addMarkovBlanket(Z=Z, W=SW.nodes[m], kappa=tau.nodes[m], zeta=Zeta.nodes[m])
 
 ##################################
 ## Update required expectations ##
@@ -211,7 +218,7 @@ net.setSchedule(schedule)
 #############################
 
 options = {}
-options['maxiter'] = 500	
+options['maxiter'] = 10
 options['tolerance'] = 1E-2
 options['forceiter'] = True
 # options['elbofreq'] = options['maxiter']+1
@@ -228,27 +235,10 @@ net.options = options
 ## Start training ##
 ####################
 
-
-params, expectations = net.iterate()
-
-exit()
+net.iterate()
 
 ##################
 ## Save results ##
 ##################
 
-# Save parameters
-p_outfolder = "/tmp/params"
-for node,a in params.iteritems():
-	for param_name,values in a.iteritems():
-		prefix = "%s_%s" % (node,param_name)
-		save_npy(outdir=p_outfolder, outprefix=prefix, data=values)
-# os.system("gzip -f %s/*" % p_outfolder)
-
-# Save expectations
-e_outfolder = "/tmp/expectations"
-for node,a in expectations.iteritems():
-	for moment_name,values in a.iteritems():
-		prefix = "%s_%s" % (node,moment_name)
-		save_npy(outdir=e_outfolder, outprefix=prefix, data=values)
-# os.system("gzip -f %s/*" % e_outfolder)
+saveModel(net, outdir="/tmp/test", compress=False)

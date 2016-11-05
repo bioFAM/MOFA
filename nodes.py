@@ -5,6 +5,9 @@ Module to define general nodes in a Bayesian network
 All nodes (variational or not variational) have two main attributes:
 - dim: dimensionality of the node
 - markov_blanket: the markov blanket of the node
+
+To-do: 
+-  removeFactors should not be here... make it more general like remove dimensions
 """
 
 
@@ -19,6 +22,10 @@ class Node(object):
     	# Function to define the Markov blanket of the node 
         self.markov_blanket = kwargs
 
+    def removeFactors(self,*idx):
+        # General function to remove factors
+        pass
+        
 # class Observed_Node(Node):
 #     """ 
 #     General class for an observed node in a Bayesian network

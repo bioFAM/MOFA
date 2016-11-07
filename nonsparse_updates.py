@@ -38,7 +38,8 @@ class Y_Node(Observed_Variational_Node):
     def __init__(self, dim, obs):
         Observed_Variational_Node.__init__(self, dim, obs)
         # Create a boolean mask of the data to hidden missing values
-        self.mask()
+        if type(self.obs) != ma.MaskedArray: 
+            self.mask()
         # Precompute some terms
         self.precompute()
 
@@ -205,7 +206,9 @@ class Z_Node(MultivariateGaussian_Unobserved_Variational_Node):
         self.Q.cov = s.repeat(cov[None,:,:],self.N,axis=0)
 
         # mean
-        if any(self.covariates): tmp = self.Q.mean[:,self.covariates]
+        if any(self.covariates): 
+            oldmean = self.Q.mean[:,self.covariates]
+            
         tmp = s.zeros(self.dim[::-1])
         for m in xrange(M):
             # tmp += s.dot( W[m].T, (tau[m]*Y[m]).T )
@@ -213,7 +216,8 @@ class Z_Node(MultivariateGaussian_Unobserved_Variational_Node):
         self.Q.mean = cov.dot(tmp).T
 
         # Do not update the latent variables associated with known covariates
-        if any(self.covariates): self.Q.mean[:,self.covariates] = tmp
+        if any(self.covariates): 
+            self.Q.mean[:,self.covariates] = oldmean
 
         pass
 

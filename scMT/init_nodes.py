@@ -16,7 +16,7 @@ from multiview_nodes import *
 from local_nodes import *
 from seeger_nodes import *
 
-import updates as gfa
+import nonsparse_updates as gfa
 import sparse_updates as scgfa
 
 # General class to initialise a Group Factor Analysis model

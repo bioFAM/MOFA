@@ -22,7 +22,6 @@ from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_
 from local_nodes import Local_Node, Observed_Local_Node
 from nonsparse_updates import Y_Node, Alpha_Node, W_Node, Tau_Node, Z_Node, Y_Node
 # from nonsparse_unvectorised_updates import Y_Node, Alpha_Node, W_Node, Tau_Node, Z_Node, Y_Node
-CHECK THAT THIS IS CORRECT!!!!
 
 ###################
 ## Generate data ##
@@ -57,26 +56,24 @@ data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 # data['tau']= [ s.ones(D[m])*1000 for m in xrange(M) ]
 data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-	likelihood="gaussian", missingness=0.0)
-# Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="poisson")
-# Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="bernoulli")
-# Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="binomial", min_trials=10, max_trials=50)
+	likelihood="gaussian", missingness=0.05)
+Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+	likelihood="poisson", missingness=0.05)
+Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+	likelihood="bernoulli", missingness=0.0)
+Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+	likelihood="binomial", missingness=0.0, min_trials=10, max_trials=50)
 
-# data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
+data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 # data["Y"] = Y_bernoulli
 # data["Y"] = Y_poisson
 # data["Y"] = Y_binomial
-data["Y"] = Y_gaussian
+# data["Y"] = Y_gaussian
 
-M_bernoulli = []
-M_poisson = []
-M_gaussian = [0,1,2]
+M_bernoulli = [2]
+M_poisson = [1]
+M_gaussian = [0]
 M_binomial = []
-
-# M_bernoulli = []
-# M_poisson = []
-# M_gaussian = []
-# M_binomial = [0,1,2]
 
 #################################
 ## Initialise Bayesian Network ##
@@ -98,18 +95,18 @@ net.dim["K"] = K
 ###############
 
 # Z without covariates (variational node)
-Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K))
-Z_qcov = s.repeat(s.eye(K)[None,:,:],N,0)
-Z = Z_Node(dim=(N,K), qmean=Z_qmean, qcov=Z_qcov)
-Z.updateExpectations()
-
-# Z with covariates (variational node)
-# Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K-1))
-# Z_qmean = s.c_[ Z_qmean, s.asarray([True,False]*(N/2), dtype=s.float32) ]
+# Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K))
 # Z_qcov = s.repeat(s.eye(K)[None,:,:],N,0)
 # Z = Z_Node(dim=(N,K), qmean=Z_qmean, qcov=Z_qcov)
 # Z.updateExpectations()
-# Z.setCovariates(idx=K-1)
+
+# Z with covariates (variational node)
+Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K-1))
+Z_qmean = s.c_[ Z_qmean, s.asarray([True,False]*(N/2), dtype=s.float32) ]
+Z_qcov = s.repeat(s.eye(K)[None,:,:],N,0)
+Z = Z_Node(dim=(N,K), qmean=Z_qmean, qcov=Z_qcov)
+Z.updateExpectations()
+Z.setCovariates(idx=K-1)
 
 
 # alpha (variational node)

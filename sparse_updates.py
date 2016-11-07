@@ -44,10 +44,13 @@ Each node is a Variational_Node() class with the following main variables:
 class Y_Node(Observed_Variational_Node):
     def __init__(self, dim, obs):
         Observed_Variational_Node.__init__(self, dim, obs)
+
         # Create a boolean mask of the data to hidden missing values
-        self.mask()
+        if type(self.obs) != ma.MaskedArray: 
+            self.mask()
         # Precompute some terms
         self.precompute()
+
 
     def precompute(self):
         # Precompute some terms to speed up the calculations
@@ -102,7 +105,9 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         self.Q.var = s.repeat(tmp[None,:],self.N,0)
 
         # Mean
-        if any(self.covariates): tmp = self.Q.mean[:,self.covariates]
+        if any(self.covariates): 
+            oldmean = self.Q.mean[:,self.covariates]
+
         for k in xrange(self.K):
             tmp1 = SW[:,k]*tau
             tmp2 = Y - s.dot( self.Q.mean[:,s.arange(self.K)!=k] , SW[:,s.arange(self.K)!=k].T )
@@ -111,7 +116,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
 
         # Do not update the latent variables associated with known covariates
         if any(self.covariates):
-            self.Q.mean[:,self.covariates] = tmp
+            self.Q.mean[:,self.covariates] = oldmean
 
         pass
 

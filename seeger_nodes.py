@@ -1,5 +1,6 @@
 from __future__ import division
 import scipy as s
+import numpy.ma as ma
 
 from variational_nodes import Unobserved_Variational_Node
 from local_nodes import Local_Node
@@ -20,7 +21,9 @@ class Zeta_Node(Local_Node):
     Notice that Zeta is a local node, not a variational node!
     """
     def __init__(self, dim, initial_value=None):
-        # 'initial_value' (ndarray): initial value of Zeta
+        # Inputs:
+        #  dim (ndarray): dimensionality of the node
+        #  initial_value (ndarray): initial value of Zeta
         Local_Node.__init__(self, dim, initial_value)
 
     def update(self):
@@ -39,17 +42,26 @@ class PseudoY(Unobserved_Variational_Node):
     """
     General class for pseudodata nodes
 
-    Notice that they are defined as Variational Nodes because they have a lower bound associated,
+    Notice that they are defined as Variational Nodes because they have a lower bound associated with it,
     but we are not using the .P and .Q distribution attributes
     """
     def __init__(self, dim, obs, E=None):
-        # - dim (2d tuple): dimensionality of each view
-        # - E (ndarray): initial expected value of pseudodata
+        # Inputs:
+        #  dim (2d tuple): dimensionality of each view
+        #  obs (ndarray): observed data
+        #  E (ndarray): initial expected value of pseudodata
         Unobserved_Variational_Node.__init__(self, dim)
-        self.precompute()
 
         # Initialise observed data 
         self.obs = obs
+
+        # Create a boolean mask of the data to hidden missing values
+        if type(self.obs) != ma.MaskedArray: 
+            self.mask()
+
+        # Precompute some terms
+        self.precompute()
+
         # Initialise expectation
         if E is not None:
             assert E.shape == dim.shape, "Problems with the dimensionalities"
@@ -57,11 +69,19 @@ class PseudoY(Unobserved_Variational_Node):
             E = s.zeros(self.dim)
         self.E = E
 
+    def mask(self):
+        # Mask the observations if they have missing values
+        self.obs = ma.masked_invalid(self.obs)
+        pass
+
     def precompute(self):
         # Precompute some terms to speed up the calculations
-        self.N = self.dim[0]
+        # self.N = self.dim[0]
+        # self.D = self.dim[1]
+        # self.lbconst = -0.5*self.N*self.D*s.log(2*s.pi)
+        self.N = self.dim[0] - ma.getmask(self.obs).sum(axis=0)
         self.D = self.dim[1]
-        self.lbconst = -0.5*self.N*self.D*s.log(2*s.pi)
+        self.lbconst = -0.5*s.sum(self.N)*s.log(2*s.pi)
 
     def updateExpectations(self):
         pass
@@ -81,7 +101,7 @@ class PseudoY(Unobserved_Variational_Node):
         W = self.markov_blanket["W"].getExpectation()
         kappa = self.markov_blanket["kappa"].getExpectation()
 
-        lb = self.lbconst + 0.5*self.N*s.log(kappa).sum() - 0.5*s.sum( kappa * (self.E - s.dot(Z,W.T))**2  )
+        lb = self.lbconst + s.sum(self.N*s.log(kappa))/2 - s.sum( kappa * (self.E-s.dot(Z,W.T))**2 )/2
         return lb
 
 class Poisson_PseudoY_Node(PseudoY):
@@ -132,6 +152,7 @@ class Poisson_PseudoY_Node(PseudoY):
         zeta = self.markov_blanket["zeta"].getValue()
         kappa = self.markov_blanket["kappa"].getValue()
         self.E = zeta - sigmoid(zeta)*(1-self.obs/self.ratefn(zeta))/kappa
+
         pass
 
     def calculateELBO(self):

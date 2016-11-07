@@ -169,7 +169,7 @@ class Simulate(object):
                 nas = s.random.randint(0, self.N*self.D[m], missingness*self.N*self.D[m])
                 tmp = Y[m].flatten()
                 tmp[nas] = s.nan
-                Y[m] = tmp.reshape((self.N,self.D[m]))
+                Y[m] = ma.masked_invalid( tmp.reshape((self.N,self.D[m])) )
 
         return Y
 

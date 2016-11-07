@@ -75,20 +75,24 @@ def main(options):
     ###################
 
     # print "Loading the data...\n"
+    # options['expr_inputfiles'] = ['/Users/ricard/data/scMT/expr/processed/filt/tmp/e_matrix.txt']
+    # options['outdir'] = '/Users/ricard/git/scGFA/scMT/tmp'
+    # options['savefolder'] = '/tmp/scGFA'
+    # options['K'] = 10
+    # options["likelihood"] = ["gaussian"]
 
     # Load expression data
     e = list()
-    e_meta = list()
+    # e_meta = list()
     for file in options["expr_inputfiles"]:
         tmp = pd.read_csv(file, sep=' ', header=0, index_col=0)
-        e.append(tmp.as_matrix())
-        asd = {'genes':tmp.index , 'samples':tmp.columns}
-        print asd
-        exit()
-        e_meta.append()
+        # e.append(tmp.as_matrix())
+        e.append(tmp)
+        # asd = {'genes':tmp.index , 'samples':tmp.columns}
+        # print asd
+        # exit()
+        # e_meta.append()
 
-    # Collect metadata
-    print e[0]
     # Collect everything into a single list
     # Y = e+m
     data = e

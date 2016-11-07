@@ -1,10 +1,8 @@
-
 """
-Script to test the non-gaussian likelihoods
+Script to test the spike and slab updates with gaussian and non-gaussian likelihoods
 """
 
-
-from __future__ import division
+# from __future__ import division
 from time import time
 import cPickle as pkl
 import scipy as s
@@ -13,21 +11,14 @@ import scipy.special as special
 import scipy.stats as stats
 import numpy.linalg  as linalg
 
+# Import manually defined functions
 from simulate import Simulate
 from BayesNet import BayesNet
-from utils import save_npy
-
-# Import manually defined updates
 from multiview_nodes import *
 from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node, Zeta_Node
 from local_nodes import Local_Node, Observed_Local_Node
-from updates import Y_Node, Alpha_Node, W_Node, Tau_Node, Z_Node, Y_Node
-
-"""
-- Update Y with gaussian, what happens?
-- Permutation test for latenet variables
-- Multiple runs
-"""
+from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node
+from utils import saveModel
 
 ###################
 ## Generate data ##
@@ -52,16 +43,28 @@ data['Z'][:,3] = stats.norm.rvs(loc=0, scale=1, size=N)
 data['Z'][:,4] = stats.norm.rvs(loc=0, scale=1, size=N)
 data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
 
-data['alpha'] = s.zeros((M,K))
-data['alpha'][0,:] = [1,1,1e6,1,1e6,1e6]
-data['alpha'][1,:] = [1,1e6,1,1e6,1,1e6]
-data['alpha'][2,:] = [1e6,1,1,1e6,1e6,1]
+# Add a known covariate
+# data['Z'] = s.c_[ data['Z'], s.asarray([True,False]*(N/2), dtype=s.float32) ]
+# covariate = 6
 
-data['W'], _ = tmp.initW_ard(alpha=data['alpha'])
+# data['alpha'] = s.zeros((M,K))
+# data['alpha'][0,:] = [1,1,1e6,1,1e6,1e6]
+# data['alpha'][1,:] = [1,1e6,1,1e6,1,1e6]
+# data['alpha'][2,:] = [1e6,1,1,1e6,1e6,1]
+
+data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
+data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
+data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
+data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
+
+# theta = [ s.ones(K)*0.5 for m in xrange(M) ]
+theta = [ s.ones(K)*0.5 for m in xrange(M) ]
+data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
+
 data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
-# data['tau']= [ s.ones(D[m])*1000 for m in xrange(M) ]
-data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
-Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="gaussian")
+data['tau']= [ stats.uniform.rvs(loc=1,scale=5,size=D[m]) for m in xrange(M) ]
+Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+	likelihood="gaussian", missingness=0.05)
 # Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="poisson")
 # Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="bernoulli")
 # Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="binomial", min_trials=10, max_trials=50)
@@ -71,6 +74,11 @@ Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data
 # data["Y"] = Y_poisson
 # data["Y"] = Y_binomial
 data["Y"] = Y_gaussian
+
+# M_bernoulli = [2]
+# M_poisson = [1]
+# M_gaussian = [0]
+# M_binomial = []
 
 M_bernoulli = []
 M_poisson = []
@@ -89,7 +97,7 @@ M_binomial = []
 net = BayesNet()
 
 # Define initial number of latent variables
-K = 20
+K = 10
 
 # Define model dimensionalities
 net.dim["M"] = M
@@ -101,12 +109,21 @@ net.dim["K"] = K
 ## Add nodes ##
 ###############
 
-# Z (variational node)
+# Z without covariates (variational node)
+Z_pmean = 0.
+Z_pvar = 1.
 Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K))
-Z_qcov = s.repeat(s.eye(K)[None,:,:],N,0)
-Z = Z_Node(dim=(N,K), qmean=Z_qmean, qcov=Z_qcov)
-Z.updateExpectations()
+Z_qvar = s.ones((N,K))
+Z = Z_Node(dim=(N,K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar)
 
+# Z with covariates (variational node)
+# Z_pmean = 0.
+# Z_pvar = 1.
+# Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K-1))
+# Z_qmean = s.c_[ Z_qmean, s.asarray([True,False]*(N/2), dtype=s.float32) ]
+# Z_qvar = s.ones((N,K))
+# Z = Z_Node(dim=(N,K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar)
+# Z.setCovariates(idx=K-1)
 
 # alpha (variational node)
 alpha_list = [None]*M
@@ -121,14 +138,14 @@ alpha = Multiview_Variational_Node((K,)*M, *alpha_list)
 
 
 # W (variational node)
-W_list = [None]*M
+SW_list = [None]*M
+S_ptheta = 0.5
 for m in xrange(M):
+	S_qtheta = s.ones((D[m],K))*S_ptheta
 	W_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(D[m],K))
-	W_qcov = s.repeat(a=s.eye(K)[None,:,:], repeats=D[m] ,axis=0)
-	W_list[m] = W_Node(dim=(D[m],K), qmean=W_qmean, qcov=W_qcov, qE=W_qmean)
-W = Multiview_Variational_Node(M, *W_list)
-
-
+	W_qvar = s.ones((D[m],K))
+	SW_list[m] = SW_Node(dim=(D[m],K), ptheta=S_ptheta, qtheta=S_qtheta, qmean=W_qmean, qvar=W_qvar)
+SW = Multiview_Variational_Node(M, *SW_list)
 
 # tau/kappa (mixed node)
 tau_list = [None]*M
@@ -181,25 +198,33 @@ Y = Multiview_Mixed_Node(M, *Y_list)
 ## Define Markov Blankets ##
 ############################
 
-Z.addMarkovBlanket(W=W, tau=tau, Y=Y)
+Z.addMarkovBlanket(SW=SW, tau=tau, Y=Y)
 for m in xrange(M):
-	alpha.nodes[m].addMarkovBlanket(W=W.nodes[m])
-	W.nodes[m].addMarkovBlanket(Z=Z, tau=tau.nodes[m], alpha=alpha.nodes[m], Y=Y.nodes[m])
+	alpha.nodes[m].addMarkovBlanket(SW=SW.nodes[m])
+	SW.nodes[m].addMarkovBlanket(Z=Z, tau=tau.nodes[m], alpha=alpha.nodes[m], Y=Y.nodes[m])
 	if m in M_gaussian:
-		Y.nodes[m].addMarkovBlanket(Z=Z, W=W.nodes[m], tau=tau.nodes[m])
-		tau.nodes[m].addMarkovBlanket(W=W.nodes[m], Z=Z, Y=Y.nodes[m])
+		Y.nodes[m].addMarkovBlanket(Z=Z, SW=SW.nodes[m], tau=tau.nodes[m])
+		tau.nodes[m].addMarkovBlanket(SW=SW.nodes[m], Z=Z, Y=Y.nodes[m])
 	else:
-		Zeta.nodes[m].addMarkovBlanket(Z=Z, W=W.nodes[m])
-		Y.nodes[m].addMarkovBlanket(Z=Z, W=W.nodes[m], kappa=tau.nodes[m], zeta=Zeta.nodes[m])
+		Zeta.nodes[m].addMarkovBlanket(Z=Z, W=SW.nodes[m])
+		Y.nodes[m].addMarkovBlanket(Z=Z, W=SW.nodes[m], kappa=tau.nodes[m], zeta=Zeta.nodes[m])
+
+##################################
+## Update required expectations ##
+##################################
+
+SW.updateExpectations()
+Z.Q.updateExpectations()
 
 ##################################
 ## Add the nodes to the network ##
 ##################################
 
-net.addNodes(Zeta=Zeta, W=W, tau=tau, Z=Z, Y=Y, alpha=alpha)
+net.addNodes(Zeta=Zeta, SW=SW, tau=tau, Z=Z, Y=Y, alpha=alpha)
 
 # Define update schedule
-schedule = ["Zeta","Y","W","Z","alpha","tau"]
+schedule = ["Zeta","Y","SW","Z","alpha","tau"]
+
 net.setSchedule(schedule)
 
 #############################
@@ -207,7 +232,7 @@ net.setSchedule(schedule)
 #############################
 
 options = {}
-options['maxiter'] = 2000
+options['maxiter'] = 1000
 options['tolerance'] = 1E-2
 options['forceiter'] = True
 # options['elbofreq'] = options['maxiter']+1
@@ -224,27 +249,10 @@ net.options = options
 ## Start training ##
 ####################
 
-
-params, expectations = net.iterate()
-
-exit()
+net.iterate()
 
 ##################
 ## Save results ##
 ##################
 
-# Save parameters
-p_outfolder = "/tmp/params"
-for node,a in params.iteritems():
-	for param_name,values in a.iteritems():
-		prefix = "%s_%s" % (node,param_name)
-		save_npy(outdir=p_outfolder, outprefix=prefix, data=values)
-# os.system("gzip -f %s/*" % p_outfolder)
-
-# Save expectations
-e_outfolder = "/tmp/expectations"
-for node,a in expectations.iteritems():
-	for moment_name,values in a.iteritems():
-		prefix = "%s_%s" % (node,moment_name)
-		save_npy(outdir=e_outfolder, outprefix=prefix, data=values)
-# os.system("gzip -f %s/*" % e_outfolder)
+# saveModel(net, outdir="/tmp/test", compress=False)

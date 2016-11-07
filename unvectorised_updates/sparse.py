@@ -97,6 +97,26 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         SWW = s.concatenate([tmp[m]["ESWW"] for m in xrange(M)],axis=0)
         tau = s.concatenate([tau[m] for m in xrange(M)],axis=0)
 
+        ## non-vectorised ##
+        # old = self.Q.mean.copy()
+        # D = Y.shape[1]
+        # for n in xrange(self.N):
+        #     for k in xrange(self.K):
+        #         # Variance
+        #         tmp = 0
+        #         for d in xrange(D):
+        #             tmp += tau[d]*SWW[d,k]
+        #         self.Q.var[n,k] = 1/(tmp + 1)
+        #         # Mean
+        #         tmp = 0
+        #         for d in xrange(D):
+        #             tmp += tau[d]*SW[d,k] * (Y[n,d] - s.sum(SW[d,s.arange(self.K)!=k]*self.Q.mean[n,s.arange(self.K)!=k]))
+        #         self.Q.mean[n,k] = self.Q.var[n,k]*tmp
+        # self.Q.mean = old.copy()
+
+
+        ## vectorised ##
+
         # Variance
         tmp = 1/((tau*SWW.T).sum(axis=1)+1)
         self.Q.var = s.repeat(tmp[None,:],self.N,0)
@@ -157,6 +177,28 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         self.Q.a = self.P.a + (Y.shape[0] - ma.getmask(Y).sum(axis=0))/2
         self.Q.b = self.P.b + tmp/2
 
+
+        ## Non-vectorised ##
+        # N = Y.shape[0]
+        # K = Z.shape[1]
+        # mask = ma.getmask(Y)
+        # a = 0
+        # for d in xrange(self.D):
+        #     tmp = 0
+        #     for n in xrange(N):
+        #             tmptmp = 0
+        #             for k in xrange(K):
+        #                 a += SWW[d,k]*ZZ[n,k]
+        #                 tmptmp += SWW[d,k]*ZZ[n,k]
+        #                 if k < (K-1):
+        #                     for j in xrange(k+1,K):
+        #                         tmptmp += 2*(SW[d,k]*Z[n,k])*(SW[d,j]*Z[n,j])
+        #             if not mask[n,d]: 
+        #                 tmp += Y[n,d]**2 - 2*Y[n,d]*s.sum(SW[d,:]*Z[n,:])
+        #             tmp += tmptmp
+        #     self.Q.a[d] = self.P.a + s.sum(~mask[:,d])/2
+        #     self.Q.b[d] = self.P.b + tmp/2
+
         pass
 
     def calculateELBO(self):
@@ -216,6 +258,34 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         Y = self.markov_blanket["Y"].getExpectation()
         alpha = self.markov_blanket["alpha"].getExpectation()
         SW = self.Q.ESW[:]
+
+        ## Non-vectorised ##
+        # oldmean = self.Q.mean.copy()
+        # oldtheta = self.Q.theta.copy()
+        # oldSW = SW.copy()
+        # for d in xrange(self.D):
+        #     for k in xrange(self.K):
+        #         term1 = s.log(self.P_theta/(1-self.P_theta))
+        #         term2 = 0.5*s.log(alpha[k]/tau[d])
+        #         term3 = 0.5*s.log(s.sum(ZZ[:,k]) + alpha[k]/tau[d])
+        #         foo = ma.dot(Y[:,d],Z[:,k]) - s.dot(SW[d,s.arange(self.K)!=k],(Z[:,k]*Z[:,s.arange(self.K)!=k].T).sum(axis=1))
+        #         bar = s.sum(ZZ[:,k]) + alpha[k]/tau[d]
+        #         term4 = 0.5*tau[d]*foo**2 / bar
+
+        #         # Update S
+        #         self.Q.theta[d,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
+
+        #         # Update W
+        #         self.Q.mean[d,k] = foo/bar
+        #         self.Q.var[d,k] = 1/(tau[d]*bar)
+
+        #         # Update expectations
+        #         SW[d,k] = self.Q.theta[d,k] * self.Q.mean[d,k]
+
+        # self.Q.mean = oldmean.copy()
+        # self.Q.theta = oldtheta.copy()
+        # SW = oldSW.copy()
+
 
         ## Vectorised ##
         for k in xrange(self.K):

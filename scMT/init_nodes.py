@@ -1,3 +1,11 @@
+
+"""
+Module to initalise the nodes
+
+To-do: 
+- Explanation
+- 
+"""
 import scipy as s
 import scipy.stats as stats
 from sys import path
@@ -11,26 +19,31 @@ from seeger_nodes import *
 import updates as gfa
 import sparse_updates as scgfa
 
-# General class to initialise a GFA
+# General class to initialise a Group Factor Analysis model
 class initModel(object):
     def __init__(self, dim, data, lik):
+        # Inputs:
+        #  dim (dic): keyworded dimensionalities
+        #    N for the number of samples, M for the number of views
+        #    K for the number of latent variables, D for the number of features (per view, so it is a list)
+        #  data (list of ndarrays of length M): observed data
+        #  lik (list): likelihood type for each view
         self.data = data
         self.lik = lik
-
-        # self.dim = dim
         self.N = dim["N"]
         self.K = dim["K"]
         self.M = dim["M"]
         self.D = dim["D"]
 
-# Class to iniailise the (sparse) scGFA model
+# Class to iniailise the (sparse) Group Factor Analysis model
 class init_scGFA(initModel):
     def __init__(self, dim, data, lik):
         initModel.__init__(self, dim, data, lik)
 
     def initZ(self, type="random"):
         # Method to initialise the latent variables
-        #  - type (str): random, orthogonal, pca
+        # Inputs:
+        #  type (str): random, orthogonal, pca
         Z_pmean = 0.
         Z_pvar = 1.
         if type == "random":
@@ -47,11 +60,11 @@ class init_scGFA(initModel):
         self.Z = scgfa.Z_Node(dim=(self.N,self.K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar)
         self.Z.updateExpectations()
 
-    def initSW(self, theta):
-        # Method to initialise the spike-slab prior
-        # -theta: prior level of sparsity
+    def initSW(self, S_ptheta):
+        # Method to initialise the spike-slab variable (product of bernoulli and gaussian variables)
+        # Inputs:
+        #  S_ptheta: parameter of the Bernoulli-distributed variable S, which indicates the prior level of sparsity (1 for no sparsity)
         SW_list = [None]*self.M
-        S_ptheta= 0.5
         for m in xrange(self.M):
             S_qtheta = s.ones((self.D[m],self.K))*S_ptheta
             W_qmean = stats.norm.rvs(loc=0, scale=1, size=(self.D[m],self.K))
@@ -61,6 +74,11 @@ class init_scGFA(initModel):
 
     def initAlpha(self, pa=1e-14, pb=1e-14, qb=1., qE=1.):
         # Method to initialise the precision of the group-wise ARD prior
+        # Inputs:
+        #  pa (float): 'a' parameter of the prior distribution
+        #  pb (float): 'b' parameter of the prior distribution
+        #  qb (float): initialisation of the 'b' parameter of the variational distribution
+        #  qE (float): initial expectation of the variational distribution
         alpha_list = [None]*self.M
         qb = s.ones(self.K)*qb
         qE = s.ones(self.K)*qE
@@ -71,6 +89,11 @@ class init_scGFA(initModel):
 
     def initTau(self, pa=1e-14, pb=1e-14, qb=0., qE=100.):
         # Method to initialise the precision of the noise
+        # Inputs:
+        #  pa (float): 'a' parameter of the prior distribution
+        #  pb (float): 'b' parameter of the prior distribution
+        #  qb (float): initialisation of the 'b' parameter of the variational distribution
+        #  qE (float): initial expectation of the variational distribution
         tau_list = [None]*self.M
         for m in xrange(self.M):
             if self.lik[m] == "poisson":
@@ -104,13 +127,14 @@ class init_scGFA(initModel):
         self.Y = Multiview_Mixed_Node(self.M, *Y_list)
 
     def MarkovBlanket(self):
+        # Method to define the markov blanket
         self.Z.addMarkovBlanket(SW=self.SW, tau=self.Tau, Y=self.Y)
         for m in xrange(self.M):
             self.Alpha.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m])
             self.SW.nodes[m].addMarkovBlanket(Z=self.Z, tau=self.Tau.nodes[m], alpha=self.Alpha.nodes[m], Y=self.Y.nodes[m])
             self.Y.nodes[m].addMarkovBlanket(Z=self.Z, SW=self.SW.nodes[m], tau=self.Tau.nodes[m])
             self.Tau.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m], Z=self.Z, Y=self.Y.nodes[m])
-        # Update expectations of SW (we need to do it here because it requires 'alpha')
+        # Update expectations of SW (we need to do it here because it requires the markov blanket to be defined )
         self.SW.updateExpectations()
 
 # Class to iniailise the (non-sparse) GFA model
@@ -120,7 +144,7 @@ class init_GFA(initModel):
 
     def initZ(self, type="random"):
         # Method to initialise the latent variables
-        #  - type (str): random, orthogonal, pca
+        #  type (str): random, orthogonal, pca
 
         if type == "random":
             Z_qmean = stats.norm.rvs(loc=0, scale=1, size=(self.N,self.K))
@@ -139,7 +163,7 @@ class init_GFA(initModel):
 
     def initW(self, type="random"):
         # Method to initialise the weights of the ARD prior
-        #  - type (str): random, pca
+        #  type (str): random, pca
         W_list = [None]*self.M
         for m in xrange(self.M):
             if type == "random":
@@ -153,6 +177,11 @@ class init_GFA(initModel):
 
     def initAlpha(self, pa=1e-14, pb=1e-14, qb=1., qE=1.):
         # Method to initialise the precision of the group-wise ARD prior
+        # Inputs:
+        #  pa (float): 'a' parameter of the prior distribution
+        #  pb (float): 'b' parameter of the prior distribution
+        #  qb (float): initialisation of the 'b' parameter of the variational distribution
+        #  qE (float): initial expectation of the variational distribution
         alpha_list = [None]*self.M
         qb = s.ones(self.K)*qb
         qE = s.ones(self.K)*qE
@@ -163,6 +192,11 @@ class init_GFA(initModel):
 
     def initTau(self, pa=1e-14, pb=1e-14, qb=0., qE=100.):
         # Method to initialise the precision of the noise
+        # Inputs:
+        #  pa (float): 'a' parameter of the prior distribution
+        #  pb (float): 'b' parameter of the prior distribution
+        #  qb (float): initialisation of the 'b' parameter of the variational distribution
+        #  qE (float): initial expectation of the variational distribution
         tau_list = [None]*self.M
         for m in xrange(self.M):
             if self.lik[m] == "poisson":
@@ -196,6 +230,7 @@ class init_GFA(initModel):
         self.Y = Multiview_Mixed_Node(self.M, *Y_list)
 
     def MarkovBlanket(self):
+        # Method to define the Markov Blankets
         self.Z.addMarkovBlanket(W=self.W, tau=self.Tau, Y=self.Y)
         for m in xrange(self.M):
             self.Alpha.nodes[m].addMarkovBlanket(W=self.W.nodes[m])

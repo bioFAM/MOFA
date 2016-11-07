@@ -7,7 +7,7 @@ library(stringr)
 
 # Function to load model expectations
 load_npy <- function(infolder) {
-  files = str_replace( list.files(path=infolder), ".npy", "" )
+  files = str_replace( list.files(path=infolder,pattern="*.npy"), ".npy", "" )
   data = list()
   vars = unique( sapply(files, function(f) strsplit(f, "\\_")[[1]][1]) )
   for (v in vars) {
@@ -30,6 +30,10 @@ load_npy <- function(infolder) {
   return(data)
 }
 
-indir="/tmp/test"
-# data = load_npy(indir)
-npyLoad(sprintf("%s/activeK.npy",indir))
+infolder="/Users/ricard/git/scGFA/scMT/tmp/model"
+# indir="/tmp/test"
+data = load_npy(infolder)
+
+# npyLoad(sprintf("%s/activeK.npy",indir))
+
+meta = read.table("/Users/ricard/git/scGFA/scMT/e_metadata.txt")

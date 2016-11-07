@@ -23,6 +23,8 @@ to-do: check order updates
 initialise pca
 save output properly
 center the data
+somehow store metadata in the model
+train with pandas dataframe
 """
 
 def get_args():
@@ -60,7 +62,7 @@ def main(options):
     # - options: dictionary with the options (given in the arguments)
 
     # Create the output folders
-
+    # print "Creating output folders...\n"
     if not os.path.exists(model_options['outdir']):
         os.makedirs(model_options['outdir'])
     if not os.path.exists(os.path.join(model_options['outdir'],"data")):
@@ -72,14 +74,21 @@ def main(options):
     ## Load the data ##
     ###################
 
-    print "Loading the data..."
+    # print "Loading the data...\n"
 
     # Load expression data
     e = list()
+    e_meta = list()
     for file in options["expr_inputfiles"]:
         tmp = pd.read_csv(file, sep=' ', header=0, index_col=0)
         e.append(tmp.as_matrix())
+        asd = {'genes':tmp.index , 'samples':tmp.columns}
+        print asd
+        exit()
+        e_meta.append()
 
+    # Collect metadata
+    print e[0]
     # Collect everything into a single list
     # Y = e+m
     data = e
@@ -101,9 +110,9 @@ def main(options):
     dim = {'M':M, 'N':N, 'D':D, 'K':K }
 
     # Define and initialise the nodes
-    if options["sparsity"]:
+    if options["sparse"]:
         init = init_scGFA(dim,data,options["likelihood"])
-        init.initSW(theta=0.5) 
+        init.initSW(S_ptheta=0.5) 
     else:
         init = init_GFA(dim,data,options["likelihood"])
         init.initW() 
@@ -120,7 +129,7 @@ def main(options):
     # Initialise Bayesian Network
     net = BayesNet(dim=dim)
 
-    if options["sparsity"]:
+    if options["sparse"]:
         net.addNodes(SW=init.SW, tau=init.Tau, Z=init.Z, Y=init.Y, alpha=init.Alpha)
         schedule = ["SW","Z","alpha","tau"]
     else:
@@ -137,7 +146,6 @@ def main(options):
     opt['tolerance'] = 1E-2
     opt['forceiter'] = options["forceiter"]
     opt['elbofreq'] = options["elbofreq"]
-    # opt['dropK'] = options["dropK"]
     opt['dropK'] = options["dropK"]
     opt['dropK_threshold'] = options["dropK_threshold"]
     opt['savefreq'] = options["savefreq"]
@@ -150,9 +158,15 @@ def main(options):
     ## Start training ##
     ####################
 
-    params, expectations = net.iterate()
+    net.iterate()
 
-    exit()
+    ##################
+    ## Save results ##
+    ##################
+
+    saveModel(net, outdir=os.path.join(model_options['outdir'],"model"), compress=True)
+
+    pass
 
 if __name__ == '__main__':
 

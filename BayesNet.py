@@ -23,7 +23,7 @@ A Bayesian network requires the following information:
 
 To-do:
 - More sanity checks (algorithmic options)
-- 
+- Add covariates
 """
 
 class BayesNet(object):
@@ -101,22 +101,28 @@ class BayesNet(object):
 
     def removeInactiveFactors(self, threshold):
         # Remove inactive factors based on the absolute value of latent variable vectors
+        #   Good: independent of likelihood type, works with pseudodata
+        #   Bad: it is an approximation and covariates are never removed
         Z = self.nodes["Z"].getExpectation()
         drop = s.where( s.absolute(Z).mean(axis=0) < threshold )[0]
 
         # Calculate proportion of residual variance explained by each factor
+        #   Good: it is the proper way of doing it, 
+        #   Bad: slow
+        # (Q) DOES THIS WORK WITH PSEUDODATA???
+        # Z = self.nodes["Z"].getExpectation()
+        # Y = self.nodes["Y"].getExpectation()
+        # tau = self.nodes["tau"].getExpectation()
+        # alpha = self.nodes["alpha"].getExpectation()
+
         # factor_pvar = s.zeros((self.dim['M'],self.dim['K']))
         # for m in xrange(self.dim['M']):
-        #     Y = self.nodes["Y"].getObservations()
-        #     print Y
-        #     # tau = self.nodes["tau"].Q[m].E
-        #     # alpha = self.nodes["alpha"].Q[m].E
-        #     Y
-        #     var = s.var(Y,axis=0)
-        #     residual_var = (var - 1/tau).sum()
+        #     residual_var = (s.var(Y[m],axis=0) - 1/tau[m]).sum()
         #     for k in xrange(self.dim["K"]):
-        #         factor_var = (self.dim["D"][m]/self.nodes["alpha"].Q[m].E[k]) * s.var(self.nodes["Z"].Q.E[:,k])
+        #         # I think this is wrong, we need to use the variance estimtes of Z
+        #         # factor_var = (self.dim["D"][m]/alpha[m][k]) * s.var(Z[:,k])
         #         factor_pvar[m,k] = factor_var / residual_var
+        # drop = s.where( (factor_pvar>threshold).sum(axis=0) == 0)[0]
 
         if len(drop) > 0:
             for node in self.nodes.keys():

@@ -1,5 +1,6 @@
 from __future__ import division
 import numpy.linalg  as linalg
+import numpy.ma as ma
 
 from variational_nodes import *
 from utils import *
@@ -8,8 +9,6 @@ from utils import *
 ###########################################
 ## Updates for the Group Factor Analysis ##
 ###########################################
-
-(Derivation of equations can be found in Ricard's MSc report)
 
 Current nodes: 
     Y_Node: observed data
@@ -38,19 +37,32 @@ Each node is a Variational_Node() class with the following main variables:
 class Y_Node(Observed_Variational_Node):
     def __init__(self, dim, obs):
         Observed_Variational_Node.__init__(self, dim, obs)
+        # Create a boolean mask of the data to hidden missing values
+        self.mask()
+        # Precompute some terms
         self.precompute()
+
 
     def precompute(self):
         # Precompute some terms to speed up the calculations
-        self.N = self.dim[0]
+        # self.N = self.dim[0]
+        self.N = self.dim[0] - ma.getmask(self.obs).sum(axis=0)
         self.D = self.dim[1]
-        self.likconst = -0.5*self.N*self.D*s.log(2*s.pi)
+        # self.likconst = -0.5*self.N*self.D*s.log(2*s.pi)
+        self.likconst = -0.5*s.sum(self.N)*s.log(2*s.pi)
+        pass
+
+    def mask(self):
+        # Mask the observations if they have missing values
+        self.obs = ma.masked_invalid(self.obs)
+        pass
 
     def calculateELBO(self):
         tau_param = self.markov_blanket["tau"].getParameters()
         tau_exp = self.markov_blanket["tau"].getExpectations()
         # We make the assumption that the prior is so broad that is negligible
-        lik = self.likconst + self.N*s.sum(tau_exp["lnE"])/2 - s.dot(tau_exp["E"],tau_param["b"])
+        # lik = self.likconst + self.N*s.sum(tau_exp["lnE"])/2 - s.dot(tau_exp["E"],tau_param["b"])
+        lik = self.likconst + s.sum(self.N*(tau_exp["lnE"]))/2 - s.dot(tau_exp["E"],tau_param["b"])
         return lik
 class W_Node(MultivariateGaussian_Unobserved_Variational_Node):
     def __init__(self, dim, qmean, qcov, qE=None, qE2=None):
@@ -68,11 +80,20 @@ class W_Node(MultivariateGaussian_Unobserved_Variational_Node):
         tau = (self.markov_blanket["tau"].getExpectation())[:,None,None]
         Y = self.markov_blanket["Y"].getExpectation()
 
+        ## Vectorised ##
         self.Q.cov = linalg.inv(tau*s.repeat(ZZ[None,:,:],self.D,0) + s.diag(alpha))
         tmp1 = tau*self.Q.cov
         tmp2 = Y.T.dot(Z)
         self.Q.mean = (tmp1[:,:,:]*tmp2[:,None,:]).sum(axis=2)
 
+        ## Non-Vectorised ##
+        # N = Y[0].shape[0]
+        # for d in xrange(self.D):
+        #     self.Q.cov[d,:,:] = linalg.inv(tau[d]*ZZ + s.diag(alpha))
+        #     tmp = 0
+        #     for n in xrange(N):
+        #         tmp += Y[n,d]*Z[n,:]
+        #     self.Q.mean[d,:] = tau[d]*self.Q.cov[d,:,:].dot(tmp)
         pass
 
     def calculateELBO(self):
@@ -112,9 +133,25 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         WW = self.markov_blanket["W"].getExpectations()["E2"]
         Y = self.markov_blanket["Y"].getExpectation()
 
-        # self.Q.a[:] = self.P.a + Z.shape[0]/2
+        ## Vectorised ##
+        # (to-do) optimise the update of a, precompute or sth
+        # Y.N maybe
+        self.Q.a[:] = self.P.a + (~ma.getmask(Y)).sum(axis=0)/2
         tmp = (Y**2).sum(axis=0) - 2*(Y*s.dot(Z,W.T)).sum(axis=0) + (WW*ZZ[None,:,:]).sum(axis=(1,2))
         self.Q.b = self.P.b + tmp/2
+
+        ## Non-vectorised ##
+        # ZZ = self.markov_blanket["Z"].getExpectations()["E2"]
+        # N = Y[0].shape[0]
+        # mask = ma.getmask(Y)
+        # for d in xrange(self.D):
+        #     tmp = 0
+        #     for n in xrange(N):
+        #         if not mask[n,d]: 
+        #             tmp += Y[n,d]**2 - 2*Y[n,d]*W[d,:].dot(Z[n,:]) 
+        #         tmp += s.trace(s.dot(WW[d,:,:],ZZ[n,:,:]))
+        #     self.Q.a[d] = self.P.a + s.sum(~mask[:,d])/2
+        #     self.Q.b[d] = self.P.b + tmp/2
 
         pass
 
@@ -169,6 +206,13 @@ class Z_Node(MultivariateGaussian_Unobserved_Variational_Node):
     def precompute(self):
         self.N = self.dim[0]
         self.K = self.dim[1]
+        self.covariates = np.zeros(self.K, dtype=bool)
+
+    def setCovariates(self, idx):
+        # Method to define which factors are unupdated covariates
+        # Input:
+        #  idx (integer list): index of the columns of Z that are covariates
+        self.covariates[idx] = True
 
     def updateParameters(self):
         # Method to update the parameters of the Q distribution of the node Z
@@ -179,25 +223,50 @@ class Z_Node(MultivariateGaussian_Unobserved_Variational_Node):
         W = [ tmp[m]["E"]for m in xrange(M) ]
         WW = [ tmp[m]["E2"]for m in xrange(M) ]
 
-        # covariance
+        ## unvectorised covariance ##
+        # D = [ y.shape[0] for y in Y]
+        # N = Y[0].shape[0]
+        # tmp = s.zeros((self.K,self.K))
+        # for m in xrange(M):
+        #     for d in xrange(D[m]):
+        #         tmp += tau[m][d]*WW[m][d,:,:]
+        # cov = linalg.inv(s.eye(self.K) + tmp)
+        # self.Q.cov = s.repeat(cov[None,:,:],N,axis=0)
+
+        ## vectorised covariance ##
         cov = s.eye(self.K)
         for m in xrange(M):
             cov += (tau[m][:,None,None] * WW[m]).sum(axis=0)
         cov = linalg.inv(cov)
         self.Q.cov = s.repeat(cov[None,:,:],self.N,axis=0)
+        
+        ## unvectorised mean ##
+        # N = Y[0].shape[0]
+        # self.Q.mean = s.zeros((N,self.K))
+        # for n in xrange(N):
+        #     tmp = 0
+        #     for m in xrange(M):
+        #         # tmp += s.dot(W[m].T,(tau[m]*Y[m][n,:]) )
+        #         tmp += W[m].T.dot(s.diag(tau[m])).dot(Y[m][n,:])
+        #     self.Q.mean[n,:] = cov.dot(tmp)
 
-        # mean
-        mean = s.zeros(self.dim[::-1])
+        ## vectorised mean ##
+        if any(self.covariates): tmp = self.Q.mean[:,self.covariates]
+        tmp = s.zeros(self.dim[::-1])
         for m in xrange(M):
-            mean += s.dot( W[m].T, (tau[m]*Y[m]).T )
-        self.Q.mean = cov.dot(mean).T
+            # tmp += s.dot( W[m].T, (tau[m]*Y[m]).T )
+            tmp += W[m].T.dot(s.diag(tau[m])).dot(Y[m].T)
+        self.Q.mean = cov.dot(tmp).T
+
+        # Do not update the latent variables associated with known covariates
+        if any(self.covariates): self.Q.mean[:,self.covariates] = tmp
 
         pass
 
     def calculateELBO(self):
-        lb_p = -s.trace(self.Q.E2.sum(axis=0))/2
-        lb_q = -self.N*logdet(self.Q.cov[0,:,:]) - self.N*self.K/2
-        return lb_p - lb_q
+        lb_p = -s.trace(self.Q.E2.sum(axis=0))
+        lb_q = -self.N*logdet(self.Q.cov[0,:,:]) - self.N*self.K
+        return (lb_p - lb_q)/2
 
     def removeFactors(self, *idx):
         # Method to remove a set of (inactive) latent variables from the node
@@ -208,6 +277,7 @@ class Z_Node(MultivariateGaussian_Unobserved_Variational_Node):
         self.Q.E2 = self.Q.E2[:,:,keep][:,keep,:]
         self.K = len(keep)
         self.dim = (self.N,self.K)
+        self.covariates = self.covariates[keep]
 
 
 

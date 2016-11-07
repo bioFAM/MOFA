@@ -2,6 +2,7 @@ from __future__ import division
 import scipy as s
 from scipy.stats import bernoulli, norm, gamma, uniform, poisson, binom
 from random import sample
+import numpy.ma as ma
 
 from utils import sigmoid
 
@@ -85,7 +86,7 @@ class Simulate(object):
         # Means are initialised to zero by default
         return [ s.zeros(self.D[m]) for m in xrange(self.M) ]
 
-    def generateData(self, W, Z, Tau, Mu, likelihood, min_trials=None, max_trials=None):
+    def generateData(self, W, Z, Tau, Mu, likelihood, min_trials=None, max_trials=None, missingness=0.0):
         # W (list of length M where each element is a np array with shape (Dm,K)): weights
         # Z (np array with shape (N,K): latent variables
         # Tau (list of length M where each element is a np array with shape (Dm,)): precision of the normally-distributed noise
@@ -93,6 +94,7 @@ class Simulate(object):
         # likelihood (str): type of likelihood
         # min_trials (int): only for binomial likelihood, minimum number of total trials
         # max_trials (int): only for binomial likelihood, maximum number of total trials
+        # missingness (float): percentage of missing values
 
         Y = [ s.zeros((self.N,self.D[m])) for m in xrange(self.M) ]
 
@@ -147,6 +149,7 @@ class Simulate(object):
                         # Use the more likely state
                         Y[m][n,d] = s.special.round(f)
 
+        # Sample observations using a binomial likelihood
         elif likelihood == "binomial":
             Y = dict(tot=[s.zeros((self.N,self.D[m])) for m in xrange(self.M)], 
                      obs=[s.zeros((self.N,self.D[m])) for m in xrange(self.M)] )
@@ -159,6 +162,14 @@ class Simulate(object):
                         # Sample the total number of successes
                         f = sigmoid( s.dot(Z[n,:],W[m][d,:].T) )
                         Y["obs"][m][n,d] = binom.rvs(Y["tot"][m][n,d], f) 
+
+        # Introduce missing values into the data
+        if missingness > 0.0:
+            for m in xrange(self.M):
+                nas = s.random.randint(0, self.N*self.D[m], missingness*self.N*self.D[m])
+                tmp = Y[m].flatten()
+                tmp[nas] = s.nan
+                Y[m] = tmp.reshape((self.N,self.D[m]))
 
         return Y
 

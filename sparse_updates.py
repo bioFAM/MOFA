@@ -152,8 +152,9 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         Z,ZZ = tmp["E"],tmp["E2"]
 
         ## Vectorised ##
-        term1 = (Y**2).sum(axis=0)
-        term2 = 2*(Y*s.dot(Z,SW.T)).sum(axis=0)
+        term1 = (Y**2).sum(axis=0).data
+        # term2 = 2*(Y*s.dot(Z,SW.T)).sum(axis=0)
+        term2 = 2*(Y*s.dot(Z,SW.T)).sum(axis=0).data
         term3 = (ZZ.dot(SWW.T)).sum(axis=0)
         term4 = s.diag(s.dot( SW.dot(Z.T), Z.dot(SW.T) )) - s.dot(Z**2,(SW**2).T).sum(axis=0)
         tmp = term1 - term2 + term3 + term4 
@@ -227,8 +228,8 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             term1 = s.log(self.P_theta/(1-self.P_theta))
             term2 = 0.5*s.log(s.divide(alpha[k],tau))
             term3 = 0.5*s.log(s.sum(ZZ[:,k]) + s.divide(alpha[k],tau))
-            # term41 = s.dot(Y.T,Z[:,k]) 
-            term41 = ma.dot(Y.T,Z[:,k]) 
+            # term41 = ma.dot(Y.T,Z[:,k])
+            term41 = ma.dot(Y.T,Z[:,k]).data
             term42 = s.dot( SW[:,s.arange(self.K)!=k] , (Z[:,k]*Z[:,s.arange(self.K)!=k].T).sum(axis=1) )                
             term43 = s.sum(ZZ[:,k]) + s.divide(alpha[k],tau)
             term4 = 0.5*tau * s.divide((term41-term42)**2,term43)

@@ -18,13 +18,10 @@ from init_nodes import *
 from BayesNet import BayesNet
 
 """
-alpha with datavar
-to-do: check order updates
-initialise pca
-save output properly
-center the data
-somehow store metadata in the model
-train with pandas dataframe
+To-do:
+- initialise alpha with datavar
+- treat 0s as missing values?
+- 
 """
 
 def get_args():
@@ -36,6 +33,7 @@ def get_args():
     parser.add_argument("-e","--expr_inputfiles", type=str, nargs="+", help="Input expression files")
     parser.add_argument("-o","--outdir", type=str, help="Output folder to save trained model")
     parser.add_argument("-sparse","--sparse", type=bool, help="Use element-wise sparsity (spike and slab)?", default=False)
+    parser.add_argument("-center","--center", type=bool, help="Center the data (column-wise)", default=True)
 
     # Model options
     parser.add_argument("-s","--view_names", type=str, nargs="+", help="Names of the views")
@@ -83,15 +81,14 @@ def main(options):
 
     # Load expression data
     e = list()
-    # e_meta = list()
     for file in options["expr_inputfiles"]:
         tmp = pd.read_csv(file, sep=' ', header=0, index_col=0)
+
+        # Center the data
+        if options['center']: tmp = (tmp - tmp.mean())
+
         # e.append(tmp.as_matrix())
         e.append(tmp)
-        # asd = {'genes':tmp.index , 'samples':tmp.columns}
-        # print asd
-        # exit()
-        # e_meta.append()
 
     # Collect everything into a single list
     # Y = e+m
@@ -168,9 +165,19 @@ def main(options):
     ## Save results ##
     ##################
 
+    # Save the data
+    print "\nSaving data..."
+    for m in xrange(M):
+        filename = "%s/%s.txt" % (os.path.join(model_options['outdir'],"data"), options['view_names'][m])
+        print "\tsaving %s" % filename
+        data[m].to_csv(filename, sep='\t', na_rep='NA', header=True, index=True)
+
+    # Save the model
+    print "\nSaving model..."
     saveModel(net, outdir=os.path.join(model_options['outdir'],"model"), compress=True)
 
     pass
+
 
 if __name__ == '__main__':
 

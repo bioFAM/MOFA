@@ -37,3 +37,4 @@ data = load_npy(infolder)
 # npyLoad(sprintf("%s/activeK.npy",indir))
 
 meta = read.table("/Users/ricard/git/scGFA/scMT/e_metadata.txt")
+asd = read.table("/Users/ricard/git/scGFA/scMT/tmp/data/expr.txt")

@@ -82,7 +82,8 @@ class W_Node(MultivariateGaussian_Unobserved_Variational_Node):
 
         self.Q.cov = linalg.inv(tau*s.repeat(ZZ[None,:,:],self.D,0) + s.diag(alpha))
         tmp1 = tau*self.Q.cov
-        tmp2 = Y.T.dot(Z)
+        # tmp2 = Y.T.dot(Z)
+        tmp2 = ma.dot(Y.T,Z).data
         self.Q.mean = (tmp1[:,:,:]*tmp2[:,None,:]).sum(axis=2)
 
         pass
@@ -125,7 +126,8 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         Y = self.markov_blanket["Y"].getExpectation()
 
         self.Q.a = self.P.a + (Y.shape[0] - ma.getmask(Y).sum(axis=0))/2
-        tmp = (Y**2).sum(axis=0) - 2*(Y*s.dot(Z,W.T)).sum(axis=0) + (WW*ZZ[None,:,:]).sum(axis=(1,2))
+        # tmp = (Y**2).sum(axis=0) - 2*(Y*s.dot(Z,W.T)).sum(axis=0) + (WW*ZZ[None,:,:]).sum(axis=(1,2))
+        tmp = (Y**2).sum(axis=0).data - 2*(Y*s.dot(Z,W.T)).sum(axis=0).data + (WW*ZZ[None,:,:]).sum(axis=(1,2))
         self.Q.b = self.P.b + tmp/2
 
         pass
@@ -214,7 +216,7 @@ class Z_Node(MultivariateGaussian_Unobserved_Variational_Node):
             # tmp += s.dot( W[m].T, (tau[m]*Y[m]).T )
             tmp += W[m].T.dot(s.diag(tau[m])).dot(Y[m].T)
         self.Q.mean = cov.dot(tmp).T
-
+        
         # Do not update the latent variables associated with known covariates
         if any(self.covariates): 
             self.Q.mean[:,self.covariates] = oldmean

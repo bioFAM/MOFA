@@ -55,6 +55,10 @@ def saveModel(model, outdir, compress=False):
 
 	# Iterate over nodes
 	for node in nodes:
+		# The data will be saved separately, not here...
+		if node == "Y": continue
+
+		# Collect node expectations
 		expectations = nodes[node].getExpectations()
 
 		# Multi-view nodes
@@ -64,18 +68,18 @@ def saveModel(model, outdir, compress=False):
 				# Iterate over expectations
 				for key,value in expectations[m].iteritems():
 					filename = os.path.join(outdir,"%s_%s_%d.npy" % (node,key,m+1))
-					print "Saving %s..." % filename
+					print "\tsaving %s..." % filename
 					np.save(filename,value)
 
 		# Single-view nodes
 		else:
 			for key,value in expectations.iteritems():
 				filename = os.path.join(outdir,"%s_%s.npy" % (node,key))
-				print "Saving %s..." % filename
+				print "\tsaving %s..." % filename
 				np.save(filename,value)
 
 	if compress:
-		os.system("gzip %s/*.npy" % outdir)
+		os.system("gzip -f %s/*.npy" % outdir)
 
 	##############################
 	## Save training statistics ##

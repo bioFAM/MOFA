@@ -18,7 +18,7 @@ from multiview_nodes import *
 from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node, Zeta_Node
 from local_nodes import Local_Node, Observed_Local_Node
 from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node
-from utils import saveModel
+from utils import *
 
 ###################
 ## Generate data ##
@@ -232,7 +232,7 @@ net.setSchedule(schedule)
 #############################
 
 options = {}
-options['maxiter'] = 1000
+options['maxiter'] = 100
 options['tolerance'] = 1E-2
 options['forceiter'] = True
 # options['elbofreq'] = options['maxiter']+1
@@ -255,4 +255,29 @@ net.iterate()
 ## Save results ##
 ##################
 
-# saveModel(net, outdir="/tmp/test", compress=False)
+
+outdir="/tmp/test"
+
+if not os.path.exists(outdir):
+    os.makedirs(outdir)
+if not os.path.exists(os.path.join(outdir,"data")):
+    os.makedirs(os.path.join(outdir,"data"))
+if not os.path.exists(os.path.join(outdir,"model")):
+    os.makedirs(os.path.join(outdir,"model"))
+if not os.path.exists(os.path.join(outdir,"stats")):
+    os.makedirs(os.path.join(outdir,"stats"))
+if not os.path.exists(os.path.join(outdir,"opts")):
+    os.makedirs(os.path.join(outdir,"opts"))
+            
+# Save the model parameters and expectations
+print "\nSaving model..."
+saveModel(net, outdir=os.path.join(outdir,"model"), only_first_moments=True)
+
+# Save training statistics
+print "\nSaving training stats..."
+opts = saveTrainingStats(model=net, outdir=os.path.join(outdir,"stats"))
+
+# Save training options
+print "\nSaving training opts..."
+opts = saveTrainingOpts(model=net, outdir=os.path.join(outdir,"opts"))
+

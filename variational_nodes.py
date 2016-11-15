@@ -38,8 +38,6 @@ class Variational_Node(Node):
     """
     def __init__(self, dim):
         Node.__init__(self,dim)
-        self.P = None
-        self.Q = None
     def calculateELBO(self):
         # General function to calculate the ELBO of the node
         return 0.
@@ -48,7 +46,7 @@ class Variational_Node(Node):
         pass
     def getExpectation(self):
         # General function to get the expectated value of the Q distribution
-        return self.Q.E
+        pass
     def getExpectations(self):
         # General function to get all relevant moments
         pass
@@ -80,8 +78,8 @@ class Observed_Variational_Node(Variational_Node):
         return self.obs
     def getExpectation(self):
         return self.getObservations()
-    def getExpectations(self):
-        return { "obs":self.getObservations() }
+    # def getExpectations(self):
+        # return { "obs":self.getObservations() }
 
 class Unobserved_Variational_Node(Variational_Node):
     """ 
@@ -96,6 +94,9 @@ class Unobserved_Variational_Node(Variational_Node):
         self.Q = None
     def updateExpectations(self):
         self.Q.updateExpectations()
+
+    def getExpectation(self):
+        return self.Q.E
 
 #######################################################
 ## Specific classes for unobserved variational nodes ##
@@ -126,7 +127,8 @@ class UnivariateGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node
     def getParameters(self):
         return { 'mean': self.Q.mean, 'var': self.Q.var }
     def getExpectations(self):
-        return dict({'E':self.Q.E, 'E2':self.Q.E2, 'lnE':None})
+        # return dict({'E':self.Q.E, 'E2':self.Q.E2, 'lnE':None})
+        return dict({'E':self.Q.E, 'E2':self.Q.E2 })
 class MultivariateGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """ 
     Abstract class for a variational node where P(x) and Q(x)
@@ -149,7 +151,8 @@ class MultivariateGaussian_Unobserved_Variational_Node(Unobserved_Variational_No
 	def getParameters(self):
 		return { 'mean':self.Q.mean, 'cov':self.Q.cov }
     def getExpectations(self):
-        return { 'E':self.Q.E, 'E2':self.Q.E2, 'lnE':None }
+        # return { 'E':self.Q.E, 'E2':self.Q.E2, 'lnE':None }
+        return { 'E':self.Q.E, 'E2':self.Q.E2 }
 class Gamma_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """ 
     Abstract class for a variational node where P(x) and Q(x) are both gamma distributions
@@ -170,8 +173,8 @@ class Gamma_Unobserved_Variational_Node(Unobserved_Variational_Node):
     def getParameters(self):
         return { 'a':self.Q.a, 'b':self.Q.b }
     def getExpectations(self):
-        return { 'E':self.Q.E, 'lnE':self.Q.lnE, 'E2':None }
-
+        # return { 'E':self.Q.E, 'lnE':self.Q.lnE, 'E2':None }
+        return { 'E':self.Q.E, 'lnE':self.Q.lnE }
 class Bernoulli_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """ 
     Abstract class for a variational node where P(x) and Q(x)
@@ -196,7 +199,8 @@ class Bernoulli_Unobserved_Variational_Node(Unobserved_Variational_Node):
     def getExpectation(self):
         return self.Q.E
     def getExpectations(self):
-        return { 'E':self.Q.E, 'E2':None, 'lnE':None }
+        # return { 'E':self.Q.E, 'E2':None, 'lnE':None }
+        return { 'E':self.Q.E }
 class BernoulliGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """ 
     Abstract class for a variational node where P(x) and Q(x)

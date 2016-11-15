@@ -9,7 +9,7 @@ Module to define some useful util functions
 def logdet(X):
 	return np.log(np.linalg.det(X))
 	# UC = np.linalg.cholesky(X)
-	# return 2*sum(np.log(s.diag(UC)))
+	# return 2*sum(np.log(np.diag(UC)))
 
 def sigmoid(X):
 	return 1/(1+np.exp(-X))
@@ -32,10 +32,23 @@ def ddot(d, mtx, left=True):
 	else:
 	    return d*mtx
 
-def saveModel(model, outdir, compress=False):
+def saveTrainingStats(model, outdir):
+    stats = model.getTrainingStats()
+    np.savetxt(X=stats["activeK"], fmt='%d', fname=os.path.join(outdir,"activeK.txt"), delimiter=' ')
+    np.savetxt(X=stats["elbo"], fmt='%0.02f', fname=os.path.join(outdir,"elbo.txt"), delimiter=' ')
+    stats["elbo_terms"].to_csv(os.path.join(outdir,"elbo_terms.txt"), sep="\t", header=True, index=False)
+
+def saveTrainingOpts(model, outdir):
+    opts = model.getTrainingOpts()
+    file = os.path.join(outdir,"opts.txt")
+    with open(file, "a") as f:
+        for k,v in opts.iteritems(): 
+            f.write(k + ":" + str(v) + "\n")
+    pass
+
+def saveModel(model, outdir, compress=False, only_first_moments=True):
 	# Function to save a trained model to be load in R:
 	# 	Expectations and parameters are stored as .npy objects to be loaded in R using the RcppCNPy package 
-	# 	Training statistics (lower bound, active factors) are stored as npy files
 	#	
 	# Inputs: 
 	# - model (BayesNet class): the trained model
@@ -59,7 +72,13 @@ def saveModel(model, outdir, compress=False):
 		if node == "Y": continue
 
 		# Collect node expectations
-		expectations = nodes[node].getExpectations()
+		if only_first_moments:
+			expectations = {'E': nodes[node].getExpectation() }
+			if node == "Zeta":
+				print expectations
+				exit()
+		else:
+			expectations = nodes[node].getExpectations()
 
 		# Multi-view nodes
 		if type(expectations) == list:
@@ -80,17 +99,6 @@ def saveModel(model, outdir, compress=False):
 
 	if compress:
 		os.system("gzip -f %s/*.npy" % outdir)
-
-	##############################
-	## Save training statistics ##
-	##############################
-
-	stats = model.getTrainingStats()
-
-	np.save(file=os.path.join(outdir,"activeK.npy"), arr=stats["activeK"])
-	np.save(file=os.path.join(outdir,"elbo.npy"), arr=stats["elbo"])
-	stats["elbo_terms"].to_csv(os.path.join(outdir,"elbo_terms.txt"), sep="\t", header=True, index=False)
-
 
 
 # if __name__ == "__main__":

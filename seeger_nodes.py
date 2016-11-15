@@ -3,7 +3,7 @@ import scipy as s
 import numpy.ma as ma
 
 from variational_nodes import Unobserved_Variational_Node
-from local_nodes import Local_Node
+from local_nodes import Unobserved_Local_Node
 from utils import sigmoid
 
 """
@@ -12,7 +12,7 @@ Reference: 'Fast Variational Bayesian Inference for Non-Conjugate Matrix Factori
 """
 
 
-class Zeta_Node(Local_Node):
+class Zeta_Node(Unobserved_Local_Node):
     """ 
     Abstract class for the local variational variable zeta that represents the location of the
     Taylor expansion for the upper bound on the log likelihood.
@@ -24,15 +24,12 @@ class Zeta_Node(Local_Node):
         # Inputs:
         #  dim (ndarray): dimensionality of the node
         #  initial_value (ndarray): initial value of Zeta
-        Local_Node.__init__(self, dim, initial_value)
+        Unobserved_Local_Node.__init__(self, dim, initial_value)
 
     def update(self):
         Z = self.markov_blanket["Z"].getExpectation()
         W = self.markov_blanket["W"].getExpectation()
         self.value = s.dot(Z,W.T)
-
-    def getValue(self):
-        return self.value
 
 ################
 ## Pseudodata ##

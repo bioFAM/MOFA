@@ -50,12 +50,10 @@ class Y_Node(Observed_Variational_Node):
         self.D = self.dim[1]
         # self.likconst = -0.5*self.N*self.D*s.log(2*s.pi)
         self.likconst = -0.5*s.sum(self.N)*s.log(2*s.pi)
-        pass
 
     def mask(self):
         # Mask the observations if they have missing values
         self.obs = ma.masked_invalid(self.obs)
-        pass
 
     def calculateELBO(self):
         tau_param = self.markov_blanket["tau"].getParameters()
@@ -86,7 +84,6 @@ class W_Node(MultivariateGaussian_Unobserved_Variational_Node):
         tmp2 = ma.dot(Y.T,Z).data
         self.Q.mean = (tmp1[:,:,:]*tmp2[:,None,:]).sum(axis=2)
 
-        pass
 
     def calculateELBO(self):
         alpha = self.markov_blanket["alpha"].getExpectations()["E"]
@@ -213,10 +210,11 @@ class Z_Node(MultivariateGaussian_Unobserved_Variational_Node):
             
         tmp = s.zeros(self.dim[::-1])
         for m in xrange(M):
-            # tmp += s.dot( W[m].T, (tau[m]*Y[m]).T )
-            tmp += W[m].T.dot(s.diag(tau[m])).dot(Y[m].T)
+            # tmp += W[m].T.dot(s.diag(tau[m])).dot(Y[m].T)
+            # tmp += ma.dot(W[m].T.dot(s.diag(tau[m])), Y[m].T)
+            tmp += ma.dot(tau[m]*W[m].T,Y[m].T)
         self.Q.mean = cov.dot(tmp).T
-        
+
         # Do not update the latent variables associated with known covariates
         if any(self.covariates): 
             self.Q.mean[:,self.covariates] = oldmean

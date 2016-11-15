@@ -95,18 +95,18 @@ net.dim["K"] = K
 ###############
 
 # Z without covariates (variational node)
-# Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K))
-# Z_qcov = s.repeat(s.eye(K)[None,:,:],N,0)
-# Z = Z_Node(dim=(N,K), qmean=Z_qmean, qcov=Z_qcov)
-# Z.updateExpectations()
-
-# Z with covariates (variational node)
-Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K-1))
-Z_qmean = s.c_[ Z_qmean, s.asarray([True,False]*(N/2), dtype=s.float32) ]
+Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K))
 Z_qcov = s.repeat(s.eye(K)[None,:,:],N,0)
 Z = Z_Node(dim=(N,K), qmean=Z_qmean, qcov=Z_qcov)
 Z.updateExpectations()
-Z.setCovariates(idx=K-1)
+
+# Z with covariates (variational node)
+# Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K-1))
+# Z_qmean = s.c_[ Z_qmean, s.asarray([True,False]*(N/2), dtype=s.float32) ]
+# Z_qcov = s.repeat(s.eye(K)[None,:,:],N,0)
+# Z = Z_Node(dim=(N,K), qmean=Z_qmean, qcov=Z_qcov)
+# Z.updateExpectations()
+# Z.setCovariates(idx=K-1)
 
 
 # alpha (variational node)

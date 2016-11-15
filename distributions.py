@@ -14,7 +14,7 @@ Each Distribution class can store an arbitrary number of distributions of the sa
 
 A Distribution class has two main types of attributes: parameters and expectations. Both have to be defined when initialising a class.
 Note that in some distributions (Gaussian mainly) a parameter is equal to an expectation. However, they are stored as separate
-attributes and are not always necessarily equal (VBEM algorithm).
+attributes and are not always necessarily equal (i.e. VBEM algorithm).
 
 There are cases (mainly with the BernoulliGaussian distribution) where some expectations are quite complex and 
 require expectations from other distributions. In that case, I prefer to define the expectations together with the updates

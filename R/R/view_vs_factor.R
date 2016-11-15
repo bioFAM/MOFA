@@ -3,6 +3,7 @@
 library(pheatmap)
 library(RColorBrewer)
 
+mat = gfa@Expectations$alpha
 view_vs_factor <- function(mat, color=colorRampPalette(c("grey100", "grey0"))(100), title="", cluster_cols=T, cluster_rows=F, show_rownames=T, show_colnames=T,
                            legend=T, treeheight_row=20, treeheight_col=20, fontsize_row=20, fontsize_col=20,
                            cellheight=NA, cellwidth=NA, outfile=NA) {

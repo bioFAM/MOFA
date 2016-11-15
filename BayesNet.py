@@ -23,7 +23,6 @@ A Bayesian network requires the following information:
 
 To-do:
 - More sanity checks (algorithmic options)
-- Add covariates
 """
 
 class BayesNet(object):
@@ -39,7 +38,7 @@ class BayesNet(object):
         self.nodes = nodes
         self.schedule = schedule
 
-        # If schedule not provided, set it to the provided order of the nodes (use OrderedDict to define the nodes)
+        # If schedule not provided, set it to the provided order of the nodes (use OrderedDict to define an ordered dictionary of the nodes)
         if len(self.nodes) > 0 and len(self.schedule) == 0:
             self.schedule = self.nodes.keys()
 
@@ -59,15 +58,17 @@ class BayesNet(object):
         default_options['savefreq'] = 1
         default_options['savefolder'] = "/tmp"
         default_options['verbosity'] = 2
+        default_options['dropK'] = True
+        default_options['dropK_threshold'] = 0.01
         return default_options
 
-    def loadOptions(self, **kwargs):
-        # Method to load a predefined set of options
-        # Inputs:
-        # - 'key': string with the name of the option/parameter
-        # - 'value': value of the corresponding option/parameter
-        for k in kwargs.keys(): assert k in self.default_options.keys(), "%s option does not exist" % k
-        self.options.update(kwargs)
+    # def loadOptions(self, **kwargs):
+    #     # Method to load a predefined set of options
+    #     # Inputs:
+    #     # - 'key': string with the name of the option/parameter
+    #     # - 'value': value of the corresponding option/parameter
+    #     for k in kwargs.keys(): assert k in self.default_options.keys(), "%s option does not exist" % k
+    #     self.options.update(kwargs)
         
     def addNodes(self, **kwargs):
         # Method to add Nodes to the Bayesian network
@@ -85,12 +86,12 @@ class BayesNet(object):
 
         pass
 
-    def updateNodes(self, *kargs):
-        # Method to update a particular set of nodes in the given order
-        # Input:
-        # - *kargs: the key(s) associated with the node(s) to be updated
-        for name in kargs: 
-            self.nodes[name].update(self)
+    # def updateNodes(self, *kargs):
+    #     # Method to update a particular set of nodes in the given order
+    #     # Input:
+    #     # - *kargs: the key(s) associated with the node(s) to be updated
+    #     for name in kargs: 
+    #         self.nodes[name].update(self)
 
     def setSchedule(self, schedule):
         # Method to define the schedule of updates
@@ -150,7 +151,7 @@ class BayesNet(object):
         elbo = pd.DataFrame(data = s.zeros( ((int(self.options['maxiter']/self.options['elbofreq'])-1), len(vb_nodes)+1 )),
                             index = xrange(1,(int(self.options['maxiter']/self.options['elbofreq']))),
                             columns = vb_nodes+["total"] )
-        activeK = s.zeros(self.options['maxiter'])
+        activeK = s.zeros(self.options['maxiter']-1)
 
         # Start training
         for iter in xrange(1,self.options['maxiter']):
@@ -159,7 +160,7 @@ class BayesNet(object):
             # Remove inactive latent variables
             if self.options['dropK'] and iter > 5:
                 self.removeInactiveFactors(self.options['dropK_threshold'])
-            activeK[iter] = self.dim["K"]
+            activeK[iter-1] = self.dim["K"]
 
             # Update node by node, with E and M step merged
             for node in self.schedule:
@@ -200,6 +201,7 @@ class BayesNet(object):
         # Finish by collecting the training statistics
         self.train_stats = { 'activeK':activeK, 'elbo':elbo["total"].values, 'elbo_terms':elbo.drop("total",1) }
         self.trained = True
+
         pass
 
     def getParameters(self, *nodes):
@@ -223,7 +225,7 @@ class BayesNet(object):
             expectations[node] = tmp
         return expectations
 
-    def getAllNodes(self):
+    def getNodes(self):
         # Method to return all nodes
         return self.nodes
 
@@ -234,6 +236,10 @@ class BayesNet(object):
     def getTrainingStats(self):
         # Method to return training statistics
         return self.train_stats
+
+    def getTrainingOpts(self):
+        # Method to return training options
+        return self.options
 
     def calculateELBO(self, *nodes):
         # Method to calculate the Evidence Lower Bound for a set of nodes

@@ -7,7 +7,7 @@ All nodes (variational or not variational) have two main attributes:
 - markov_blanket: the markov blanket of the node
 
 To-do: 
--  removeFactors should not be here... make it more general like remove dimensions
+-  removeFactors should not be here... make it more general to remove any element from any dimensions
 """
 
 
@@ -25,11 +25,3 @@ class Node(object):
     def removeFactors(self,*idx):
         # General function to remove factors
         pass
-        
-# class Observed_Node(Node):
-#     """ 
-#     General class for an observed node in a Bayesian network
-#     """
-#     def __init__(self, dim, obs):
-#     	Node.__init__(self,dim)
-#     	self.obs = obs

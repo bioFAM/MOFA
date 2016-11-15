@@ -67,6 +67,10 @@ def main(options):
         os.makedirs(os.path.join(model_options['outdir'],"data"))
     if not os.path.exists(os.path.join(model_options['outdir'],"model")):
             os.makedirs(os.path.join(model_options['outdir'],"model"))
+    if not os.path.exists(os.path.join(model_options['outdir'],"stats")):
+            os.makedirs(os.path.join(model_options['outdir'],"stats"))
+    if not os.path.exists(os.path.join(model_options['outdir'],"opts")):
+            os.makedirs(os.path.join(model_options['outdir'],"opts"))
 
     ###################
     ## Load the data ##
@@ -172,11 +176,17 @@ def main(options):
         print "\tsaving %s" % filename
         data[m].to_csv(filename, sep='\t', na_rep='NA', header=True, index=True)
 
-    # Save the model
+    # Save the model parameters and expectations
     print "\nSaving model..."
-    saveModel(net, outdir=os.path.join(model_options['outdir'],"model"), compress=True)
+    saveModel(net, outdir=os.path.join(model_options['outdir'],"model"))
 
-    pass
+    # Save training statistics
+    print "\nSaving training stats..."
+    opts = saveTrainingStats(model=net, outdir=os.path.join(model_options['outdir'],"stats"))
+    
+    # Save training options
+    print "\nSaving training opts..."
+    opts = saveTrainingOpts(model=net, outdir=os.path.join(model_options['outdir'],"opts"))
 
 
 if __name__ == '__main__':

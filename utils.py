@@ -6,6 +6,18 @@ import os
 Module to define some useful util functions
 """
 
+def corr(A,B):
+    # Rowwise mean of input arrays & subtract from input arrays themeselves
+    A_mA = A - A.mean(1)[:,None]
+    B_mB = B - B.mean(1)[:,None]
+
+    # Sum of squares across rows
+    ssA = (A_mA**2).sum(1);
+    ssB = (B_mB**2).sum(1);
+
+    # Finally get corr coeff
+    return np.dot(A_mA,B_mB.T)/np.sqrt(np.dot(ssA[:,None],ssB[None]))
+
 def logdet(X):
 	return np.log(np.linalg.det(X))
 	# UC = np.linalg.cholesky(X)
@@ -32,6 +44,7 @@ def ddot(d, mtx, left=True):
 	else:
 	    return d*mtx
 
+
 def saveTrainingStats(model, outdir):
     stats = model.getTrainingStats()
     np.savetxt(X=stats["activeK"], fmt='%d', fname=os.path.join(outdir,"activeK.txt"), delimiter=' ')
@@ -46,7 +59,7 @@ def saveTrainingOpts(model, outdir):
             f.write(k + ":" + str(v) + "\n")
     pass
 
-def saveModel(model, outdir, compress=False, only_first_moments=True):
+def saveModel(model, outdir, compress=False):
 	# Function to save a trained model to be load in R:
 	# 	Expectations and parameters are stored as .npy objects to be loaded in R using the RcppCNPy package 
 	#	
@@ -57,10 +70,18 @@ def saveModel(model, outdir, compress=False, only_first_moments=True):
 
 	# Check that the model is trained
 	assert model.trained == True, "Model is not trained yet"
-	nodes = model.getAllNodes()
+	nodes = model.getNodes()
+	# vb_nodes = model.getVariationalNodes()
 
 	# Create output folder if it does not exist
 	if not os.path.exists(outdir): os.makedirs(outdir)
+
+	#####################
+	## Save parameters ##
+	#####################
+
+	# to do...
+
 
 	#######################
 	## Save expectations ##
@@ -72,13 +93,7 @@ def saveModel(model, outdir, compress=False, only_first_moments=True):
 		if node == "Y": continue
 
 		# Collect node expectations
-		if only_first_moments:
-			expectations = {'E': nodes[node].getExpectation() }
-			if node == "Zeta":
-				print expectations
-				exit()
-		else:
-			expectations = nodes[node].getExpectations()
+		expectations = nodes[node].getExpectations()
 
 		# Multi-view nodes
 		if type(expectations) == list:
@@ -87,15 +102,19 @@ def saveModel(model, outdir, compress=False, only_first_moments=True):
 				# Iterate over expectations
 				for key,value in expectations[m].iteritems():
 					filename = os.path.join(outdir,"%s_%s_%d.npy" % (node,key,m+1))
-					print "\tsaving %s..." % filename
+					# print "\tsaving %s..." % filename
 					np.save(filename,value)
 
 		# Single-view nodes
 		else:
 			for key,value in expectations.iteritems():
 				filename = os.path.join(outdir,"%s_%s.npy" % (node,key))
-				print "\tsaving %s..." % filename
+				# print "\tsaving %s..." % filename
 				np.save(filename,value)
+
+	##############
+	## Compress ##
+	##############
 
 	if compress:
 		os.system("gzip -f %s/*.npy" % outdir)

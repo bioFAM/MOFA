@@ -78,5 +78,6 @@ class Observed_Local_Node(Local_Node):
         Local_Node.__init__(self, dim, value)
     def getExpectations(self):
         # return { 'obs':self.getValue(), 'lnE':None, 'E2':None }
-        return { 'obs':self.getValue() }
+        # return { 'obs':self.getValue() }
+        return { 'E':self.getValue() }
 

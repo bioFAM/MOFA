@@ -89,7 +89,6 @@ class Multiview_Variational_Node(Multiview_Node, Variational_Node):
         return sum(lb)
 
 class Multiview_Mixed_Node(Multiview_Local_Node, Multiview_Variational_Node):
-# class Multiview_Mixed_Node(Multiview_Node):
     """
     General Class for multiview nodes that contain both variational and local nodes
     """

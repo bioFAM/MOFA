@@ -58,7 +58,18 @@ loadTrainingOpts <- function(infolder) {
   return(opts)
 }
 
-
+# Function to load data used for training
+# Input: 
+# Output: 
+loadTrainingData <- function(infolder) {
+  files = list.files(path=infolder,pattern="*.npy")
+  data <- list()
+  for (file in files) {
+    view <- strsplit(file, "\\.")[[1]][1]
+    data[[view]] <- npyLoad(str_c(infolder,"/",file))
+  }
+  return(data)
+}
 
 
 # Function to load model expectations

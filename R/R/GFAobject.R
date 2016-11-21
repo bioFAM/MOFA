@@ -9,10 +9,8 @@
 # - Expectations: expected values of the Q distributions
 # - Parameters: parameters of the Q distributions
 
-setClass(Class="GFATrainedModel", 
-         slots=c(TrainStats="list", TrainOpts="list", Expectations="list", Parameters="list"), 
-         # prototype=c(TrainStats=NA, Expectations=NA, Parameters=NA),
-        )
+setClass(Class="GFATrainedModel", slots=c(TrainStats="list", TrainOpts="list", Expectations="list", Parameters="list", TrainData="list"), )
+
 # Define the show method
 setMethod("show", "GFATrainedModel", function(object) { cat("scGFAtrained model ") } )
 
@@ -28,6 +26,3 @@ setMethod("getTrainOpts", "GFATrainedModel", function(object) { return(object@Tr
 # getMethod(f="show",signature="GFATrainedModel")
 
 # myGFA <- new("GFATrainedModel", TrainStats=, Expectations=, Parameters=, Nodes=)
-# myGFA <- new("GFATrainedModel")
-# myGFA
-# getTrainOpts(myGFA)

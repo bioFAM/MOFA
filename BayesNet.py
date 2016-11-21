@@ -8,7 +8,8 @@ import pandas as pd
 
 from nodes import Node
 from local_nodes import Local_Node
-from variational_nodes import Variational_Node
+from variational_nodes import Unobserved_Variational_Node, Variational_Node
+from utils import corr
 
 """
 This module is used to define the class containing the entire Bayesian Network, 
@@ -101,16 +102,17 @@ class BayesNet(object):
         self.schedule = schedule
 
     def removeInactiveFactors(self, threshold):
-        # Remove inactive factors based on the absolute value of latent variable vectors
+        # Method to remove inactive factors
+
+        # Option 1: absolute value of latent variable vectors
         #   Good: independent of likelihood type, works with pseudodata
         #   Bad: it is an approximation and covariates are never removed
         Z = self.nodes["Z"].getExpectation()
         drop = s.where( s.absolute(Z).mean(axis=0) < threshold )[0]
 
-        # Calculate proportion of residual variance explained by each factor
+        # Option 2: proportion of residual variance explained by each factor
         #   Good: it is the proper way of doing it, 
-        #   Bad: slow
-        # (Q) DOES THIS WORK WITH PSEUDODATA???
+        #   Bad: slow, does it work well with pseudodata?
         # Z = self.nodes["Z"].getExpectation()
         # Y = self.nodes["Y"].getExpectation()
         # tau = self.nodes["tau"].getExpectation()
@@ -120,15 +122,24 @@ class BayesNet(object):
         # for m in xrange(self.dim['M']):
         #     residual_var = (s.var(Y[m],axis=0) - 1/tau[m]).sum()
         #     for k in xrange(self.dim["K"]):
-        #         # I think this is wrong, we need to use the variance estimtes of Z
-        #         # factor_var = (self.dim["D"][m]/alpha[m][k]) * s.var(Z[:,k])
+        #         factor_var = (self.dim["D"][m]/alpha[m][k])# * s.var(Z[:,k])
         #         factor_pvar[m,k] = factor_var / residual_var
         # drop = s.where( (factor_pvar>threshold).sum(axis=0) == 0)[0]
 
+        # Option 3: highly correlated factors
+        # (Q) Which of the two factors should we remove? Maybe the one that explains less variation
+        # Z = self.nodes["Z"].getExpectation()
+        # r = s.absolute(corr(Z.T,Z.T))
+        # s.fill_diagonal(r,0)
+        # r *= s.tri(*r.shape)
+        # drop = s.where(r > 0.80)[0]
+        # if len(drop) > 0:
+        #     drop = [ s.random.choice(drop) ]
+
+        # Drop the factors
         if len(drop) > 0:
             for node in self.nodes.keys():
                 self.nodes[node].removeFactors(*drop)
-
         self.dim['K'] -= len(drop)
 
         # Update the active number of latent variables
@@ -147,7 +158,7 @@ class BayesNet(object):
         assert all(self.dim["D"] > self.dim["K"]), "The number of latent variables have to be smaller than the number of observed variables"
 
         # Initialise variables to monitor training
-        vb_nodes = self.getVariationalNodes()
+        vb_nodes = self.getVariationalNodes().keys()
         elbo = pd.DataFrame(data = s.zeros( ((int(self.options['maxiter']/self.options['elbofreq'])-1), len(vb_nodes)+1 )),
                             index = xrange(1,(int(self.options['maxiter']/self.options['elbofreq']))),
                             columns = vb_nodes+["total"] )
@@ -214,14 +225,16 @@ class BayesNet(object):
             if tmp != None: params[node] = tmp
         return params
 
-    def getExpectations(self, *nodes):
+    def getExpectations(self, only_first_moments=False, *nodes):
         # Method to collect all expectations of a given set of nodes (all by default)
         # - nodes (str): name of the node
         if len(nodes) == 0: nodes = self.nodes.keys()
         expectations = {}
         for node in nodes:
-            tmp = self.nodes[node].getExpectations()
-            # tmp = self.nodes[node].getExpectation()
+            if only_first_moments:
+                tmp = self.nodes[node].getExpectation()
+            else:
+                tmp = self.nodes[node].getExpectations()
             expectations[node] = tmp
         return expectations
 
@@ -231,7 +244,8 @@ class BayesNet(object):
 
     def getVariationalNodes(self):
         # Method to return all variational nodes
-        return filter(lambda node: isinstance(self.nodes[node],Variational_Node), self.nodes.keys())
+        # filter(lambda node: isinstance(self.nodes[node],Variational_Node), self.nodes.keys())
+        return { k:v for k,v in self.nodes.iteritems() if isinstance(v,Variational_Node) }
 
     def getTrainingStats(self):
         # Method to return training statistics

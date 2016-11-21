@@ -1,5 +1,5 @@
 """
-Script to test the spike and slab updates with gaussian and non-gaussian likelihoods
+Script to test missing values
 """
 
 # from __future__ import division
@@ -43,21 +43,11 @@ data['Z'][:,3] = stats.norm.rvs(loc=0, scale=1, size=N)
 data['Z'][:,4] = stats.norm.rvs(loc=0, scale=1, size=N)
 data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
 
-# Add a known covariate
-# data['Z'] = s.c_[ data['Z'], s.asarray([True,False]*(N/2), dtype=s.float32) ]
-# covariate = 6
-
-# data['alpha'] = s.zeros((M,K))
-# data['alpha'][0,:] = [1,1,1e6,1,1e6,1e6]
-# data['alpha'][1,:] = [1,1e6,1,1e6,1,1e6]
-# data['alpha'][2,:] = [1e6,1,1,1e6,1e6,1]
-
 data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
 data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
 data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
 data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
-# theta = [ s.ones(K)*0.5 for m in xrange(M) ]
 theta = [ s.ones(K)*1.0 for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
 
@@ -73,25 +63,17 @@ Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=dat
 	# likelihood="binomial", min_trials=10, max_trials=50, missingness=0.05)
 
 data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
-# data["Y"] = Y_bernoulli
-# data["Y"] = Y_poisson
-# data["Y"] = Y_binomial
-# data["Y"] = Y_gaussian
+
+# Replace all observations of some samples with missing values
+missing = ([1,2,3],[4,5,6],[7,8,9])
+for m in xrange(M):
+	data["Y"][m][missing[m],:] = s.ma.masked
 
 M_gaussian = [0]
 M_poisson = [1]
 M_bernoulli = [2]
 M_binomial = []
 
-# M_bernoulli = []
-# M_poisson = []
-# M_gaussian = [0,1,2]
-# M_binomial = []
-
-# M_bernoulli = []
-# M_poisson = []
-# M_gaussian = []
-# M_binomial = [0,1,2]
 
 #################################
 ## Initialise Bayesian Network ##
@@ -118,15 +100,6 @@ Z_pvar = 1.
 Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K))
 Z_qvar = s.ones((N,K))
 Z = Z_Node(dim=(N,K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar)
-
-# Z with covariates (variational node)
-# Z_pmean = 0.
-# Z_pvar = 1.
-# Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K-1))
-# Z_qmean = s.c_[ Z_qmean, s.asarray([True,False]*(N/2), dtype=s.float32) ]
-# Z_qvar = s.ones((N,K))
-# Z = Z_Node(dim=(N,K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar)
-# Z.setCovariates(idx=K-1)
 
 # alpha (variational node)
 alpha_list = [None]*M
@@ -254,47 +227,4 @@ net.options = options
 ####################
 
 net.iterate()
-
-# from utils import corr
-# Z = net.nodes["Z"].getExpectation()
-# r = corr(Z.T,Z.T)
-# print r
-
-# import pandas as pd
-# print pd.DataFrame(net.nodes["alpha"].getExpectation())
-
-##################
-## Save results ##
-##################
-
-outdir="/tmp/test"
-if not os.path.exists(outdir):
-    os.makedirs(outdir)
-if not os.path.exists(os.path.join(outdir,"data")):
-    os.makedirs(os.path.join(outdir,"data"))
-if not os.path.exists(os.path.join(outdir,"model")):
-    os.makedirs(os.path.join(outdir,"model"))
-if not os.path.exists(os.path.join(outdir,"stats")):
-    os.makedirs(os.path.join(outdir,"stats"))
-if not os.path.exists(os.path.join(outdir,"opts")):
-    os.makedirs(os.path.join(outdir,"opts"))
-
-# Save the training data
-print "\nSaving data..."
-
-pseudodata = net.nodes["Y"].getExpectation()
-for m in xrange(M): np.save(file="%s/data/Y_%d.npy" % (outdir,m+1), arr=data["Y"][m].data)
-for m in xrange(M): np.save(file="%s/model/Y_E_%d.npy" % (outdir,m+1), arr=pseudodata[m].data)
-
-# Save the model parameters and expectations
-print "\nSaving model..."
-saveModel(net, outdir=os.path.join(outdir,"model"))
-
-# Save training statistics
-print "\nSaving training stats..."
-opts = saveTrainingStats(model=net, outdir=os.path.join(outdir,"stats"))
-
-# Save training options
-print "\nSaving training opts..."
-opts = saveTrainingOpts(model=net, outdir=os.path.join(outdir,"opts"))
 

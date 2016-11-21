@@ -69,7 +69,6 @@ class PseudoY(Unobserved_Variational_Node):
     def mask(self):
         # Mask the observations if they have missing values
         self.obs = ma.masked_invalid(self.obs)
-        pass
 
     def precompute(self):
         # Precompute some terms to speed up the calculations

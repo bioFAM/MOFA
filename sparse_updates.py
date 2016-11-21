@@ -51,7 +51,6 @@ class Y_Node(Observed_Variational_Node):
         # Precompute some terms
         self.precompute()
 
-
     def precompute(self):
         # Precompute some terms to speed up the calculations
         # self.N = self.dim[0]
@@ -122,7 +121,8 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
 
     def calculateELBO(self):
         lb_p = -self.Q.E2.sum()
-        lb_q = -s.log(self.Q.var).sum() + self.N*self.K
+        lb_q = -s.log(self.Q.var).sum() - self.N*self.K
+        # lb_q = -s.log(self.Q.var).sum() + self.N*self.K
         return (lb_p-lb_q)/2
 
     def removeFactors(self, *idx):
@@ -150,6 +150,7 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         SW,SWW = tmp["ESW"], tmp["ESWW"]
         tmp = self.markov_blanket["Z"].getExpectations()
         Z,ZZ = tmp["E"],tmp["E2"]
+
 
         ## Vectorised ##
         term1 = (Y**2).sum(axis=0).data
@@ -188,7 +189,7 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
 
         # self.Q.a = self.P.a + D/2 # Updated in the initialisation
         self.Q.b = self.P.b + SWW.sum(axis=0)/2
-
+        
     def calculateELBO(self):
         p = self.P
         q = self.Q
@@ -215,7 +216,6 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         self.K = self.dim[1]
 
     def updateParameters(self):
-
         tmp = self.markov_blanket["Z"].getExpectations()
         Z,ZZ = tmp["E"],tmp["E2"]
         tau = self.markov_blanket["tau"].getExpectation()
@@ -256,10 +256,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         pass
 
     def getExpectations(self):
-        return dict({'ES':self.Q.ES, 'EW':self.Q.EW, 'ESW':self.Q.ESW,'ESWW':self.Q.ESWW, 'EWW':self.Q.EWW})
-
-    # def getExpectation(self):
-        # return self.Q.ESW
+        return dict({'ES':self.Q.ES, 'EW':self.Q.EW, 'ESW':self.Q.ESW, 'ESWW':self.Q.ESWW, 'EWW':self.Q.EWW})
 
     def removeFactors(self, *idx):
         # Method to remove a set of (inactive) latent variables from the node
@@ -284,12 +281,13 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
 
         # Calculate ELBO for W
         lb_pw = (self.D*alpha["lnE"].sum() - s.sum(alpha["E"]*WW))/2
-        lb_qw = -0.5*self.K*self.D - 0.5*s.log(S*self.Q.var + ((1-S)/alpha["E"])).sum()
+        # lb_qw = -0.5*self.K*self.D - 0.5*s.log(S*self.Q.var + ((1-S)/alpha["E"])).sum()
+        lb_qw = -0.5*s.log(S*self.Q.var + (s.divide((1-S),alpha["E"]))).sum()
         lb_w = lb_pw - lb_qw
 
         # Calculate ELBO for S
-        Slower = 0.00001
-        Supper = 0.99999
+        Slower = 0.000000001
+        Supper = 0.999999999
         S[S<Slower] = Slower
         S[S>Supper] = Supper
         # theta = self.P_theta

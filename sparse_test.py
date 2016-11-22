@@ -137,7 +137,7 @@ def run_test(test_ix):
     #################################
     ## Initialise Bayesian Network ##
     #################################
-    for optimise_pi_bool in [True, False]:
+    for optimise_theta_bool in [True, False]:
         net = BayesNet(nodes={}, schedule=())
 
         # Define initial number of latent variables
@@ -193,7 +193,7 @@ def run_test(test_ix):
             W_qvar = s.ones((D[m], K))
             SW_list[m] = SW_Node(dim=(D[m], K), ptheta=S_ptheta, qtheta=S_qtheta,
                                  qmean=W_qmean, qvar=W_qvar,
-                                 optimise_pi_bool = optimise_pi_bool,
+                                 optimise_theta_bool = optimise_theta_bool,
                                  pi_opt_per_factor = factor_wise)
         SW = Multiview_Variational_Node(M, *SW_list)
 
@@ -322,7 +322,7 @@ def run_test(test_ix):
             os.makedirs(os.path.join(outdir, "opts"))
 
 
-        if optimise_pi_bool:
+        if optimise_theta_bool:
             # save the Pi parameters
             sparsity_inferred_opt[3 * test_ix:(3 * test_ix + 3), 0] = test_ix
             sparsity_inferred_opt[3 * test_ix:(3 * test_ix + 3), 1] = [0, 1, 2]
@@ -342,7 +342,7 @@ def run_test(test_ix):
             sparsity_inferred_no_opt[3 * test_ix:(3 * test_ix + 3), 1] = [0, 1, 2]
             sparsity_inferred_no_opt_tmp = np.vstack([sw.P_theta for sw in SW_list])
             sparsity_inferred_no_opt[3 * test_ix:(3 * test_ix + 3), 2:(sparsity_inferred_no_opt_tmp.shape[1]+2)] = sparsity_inferred_no_opt_tmp
-            # sparsity_inferred_no_opt[3 * test_ix:(3 * test_ix + 3), 2] = [sw.optimise_pi() for sw in SW_list]
+            # sparsity_inferred_no_opt[3 * test_ix:(3 * test_ix + 3), 2] = [sw.optimise_theta() for sw in SW_list]
 
             # save the alpha parameters
             alpha_no_opt[3 * test_ix:(3 * test_ix + 3), 0] = test_ix

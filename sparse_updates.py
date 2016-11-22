@@ -224,10 +224,10 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
 
 class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
     def __init__(self, dim, qmean, qvar, ptheta, qtheta,
-                 optimise_pi_bool=False, pi_opt_per_factor=False):
+                 optimise_theta_bool=False, pi_opt_per_factor=False):
         BernoulliGaussian_Unobserved_Variational_Node.__init__(self, dim=dim, qmean=qmean, qvar=qvar, ptheta=ptheta, qtheta=qtheta)
         self.precompute()
-        self.optimise_pi_bool = optimise_pi_bool
+        self.optimise_theta_bool = _bool
         self.pi_opt_per_factor = pi_opt_per_factor
 
     def precompute(self):
@@ -266,10 +266,10 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             SW[:,k] = self.Q.theta[:,k] * self.Q.mean[:,k]
 
         # Maximising lower bond with respect to hyperparameter theta (M-step)
-        if self.optimise_pi_bool:
-            self.P_theta = self.optimise_pi()
+        if self.optimise_theta_bool:
+            self.P_theta = self.optimise_theta()
 
-    def optimise_pi(self):
+    def optimise_theta(self):
         exp = self.getExpectations()
         S = exp['ES']
         if self.pi_opt_per_factor:

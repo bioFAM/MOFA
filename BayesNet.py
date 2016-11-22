@@ -11,7 +11,7 @@ from local_nodes import Local_Node
 from variational_nodes import Variational_Node
 
 """
-This module is used to define the class containing the entire Bayesian Network, 
+This module is used to define the class containing the entire Bayesian Network,
 and the corresponding attributes/methods to train the model, set algorithmic options, calculate lower bound, etc.
 
 A Bayesian network requires the following information:
@@ -29,7 +29,7 @@ class BayesNet(object):
 
     def __init__(self, dim={}, nodes={}, schedule=()):
         #  dim: dictionary with the dimensions and its keynames, ex. {'N'=10, 'M'=3, ...}
-        #  nodes: dictionary with all nodes where the keys are the name of the node and the values are instances of Variational_Node() or Multiview_Variational_Node() 
+        #  nodes: dictionary with all nodes where the keys are the name of the node and the values are instances of Variational_Node() or Multiview_Variational_Node()
         #  schedule: tuple with the names of the nodes to be updated in the given order. Nodes not present in schedule will not be updated
 
         assert len(schedule) == len(nodes), "Different number of nodes and schedules provided"
@@ -69,20 +69,20 @@ class BayesNet(object):
     #     # - 'value': value of the corresponding option/parameter
     #     for k in kwargs.keys(): assert k in self.default_options.keys(), "%s option does not exist" % k
     #     self.options.update(kwargs)
-        
+
     def addNodes(self, **kwargs):
         # Method to add Nodes to the Bayesian network
         # Inputs:
         #   - **kwargs: instances of a descendent of the class Variational_Node()
         # Output: dictionary with the mapping name-node(s).
-        
+
         # Sanity checks
         assert len(kwargs) > 0, "Nothing was passed as argument"
         assert all( [isinstance(x, Node) for x in kwargs.values()] ), "The nodes have to be a Variational_Node class instances"
         assert len(set(kwargs.keys()).intersection(set(self.nodes.keys()))) == 0, "Some of the nodes is already present"
-        
+
         # Update the nodes
-        self.nodes.update(kwargs) 
+        self.nodes.update(kwargs)
 
         pass
 
@@ -90,7 +90,7 @@ class BayesNet(object):
     #     # Method to update a particular set of nodes in the given order
     #     # Input:
     #     # - *kargs: the key(s) associated with the node(s) to be updated
-    #     for name in kargs: 
+    #     for name in kargs:
     #         self.nodes[name].update(self)
 
     def setSchedule(self, schedule):
@@ -108,7 +108,7 @@ class BayesNet(object):
         drop = s.where( s.absolute(Z).mean(axis=0) < threshold )[0]
 
         # Calculate proportion of residual variance explained by each factor
-        #   Good: it is the proper way of doing it, 
+        #   Good: it is the proper way of doing it,
         #   Bad: slow
         # (Q) DOES THIS WORK WITH PSEUDODATA???
         # Z = self.nodes["Z"].getExpectation()
@@ -195,7 +195,7 @@ class BayesNet(object):
                 print "Check this"
                 exit()
                 savefile = "%s/%d_model.pkl" % (self.options['savefolder'], iter)
-                if self.options['verbosity'] == 2: print "Saving the model in %s" % savefile 
+                if self.options['verbosity'] == 2: print "Saving the model in %s" % savefile
                 pkl.dump(self, open(savefile,"wb"))
 
         # Finish by collecting the training statistics
@@ -249,4 +249,3 @@ class BayesNet(object):
             elbo[node] = float(self.nodes[node].calculateELBO())
             elbo["total"] += elbo[node]
         return elbo
-        

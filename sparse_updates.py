@@ -5,6 +5,8 @@ import numpy.ma as ma
 # Import manually defined functions
 from variational_nodes import *
 from utils import *
+import pdb
+import math
 
 """
 ###################################################
@@ -16,7 +18,7 @@ Extensions with respect to the Gaussian Group Factor Analysis:
 
 (Derivation of equations can be found in file XX)
 
-Current nodes: 
+Current nodes:
     Y_Node: observed data
     SW_Node: spike and slab weights
     Tau_Node: precision of the noise
@@ -35,8 +37,8 @@ Each node is a Variational_Node() class with the following main variables:
 
     Important attributes:
     - markov_blanket: dictionary that defines the set of nodes that are in the markov blanket of the current node
-    - Q: an instance of Distribution() which contains the specification of the variational distribution 
-    - P: an instance of Distribution() which contains the specification of the prior distribution 
+    - Q: an instance of Distribution() which contains the specification of the variational distribution
+    - P: an instance of Distribution() which contains the specification of the prior distribution
     - dim: dimensionality of the node
 
 """
@@ -46,7 +48,7 @@ class Y_Node(Observed_Variational_Node):
         Observed_Variational_Node.__init__(self, dim, obs)
 
         # Create a boolean mask of the data to hidden missing values
-        if type(self.obs) != ma.MaskedArray: 
+        if type(self.obs) != ma.MaskedArray:
             self.mask()
         # Precompute some terms
         self.precompute()
@@ -70,6 +72,8 @@ class Y_Node(Observed_Variational_Node):
         tau_param = self.markov_blanket["tau"].getParameters()
         tau_exp = self.markov_blanket["tau"].getExpectations()
         lik = self.likconst + s.sum(self.N*(tau_exp["lnE"]))/2 - s.dot(tau_exp["E"],tau_param["b"])
+        # if math.isnan(lik):
+            # pdb.set_trace()
         return lik
 
 class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
@@ -105,7 +109,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         self.Q.var = s.repeat(tmp[None,:],self.N,0)
 
         # Mean
-        if any(self.covariates): 
+        if any(self.covariates):
             oldmean = self.Q.mean[:,self.covariates]
 
         for k in xrange(self.K):
@@ -123,6 +127,8 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
     def calculateELBO(self):
         lb_p = -self.Q.E2.sum()
         lb_q = -s.log(self.Q.var).sum() + self.N*self.K
+        # if(math.isnan(lb_p-lb_q)):
+            # pdb.set_trace()
         return (lb_p-lb_q)/2
 
     def removeFactors(self, *idx):
@@ -150,15 +156,15 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         SW,SWW = tmp["ESW"], tmp["ESWW"]
         tmp = self.markov_blanket["Z"].getExpectations()
         Z,ZZ = tmp["E"],tmp["E2"]
-
+        # pdb.set_trace()
         ## Vectorised ##
         term1 = (Y**2).sum(axis=0).data
         # term2 = 2*(Y*s.dot(Z,SW.T)).sum(axis=0)
         term2 = 2*(Y*s.dot(Z,SW.T)).sum(axis=0).data
         term3 = (ZZ.dot(SWW.T)).sum(axis=0)
         term4 = s.diag(s.dot( SW.dot(Z.T), Z.dot(SW.T) )) - s.dot(Z**2,(SW**2).T).sum(axis=0)
-        tmp = term1 - term2 + term3 + term4 
-        
+        tmp = term1 - term2 + term3 + term4
+
         # self.Q.a[:] = self.P.a + N/2
         self.Q.a = self.P.a + (Y.shape[0] - ma.getmask(Y).sum(axis=0))/2
         self.Q.b = self.P.b + tmp/2
@@ -170,6 +176,9 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         q = self.Q
         lb_p = self.lbconst + (p.a-1)*s.sum(q.lnE) - p.b*s.sum(q.E)
         lb_q = s.sum(q.a*s.log(q.b)) + s.sum((q.a-1)*q.lnE) - s.sum(q.b*q.E) - s.sum(special.gammaln(q.a))
+
+        # if(math.isnan(lb_p -lb_q)):
+        #     pdb.set_trace()
 
         return lb_p - lb_q
 
@@ -183,17 +192,25 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
         self.lbconst = self.K * ( self.P.a*s.log(self.P.b) - special.gammaln(self.P.a) )
 
     def updateParameters(self):
+        # pdb.set_trace()
         tmp = self.markov_blanket["SW"].getExpectations()
-        S,SWW = tmp["ES"],tmp["ESWW"]
+        S,EWW,ESWW = tmp["ES"],tmp["EWW"],tmp["ESWW"]
 
+        # ARD prior on What
+        # self.Q.b = self.P.b + EWW.sum(axis=0)/2
         # self.Q.a = self.P.a + D/2 # Updated in the initialisation
-        self.Q.b = self.P.b + SWW.sum(axis=0)/2
+
+        # ARD prior on W
+        self.Q.a = self.P.a + S.sum(axis=0)/2
+        self.Q.b = self.P.b + ESWW.sum(axis=0)/2
 
     def calculateELBO(self):
         p = self.P
         q = self.Q
         lb_p = self.lbconst + (p.a-1)*s.sum(q.lnE) - p.b*s.sum(q.E)
         lb_q = s.sum(q.a*s.log(q.b)) + s.sum((q.a-1)*q.lnE) - s.sum(q.b*q.E) - s.sum(special.gammaln(q.a))
+        # if math.isnan(lb_q):
+            # pdb.set_trace()
         return lb_p - lb_q
 
     def removeFactors(self, *idx):
@@ -206,9 +223,12 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
         self.dim = (self.K,1)
 
 class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
-    def __init__(self, dim, qmean, qvar, ptheta, qtheta):
+    def __init__(self, dim, qmean, qvar, ptheta, qtheta,
+                 optimise_pi_bool=False, pi_opt_per_factor=False):
         BernoulliGaussian_Unobserved_Variational_Node.__init__(self, dim=dim, qmean=qmean, qvar=qvar, ptheta=ptheta, qtheta=qtheta)
         self.precompute()
+        self.optimise_pi_bool = optimise_pi_bool
+        self.pi_opt_per_factor = pi_opt_per_factor
 
     def precompute(self):
         self.D = self.dim[0]
@@ -223,14 +243,15 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         alpha = self.markov_blanket["alpha"].getExpectation()
         SW = self.Q.ESW[:]
 
+        all_term1 = s.log(self.P_theta/(1-self.P_theta))
         ## Vectorised ##
         for k in xrange(self.K):
-            term1 = s.log(self.P_theta/(1-self.P_theta))
+            term1 = all_term1[k]
             term2 = 0.5*s.log(s.divide(alpha[k],tau))
             term3 = 0.5*s.log(s.sum(ZZ[:,k]) + s.divide(alpha[k],tau))
             # term41 = ma.dot(Y.T,Z[:,k])
             term41 = ma.dot(Y.T,Z[:,k]).data
-            term42 = s.dot( SW[:,s.arange(self.K)!=k] , (Z[:,k]*Z[:,s.arange(self.K)!=k].T).sum(axis=1) )                
+            term42 = s.dot( SW[:,s.arange(self.K)!=k] , (Z[:,k]*Z[:,s.arange(self.K)!=k].T).sum(axis=1) )
             term43 = s.sum(ZZ[:,k]) + s.divide(alpha[k],tau)
             term4 = 0.5*tau * s.divide((term41-term42)**2,term43)
 
@@ -243,8 +264,19 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
 
             # Update Expectations for the next iteration
             SW[:,k] = self.Q.theta[:,k] * self.Q.mean[:,k]
-        
-        pass
+
+        # Maximising lower bond with respect to hyperparameter theta (M-step)
+        if self.optimise_pi_bool:
+            self.P_theta = self.optimise_pi()
+
+    def optimise_pi(self):
+        exp = self.getExpectations()
+        S = exp['ES']
+        if self.pi_opt_per_factor:
+            return S.mean(axis=0)
+        else:
+            return S.mean() * s.ones(S.shape[1])
+
 
     def updateExpectations(self):
         alpha = self.markov_blanket["alpha"].getExpectation()
@@ -263,6 +295,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
 
     def removeFactors(self, *idx):
         # Method to remove a set of (inactive) latent variables from the node
+
         keep = s.setdiff1d(s.arange(self.K),idx)
         self.Q.mean = self.Q.mean[:,keep]
         self.Q.var = self.Q.var[:,keep]
@@ -274,6 +307,8 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         self.Q.EWW = self.Q.EWW[:,keep]
         self.K = len(keep)
         self.dim = (self.D,self.K)
+        self.P_theta = self.P_theta[keep]
+
 
     def calculateELBO(self):
         # Calculate Variational Evidence Lower Bound
@@ -288,13 +323,17 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         lb_w = lb_pw - lb_qw
 
         # Calculate ELBO for S
+        # TODO understand why we do that ??
         Slower = 0.00001
         Supper = 0.99999
         S[S<Slower] = Slower
         S[S>Supper] = Supper
         # theta = self.P_theta
-        lb_ps = s.sum( S*s.log(self.P_theta) + (1-S)*s.log(1-self.P_theta) )
+
+        lb_ps = s.sum( S*s.log(self.P_theta) + (1-S)*s.log(1-self.P_theta))
         lb_qs = s.sum( S*s.log(S) + (1-S)*s.log(1-S) )
         lb_s = lb_ps - lb_qs
 
+        # if math.isnan(lb_w + lb_s):
+            # pdb.set_trace()
         return lb_w + lb_s

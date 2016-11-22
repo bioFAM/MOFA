@@ -57,7 +57,7 @@ def saveModel(model, outdir, compress=False, only_first_moments=True):
 
 	# Check that the model is trained
 	assert model.trained == True, "Model is not trained yet"
-	nodes = model.getAllNodes()
+	nodes = model.getNodes()
 
 	# Create output folder if it does not exist
 	if not os.path.exists(outdir): os.makedirs(outdir)

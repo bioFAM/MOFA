@@ -122,6 +122,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         if any(self.covariates):
             self.Q.mean[:,self.covariates] = oldmean
 
+    def priorUpdateContributions():
         pass
 
     def calculateELBO(self):
@@ -169,6 +170,7 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         self.Q.a = self.P.a + (Y.shape[0] - ma.getmask(Y).sum(axis=0))/2
         self.Q.b = self.P.b + tmp/2
 
+    def priorUpdateContribution():
         pass
 
     def calculateELBO(self):

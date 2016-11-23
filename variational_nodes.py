@@ -122,7 +122,9 @@ class UnivariateGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node
         Unobserved_Variational_Node.__init__(self, dim)
 
         # Initialise the P and Q distributions
-        self.P = UnivariateGaussian(dim=(1,), mean=pmean, var=pvar)
+        # MODIFIED: dimensions of self.P have to match those of Q to allow informative
+        # prior
+        self.P = UnivariateGaussian(dim=dim, mean=pmean, var=pvar)
         self.Q = UnivariateGaussian(dim=dim, mean=qmean, var=qvar, E=qE, E2=qE2)
 
     def getParameters(self):
@@ -224,7 +226,7 @@ class BernoulliGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node)
 
         # Initialise the distributions
         # self.P = BernoulliGaussian(dim=(1,), theta=S_ptheta, mean=W_pmean, var=W_pvar)
-        # initialise ptheta 
+        # initialise ptheta
         if type(ptheta) == float or len(ptheta) == 1:
             self.P_theta = ptheta * s.ones(dim[1])
         else:

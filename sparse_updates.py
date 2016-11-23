@@ -93,6 +93,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         self.covariates[idx] = True
 
     def updateParameters(self):
+        # TODO drop inactive factors from the prior too
         Y = self.markov_blanket["Y"].getExpectation()
         tmp = self.markov_blanket["SW"].getExpectations()
         tau = self.markov_blanket["tau"].getExpectation()
@@ -105,18 +106,24 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         tau = s.concatenate([tau[m] for m in xrange(M)],axis=0)
 
         # Variance
-        tmp = 1/((tau*SWW.T).sum(axis=1)+1)
-        self.Q.var = s.repeat(tmp[None,:],self.N,0)
+        # pdb.set_trace()
+        tmp = (tau*SWW.T).sum(axis=1)
+        tmp = s.repeat(tmp[None,:],self.N,0)
+        tmp += 1./self.P.var  # adding the prior precision to the updated precision
+        self.Q.var = 1./tmp
 
         # Mean
         if any(self.covariates):
             oldmean = self.Q.mean[:,self.covariates]
 
         for k in xrange(self.K):
+            # pdb.set_trace()
             tmp1 = SW[:,k]*tau
             tmp2 = Y - s.dot( self.Q.mean[:,s.arange(self.K)!=k] , SW[:,s.arange(self.K)!=k].T )
             # self.Q.mean[:,k] = self.Q.var[:,k] * s.dot(tmp2,tmp1)
-            self.Q.mean[:,k] = self.Q.var[:,k] * ma.dot(tmp2,tmp1)
+            tmp3 = ma.dot(tmp2,tmp1)
+            tmp3 += 1./self.P.var[:, k] * self.P.mean[:, k]  # adding contribution from the prior
+            self.Q.mean[:,k] = self.Q.var[:,k] * tmp3
 
         # Do not update the latent variables associated with known covariates
         if any(self.covariates):
@@ -134,10 +141,15 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
 
     def removeFactors(self, *idx):
         keep = s.setdiff1d(s.arange(self.K),idx)
+        #remove variational distribution terms
         self.Q.mean = self.Q.mean[:,keep]
         self.Q.var = self.Q.var[:,keep]
         self.Q.E = self.Q.E[:,keep]
         self.Q.E2 = self.Q.E2[:,keep]
+        # remove prior terms
+        self.P.mean = self.P.mean[:,keep]
+        self.P.var = self.P.var[:,keep]
+        # others
         self.covariates = self.covariates[keep]
         self.K = len(keep)
         self.dim = (self.N,self.K)
@@ -170,9 +182,6 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         self.Q.a = self.P.a + (Y.shape[0] - ma.getmask(Y).sum(axis=0))/2
         self.Q.b = self.P.b + tmp/2
 
-    def priorUpdateContribution():
-        pass
-
     def calculateELBO(self):
         p = self.P
         q = self.Q
@@ -203,6 +212,8 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
         # self.Q.a = self.P.a + D/2 # Updated in the initialisation
 
         # ARD prior on W
+        # TODO check dimensionality here for the prior
+        # pdb.set_trace()
         self.Q.a = self.P.a + S.sum(axis=0)/2
         self.Q.b = self.P.b + ESWW.sum(axis=0)/2
 
@@ -229,7 +240,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
                  optimise_theta_bool=False, pi_opt_per_factor=False):
         BernoulliGaussian_Unobserved_Variational_Node.__init__(self, dim=dim, qmean=qmean, qvar=qvar, ptheta=ptheta, qtheta=qtheta)
         self.precompute()
-        self.optimise_theta_bool = _bool
+        self.optimise_theta_bool = optimise_theta_bool
         self.pi_opt_per_factor = pi_opt_per_factor
 
     def precompute(self):

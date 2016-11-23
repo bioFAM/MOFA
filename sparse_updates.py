@@ -169,7 +169,7 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         SW,SWW = tmp["ESW"], tmp["ESWW"]
         tmp = self.markov_blanket["Z"].getExpectations()
         Z,ZZ = tmp["E"],tmp["E2"]
-        # pdb.set_trace()
+        pdb.set_trace()
         ## Vectorised ##
         term1 = (Y**2).sum(axis=0).data
         # term2 = 2*(Y*s.dot(Z,SW.T)).sum(axis=0)
@@ -213,7 +213,7 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
 
         # ARD prior on W
         # TODO check dimensionality here for the prior
-        # pdb.set_trace()
+        pdb.set_trace()
         self.Q.a = self.P.a + S.sum(axis=0)/2
         self.Q.b = self.P.b + ESWW.sum(axis=0)/2
 
@@ -248,7 +248,6 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         self.K = self.dim[1]
 
     def updateParameters(self):
-
         tmp = self.markov_blanket["Z"].getExpectations()
         Z,ZZ = tmp["E"],tmp["E2"]
         tau = self.markov_blanket["tau"].getExpectation()

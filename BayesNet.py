@@ -156,6 +156,7 @@ class BayesNet(object):
         # Sanity checks
         assert self.dim["K"] < self.dim["N"], "The number of latent variables have to be smaller than the number of samples"
         assert all(self.dim["D"] > self.dim["K"]), "The number of latent variables have to be smaller than the number of observed variables"
+        if not os.path.exists(self.options['savefolder']): os.makedirs(self.options['savefolder'])
 
         # Initialise variables to monitor training
         vb_nodes = self.getVariationalNodes().keys()
@@ -198,15 +199,15 @@ class BayesNet(object):
                         break
                 else:
                     print "Iteration 1: time=%.2f ELBO=%.2f, K=%d" % (time()-t,elbo.iloc[i]["total"], self.dim["K"])
+                    if self.options['verbosity'] == 2:
+                        print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
             else:
                 if self.options['verbosity'] > 0: print "Iteration %d: time=%.2f, K=%d" % (iter,time()-t,self.dim["K"])
 
             # Save the model
             if iter % self.options['savefreq'] == 0:
-                print "Check this"
-                exit()
                 savefile = "%s/%d_model.pkl" % (self.options['savefolder'], iter)
-                if self.options['verbosity'] == 2: print "Saving the model in %s" % savefile 
+                if self.options['verbosity'] == 2: print "Saving the model in %s\n" % savefile 
                 pkl.dump(self, open(savefile,"wb"))
 
         # Finish by collecting the training statistics

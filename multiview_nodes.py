@@ -40,6 +40,10 @@ class Multiview_Node(Node):
         # Get current estimate of all relevant moments
         return [ self.nodes[m].getExpectations() for m in self.idx ]
 
+    def getParameters(self):
+        # Get current estimate of parameters
+        return [ self.nodes[m].getParameters() for m in self.idx ]
+
 # class Multiview_Local_Node(Multiview_Node,Local_Node):
 class Multiview_Local_Node(Multiview_Node):
     """ 

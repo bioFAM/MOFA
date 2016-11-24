@@ -185,11 +185,16 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
 
     def updateParameters(self):
         tmp = self.markov_blanket["SW"].getExpectations()
-        S,SWW = tmp["ES"],tmp["ESWW"]
+        S,WW,SWW = tmp["ES"],tmp["EWW"],tmp["ESWW"]
 
+        # ARD prior on What
         # self.Q.a = self.P.a + D/2 # Updated in the initialisation
+        # self.Q.b = self.P.b + EWW.sum(axis=0)/2
+
+        # ARD prior on W
+        self.Q.a = self.P.a + S.sum(axis=0)/2
         self.Q.b = self.P.b + SWW.sum(axis=0)/2
-        
+
     def calculateELBO(self):
         p = self.P
         q = self.Q

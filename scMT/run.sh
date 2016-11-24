@@ -1,4 +1,4 @@
-#!/bin/bash
+Va#!/bin/bash
 
 met_inputfiles=()
 expr_inputfiles=("/Users/ricard/data/scMT/expr/processed/filt/tmp/e_matrix.txt")

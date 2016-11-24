@@ -1,6 +1,6 @@
 import numpy as np
-import struct
 import os
+import h5py
 
 """
 Module to define some useful util functions
@@ -45,79 +45,151 @@ def ddot(d, mtx, left=True):
 	    return d*mtx
 
 
-def saveTrainingStats(model, outdir):
-    stats = model.getTrainingStats()
-    np.savetxt(X=stats["activeK"], fmt='%d', fname=os.path.join(outdir,"activeK.txt"), delimiter=' ')
-    np.savetxt(X=stats["elbo"], fmt='%0.02f', fname=os.path.join(outdir,"elbo.txt"), delimiter=' ')
-    stats["elbo_terms"].to_csv(os.path.join(outdir,"elbo_terms.txt"), sep="\t", header=True, index=False)
+def saveParameters(model, hdf5):
 
-def saveTrainingOpts(model, outdir):
-    opts = model.getTrainingOpts()
-    file = os.path.join(outdir,"opts.txt")
-    with open(file, "a") as f:
-        for k,v in opts.iteritems(): 
-            f.write(k + ":" + str(v) + "\n")
-    pass
-
-def saveModel(model, outdir, compress=False):
-	# Function to save a trained model to be load in R:
-	# 	Expectations and parameters are stored as .npy objects to be loaded in R using the RcppCNPy package 
-	#	
-	# Inputs: 
-	# - model (BayesNet class): the trained model
-	# - outdir (string): output directory
-	# - compress (bool): compress files using gzip?
-
-	# Check that the model is trained
-	assert model.trained == True, "Model is not trained yet"
+	# STOPPED HER
+	
+	# Get nodes from the model
 	nodes = model.getNodes()
-	# vb_nodes = model.getVariationalNodes()
 
-	# Create output folder if it does not exist
-	if not os.path.exists(outdir): os.makedirs(outdir)
-
-	#####################
-	## Save parameters ##
-	#####################
-
-	# to do...
-
-
-	#######################
-	## Save expectations ##
-	#######################
+	# Create groups 
+	param_grp = hdf5.create_group("parameters")
 
 	# Iterate over nodes
 	for node in nodes:
-		# The data will be saved separately, not here...
-		if node == "Y": continue
+		print node
+
+		# Collect node expectation
+		parameters = nodes[node].getParameters()
+
+		# Create node subgroup
+		node_subgrp = param_grp.create_group(node)
+
+		# Multi-view nodes
+		if type(parameters) == list:
+			# Create subsubgroup for the view
+			# Loop through the views
+			for m in xrange(len(parameters)):
+				view_subgrp = node_subgrp.create_group("%s%d" % (node,m))
+				# Loop through the parameters
+				for param_name in parameters[m].keys():
+					view_subgrp.create_dataset("%s%d_%s" % (node,m,param_name), data=parameters[m][param_name])
+		# Single-view nodes
+		# else:
+			# for param_name,param_value in parameters.iteritems():
+				# view_subgrp.create_dataset("%s_%s" % (node,m,param_name), data=parameters[m][param_name])	pass
+
+def saveExpectations(model, hdf5):
+
+	# Get nodes from the model
+	nodes = model.getNodes()
+
+	# Load HD5 file
+	# Create groups 
+	exp_grp = hdf5.create_group("expectations")
+
+	# Iterate over nodes
+	for node in nodes:
 
 		# Collect node expectations
-		expectations = nodes[node].getExpectations()
+		expectations = nodes[node].getExpectation()
 
 		# Multi-view nodes
 		if type(expectations) == list:
+			# Create subgroup for the node
+			node_subgrp = exp_grp.create_group(node)
 			# Iterate over views
 			for m in xrange(len(expectations)):
-				# Iterate over expectations
-				for key,value in expectations[m].iteritems():
-					filename = os.path.join(outdir,"%s_%s_%d.npy" % (node,key,m+1))
-					# print "\tsaving %s..." % filename
-					np.save(filename,value)
+				node_subgrp.create_dataset("%s%d" % (node,m), data=expectations[m])
 
 		# Single-view nodes
 		else:
-			for key,value in expectations.iteritems():
-				filename = os.path.join(outdir,"%s_%s.npy" % (node,key))
-				# print "\tsaving %s..." % filename
-				np.save(filename,value)
+			exp_grp.create_dataset("%s" % node, data=expectations)
+	pass
 
-	##############
-	## Compress ##
-	##############
 
-	if compress:
-		os.system("gzip -f %s/*.npy" % outdir)
+def saveModel(model, outfile):
+	assert model.trained == True, "Model is not trained yet"
+
+	hdf5 = h5py.File(outfile,'w')
+	# saveExpectations(model,hdf5)
+	saveParameters(model,hdf5)
+
+	pass
+
+# def saveTrainingStats(model, outdir):
+#     stats = model.getTrainingStats()
+#     np.savetxt(X=stats["activeK"], fmt='%d', fname=os.path.join(outdir,"activeK.txt"), delimiter=' ')
+#     np.savetxt(X=stats["elbo"], fmt='%0.02f', fname=os.path.join(outdir,"elbo.txt"), delimiter=' ')
+#     stats["elbo_terms"].to_csv(os.path.join(outdir,"elbo_terms.txt"), sep="\t", header=True, index=False)
+
+# def saveTrainingOpts(model, outdir):
+#     opts = model.getTrainingOpts()
+#     file = os.path.join(outdir,"opts.txt")
+#     with open(file, "a") as f:
+#         for k,v in opts.iteritems(): 
+#             f.write(k + ":" + str(v) + "\n")
+#     pass
+
+# def saveModel(model, outdir, compress=False):
+# 	# Function to save a trained model to be load in R:
+# 	# 	Expectations and parameters are stored as .npy objects to be loaded in R using the RcppCNPy package 
+# 	#	
+# 	# Inputs: 
+# 	# - model (BayesNet class): the trained model
+# 	# - outdir (string): output directory
+# 	# - compress (bool): compress files using gzip?
+
+# 	# Check that the model is trained
+# 	assert model.trained == True, "Model is not trained yet"
+# 	nodes = model.getNodes()
+# 	# vb_nodes = model.getVariationalNodes()
+
+# 	# Create output folder if it does not exist
+# 	if not os.path.exists(outdir): os.makedirs(outdir)
+
+# 	#####################
+# 	## Save parameters ##
+# 	#####################
+
+# 	# to do...
+
+
+# 	#######################
+# 	## Save expectations ##
+# 	#######################
+
+# 	# Iterate over nodes
+# 	for node in nodes:
+# 		# The data will be saved separately, not here...
+# 		if node == "Y": continue
+
+# 		# Collect node expectations
+# 		expectations = nodes[node].getExpectations()
+
+# 		# Multi-view nodes
+# 		if type(expectations) == list:
+# 			# Iterate over views
+# 			for m in xrange(len(expectations)):
+# 				# Iterate over expectations
+# 				for key,value in expectations[m].iteritems():
+# 					filename = os.path.join(outdir,"%s_%s_%d.npy" % (node,key,m+1))
+# 					# print "\tsaving %s..." % filename
+# 					np.save(filename,value)
+
+# 		# Single-view nodes
+# 		else:
+# 			for key,value in expectations.iteritems():
+# 				filename = os.path.join(outdir,"%s_%s.npy" % (node,key))
+# 				# print "\tsaving %s..." % filename
+# 				np.save(filename,value)
+
+# 	##############
+# 	## Compress ##
+# 	##############
+
+# 	if compress:
+# 		os.system("gzip -f %s/*.npy" % outdir)
 
 
 # if __name__ == "__main__":

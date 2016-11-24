@@ -10,6 +10,7 @@ import os
 import scipy.special as special
 import scipy.stats as stats
 import numpy.linalg  as linalg
+import pandas as pd
 
 # Import manually defined functions
 from simulate import Simulate
@@ -57,36 +58,46 @@ data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
 data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
 data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
-# theta = [ s.ones(K)*0.5 for m in xrange(M) ]
-theta = [ s.ones(K)*1.0 for m in xrange(M) ]
+theta = [ s.ones(K)*0.5 for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
 
 data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
+
 data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
+
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-	likelihood="gaussian", missingness=0.05)
-Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-	likelihood="poisson", missingness=0.05)
-Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-	likelihood="bernoulli", missingness=0.05)
+	likelihood="gaussian", missingness=0.00)
+# Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+# 	likelihood="poisson", missingness=0.00)
+# Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+# 	likelihood="bernoulli", missingness=0.00)
 # Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
 	# likelihood="binomial", min_trials=10, max_trials=50, missingness=0.05)
 
-data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
+# s.savetxt("/tmp/test0.txt", Y_gaussian[0], delimiter="\t")
+# s.savetxt("/tmp/test1.txt", Y_gaussian[1], delimiter="\t")
+# s.savetxt("/tmp/test2.txt", Y_gaussian[2], delimiter="\t")
+
+# Y_gaussian = {}
+# Y_gaussian[0] = pd.read_csv("/tmp/test0.txt", delimiter="\t", header=None, index_col=None)
+# Y_gaussian[1] = pd.read_csv("/tmp/test1.txt", delimiter="\t", header=None, index_col=None)
+# Y_gaussian[2] = pd.read_csv("/tmp/test2.txt", delimiter="\t", header=None, index_col=None)
+
+# data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 # data["Y"] = Y_bernoulli
 # data["Y"] = Y_poisson
 # data["Y"] = Y_binomial
-# data["Y"] = Y_gaussian
+data["Y"] = Y_gaussian
 
-M_gaussian = [0]
-M_poisson = [1]
-M_bernoulli = [2]
-M_binomial = []
-
-# M_bernoulli = []
-# M_poisson = []
-# M_gaussian = [0,1,2]
+# M_gaussian = [0]
+# M_poisson = [1]
+# M_bernoulli = [2]
 # M_binomial = []
+
+M_bernoulli = []
+M_poisson = []
+M_gaussian = [0,1,2]
+M_binomial = []
 
 # M_bernoulli = []
 # M_poisson = []
@@ -133,10 +144,12 @@ alpha_list = [None]*M
 alpha_pa = 1e-14
 alpha_pb = 1e-14
 alpha_qb = s.ones(K)
+alpha_qa = s.ones(K)
 alpha_qE = s.ones(K)*100
 for m in xrange(M):
-	alpha_qa = alpha_pa + s.ones(K)*D[m]/2
-	alpha_list[m] = Alpha_Node(dim=(K,), pa=alpha_pa, pb=alpha_pb, qa=alpha_qa[m], qb=alpha_qb, qE=alpha_qE)
+	alpha_list[m] = Alpha_Node(dim=(K,), pa=alpha_pa, pb=alpha_pb, qa=alpha_qa, qb=alpha_qb, qE=alpha_qE)
+	# alpha_qa = alpha_pa + s.ones(K)*D[m]/2
+	# alpha_list[m] = Alpha_Node(dim=(K,), pa=alpha_pa, pb=alpha_pb, qa=alpha_qa[m], qb=alpha_qb, qE=alpha_qE)
 alpha = Multiview_Variational_Node((K,)*M, *alpha_list)
 
 
@@ -236,7 +249,7 @@ net.setSchedule(schedule)
 #############################
 
 options = {}
-options['maxiter'] = 150
+options['maxiter'] = 10
 options['tolerance'] = 1E-2
 options['forceiter'] = True
 # options['elbofreq'] = options['maxiter']+1
@@ -254,6 +267,7 @@ net.options = options
 ####################
 
 net.iterate()
+exit()
 
 # from utils import corr
 # Z = net.nodes["Z"].getExpectation()
@@ -267,34 +281,36 @@ net.iterate()
 ## Save results ##
 ##################
 
-outdir="/tmp/test"
-if not os.path.exists(outdir):
-    os.makedirs(outdir)
-if not os.path.exists(os.path.join(outdir,"data")):
-    os.makedirs(os.path.join(outdir,"data"))
-if not os.path.exists(os.path.join(outdir,"model")):
-    os.makedirs(os.path.join(outdir,"model"))
-if not os.path.exists(os.path.join(outdir,"stats")):
-    os.makedirs(os.path.join(outdir,"stats"))
-if not os.path.exists(os.path.join(outdir,"opts")):
-    os.makedirs(os.path.join(outdir,"opts"))
+# print "\nSaving model..."
+# saveModel(net, outfile="/tmp/test/asd.hd5")
+
+# outdir="/tmp/test"
+# if not os.path.exists(outdir):
+#     os.makedirs(outdir)
+# if not os.path.exists(os.path.join(outdir,"data")):
+#     os.makedirs(os.path.join(outdir,"data"))
+# if not os.path.exists(os.path.join(outdir,"model")):
+#     os.makedirs(os.path.join(outdir,"model"))
+# if not os.path.exists(os.path.join(outdir,"stats")):
+#     os.makedirs(os.path.join(outdir,"stats"))
+# if not os.path.exists(os.path.join(outdir,"opts")):
+#     os.makedirs(os.path.join(outdir,"opts"))
 
 # Save the training data
-print "\nSaving data..."
+# print "\nSaving data..."
+# pseudodata = net.nodes["Y"].getExpectation()
+# for m in xrange(M): np.save(file="%s/data/Y_%d.npy" % (outdir,m+1), arr=data["Y"][m].data)
+# for m in xrange(M): np.save(file="%s/model/Y_E_%d.npy" % (outdir,m+1), arr=pseudodata[m].data)
 
-pseudodata = net.nodes["Y"].getExpectation()
-for m in xrange(M): np.save(file="%s/data/Y_%d.npy" % (outdir,m+1), arr=data["Y"][m].data)
-for m in xrange(M): np.save(file="%s/model/Y_E_%d.npy" % (outdir,m+1), arr=pseudodata[m].data)
+# # Save the model parameters and expectations
+# print "\nSaving model..."
+# saveModel(net, outdir=os.path.join(outdir,"model"))
 
-# Save the model parameters and expectations
-print "\nSaving model..."
-saveModel(net, outdir=os.path.join(outdir,"model"))
+# # Save training statistics
+# print "\nSaving training stats..."
+# opts = saveTrainingStats(model=net, outdir=os.path.join(outdir,"stats"))
 
-# Save training statistics
-print "\nSaving training stats..."
-opts = saveTrainingStats(model=net, outdir=os.path.join(outdir,"stats"))
-
-# Save training options
-print "\nSaving training opts..."
-opts = saveTrainingOpts(model=net, outdir=os.path.join(outdir,"opts"))
+# # Save training options
+# print "\nSaving training opts..."
+# opts = saveTrainingOpts(model=net, outdir=os.path.join(outdir,"opts"))
 

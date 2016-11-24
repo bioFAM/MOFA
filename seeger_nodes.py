@@ -12,24 +12,24 @@ Reference: 'Fast Variational Bayesian Inference for Non-Conjugate Matrix Factori
 """
 
 
-class Zeta_Node(Unobserved_Local_Node):
-    """ 
-    Abstract class for the local variational variable zeta that represents the location of the
-    Taylor expansion for the upper bound on the log likelihood.
-    It is required for the approximation that leads to closed-form VB updates in non-conjugate matrix factorisation models
+# class Zeta_Node(Unobserved_Local_Node):
+#     """ 
+#     Abstract class for the local variational variable zeta that represents the location of the
+#     Taylor expansion for the upper bound on the log likelihood.
+#     It is required for the approximation that leads to closed-form VB updates in non-conjugate matrix factorisation models
 
-    Notice that Zeta is a local node, not a variational node!
-    """
-    def __init__(self, dim, initial_value=None):
-        # Inputs:
-        #  dim (ndarray): dimensionality of the node
-        #  initial_value (ndarray): initial value of Zeta
-        Unobserved_Local_Node.__init__(self, dim, initial_value)
+#     Notice that Zeta is a local node, not a variational node!
+#     """
+#     def __init__(self, dim, initial_value=None):
+#         # Inputs:
+#         #  dim (ndarray): dimensionality of the node
+#         #  initial_value (ndarray): initial value of Zeta
+#         Unobserved_Local_Node.__init__(self, dim, initial_value)
 
-    def update(self):
-        Z = self.markov_blanket["Z"].getExpectation()
-        W = self.markov_blanket["W"].getExpectation()
-        self.value = s.dot(Z,W.T)
+#     def update(self):
+#         Z = self.markov_blanket["Z"].getExpectation()
+#         W = self.markov_blanket["W"].getExpectation()
+#         self.value = s.dot(Z,W.T)
 
 ################
 ## Pseudodata ##
@@ -42,10 +42,11 @@ class PseudoY(Unobserved_Variational_Node):
     Notice that they are defined as Variational Nodes because they have a lower bound associated with it,
     but we are not using the .P and .Q distribution attributes
     """
-    def __init__(self, dim, obs, E=None):
+    def __init__(self, dim, obs, Zeta=None, E=None):
         # Inputs:
         #  dim (2d tuple): dimensionality of each view
         #  obs (ndarray): observed data
+        #  Zeta: parameter
         #  E (ndarray): initial expected value of pseudodata
         Unobserved_Variational_Node.__init__(self, dim)
 
@@ -59,12 +60,20 @@ class PseudoY(Unobserved_Variational_Node):
         # Precompute some terms
         self.precompute()
 
+        # Initialise Zeta
+        self.Zeta = Zeta
+
         # Initialise expectation
         if E is not None:
             assert E.shape == dim.shape, "Problems with the dimensionalities"
         else:
             E = s.zeros(self.dim)
         self.E = E
+
+    def updateParameters(self):
+        Z = self.markov_blanket["Z"].getExpectation()
+        W = self.markov_blanket["W"].getExpectation()
+        self.Zeta = s.dot(Z,W.T)
 
     def mask(self):
         # Mask the observations if they have missing values
@@ -124,11 +133,11 @@ class Poisson_PseudoY_Node(PseudoY):
     clipping overly large counts
 
     """
-    def __init__(self, dim, obs, E=None):
+    def __init__(self, dim, obs, Zeta=None, E=None):
         # - dim (2d tuple): dimensionality of each view
         # - obs (ndarray): observed data
         # - E (ndarray): initial expected value of pseudodata
-        PseudoY.__init__(self, dim=dim, obs=obs, E=E)
+        PseudoY.__init__(self, dim=dim, obs=obs, Zeta=Zeta, E=E)
 
         # Initialise the observed data
         assert s.all(s.mod(self.obs, 1) == 0), "Data must not contain float numbers, only integers"
@@ -145,9 +154,8 @@ class Poisson_PseudoY_Node(PseudoY):
 
     def updateExpectations(self):
         # Update the pseudodata
-        zeta = self.markov_blanket["zeta"].getValue()
         kappa = self.markov_blanket["kappa"].getValue()
-        self.E = zeta - sigmoid(zeta)*(1-self.obs/self.ratefn(zeta))/kappa
+        self.E = self.Zeta - sigmoid(self.Zeta)*(1-self.obs/self.ratefn(self.Zeta))/kappa
 
         pass
 
@@ -177,19 +185,18 @@ class Bernoulli_PseudoY_Node(PseudoY):
 
 
     """
-    def __init__(self, dim, obs, E=None):
+    def __init__(self, dim, obs, Zeta=None, E=None):
         # - dim (2d tuple): dimensionality of each view
         # - obs (ndarray): observed data
         # - E (ndarray): initial expected value of pseudodata
-        PseudoY.__init__(self, dim=dim, obs=obs, E=E)
+        PseudoY.__init__(self, dim=dim, obs=obs, Zeta=Zeta, E=E)
 
         # Initialise the observed data
         assert s.all( (self.obs==0) | (self.obs==1) ), "Data must be binary"
 
     def updateExpectations(self):
         # Update the pseudodata
-        zeta = self.markov_blanket["zeta"].getValue()
-        self.E = zeta - 4*(sigmoid(zeta) - self.obs)
+        self.E = self.Zeta - 4*(sigmoid(self.Zeta) - self.obs)
         pass
 
     def calculateELBO(self):
@@ -219,11 +226,11 @@ class Binomial_PseudoY_Node(PseudoY):
                 = zeta_ij - (N_{ij}*sigmoid(zeta_ij) - y_ij)/kappa_d
 
     """
-    def __init__(self, dim, obs, tot, E=None):
+    def __init__(self, dim, obs, tot, Zeta=None, E=None):
         # - dim (2d tuple): dimensionality of each view
         # - obs (ndarray): observed data
         # - E (ndarray): initial expected value of pseudodata
-        PseudoY.__init__(self, dim=dim, obs=None, E=E)
+        PseudoY.__init__(self, dim=dim, obs=None, Zeta=Zeta, E=E)
 
         # Initialise the observed data
         assert s.all(s.mod(obs, 1) == 0) and s.all(s.mod(tot, 1) == 0), "Data must not contain float numbers, only integers"
@@ -235,9 +242,8 @@ class Binomial_PseudoY_Node(PseudoY):
 
     def updateExpectations(self):
         # Update the pseudodata
-        zeta = self.markov_blanket["zeta"].getValue()
         kappa = self.markov_blanket["kappa"].getValue()
-        self.E = zeta - s.divide(self.tot*sigmoid(zeta)-self.obs, kappa)
+        self.E = self.zeta - s.divide(self.tot*sigmoid(self.Zeta)-self.obs, kappa)
         pass
 
     def calculateELBO(self):

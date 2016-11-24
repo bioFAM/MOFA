@@ -16,7 +16,7 @@ import pandas as pd
 from simulate import Simulate
 from BayesNet import BayesNet
 from multiview_nodes import *
-from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node, Zeta_Node
+from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
 from local_nodes import Local_Node, Observed_Local_Node
 from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node
 from utils import *
@@ -66,11 +66,11 @@ data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-	likelihood="gaussian", missingness=0.00)
-# Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-# 	likelihood="poisson", missingness=0.00)
-# Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-# 	likelihood="bernoulli", missingness=0.00)
+	likelihood="gaussian", missingness=0.02)
+Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+	likelihood="poisson", missingness=0.02)
+Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+	likelihood="bernoulli", missingness=0.02)
 # Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
 	# likelihood="binomial", min_trials=10, max_trials=50, missingness=0.05)
 
@@ -83,21 +83,22 @@ Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data
 # Y_gaussian[1] = pd.read_csv("/tmp/test1.txt", delimiter="\t", header=None, index_col=None)
 # Y_gaussian[2] = pd.read_csv("/tmp/test2.txt", delimiter="\t", header=None, index_col=None)
 
-# data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
+data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
+
 # data["Y"] = Y_bernoulli
 # data["Y"] = Y_poisson
 # data["Y"] = Y_binomial
-data["Y"] = Y_gaussian
+# data["Y"] = Y_gaussian
 
-# M_gaussian = [0]
-# M_poisson = [1]
-# M_bernoulli = [2]
-# M_binomial = []
-
-M_bernoulli = []
-M_poisson = []
-M_gaussian = [0,1,2]
+M_gaussian = [0]
+M_poisson = [1]
+M_bernoulli = [2]
 M_binomial = []
+
+# M_bernoulli = []
+# M_poisson = []
+# M_gaussian = [0,1,2]
+# M_binomial = []
 
 # M_bernoulli = []
 # M_poisson = []
@@ -186,28 +187,17 @@ for m in xrange(M):
 tau = Multiview_Mixed_Node(M,*tau_list)
 
 
-# zeta (local node)
-# not initialised since it is the first update
-Zeta_list = [None]*M
-for m in xrange(M):
-	if m not in M_gaussian:
-		Zeta_list[m] = Zeta_Node(dim=(N,D[m]), initial_value=None) 
-	else:
-		Zeta_list[m] = None
-Zeta = Multiview_Local_Node(M, *Zeta_list)
-
-
 # Y/Yhat (mixed node)
 Y_list = [None]*M
 for m in xrange(M):
 	if m in M_gaussian:
 		Y_list[m] = Y_Node(dim=(N,D[m]), obs=data['Y'][m])
 	elif m in M_poisson:
-		Y_list[m] = Poisson_PseudoY_Node(dim=(N,D[m]), obs=data['Y'][m], E=None)
+		Y_list[m] = Poisson_PseudoY_Node(dim=(N,D[m]), obs=data['Y'][m], Zeta=None, E=None)
 	elif m in M_bernoulli:
-		Y_list[m] = Bernoulli_PseudoY_Node(dim=(N,D[m]), obs=data['Y'][m], E=None)
+		Y_list[m] = Bernoulli_PseudoY_Node(dim=(N,D[m]), obs=data['Y'][m], Zeta=None, E=None)
 	elif m in M_binomial:
-		Y_list[m] = Binomial_PseudoY_Node(dim=(N,D[m]), tot=data['Y']["tot"][m], obs=data['Y']["obs"][m], E=None)
+		Y_list[m] = Binomial_PseudoY_Node(dim=(N,D[m]), tot=data['Y']["tot"][m], obs=data['Y']["obs"][m], Zeta=None, E=None)
 Y = Multiview_Mixed_Node(M, *Y_list)
 
 
@@ -223,8 +213,7 @@ for m in xrange(M):
 		Y.nodes[m].addMarkovBlanket(Z=Z, SW=SW.nodes[m], tau=tau.nodes[m])
 		tau.nodes[m].addMarkovBlanket(SW=SW.nodes[m], Z=Z, Y=Y.nodes[m])
 	else:
-		Zeta.nodes[m].addMarkovBlanket(Z=Z, W=SW.nodes[m])
-		Y.nodes[m].addMarkovBlanket(Z=Z, W=SW.nodes[m], kappa=tau.nodes[m], zeta=Zeta.nodes[m])
+		Y.nodes[m].addMarkovBlanket(Z=Z, W=SW.nodes[m], kappa=tau.nodes[m])
 
 ##################################
 ## Update required expectations ##
@@ -237,10 +226,10 @@ Z.Q.updateExpectations()
 ## Add the nodes to the network ##
 ##################################
 
-net.addNodes(Zeta=Zeta, SW=SW, tau=tau, Z=Z, Y=Y, alpha=alpha)
+net.addNodes(SW=SW, tau=tau, Z=Z, Y=Y, alpha=alpha)
 
 # Define update schedule
-schedule = ["Zeta","Y","SW","Z","alpha","tau"]
+schedule = ["Y","SW","Z","alpha","tau"]
 
 net.setSchedule(schedule)
 
@@ -249,7 +238,7 @@ net.setSchedule(schedule)
 #############################
 
 options = {}
-options['maxiter'] = 10
+options['maxiter'] = 500
 options['tolerance'] = 1E-2
 options['forceiter'] = True
 # options['elbofreq'] = options['maxiter']+1

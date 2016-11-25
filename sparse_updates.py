@@ -132,13 +132,19 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         if any(self.covariates):
             self.Q.mean[:,self.covariates] = oldmean
 
-    # TODO update ELBO to take into account priors
     def calculateELBO(self):
-        lb_p = -self.Q.E2.sum()
-        lb_q = -s.log(self.Q.var).sum() + self.N*self.K
-        # if(math.isnan(lb_p-lb_q)):
-            # pdb.set_trace()
-        return (lb_p-lb_q)/2
+        pdb.set_trace()  # check dimensionalities
+        # term from the exponential term in the Gaussian
+        tmp1 = self.Q.E2/2. - self.P.mean * self.Q.E + self.P.mean**2.0/2.
+        tmp1 = -(tmp1/self.P.var).sum()
+
+        # term from the precision factor in front of the Gaussian (TODO should be computed only once)
+        tmp2 = - (s.log(self.P.var)/2.).sum()
+
+        lb_p = tmp1 + tmp2
+        lb_q = (-s.log(self.Q.var).sum() + self.N*self.K)/2.
+
+        return lb_p-lb_q
 
     def removeFactors(self, *idx):
         keep = s.setdiff1d(s.arange(self.K),idx)
@@ -341,7 +347,6 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         lb_w = lb_pw - lb_qw
 
         # Calculate ELBO for S
-        # TODO understand why we do that ?? ->over/underflow prob
         Slower = 0.00001
         Supper = 0.99999
         S[S<Slower] = Slower

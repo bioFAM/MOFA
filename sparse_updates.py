@@ -143,7 +143,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         tmp2 = - (s.log(self.P.var)/2.).sum()
 
         lb_p = tmp1 + tmp2
-        lb_q = (-s.log(self.Q.var).sum() + self.N*self.K)/2.
+        lb_q = - (s.log(self.Q.var).sum() + self.N*self.K)/2.
 
         return lb_p-lb_q
 
@@ -259,12 +259,19 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         Y = self.markov_blanket["Y"].getExpectation()
         alpha = self.markov_blanket["alpha"].getExpectation()
         SW = self.Q.ESW[:]
-        theta = self.markov_blanket['Theta'].getExpectations()['E']
-        # check dimensions of theta and expand if necessary
-        if theta.shape != self.Q.mean.shape:
-            theta = s.repeat(theta[None,:],self.Q.mean.shape[0],0)
+        # TODO make general in mixed node
+        theta_lnE = self.markov_blanket['Theta'].getExpectations()['lnE']
+        theta_lnEInv = self.markov_blanket['Theta'].getExpectations()['lnEInv']
 
-        all_term1 = s.log(theta/(1.-theta))
+        # check dimensions of theta and expand if necessary
+        if theta_lnE.shape != self.Q.mean.shape:
+            theta_lnE = s.repeat(theta_lnE[None,:],self.Q.mean.shape[0],0)
+        if theta_lnEInv.shape != self.Q.mean.shape:
+            theta_lnEInv = s.repeat(theta_lnEInv[None,:],self.Q.mean.shape[0],0)
+
+
+        all_term1 = theta_lnE - theta_lnEInv
+        # all_term1 = s.log(theta/(1.-theta))
         ## Vectorised ##
         for k in xrange(self.K):
 
@@ -278,7 +285,10 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             term4 = 0.5*tau * s.divide((term41-term42)**2,term43)
 
             # Update S
-            self.Q.theta[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
+            try:
+                self.Q.theta[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
+            except:
+                pdb.set_trace()
 
             # Update W
             self.Q.mean[:,k] = s.divide(term41-term42,term43)
@@ -290,14 +300,14 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         # Maximising lower bond with respect to hyperparameter theta (M-step)
         # if self.optimise_theta_bool:
             # self.P_theta = self.optimise_theta()
-
-    def optimise_theta(self):
-        exp = self.getExpectations()
-        S = exp['ES']
-        if self.pi_opt_per_factor:
-            return S.mean(axis=0)
-        else:
-            return S.mean() * s.ones(S.shape[1])
+    #
+    # def optimise_theta(self):
+    #     exp = self.getExpectations()
+    #     S = exp['ES']
+    #     if self.pi_opt_per_factor:
+    #         return S.mean(axis=0)
+    #     else:
+    #         return S.mean() * s.ones(S.shape[1])
 
 
     def updateExpectations(self):
@@ -338,7 +348,8 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         exp = self.getExpectations()
         S = exp["ES"]
         WW = exp["EWW"]
-        theta = self.markov_blanket['Theta'].getExpectations()['E']
+        theta_lnE = self.markov_blanket['Theta'].getExpectations()['lnE']
+        theta_lnEInv = self.markov_blanket['Theta'].getExpectations()['lnEInv']
 
         # Calculate ELBO for W
         lb_pw = (self.D*alpha["lnE"].sum() - s.sum(alpha["E"]*WW))/2
@@ -346,18 +357,18 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         lb_w = lb_pw - lb_qw
 
         # Calculate ELBO for S
-        Slower = 0.00001
-        Supper = 0.99999
-        S[S<Slower] = Slower
-        S[S>Supper] = Supper
+        # pdb.set_trace()
+        # Slower = 0.00001
+        # Supper = 0.99999
+        # S[S<Slower] = Slower
+        # S[S>Supper] = Supper
 
-        # TODO problem here with the lower bond when theta is mixed
-        # the reason is that prior on theta will be counted too many times
-        # for the non-annotated factors
-        # quick hack:
-        
-        lb_ps = s.sum( S*s.log(theta) + (1-S)*s.log(1-theta))
-        lb_qs = s.sum( S*s.log(S) + (1-S)*s.log(1-S) )
+        lb_ps = s.sum( S*theta_lnE + (1-S)*theta_lnEInv)
+
+        lb_qs_tmp = S*s.log(S) + (1-S)*s.log(1-S)
+        lb_qs_tmp[s.isnan(lb_qs_tmp)] = 0
+
+        lb_qs = s.sum(lb_qs_tmp)
         lb_s = lb_ps - lb_qs
 
         # if math.isnan(lb_w + lb_s):
@@ -390,10 +401,10 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
 
         tmp1 = S.sum(axis=0)
         self.Q.a = tmp1 + self.P.a
-        self.Q.b = + self.P.b - tmp1 + S.shape[0]
+        self.Q.b = self.P.b - tmp1 + S.shape[0]
 
     def getExpectations(self):
-        return {'E':self.Q.E}
+        return {'E':self.Q.E, 'lnE':self.Q.lnE, 'lnEInv':self.Q.lnEInv}
     # TODO implement ELBO term
 
     def removeFactors(self, *idx):
@@ -402,6 +413,8 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
         self.Q.a = self.Q.a[keep]
         self.Q.b = self.Q.b[keep]
         self.Q.E = self.Q.E[keep]
+        self.Q.lnE = self.Q.lnE[keep]
+        self.Q.lnEInv = self.Q.lnEInv[keep]
         # remove prior terms
         self.P.a = self.P.a[keep]
         self.P.b = self.P.b[keep]
@@ -421,3 +434,4 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
         lbq = tmp2.sum()
 
         return lbp - lbq
+        # return 0

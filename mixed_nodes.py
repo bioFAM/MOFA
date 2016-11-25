@@ -39,13 +39,19 @@ class Mixed_Theta_Nodes(Variational_Node, Constant_Node):
         # get expectations or values for each node and return concatenated array
         values_annotated = self.annotated_theta.getValue()
         exp = self.non_annotated_theta.getExpectations()['E']
+        lnExp = self.non_annotated_theta.getExpectations()['lnE']
+        lnExpInv = self.non_annotated_theta.getExpectations()['lnEInv']
 
         # deal with different dimensions
         if exp.shape != values_annotated.shape:
             exp = s.repeat(exp[None, :], values_annotated.shape[0], 0)
+            lnExp = s.repeat(lnExp[None, :], values_annotated.shape[0], 0)
+            lnExpInv = s.repeat(lnExpInv[None, :], values_annotated.shape[0], 0)
 
-        tmp = s.concatenate((values_annotated, exp), axis=1)
-        return dict({'E': tmp})
+        E = s.concatenate((values_annotated, exp), axis=1)
+        lnE = s.concatenate((s.log(values_annotated), lnExp), axis=1)
+        lnEInv = s.concatenate((s.log(1-values_annotated), lnExpInv), axis=1)
+        return dict({'E': E, 'lnE': lnE, 'lnEInv':lnEInv})
 
     def updateExpectations(self):
         self.non_annotated_theta.updateExpectations()

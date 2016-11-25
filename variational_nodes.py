@@ -239,3 +239,19 @@ class BernoulliGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node)
         return { 'theta':self.Q.theta, 'mean':self.Q.mean, 'var':self.Q.var }
     def getExpectation(self):
         return self.Q.ESW
+
+
+class Beta_Unobserved_Variational_Node(Unobserved_Variational_Node):
+    """
+    Abstract class for a variational node where both P(x) and Q(x) are beta
+    distributions
+    """
+    def __init__(self, dim, pa, pb, qa=1., qb=1.):
+        super(Beta_Unobserved_Variational_Node, self).__init__(dim)
+        self.P = Beta(dim, pa, pb)
+        self.Q = Beta(dim, qa, qb)
+
+    def getParameters(self):
+        return { 'a':self.Q.a, 'b':self.Q.b }
+    def getExpectations(self):
+        return { 'E':self.Q.E}

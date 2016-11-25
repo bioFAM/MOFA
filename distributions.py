@@ -409,7 +409,6 @@ class Beta(Distribution):
         else:
             if isinstance(E,(float,int)): E = s.ones(dim) * E
             self.E = E
-
         # Check that dimensionalities match
         assert self.a.shape == self.E.shape == self.b.shape == self.dim, "Dimensionalities do not match"
 

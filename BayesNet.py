@@ -10,6 +10,8 @@ from nodes import Node
 from local_nodes import Local_Node
 from variational_nodes import Variational_Node
 
+import pdb
+
 """
 This module is used to define the class containing the entire Bayesian Network,
 and the corresponding attributes/methods to train the model, set algorithmic options, calculate lower bound, etc.

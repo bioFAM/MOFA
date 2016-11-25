@@ -14,7 +14,7 @@ from utils import *
 #####################################
 
 class Local_Node(Node):
-    """ 
+    """
     Abstract class for local variational parameters in a Bayesian probabilistic model.
     Variational Parameters do not have prior and posterior distributions, but they are updated
     in order to optimise a lower bound.
@@ -31,9 +31,9 @@ class Local_Node(Node):
         self.value = None
 
         # Initialise the values
-        if value is None: 
+        if value is None:
             value = s.zeros(self.dim)
-        else: 
+        else:
             assert value.shape == dim
         self.value = value
 
@@ -47,10 +47,10 @@ class Local_Node(Node):
         return { 'E':self.getValue() }
     def update(self):
         # General function to update the values of the local node
-        pass 
+        pass
 
 class Unobserved_Local_Node(Local_Node):
-    """ 
+    """
     Abstract class for local variational parameters in a Bayesian probabilistic model.
     Variational Parameters do not have prior and posterior distributions, but they are updated
     in order to optimise a lower bound.
@@ -64,14 +64,14 @@ class Unobserved_Local_Node(Local_Node):
     """
     def __init__(self, dim, initial_value):
         Local_Node.__init__(self, dim, initial_value)
-   
+
 
 ###########################################################
 ## General class for observed and unobserved local nodes ##
 ###########################################################
 
 class Observed_Local_Node(Local_Node):
-    """ 
+    """
     General class for an observed node in a Bayesian network
     """
     def __init__(self, dim, value):
@@ -79,4 +79,3 @@ class Observed_Local_Node(Local_Node):
     def getExpectations(self):
         # return { 'obs':self.getValue(), 'lnE':None, 'E2':None }
         return { 'obs':self.getValue() }
-

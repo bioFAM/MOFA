@@ -43,6 +43,10 @@ Each node is a Variational_Node() class with the following main variables:
 
 """
 
+# TODO: in all remove factor functions, the dimensions of the distribution dont
+# seem to be updated. Would dbe neater to have a remove factor implemented in each distribution ?
+# which take care of this ?
+
 class Y_Node(Observed_Variational_Node):
     def __init__(self, dim, obs):
         Observed_Variational_Node.__init__(self, dim, obs)
@@ -93,7 +97,6 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         self.covariates[idx] = True
 
     def updateParameters(self):
-        # TODO drop inactive factors from the prior too
         Y = self.markov_blanket["Y"].getExpectation()
         tmp = self.markov_blanket["SW"].getExpectations()
         tau = self.markov_blanket["tau"].getExpectation()
@@ -129,9 +132,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         if any(self.covariates):
             self.Q.mean[:,self.covariates] = oldmean
 
-    def priorUpdateContributions():
-        pass
-
+    # TODO update ELBO to take into account priors
     def calculateELBO(self):
         lb_p = -self.Q.E2.sum()
         lb_q = -s.log(self.Q.var).sum() + self.N*self.K
@@ -169,7 +170,6 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         SW,SWW = tmp["ESW"], tmp["ESWW"]
         tmp = self.markov_blanket["Z"].getExpectations()
         Z,ZZ = tmp["E"],tmp["E2"]
-        pdb.set_trace()
         ## Vectorised ##
         term1 = (Y**2).sum(axis=0).data
         # term2 = 2*(Y*s.dot(Z,SW.T)).sum(axis=0)
@@ -213,7 +213,6 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
 
         # ARD prior on W
         # TODO check dimensionality here for the prior
-        pdb.set_trace()
         self.Q.a = self.P.a + S.sum(axis=0)/2
         self.Q.b = self.P.b + ESWW.sum(axis=0)/2
 
@@ -254,11 +253,17 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         Y = self.markov_blanket["Y"].getExpectation()
         alpha = self.markov_blanket["alpha"].getExpectation()
         SW = self.Q.ESW[:]
+        theta = self.markov_blanket['Theta'].getExpectations()['E']
 
-        all_term1 = s.log(self.P_theta/(1-self.P_theta))
+        # check dimensions of theta and expand if necessary
+        if theta.shape != self.Q.mean.shape:
+            theta = s.repeat(theta[None,:],self.Q.mean.shape[0],0)
+        # TODO here we need a theta node in the markov_blanket of the right dimensions to use
+
+        all_term1 = s.log(theta/(1.-theta))
         ## Vectorised ##
         for k in xrange(self.K):
-            term1 = all_term1[k]
+            term1 = all_term1[:, k]
             term2 = 0.5*s.log(s.divide(alpha[k],tau))
             term3 = 0.5*s.log(s.sum(ZZ[:,k]) + s.divide(alpha[k],tau))
             # term41 = ma.dot(Y.T,Z[:,k])
@@ -278,8 +283,8 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             SW[:,k] = self.Q.theta[:,k] * self.Q.mean[:,k]
 
         # Maximising lower bond with respect to hyperparameter theta (M-step)
-        if self.optimise_theta_bool:
-            self.P_theta = self.optimise_theta()
+        # if self.optimise_theta_bool:
+            # self.P_theta = self.optimise_theta()
 
     def optimise_theta(self):
         exp = self.getExpectations()
@@ -319,7 +324,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         self.Q.EWW = self.Q.EWW[:,keep]
         self.K = len(keep)
         self.dim = (self.D,self.K)
-        self.P_theta = self.P_theta[keep]
+        # self.P_theta = self.P_theta[keep]
 
 
     def calculateELBO(self):
@@ -328,6 +333,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         exp = self.getExpectations()
         S = exp["ES"]
         WW = exp["EWW"]
+        theta = self.markov_blanket['Theta'].getExpectations()['E']
 
         # Calculate ELBO for W
         lb_pw = (self.D*alpha["lnE"].sum() - s.sum(alpha["E"]*WW))/2
@@ -335,17 +341,65 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         lb_w = lb_pw - lb_qw
 
         # Calculate ELBO for S
-        # TODO understand why we do that ??
+        # TODO understand why we do that ?? ->over/underflow prob
         Slower = 0.00001
         Supper = 0.99999
         S[S<Slower] = Slower
         S[S>Supper] = Supper
-        # theta = self.P_theta
 
-        lb_ps = s.sum( S*s.log(self.P_theta) + (1-S)*s.log(1-self.P_theta))
+        # TODO problem here with the lower bond when theta is mixed
+        # the reason is that prior on theta will be counted too many times
+        # for the non-annotated factors
+        lb_ps = s.sum( S*s.log(theta) + (1-S)*s.log(1-theta))
         lb_qs = s.sum( S*s.log(S) + (1-S)*s.log(1-S) )
         lb_s = lb_ps - lb_qs
 
         # if math.isnan(lb_w + lb_s):
             # pdb.set_trace()
         return lb_w + lb_s
+
+#
+class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
+    """
+    This class comtain a Theta node associate to factors for which
+    we dont have annotations.
+
+    The inference is done per view and factor, so the dimension of the node is the
+    number of non-annotated factors
+
+    the updateParameters function needs to know what factors are non-annotated in
+    order to choose from the S matrix
+    """
+
+    # TODO needs to implement a function to drop factors
+    def __init__(self, dim, pa=1., pb=1., qa=1., qb=1.):
+        Beta_Unobserved_Variational_Node.__init__(self, dim, pa, pb, qa, qb)
+
+    def updateParameters(self, factors_selection=None):
+        # get needed node from the markov_blanket
+        tmp = self.markov_blanket['SW'].getExpectations()
+        S = tmp["ES"]  # S is of dimension D*K
+
+        if factors_selection is not None:
+            S = S[:, factors_selection]
+
+        tmp1 = S.sum(axis=0)
+        self.Q.a = tmp1 + self.P.a
+        self.Q.b = + self.P.b - tmp1 + S.shape[0]
+
+    def getExpectations(self):
+        return {'E':self.Q.E}
+    # TODO implement ELBO term
+
+    def removeFactors(self, *idx):
+        keep = s.setdiff1d(s.arange(self.dim[0]),idx)
+        #remove variational distribution terms
+        self.Q.a = self.Q.a[keep]
+        self.Q.b = self.Q.b[keep]
+        self.Q.E = self.Q.E[keep]
+        # remove prior terms
+        self.P.a = self.P.a[keep]
+        self.P.b = self.P.b[keep]
+        self.P.E = self.P.E[keep]
+        # others
+        self.dim = (len(keep),)

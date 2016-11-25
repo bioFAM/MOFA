@@ -63,7 +63,7 @@ data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=
 
 data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 data['tau']= [ stats.uniform.rvs(loc=1,scale=5,size=D[m]) for m in xrange(M) ]
-Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="gaussian", missingness=0.05)
 # Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="poisson")
 # Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="bernoulli")
@@ -151,10 +151,10 @@ SW = Multiview_Variational_Node(M, *SW_list)
 tau_list = [None]*M
 for m in xrange(M):
 	if m in M_poisson:
-		tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0) 
+		tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0)
 		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
 	elif m in M_bernoulli:
-		tmp = s.ones(D[m])*0.25 
+		tmp = s.ones(D[m])*0.25
 		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
 	elif m in M_binomial:
 		tmp = 0.25*s.amax(data["Y"]["tot"][m],axis=0)
@@ -174,7 +174,7 @@ tau = Multiview_Mixed_Node(M,*tau_list)
 Zeta_list = [None]*M
 for m in xrange(M):
 	if m not in M_gaussian:
-		Zeta_list[m] = Zeta_Node(dim=(N,D[m]), initial_value=None) 
+		Zeta_list[m] = Zeta_Node(dim=(N,D[m]), initial_value=None)
 	else:
 		Zeta_list[m] = None
 Zeta = Multiview_Local_Node(M, *Zeta_list)
@@ -268,7 +268,7 @@ if not os.path.exists(os.path.join(outdir,"stats")):
     os.makedirs(os.path.join(outdir,"stats"))
 if not os.path.exists(os.path.join(outdir,"opts")):
     os.makedirs(os.path.join(outdir,"opts"))
-            
+
 # Save the model parameters and expectations
 print "\nSaving model..."
 saveModel(net, outdir=os.path.join(outdir,"model"), only_first_moments=True)
@@ -280,4 +280,3 @@ opts = saveTrainingStats(model=net, outdir=os.path.join(outdir,"stats"))
 # Save training options
 print "\nSaving training opts..."
 opts = saveTrainingOpts(model=net, outdir=os.path.join(outdir,"opts"))
-

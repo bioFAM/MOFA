@@ -41,7 +41,6 @@ class Mixed_Theta_Nodes(Variational_Node, Constant_Node):
         exp = self.non_annotated_theta.getExpectations()['E']
 
         # deal with different dimensions
-        pdb.set_trace()  # TODO check dimensions here
         if exp.shape != values_annotated.shape:
             exp = s.repeat(exp[None, :], values_annotated.shape[0], 0)
 
@@ -60,15 +59,15 @@ class Mixed_Theta_Nodes(Variational_Node, Constant_Node):
         return self.non_annotated_theta.calculateELBO()
 
     def removeFactors(self, *ix):
-        keep = s.setdiff1d(s.arange(self.K),idx)
+        annotated_to_rm = s.intersect1d(ix, self.annotated_factors_ix)
+        non_annotated_to_rm = s.intersect1d(ix, self.non_annotated_factors_ix)
 
-        keep_annotated = s.intersect1d(keep, self.annotated_factors_ix)
-        keep_non_annotated = s.intersect1d(keep, self.non_annotated_factors_ix)
+        non_annotated_to_rm_reindexed = non_annotated_to_rm - len(self.annotated_factors_ix)
 
-        self.annotated_theta.removeFactors(keep_annotated)
-        self.non_annotated_theta.removeFactors(keep_non_annotated)
+        self.non_annotated_theta.removeFactors(non_annotated_to_rm_reindexed)
+        self.annotated_theta.removeFactors(annotated_to_rm)
 
-        self.annotated_factors_ix = xrange(len(keep_annotated))
-        self.non_annotated_factors_ix = xrange(len(keep_non_annotated)) + len(self.annotated_factors_ix)
+        self.annotated_factors_ix = range(len(self.annotated_factors_ix) - len(annotated_to_rm))
+        self.non_annotated_factors_ix = range(len(self.annotated_factors_ix), len(self.annotated_factors_ix) +len(self.non_annotated_factors_ix) - len(non_annotated_to_rm))
 
         self.K = len(self.annotated_factors_ix) + len(self.non_annotated_factors_ix)

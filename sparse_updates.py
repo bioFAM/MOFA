@@ -261,7 +261,6 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         alpha = self.markov_blanket["alpha"].getExpectation()
         SW = self.Q.ESW[:]
         theta = self.markov_blanket['Theta'].getExpectations()['E']
-
         # check dimensions of theta and expand if necessary
         if theta.shape != self.Q.mean.shape:
             theta = s.repeat(theta[None,:],self.Q.mean.shape[0],0)
@@ -270,6 +269,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         all_term1 = s.log(theta/(1.-theta))
         ## Vectorised ##
         for k in xrange(self.K):
+
             term1 = all_term1[:, k]
             term2 = 0.5*s.log(s.divide(alpha[k],tau))
             term3 = 0.5*s.log(s.sum(ZZ[:,k]) + s.divide(alpha[k],tau))
@@ -377,7 +377,6 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
     order to choose from the S matrix
     """
 
-    # TODO needs to implement a function to drop factors
     def __init__(self, dim, pa=1., pb=1., qa=1., qb=1.):
         Beta_Unobserved_Variational_Node.__init__(self, dim, pa, pb, qa, qb)
 

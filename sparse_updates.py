@@ -219,7 +219,6 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
         # self.Q.a = self.P.a + D/2 # Updated in the initialisation
 
         # ARD prior on W
-        # TODO check dimensionality here for the prior
         self.Q.a = self.P.a + S.sum(axis=0)/2
         self.Q.b = self.P.b + ESWW.sum(axis=0)/2
 
@@ -264,7 +263,6 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         # check dimensions of theta and expand if necessary
         if theta.shape != self.Q.mean.shape:
             theta = s.repeat(theta[None,:],self.Q.mean.shape[0],0)
-        # TODO here we need a theta node in the markov_blanket of the right dimensions to use
 
         all_term1 = s.log(theta/(1.-theta))
         ## Vectorised ##
@@ -356,6 +354,8 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         # TODO problem here with the lower bond when theta is mixed
         # the reason is that prior on theta will be counted too many times
         # for the non-annotated factors
+        # quick hack:
+        
         lb_ps = s.sum( S*s.log(theta) + (1-S)*s.log(1-theta))
         lb_qs = s.sum( S*s.log(S) + (1-S)*s.log(1-S) )
         lb_s = lb_ps - lb_qs

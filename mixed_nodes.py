@@ -57,7 +57,7 @@ class Mixed_Theta_Nodes(Variational_Node, Constant_Node):
 
     # TODO implement
     def calculateELBO(self):
-        return 0.
+        return self.non_annotated_theta.calculateELBO()
 
     def removeFactors(self, *ix):
         keep = s.setdiff1d(s.arange(self.K),idx)

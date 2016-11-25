@@ -414,6 +414,9 @@ class Beta(Distribution):
 
     def updateExpectations(self):
         self.E = s.divide(self.a,self.a+self.b)
+        self.lnE = special.digamma(self.a) - special.digamma(self.a + self.b)
+        # expectation of ln(1-X)
+        self.lnEInv = special.digamma(self.b) - special.digamma(self.a + self.b)
 
     def density(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"

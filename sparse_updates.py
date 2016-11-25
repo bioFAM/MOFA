@@ -8,6 +8,8 @@ from utils import *
 import pdb
 import math
 
+import scipy.special as special
+
 """
 ###################################################
 ## Updates for the Sparse Group Factor Analysis ##
@@ -133,7 +135,6 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
             self.Q.mean[:,self.covariates] = oldmean
 
     def calculateELBO(self):
-        pdb.set_trace()  # check dimensionalities
         # term from the exponential term in the Gaussian
         tmp1 = self.Q.E2/2. - self.P.mean * self.Q.E + self.P.mean**2.0/2.
         tmp1 = -(tmp1/self.P.var).sum()
@@ -408,3 +409,16 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
         self.P.E = self.P.E[keep]
         # others
         self.dim = (len(keep),)
+
+    def calculateELBO(self):
+        # minus cross entropy of Q and P
+        tmp1 = (self.P.a -1.) * self.Q.lnE + (self.P.b -1.) * self.Q.lnEInv
+        tmp1 -= special.betaln(self.P.a, self.P.b)
+        lbp = tmp1.sum()
+
+        # minus entropy of Q
+        tmp2 = (self.Q.a -1.) * self.Q.lnE + (self.Q.b -1.) * self.Q.lnEInv
+        tmp2 -= special.betaln(self.Q.a, self.Q.b)
+        lbq = tmp2.sum()
+
+        return lbp - lbq

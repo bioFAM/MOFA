@@ -53,6 +53,9 @@ class Mixed_Theta_Nodes(Variational_Node, Constant_Node):
         lnEInv = s.concatenate((s.log(1-values_annotated), lnExpInv), axis=1)
         return dict({'E': E, 'lnE': lnE, 'lnEInv':lnEInv})
 
+    def getExpectation(self):
+        return self.getExpectations()['E']
+
     def updateExpectations(self):
         self.non_annotated_theta.updateExpectations()
 

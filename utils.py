@@ -58,7 +58,6 @@ def saveModel(model, outdir, compress=False, only_first_moments=True):
 
 	# Check that the model is trained
 	assert model.trained == True, "Model is not trained yet"
-	pdb.set_trace()
 	nodes = model.getNodes()
 
 	# Create output folder if it does not exist
@@ -82,19 +81,19 @@ def saveModel(model, outdir, compress=False, only_first_moments=True):
 		else:
 			expectations = nodes[node].getExpectations()
 
-		# Multi-view nodes
-		if type(expectations) == list:
-			# Iterate over views
-			for m in xrange(len(expectations)):
+		# TODO problem here ? dimensions are wrong in the file
+		for key,value in expectations.iteritems():
+			# Multi view node case
+			if type(value) == list:
+				for m in xrange(len(value)):
 				# Iterate over expectations
-				for key,value in expectations[m].iteritems():
+				# for key,value in expectations[m].iteritems():
 					filename = os.path.join(outdir,"%s_%s_%d.npy" % (node,key,m+1))
 					print "\tsaving %s..." % filename
 					np.save(filename,value)
 
-		# Single-view nodes
-		else:
-			for key,value in expectations.iteritems():
+			# single-view node case
+			else:
 				filename = os.path.join(outdir,"%s_%s.npy" % (node,key))
 				print "\tsaving %s..." % filename
 				np.save(filename,value)

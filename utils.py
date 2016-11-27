@@ -1,6 +1,7 @@
 import numpy as np
 import struct
 import os
+import pdb
 
 """
 Module to define some useful util functions
@@ -42,21 +43,22 @@ def saveTrainingOpts(model, outdir):
     opts = model.getTrainingOpts()
     file = os.path.join(outdir,"opts.txt")
     with open(file, "a") as f:
-        for k,v in opts.iteritems(): 
+        for k,v in opts.iteritems():
             f.write(k + ":" + str(v) + "\n")
     pass
 
 def saveModel(model, outdir, compress=False, only_first_moments=True):
 	# Function to save a trained model to be load in R:
-	# 	Expectations and parameters are stored as .npy objects to be loaded in R using the RcppCNPy package 
-	#	
-	# Inputs: 
+	# 	Expectations and parameters are stored as .npy objects to be loaded in R using the RcppCNPy package
+	#
+	# Inputs:
 	# - model (BayesNet class): the trained model
 	# - outdir (string): output directory
 	# - compress (bool): compress files using gzip?
 
 	# Check that the model is trained
 	assert model.trained == True, "Model is not trained yet"
+	pdb.set_trace()
 	nodes = model.getNodes()
 
 	# Create output folder if it does not exist
@@ -76,7 +78,7 @@ def saveModel(model, outdir, compress=False, only_first_moments=True):
 			expectations = {'E': nodes[node].getExpectation() }
 			if node == "Zeta":
 				print expectations
-				exit()
+				# exit()
 		else:
 			expectations = nodes[node].getExpectations()
 

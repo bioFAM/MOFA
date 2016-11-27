@@ -41,7 +41,7 @@ class Simulate(object):
         return alpha
 
     def initW_ard(self, alpha=None):
-        # ARD weights are initialised 
+        # ARD weights are initialised
         if alpha is None:
             alpha = self.initAlpha()
         W = [ s.zeros((self.D[m],self.K)) for m in xrange(self.M) ]
@@ -50,12 +50,21 @@ class Simulate(object):
                 W[m][:,k] = norm.rvs(loc=0, scale=1/s.sqrt(alpha[m][k]), size=self.D[m])
         return W,alpha
 
-    def initW_spikeslab(self, theta, alpha=None):
+    # TODO: here is a quick hack for taking into account informative priors
+    # need to work out how to do this better
+    def initW_spikeslab(self, theta, alpha=None, annotation=False):
         # Simulate bernoulli variable S
         S = [ s.zeros((self.D[m],self.K)) for m in xrange(self.M) ]
-        for m in xrange(self.M):
-            for k in xrange(self.K):
-                S[m][:,k] = bernoulli.rvs(p=theta[m][k], size=self.D[m])
+        if annotation:
+            # if annotation is True, theta is an informative prior and its dimensions
+            # are M * K * D[m], so theta[m][k] is already of length D
+            for m in xrange(self.M):
+                for k in xrange(self.K):
+                    S[m][:,k] = bernoulli.rvs(p=theta[m][:, k])
+        else:
+            for m in xrange(self.M):
+                for k in xrange(self.K):
+                    S[m][:,k] = bernoulli.rvs(p=theta[m][k], size=self.D[m])
 
         # Simualte ARD precision
         if alpha is None:
@@ -110,7 +119,7 @@ class Simulate(object):
 
         # Sample observations using a poisson likelihood
         elif likelihood == "poisson":
-            # Slow way 
+            # Slow way
             for m in xrange(self.M):
                 for n in xrange(self.N):
                     for d in xrange(self.D[m]):
@@ -132,10 +141,10 @@ class Simulate(object):
             #     # Y[m] = poisson.rvs(rate)
             #     # Use the more likely values
             #     Y[m] = s.special.round(rate)
-                
+
         # Sample observations using a bernoulli likelihood
         elif likelihood == "bernoulli":
-            # Slow way 
+            # Slow way
             for m in xrange(self.M):
                 for n in xrange(self.N):
                     for d in xrange(self.D[m]):
@@ -151,9 +160,9 @@ class Simulate(object):
 
         # Sample observations using a binomial likelihood
         elif likelihood == "binomial":
-            Y = dict(tot=[s.zeros((self.N,self.D[m])) for m in xrange(self.M)], 
+            Y = dict(tot=[s.zeros((self.N,self.D[m])) for m in xrange(self.M)],
                      obs=[s.zeros((self.N,self.D[m])) for m in xrange(self.M)] )
-            # Slow way 
+            # Slow way
             for m in xrange(self.M):
                 for n in xrange(self.N):
                     for d in xrange(self.D[m]):
@@ -161,7 +170,7 @@ class Simulate(object):
                         Y["tot"][m][n,d] = s.random.random_integers(low=min_trials, high=max_trials, size=1)
                         # Sample the total number of successes
                         f = sigmoid( s.dot(Z[n,:],W[m][d,:].T) )
-                        Y["obs"][m][n,d] = binom.rvs(Y["tot"][m][n,d], f) 
+                        Y["obs"][m][n,d] = binom.rvs(Y["tot"][m][n,d], f)
 
         # Introduce missing values into the data
         if missingness > 0.0:
@@ -172,5 +181,3 @@ class Simulate(object):
                 Y[m] = ma.masked_invalid( tmp.reshape((self.N,self.D[m])) )
 
         return Y
-
-

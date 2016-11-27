@@ -30,17 +30,6 @@ from mixed_nodes import Mixed_Theta_Nodes
 
 N_tests = 200
 
-sparsity_truth = s.zeros([3 * N_tests, 8])
-sparsity_inferred_opt = s.zeros([3 * N_tests, 12])
-sparsity_inferred_no_opt = s.zeros([3 * N_tests, 12])
-
-alpha_opt = s.zeros([3 * N_tests, 12])
-alpha_no_opt = s.zeros([3 * N_tests, 12])
-
-# choose whether to put the theta prior factor/view-wise or just view wise
-factor_wise = True
-ARD_bool = True
-
 """
 Define function to run one single test. Results are saved in global variables
 """
@@ -78,39 +67,61 @@ def run_test(test_ix):
     # data['alpha'][0,:] = [1,1,1e6,1,1e6,1e6]
     # data['alpha'][1,:] = [1,1e6,1,1e6,1,1e6]
     # data['alpha'][2,:] = [1e6,1,1,1e6,1e6,1]
-
+    """
+    Define structure for knowledge passing
+        - factors Z1, Z2 and Z3 are annotatedo in view 1 only
+        - Z1 is shared by all three views
+        - Z2 is shared by view 1 and 2
+        - Z3 is only active in view 1
+    There will be an annotated inactive fatcor too in the model (defined later)
+    """
     data['alpha'] = [s.zeros(K, ) for m in xrange(M)]
-    data['alpha'][0] = [1, 1, 1e6, 1, 1e6, 1e6]
-    data['alpha'][1] = [1, 1e6, 1, 1e6, 1, 1e6]
-    data['alpha'][2] = [1e6, 1, 1, 1e6, 1e6, 1]
+    data['alpha'][0] = [1, 1,   1,   1,   1e6, 1e6]
+    data['alpha'][1] = [1, 1,   1e6, 1e6, 1,   1e6]
+    data['alpha'][2] = [1, 1e6, 1e6, 1,   1e6, 1]
+
+    # annotations
+    annotation_theta1 = s.random.choice([0.1, 0.9], p=[0.8, 0.2], size = D[0])
+    annotation_theta2 = s.random.choice([0.1, 0.9], p=[0.7, 0.3], size = D[0])
+    annotation_theta3 = s.random.choice([0.1, 0.9], p=[0.4, 0.6], size = D[0])
+    theta_remaining = s.ones([D[0], 3]) * s.random.uniform(0, 1, 3)
+
+    theta_view_1 = s.concatenate((annotation_theta1[:,None], annotation_theta2[:,None],
+                                  annotation_theta3[:,None], theta_remaining), axis=1)
+    theta_view_2 = s.ones([D[1], K]) * s.random.uniform(0, 1, K)
+    theta_view_3 = s.ones([D[2], K]) * s.random.uniform(0, 1, K)
+
+    theta = [theta_view_1, theta_view_2, theta_view_3]
+
+    annotation_bool = True
 
     # theta = [ s.ones(K)*0.5 for m in xrange(M) ]
     # theta = [ s.ones(K)*0.5 for m in xrange(M) ]
-    # if not factor_wise, initialisation should be done as it is, and then
-    # rtansformed inside the code to be of the right dimension
+
+
     # TODO to change, initialisation and that should be it
-    if factor_wise:
-        theta_priors = s.random.uniform(0, 1, M*K)
-        theta_priors = s.reshape(theta_priors, [M, K])
-        theta = [theta_priors[m, :] for m in xrange(M)]
-        sparsity_truth[3 * test_ix:(3 * test_ix + 3), 0] = test_ix
-        sparsity_truth[3 * test_ix:(3 * test_ix + 3), 1] = [0,1,2]
-        sparsity_truth[3 * test_ix:(3 * test_ix + 3), 2:] = theta_priors
+    # if factor_wise:
+    #     theta_priors = s.random.uniform(0, 1, M*K)
+    #     theta_priors = s.reshape(theta_priors, [M, K])
+    #     theta = [theta_priors[m, :] for m in xrange(M)]
+    #     sparsity_truth[3 * test_ix:(3 * test_ix + 3), 0] = test_ix
+    #     sparsity_truth[3 * test_ix:(3 * test_ix + 3), 1] = [0,1,2]
+    #     sparsity_truth[3 * test_ix:(3 * test_ix + 3), 2:] = theta_priors
+    #
+    # else:
+    #     theta_priors = s.random.uniform(0, 1, 3)
+    #     sparsity_truth[3 * test_ix:(3 * test_ix + 3), 0] = test_ix
+    #     sparsity_truth[3 * test_ix:(3 * test_ix + 3), 1] = [0,1,2]
+    #     sparsity_truth[3 * test_ix:(3 * test_ix + 3), 2:] = s.reshape(theta_priors, [3,1])
+    #     theta = [s.ones(K) * theta_priors[m] for m in xrange(M)]
 
-    else:
-        theta_priors = s.random.uniform(0, 1, 3)
-        sparsity_truth[3 * test_ix:(3 * test_ix + 3), 0] = test_ix
-        sparsity_truth[3 * test_ix:(3 * test_ix + 3), 1] = [0,1,2]
-        sparsity_truth[3 * test_ix:(3 * test_ix + 3), 2:] = s.reshape(theta_priors, [3,1])
-        theta = [s.ones(K) * theta_priors[m] for m in xrange(M)]
-
-    data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
+    data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'], annotation=annotation_bool)
 
     data['mu'] = [s.zeros(D[m]) for m in xrange(M)]
     data['tau'] = [stats.uniform.rvs(loc=1, scale=5, size=D[m]) for m in xrange(M)]
     Y_gaussian = None
     Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
-                                  likelihood="gaussian", missingness=0.05)
+                                  likelihood="gaussian", missingness=0.00)
     # Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="poisson")
     # Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="bernoulli")
     # Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="binomial",
@@ -246,10 +257,15 @@ def run_test(test_ix):
 
     # Theta node
     Theta_list = [None] * M
-    # In the first view, three factors are annotated
-    annotations = s.random.choice([0.9, 0.1], [100,3])
-    annotated_node = Constant_Node((100,3), annotations)
-    non_annotated_node = Theta_Node_No_Annotation((7,))
+    """
+    Here, use the annotations in the inferrence
+    Also add a fourth annotated facor which is not active in any view (should be removed)
+    """
+    sup_annotation = s.random.choice([0.1, 0.9], p=[0.75, 0.25], size=[100,1])
+    annotations = s.concatenate((annotation_theta1[:,None], annotation_theta2[:,None],
+                                  annotation_theta3[:,None], sup_annotation), axis=1)
+    annotated_node = Constant_Node((100,4), annotations)
+    non_annotated_node = Theta_Node_No_Annotation((6,))
     Theta_list[0] = Mixed_Theta_Nodes(annotated_node, non_annotated_node)
     # Other two views, no annotation
 
@@ -366,56 +382,5 @@ Running all tests in parallel
 """
 Running tests sequentiallly
 """
-for ix in range(0,N_tests):
+for ix in range(0,1):
     run_test(ix)
-
-# test_dir = '/Users/damienarnol1/Documents/local/pro/PhD/scGFA_all/tests/model_100/'
-# test_dir = '/Users/damienarnol1/Documents/local/pro/PhD/scGFA_all/tests/test_100_per_factor_What/'
-test_dir = '/tmp/'
-
-if factor_wise:
-    factors = ' '.join(['factor' + str(ix) for ix in range(10)])
-    file_header = 'run view ' + factors
-else:
-    file_header = 'run factor res'
-
-# if factor_wise:
-#     factors = ' '.join(['factor' + str(ix) for ix in range(6)])
-#     file_header = 'run view ' + factors
-# else:
-#     file_header = 'run view res'
-
-s.savetxt(test_dir + 'sparsity_truth.txt',
-          sparsity_truth,
-          header = file_header, comments='')
-
-# if factor_wise:
-#     factors = ' '.join(['inferred_pi' + str(ix) for ix in range(10)])
-#     file_header = 'run view ' + factors
-# else:
-#     file_header = 'run factor true_pi'
-s.savetxt(test_dir + 'sparsity_inf_opt.txt',
-          sparsity_inferred_opt,
-          header = file_header, comments='')
-
-# if factor_wise:
-#     factors = ' '.join(['estimated_pi' + str(ix) for ix in range(10)])
-#     file_header = 'run view ' + factors
-# else:
-#     file_header = 'run factor true_pi'
-s.savetxt(test_dir + 'sparsity_inf_no_opt.txt',
-          sparsity_inferred_no_opt,
-          header = file_header, comments='')
-
-# writing alpha parameters into a file
-factors = ' '.join(['factor' + str(ix) for ix in range(10)])
-file_header = 'run view ' + factors
-s.savetxt(test_dir + 'alpha_no_opt.txt',
-          alpha_no_opt,
-          header = file_header, comments='')
-
-factors = ' '.join(['factor' + str(ix) for ix in range(10)])
-file_header = 'run view ' + factors
-s.savetxt(test_dir + 'alpha_opt.txt',
-          alpha_opt,
-          header = file_header, comments='')

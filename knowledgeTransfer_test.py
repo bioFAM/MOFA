@@ -28,7 +28,6 @@ import pdb
 from constant_nodes import Constant_Node
 from mixed_nodes import Mixed_Theta_Nodes
 
-N_tests = 200
 
 """
 Define function to run one single test. Results are saved in global variables
@@ -336,7 +335,9 @@ def run_test(test_ix):
     ## Save results ##
     ##################
 
-
+    # pdb.set_trace()
+    print Theta.nodes[0].K
+    print len(Theta.nodes[0].annotated_factors_ix)
     outdir = "/tmp/test"
 
     if not os.path.exists(outdir):
@@ -371,12 +372,15 @@ def run_test(test_ix):
     opts = saveTrainingOpts(model=net,
                             outdir=file_name)  # saving real values of sparsity and infered values
 
-        # del net, Zeta, SW, tau, Z, Y, alpha
 
+
+
+N_tests = 200
 
 """
 Running all tests in parallel
 """
+# TODO needs to add some index for saving files
 # Parallel(n_jobs=8)(delayed(run_test)(ix) for ix in range(0, N_tests))
 
 """

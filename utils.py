@@ -86,11 +86,12 @@ def saveModel(model, outdir, compress=False, only_first_moments=True):
 			# Multi view node case
 			if type(value) == list:
 				for m in xrange(len(value)):
+					pdb.set_trace()
 				# Iterate over expectations
 				# for key,value in expectations[m].iteritems():
 					filename = os.path.join(outdir,"%s_%s_%d.npy" % (node,key,m+1))
 					print "\tsaving %s..." % filename
-					np.save(filename,value)
+					np.save(filename,value[m])
 
 			# single-view node case
 			else:

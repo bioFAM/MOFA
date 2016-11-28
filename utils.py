@@ -45,7 +45,6 @@ def saveTrainingOpts(model, outdir):
     with open(file, "a") as f:
         for k,v in opts.iteritems():
             f.write(k + ":" + str(v) + "\n")
-    pass
 
 def saveData(simulation, outdir):
 	for key, value in simulation.iteritems():
@@ -98,8 +97,6 @@ def saveModel(model, outdir, compress=False, only_first_moments=True):
 			# Multi view node case
 			if type(value) == list:
 				for m in xrange(len(value)):
-				# Iterate over expectations
-				# for key,value in expectations[m].iteritems():
 					filename = os.path.join(outdir,"%s_%s_%d.npy" % (node,key,m+1))
 					print "\tsaving %s..." % filename
 					np.save(filename,value[m])

@@ -215,12 +215,13 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
         S,EWW,ESWW = tmp["ES"],tmp["EWW"],tmp["ESWW"]
 
         # ARD prior on What
-        # self.Q.b = self.P.b + EWW.sum(axis=0)/2
-        # self.Q.a = self.P.a + D/2 # Updated in the initialisation
+        # pdb.set_trace()
+        self.Q.b = self.P.b + EWW.sum(axis=0)/2.
+        self.Q.a = s.repeat(self.P.a + EWW.shape[0]/2., self.K) # Updated in the initialisation
 
         # ARD prior on W
-        self.Q.a = self.P.a + S.sum(axis=0)/2
-        self.Q.b = self.P.b + ESWW.sum(axis=0)/2
+        # self.Q.a = self.P.a + S.sum(axis=0)/2
+        # self.Q.b = self.P.b + ESWW.sum(axis=0)/2
 
     def calculateELBO(self):
         p = self.P

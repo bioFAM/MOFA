@@ -176,7 +176,10 @@ class BayesNet(object):
                 if i > 0:
                     # Check convergence using the ELBO
                     delta_elbo = elbo.iloc[i]["total"]-elbo.iloc[i-1]["total"]
-                    # print delta_elbo
+                    if delta_elbo < 0:
+                        print delta_elbo
+                        exit()
+
 
                     # Print ELBO monitoring
                     if self.options['verbosity'] > 0:

@@ -2,7 +2,7 @@
 Script to test the spike and slab updates with gaussian and non-gaussian likelihoods
 """
 
-# from __future__ import division
+from __future__ import division
 from time import time
 import cPickle as pkl
 import scipy as s
@@ -340,20 +340,20 @@ def run_test(test_ix):
 
 
         # Save the model parameters and expectations
-    print "\nSaving model..."
-    file_name = os.path.join(outdir, "model")
-    saveModel(net, outdir=file_name, only_first_moments=True)
-
-    # Save training statistics
-    print "\nSaving training stats..."
-    file_name = os.path.join(outdir, "stats")
-    opts = saveTrainingStats(model=net, outdir=file_name)
-
-    # Save training options
-    print "\nSaving training opts..."
-    file_name = os.path.join(outdir, "opts")
-    opts = saveTrainingOpts(model=net,
-                            outdir=file_name)  # saving real values of sparsity and infered values
+    # print "\nSaving model..."
+    # file_name = os.path.join(outdir, "model")
+    # saveModel(net, outdir=file_name, only_first_moments=True)
+    #
+    # # Save training statistics
+    # print "\nSaving training stats..."
+    # file_name = os.path.join(outdir, "stats")
+    # opts = saveTrainingStats(model=net, outdir=file_name)
+    #
+    # # Save training options
+    # print "\nSaving training opts..."
+    # file_name = os.path.join(outdir, "opts")
+    # opts = saveTrainingOpts(model=net,
+    #                         outdir=file_name)  # saving real values of sparsity and infered values
 
         # del net, Zeta, SW, tau, Z, Y, alpha
 

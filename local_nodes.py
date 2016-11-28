@@ -42,6 +42,8 @@ class Local_Node(Node):
         return self.value
     def getExpectation(self):
         return self.getValue()
+    def getParameters(self):
+        return None
     def getExpectations(self):
         # return { 'E':self.getValue(), 'lnE':None, 'E2':None }
         return { 'E':self.getValue() }
@@ -78,5 +80,5 @@ class Observed_Local_Node(Local_Node):
         Local_Node.__init__(self, dim, value)
     def getExpectations(self):
         # return { 'obs':self.getValue(), 'lnE':None, 'E2':None }
-        return { 'obs':self.getValue() }
-
+        # return { 'obs':self.getValue() }
+        return { 'E':self.getValue() } 

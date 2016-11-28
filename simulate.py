@@ -164,13 +164,17 @@ class Simulate(object):
                         Y["obs"][m][n,d] = binom.rvs(Y["tot"][m][n,d], f) 
 
         # Introduce missing values into the data
+        # DOESNT WORK FOR BINOMIAL RIGHT NOW
         if missingness > 0.0:
             for m in xrange(self.M):
                 nas = s.random.randint(0, self.N*self.D[m], missingness*self.N*self.D[m])
                 tmp = Y[m].flatten()
                 tmp[nas] = s.nan
-                Y[m] = ma.masked_invalid( tmp.reshape((self.N,self.D[m])) )
+                Y[m] = tmp.reshape((self.N,self.D[m]))
 
+        # Create a mask 
+        for m in xrange(self.M):
+            Y[m] = ma.masked_invalid(Y[m])
         return Y
 
 

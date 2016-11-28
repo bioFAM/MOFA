@@ -40,6 +40,10 @@ class Multiview_Node(Node):
         # Get current estimate of all relevant moments
         return [ self.nodes[m].getExpectations() for m in self.idx ]
 
+    def getParameters(self):
+        # Get current estimate of parameters
+        return [ self.nodes[m].getParameters() for m in self.idx ]
+
 # class Multiview_Local_Node(Multiview_Node,Local_Node):
 class Multiview_Local_Node(Multiview_Node):
     """ 
@@ -89,7 +93,6 @@ class Multiview_Variational_Node(Multiview_Node, Variational_Node):
         return sum(lb)
 
 class Multiview_Mixed_Node(Multiview_Local_Node, Multiview_Variational_Node):
-# class Multiview_Mixed_Node(Multiview_Node):
     """
     General Class for multiview nodes that contain both variational and local nodes
     """
@@ -110,5 +113,5 @@ class Multiview_Mixed_Node(Multiview_Local_Node, Multiview_Variational_Node):
                 lb += self.nodes[m].calculateELBO()
         return lb
         
-    # def getObservations(self):
-    #     return [ self.nodes[m].getObservations() for m in self.idx ]
+    def getObservations(self):
+        return [ self.nodes[m].getObservations() for m in self.idx ]

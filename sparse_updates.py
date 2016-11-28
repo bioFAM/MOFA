@@ -5,6 +5,10 @@ import numpy.ma as ma
 # Import manually defined functions
 from variational_nodes import *
 from utils import *
+import pdb
+import math
+
+import scipy.special as special
 
 """
 ###################################################
@@ -40,6 +44,10 @@ Each node is a Variational_Node() class with the following main variables:
     - dim: dimensionality of the node
 
 """
+
+# TODO: in all remove factor functions, the dimensions of the distribution dont
+# seem to be updated. Would dbe neater to have a remove factor implemented in each distribution ?
+# which take care of this ?
 
 class Y_Node(Observed_Variational_Node):
     def __init__(self, dim, obs):
@@ -100,8 +108,11 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         tau = s.concatenate([tau[m] for m in xrange(M)],axis=0)
 
         # Variance
-        tmp = 1/((tau*SWW.T).sum(axis=1)+1)
-        self.Q.var = s.repeat(tmp[None,:],self.N,0)
+        # pdb.set_trace()
+        tmp = (tau*SWW.T).sum(axis=1)
+        tmp = s.repeat(tmp[None,:],self.N,0)
+        tmp += 1./self.P.var  # adding the prior precision to the updated precision
+        self.Q.var = 1./tmp
 
         # Mean
         if any(self.covariates): 
@@ -111,26 +122,38 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
             tmp1 = SW[:,k]*tau
             tmp2 = Y - s.dot( self.Q.mean[:,s.arange(self.K)!=k] , SW[:,s.arange(self.K)!=k].T )
             # self.Q.mean[:,k] = self.Q.var[:,k] * s.dot(tmp2,tmp1)
-            self.Q.mean[:,k] = self.Q.var[:,k] * ma.dot(tmp2,tmp1)
+            tmp3 = ma.dot(tmp2,tmp1)
+            tmp3 += 1./self.P.var[:, k] * self.P.mean[:, k]  # adding contribution from the prior
+            self.Q.mean[:,k] = self.Q.var[:,k] * tmp3
 
         # Do not update the latent variables associated with known covariates
         if any(self.covariates):
             self.Q.mean[:,self.covariates] = oldmean
 
-        pass
-
     def calculateELBO(self):
-        lb_p = -self.Q.E2.sum()
-        lb_q = -s.log(self.Q.var).sum() - self.N*self.K
-        # lb_q = -s.log(self.Q.var).sum() + self.N*self.K
-        return (lb_p-lb_q)/2
+        # term from the exponential term in the Gaussian
+        tmp1 = self.Q.E2/2. - self.P.mean * self.Q.E + self.P.mean**2.0/2.
+        tmp1 = -(tmp1/self.P.var).sum()
+
+        # term from the precision factor in front of the Gaussian (TODO should be computed only once)
+        tmp2 = - (s.log(self.P.var)/2.).sum()
+
+        lb_p = tmp1 + tmp2
+        lb_q = - (s.log(self.Q.var).sum() + self.N*self.K)/2.
+
+        return lb_p-lb_q
 
     def removeFactors(self, *idx):
         keep = s.setdiff1d(s.arange(self.K),idx)
+        #remove variational distribution terms
         self.Q.mean = self.Q.mean[:,keep]
         self.Q.var = self.Q.var[:,keep]
         self.Q.E = self.Q.E[:,keep]
         self.Q.E2 = self.Q.E2[:,keep]
+        # remove prior terms
+        self.P.mean = self.P.mean[:,keep]
+        self.P.var = self.P.var[:,keep]
+        # others
         self.covariates = self.covariates[keep]
         self.K = len(keep)
         self.dim = (self.N,self.K)
@@ -150,21 +173,17 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         SW,SWW = tmp["ESW"], tmp["ESWW"]
         tmp = self.markov_blanket["Z"].getExpectations()
         Z,ZZ = tmp["E"],tmp["E2"]
-
-
         ## Vectorised ##
         term1 = (Y**2).sum(axis=0).data
         # term2 = 2*(Y*s.dot(Z,SW.T)).sum(axis=0)
         term2 = 2*(Y*s.dot(Z,SW.T)).sum(axis=0).data
         term3 = (ZZ.dot(SWW.T)).sum(axis=0)
         term4 = s.diag(s.dot( SW.dot(Z.T), Z.dot(SW.T) )) - s.dot(Z**2,(SW**2).T).sum(axis=0)
-        tmp = term1 - term2 + term3 + term4 
-        
+        tmp = term1 - term2 + term3 + term4
+
         # self.Q.a[:] = self.P.a + N/2
         self.Q.a = self.P.a + (Y.shape[0] - ma.getmask(Y).sum(axis=0))/2
         self.Q.b = self.P.b + tmp/2
-
-        pass
 
     def calculateELBO(self):
         p = self.P
@@ -185,16 +204,16 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
 
     def updateParameters(self):
         tmp = self.markov_blanket["SW"].getExpectations()
-        S,WW,SWW = tmp["ES"],tmp["EWW"],tmp["ESWW"]
+        S,EWW,ESWW = tmp["ES"],tmp["EWW"],tmp["ESWW"]
 
         # ARD prior on What
-        # IS THIS WRONG FOR SOME REASON ???
-        # self.Q.a = self.P.a + D/2 # Updated in the initialisation
-        # self.Q.b = self.P.b + WW.sum(axis=0)/2
+        # pdb.set_trace()
+        self.Q.b = self.P.b + EWW.sum(axis=0)/2.
+        self.Q.a = s.repeat(self.P.a + EWW.shape[0]/2., self.K) # Updated in the initialisation
 
         # ARD prior on W
-        self.Q.a = self.P.a + S.sum(axis=0)/2
-        self.Q.b = self.P.b + SWW.sum(axis=0)/2
+        # self.Q.a = self.P.a + S.sum(axis=0)/2
+        # self.Q.b = self.P.b + ESWW.sum(axis=0)/2
 
     def calculateELBO(self):
         p = self.P
@@ -228,15 +247,28 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         Y = self.markov_blanket["Y"].getExpectation()
         alpha = self.markov_blanket["alpha"].getExpectation()
         SW = self.Q.ESW[:]
+        # TODO make general in mixed node
+        theta_lnE = self.markov_blanket['Theta'].getExpectations()['lnE']
+        theta_lnEInv = self.markov_blanket['Theta'].getExpectations()['lnEInv']
 
+        # check dimensions of theta and expand if necessary
+        if theta_lnE.shape != self.Q.mean.shape:
+            theta_lnE = s.repeat(theta_lnE[None,:],self.Q.mean.shape[0],0)
+        if theta_lnEInv.shape != self.Q.mean.shape:
+            theta_lnEInv = s.repeat(theta_lnEInv[None,:],self.Q.mean.shape[0],0)
+
+
+        all_term1 = theta_lnE - theta_lnEInv
+        # all_term1 = s.log(theta/(1.-theta))
         ## Vectorised ##
         for k in xrange(self.K):
-            term1 = s.log(self.P_theta/(1-self.P_theta))
+
+            term1 = all_term1[:, k]
             term2 = 0.5*s.log(s.divide(alpha[k],tau))
             term3 = 0.5*s.log(s.sum(ZZ[:,k]) + s.divide(alpha[k],tau))
             # term41 = ma.dot(Y.T,Z[:,k])
             term41 = ma.dot(Y.T,Z[:,k]).data
-            term42 = s.dot( SW[:,s.arange(self.K)!=k] , (Z[:,k]*Z[:,s.arange(self.K)!=k].T).sum(axis=1) )                
+            term42 = s.dot( SW[:,s.arange(self.K)!=k] , (Z[:,k]*Z[:,s.arange(self.K)!=k].T).sum(axis=1) )
             term43 = s.sum(ZZ[:,k]) + s.divide(alpha[k],tau)
             term4 = 0.5*tau * s.divide((term41-term42)**2,term43)
 
@@ -249,8 +281,6 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
 
             # Update Expectations for the next iteration
             SW[:,k] = self.Q.theta[:,k] * self.Q.mean[:,k]
-        
-        pass
 
     def updateExpectations(self):
         alpha = self.markov_blanket["alpha"].getExpectation()
@@ -262,7 +292,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         pass
 
     def getExpectations(self):
-        return dict({'ES':self.Q.ES, 'EW':self.Q.EW, 'ESW':self.Q.ESW, 'ESWW':self.Q.ESWW, 'EWW':self.Q.EWW})
+        return dict({'ES':self.Q.ES, 'EW':self.Q.EW, 'ESW':self.Q.ESW,'ESWW':self.Q.ESWW, 'EWW':self.Q.EWW})
 
     def removeFactors(self, *idx):
         # Method to remove a set of (inactive) latent variables from the node
@@ -284,21 +314,90 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         exp = self.getExpectations()
         S = exp["ES"]
         WW = exp["EWW"]
+        theta_lnE = self.markov_blanket['Theta'].getExpectations()['lnE']
+        theta_lnEInv = self.markov_blanket['Theta'].getExpectations()['lnEInv']
 
         # Calculate ELBO for W
         lb_pw = (self.D*alpha["lnE"].sum() - s.sum(alpha["E"]*WW))/2
-        # lb_qw = -0.5*self.K*self.D - 0.5*s.log(S*self.Q.var + ((1-S)/alpha["E"])).sum()
-        lb_qw = -0.5*s.log(S*self.Q.var + (s.divide((1-S),alpha["E"]))).sum()
+        lb_qw = -0.5*self.K*self.D - 0.5*s.log(S*self.Q.var + ((1-S)/alpha["E"])).sum()
         lb_w = lb_pw - lb_qw
 
         # Calculate ELBO for S
-        Slower = 0.000000001
-        Supper = 0.999999999
-        S[S<Slower] = Slower
-        S[S>Supper] = Supper
-        # theta = self.P_theta
-        lb_ps = s.sum( S*s.log(self.P_theta) + (1-S)*s.log(1-self.P_theta) )
-        lb_qs = s.sum( S*s.log(S) + (1-S)*s.log(1-S) )
+        # pdb.set_trace()
+        # Slower = 0.00001
+        # Supper = 0.99999
+        # S[S<Slower] = Slower
+        # S[S>Supper] = Supper
+
+        lb_ps = s.sum( S*theta_lnE + (1-S)*theta_lnEInv)
+
+        lb_qs_tmp = S*s.log(S) + (1-S)*s.log(1-S)
+        lb_qs_tmp[s.isnan(lb_qs_tmp)] = 0
+
+        lb_qs = s.sum(lb_qs_tmp)
         lb_s = lb_ps - lb_qs
 
+        # if math.isnan(lb_w + lb_s):
+            # pdb.set_trace()
         return lb_w + lb_s
+
+#
+class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
+    """
+    This class comtain a Theta node associate to factors for which
+    we dont have annotations.
+
+    The inference is done per view and factor, so the dimension of the node is the
+    number of non-annotated factors
+
+    the updateParameters function needs to know what factors are non-annotated in
+    order to choose from the S matrix
+    """
+
+    def __init__(self, dim, pa=1., pb=1., qa=1., qb=1.):
+        Beta_Unobserved_Variational_Node.__init__(self, dim, pa, pb, qa, qb)
+
+    def updateParameters(self, factors_selection=None):
+        # get needed node from the markov_blanket
+        tmp = self.markov_blanket['SW'].getExpectations()
+        S = tmp["ES"]  # S is of dimension D*K
+
+        if factors_selection is not None:
+            S = S[:, factors_selection]
+
+        tmp1 = S.sum(axis=0)
+        self.Q.a = tmp1 + self.P.a
+        self.Q.b = self.P.b - tmp1 + S.shape[0]
+
+    def getExpectations(self):
+        return {'E':self.Q.E, 'lnE':self.Q.lnE, 'lnEInv':self.Q.lnEInv}
+    # TODO implement ELBO term
+
+    def removeFactors(self, *idx):
+        keep = s.setdiff1d(s.arange(self.dim[0]),idx)
+        #remove variational distribution terms
+        self.Q.a = self.Q.a[keep]
+        self.Q.b = self.Q.b[keep]
+        self.Q.E = self.Q.E[keep]
+        self.Q.lnE = self.Q.lnE[keep]
+        self.Q.lnEInv = self.Q.lnEInv[keep]
+        # remove prior terms
+        self.P.a = self.P.a[keep]
+        self.P.b = self.P.b[keep]
+        self.P.E = self.P.E[keep]
+        # others
+        self.dim = (len(keep),)
+
+    def calculateELBO(self):
+        # minus cross entropy of Q and P
+        tmp1 = (self.P.a -1.) * self.Q.lnE + (self.P.b -1.) * self.Q.lnEInv
+        tmp1 -= special.betaln(self.P.a, self.P.b)
+        lbp = tmp1.sum()
+
+        # minus entropy of Q
+        tmp2 = (self.Q.a -1.) * self.Q.lnE + (self.Q.b -1.) * self.Q.lnEInv
+        tmp2 -= special.betaln(self.Q.a, self.Q.b)
+        lbq = tmp2.sum()
+
+        return lbp - lbq
+        # return 0

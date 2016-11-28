@@ -5,18 +5,20 @@ import numpy.linalg as linalg
 import scipy.special as special
 import scipy.stats as stats
 
+import pdb
+
 from utils import *
 
 """
 This module is used to define statistical distributions in a general sense
 
-Each Distribution class can store an arbitrary number of distributions of the same type, this is specified in the 'dim' argument 
+Each Distribution class can store an arbitrary number of distributions of the same type, this is specified in the 'dim' argument
 
 A Distribution class has two main types of attributes: parameters and expectations. Both have to be defined when initialising a class.
 Note that in some distributions (Gaussian mainly) a parameter is equal to an expectation. However, they are stored as separate
 attributes and are not always necessarily equal (i.e. VBEM algorithm).
 
-There are cases (mainly with the BernoulliGaussian distribution) where some expectations are quite complex and 
+There are cases (mainly with the BernoulliGaussian distribution) where some expectations are quite complex and
 require expectations from other distributions. In that case, I prefer to define the expectations together with the updates
 of the corresponding node, instead of doing it here.
 
@@ -43,7 +45,7 @@ class MultivariateGaussian(Distribution):
     """
     Class for a multivariate Gaussian distribution. This class can store N multivate
     Gaussian Distributions of dimensionality D each.
-    Here we assume that the data factorises over samples (rows), 
+    Here we assume that the data factorises over samples (rows),
     so we have N distributions of dimensionality D each.
 
     Equations:
@@ -70,22 +72,22 @@ class MultivariateGaussian(Distribution):
 
         ## Initialise the parameters ##
 
-        # Initialise the mean 
+        # Initialise the mean
         # If 'mean' is a scalar, broadcast it to all dimensions
         if isinstance(mean,(int,float)): mean = s.ones( (dim[0],dim[1]) ) * mean
         # If 'mean' has dim (D,) and we have N distributions, broadcast it to all N distributions
         if len(mean.shape)==1 and mean.shape[0]==dim[0]: mean = s.repeat(mean,N,0)
         assert sum(mean.shape) > 2, "The mean has to be a matrix with shape (N,D) "
 
-        # Initialise the covariance 
+        # Initialise the covariance
         # If 'cov' is a matrix and not a tensor, broadcast it along the zeroth axis
         if len(cov.shape) == 2: cov = s.repeat(cov[None,:,:],dim[0],0)
         assert (cov.shape[1]==cov.shape[2]) and (sum(cov.shape[1:])>1), "The covariance has to be a tensor with shape (N,D,D)"
-        
-        # Check that the dimensionalities of 'mean' and 'cov' match 
+
+        # Check that the dimensionalities of 'mean' and 'cov' match
         assert cov.shape[1] == mean.shape[1] == dim[1], "Error in the dimensionalities"
         assert cov.shape[0] == mean.shape[0] == dim[0], "Error in the dimensionalities"
-        
+
         self.mean = mean
         self.cov = cov
 
@@ -130,7 +132,7 @@ class UnivariateGaussian(Distribution):
     Equations:
     Class for a univariate Gaussian distributed node
     p(x|mu,sigma^2) = 1/sqrt(2*pi*sigma^2) * exp(-0.5*(x-mu)^2/(sigma^2) )
-    log p(x|mu,sigma^2) = 
+    log p(x|mu,sigma^2) =
     E[x] = mu
     var[x] = sigma^2
     H[x] = 0.5*log(sigma^2) + 0.5*(1+log(2pi))
@@ -163,7 +165,7 @@ class UnivariateGaussian(Distribution):
         assert x.shape == self.dim, "Problem with the dimensionalities"
         # print stats.norm.pdf(x, loc=self.mean, scale=s.sqrt(self.var))
         return s.sum( (1/s.sqrt(2*s.pi*self.var)) * s.exp(-0.5*(x-self.mean)**2/self.var) )
-        
+
     def loglik(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
         # return s.log(stats.norm.pdf(x, loc=self.mean, scale=s.sqrt(self.var)))
@@ -171,6 +173,8 @@ class UnivariateGaussian(Distribution):
 
     def entropy(self):
         return s.sum( 0.5*s.log(self.var) + 0.5*(1+s.log(2*s.pi)) )
+
+
 class Gamma(Distribution):
     """
     This class can store an arbitrary number of Gamma distributions
@@ -193,20 +197,21 @@ class Gamma(Distribution):
         if isinstance(b,(float,int)): b = s.ones(dim) * b
         self.a = a
         self.b = b
+        # pdb.set_trace()
 
         ## Initialise expectations ##
-        if E is not None: 
-            if isinstance(E,(float,int)): E = s.ones(dim) * E  
+        if E is not None:
+            if isinstance(E,(float,int)): E = s.ones(dim) * E
         self.E = E
 
         if lnE is not None:
             if isinstance(lnE,(float,int)): lnE = s.ones(dim) * lnE
-        self.lnE = lnE  
+        self.lnE = lnE
 
     def updateExpectations(self):
         self.E = self.a/self.b
         self.lnE = special.digamma(self.a) - s.log(self.b)
-        
+
     def density(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
         return s.prod( (1/special.gamma(self.a)) * self.b**self.a * x**(self.a-1) * s.exp(-self.b*x) )
@@ -214,13 +219,15 @@ class Gamma(Distribution):
     def loglik(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
         return s.sum( -s.log(special.gamma(self.a)) + self.a*s.log(self.b) * (self.a-1)*s.log(x) -self.b*x )
+
+
 class Poisson(Distribution):
     """
-    Class for a Poisson distribution. 
+    Class for a Poisson distribution.
     This class can store an arbitrary number of Poisson distributions
 
     Equations:
-    p(x|theta) = theta**x * exp(-theta) * 1/theta! 
+    p(x|theta) = theta**x * exp(-theta) * 1/theta!
     log p(x|a,b) = x*theta - theta - log(x!)
     E[x] = theta
     var[x] = theta
@@ -235,7 +242,7 @@ class Poisson(Distribution):
         self.theta = theta
 
         # Initialise expectations
-        if E is not None: 
+        if E is not None:
             if isinstance(E,(float,int)): E = s.ones(dim) * E
         else:
             E = s.zeros(dim)
@@ -246,7 +253,7 @@ class Poisson(Distribution):
 
     def updateExpectations(self):
         self.E = self.theta.copy()
-        
+
     def density(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
         assert x.dtype == int, "x has to be an integer array"
@@ -278,10 +285,10 @@ class Bernoulli(Distribution):
         self.theta = theta
 
         ## Initialise expectations ##
-        if E is None: 
+        if E is None:
             E = self.theta
         else:
-            if isinstance(E,(float,int)): E = s.ones(dim) * E  
+            if isinstance(E,(float,int)): E = s.ones(dim) * E
         self.E = E
 
         # Check that dimensionality match
@@ -299,14 +306,14 @@ class Bernoulli(Distribution):
         return s.sum( x*self.theta + (1-x)*(1-self.theta) )
 class BernoulliGaussian(Distribution):
     """
-    Class to store an arbitrary number of Bernoulli-Gaussian distributions (see paper Spike and Slab 
+    Class to store an arbitrary number of Bernoulli-Gaussian distributions (see paper Spike and Slab
     Variational Inference for Multi-Task and Multiple Kernel Learning by Titsias and Gredilla)
 
     Equations:
     p(w,s) = Normal(w|mean,var) * Bernoulli(s|theta)
 
     This distribution has several expectations that are required for the variational updates, and they depend
-    on other parameters (alpha from the ARD prior). For this reason I decided to define the expectations in the 
+    on other parameters (alpha from the ARD prior). For this reason I decided to define the expectations in the
     class of the corresponding node, instead of doing it here.
 
     """
@@ -353,10 +360,10 @@ class Binomial(Distribution):
         # self.K = K
 
         ## Initialise expectations ##
-        if E is None: 
+        if E is None:
             self.updateExpectations()
         else:
-            if isinstance(E,(float,int)): E = s.ones(dim) * E  
+            if isinstance(E,(float,int)): E = s.ones(dim) * E
             self.E = E
 
         # Check that dimensionalities match
@@ -381,8 +388,8 @@ class Beta(Distribution):
     Class to store an arbitrary number of Beta distributions
 
     Equations:
-    p(x|a,b) = 
-    log p(x|a,b) = 
+    p(x|a,b) =
+    log p(x|a,b) =
     E[x] = a/(a+b)
     var[x] = a*b / ((a+b)**2 * (a+b+1))
     """
@@ -397,17 +404,19 @@ class Beta(Distribution):
         self.b = b
 
         ## Initialise expectations ##
-        if E is None: 
+        if E is None:
             self.updateExpectations()
         else:
-            if isinstance(E,(float,int)): E = s.ones(dim) * E  
+            if isinstance(E,(float,int)): E = s.ones(dim) * E
             self.E = E
-
         # Check that dimensionalities match
         assert self.a.shape == self.E.shape == self.b.shape == self.dim, "Dimensionalities do not match"
 
     def updateExpectations(self):
         self.E = s.divide(self.a,self.a+self.b)
+        self.lnE = special.digamma(self.a) - special.digamma(self.a + self.b)
+        # expectation of ln(1-X)
+        self.lnEInv = special.digamma(self.b) - special.digamma(self.a + self.b)
 
     def density(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"

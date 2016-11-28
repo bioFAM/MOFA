@@ -57,15 +57,6 @@ theta = [ s.ones(K)*0.5 for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
 
 data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
-<<<<<<< HEAD
-data['tau']= [ stats.uniform.rvs(loc=1,scale=5,size=D[m]) for m in xrange(M) ]
-Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
-	likelihood="gaussian", missingness=0.05)
-# Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="poisson")
-# Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="bernoulli")
-# Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], likelihood="binomial", min_trials=10, max_trials=50)
-=======
->>>>>>> 335e5cb0973af5abdd348daaef33abf5bb9c24cc
 
 data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 
@@ -152,19 +143,11 @@ SW = Multiview_Variational_Node(M, *SW_list)
 # tau/kappa (mixed node)
 tau_list = [None]*M
 for m in xrange(M):
-<<<<<<< HEAD
-	if m in M_poisson:
-		tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0)
-		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
-	elif m in M_bernoulli:
-		tmp = s.ones(D[m])*0.25
-=======
 	if likelihood[m] == "poisson":
 		tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0) 
 		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
 	elif likelihood[m] == "bernoulli":
 		tmp = s.ones(D[m])*0.25 
->>>>>>> 335e5cb0973af5abdd348daaef33abf5bb9c24cc
 		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
 	elif likelihood[m] == "binomial":
 		tmp = 0.25*s.amax(data["Y"]["tot"][m],axis=0)
@@ -179,20 +162,6 @@ for m in xrange(M):
 tau = Multiview_Mixed_Node(M,*tau_list)
 
 
-<<<<<<< HEAD
-# zeta (local node)
-# not initialised since it is the first update
-Zeta_list = [None]*M
-for m in xrange(M):
-	if m not in M_gaussian:
-		Zeta_list[m] = Zeta_Node(dim=(N,D[m]), initial_value=None)
-	else:
-		Zeta_list[m] = None
-Zeta = Multiview_Local_Node(M, *Zeta_list)
-
-
-=======
->>>>>>> 335e5cb0973af5abdd348daaef33abf5bb9c24cc
 # Y/Yhat (mixed node)
 Y_list = [None]*M
 for m in xrange(M):
@@ -266,37 +235,9 @@ net.iterate()
 ## Save results ##
 ##################
 
-<<<<<<< HEAD
-
-outdir="/tmp/test"
-
-if not os.path.exists(outdir):
-    os.makedirs(outdir)
-if not os.path.exists(os.path.join(outdir,"data")):
-    os.makedirs(os.path.join(outdir,"data"))
-if not os.path.exists(os.path.join(outdir,"model")):
-    os.makedirs(os.path.join(outdir,"model"))
-if not os.path.exists(os.path.join(outdir,"stats")):
-    os.makedirs(os.path.join(outdir,"stats"))
-if not os.path.exists(os.path.join(outdir,"opts")):
-    os.makedirs(os.path.join(outdir,"opts"))
-
-# Save the model parameters and expectations
-print "\nSaving model..."
-saveModel(net, outdir=os.path.join(outdir,"model"), only_first_moments=True)
-
-# Save training statistics
-print "\nSaving training stats..."
-opts = saveTrainingStats(model=net, outdir=os.path.join(outdir,"stats"))
-
-# Save training options
-print "\nSaving training opts..."
-opts = saveTrainingOpts(model=net, outdir=os.path.join(outdir,"opts"))
-=======
 print "\nSaving model..."
 sample_names = [ "sample_%d" % n for n in xrange(N)]
 feature_names = [[ "feature_%d" % n for n in xrange(D[m])] for m in xrange(M)]
 
 saveModel(net, outfile="/tmp/test/asd.hd5", view_names=view_names, 
 	sample_names=sample_names, feature_names=feature_names)
->>>>>>> 335e5cb0973af5abdd348daaef33abf5bb9c24cc

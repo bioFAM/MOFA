@@ -47,6 +47,18 @@ def saveTrainingOpts(model, outdir):
             f.write(k + ":" + str(v) + "\n")
     pass
 
+def saveData(simulation, outdir):
+	for key, value in simulation.iteritems():
+		if type(value) == list:
+			for m in xrange(len(value)):
+				filename = os.path.join(outdir,"%s_%d.npy" % (key,m+1))
+				print "\tsaving %s..." % filename
+				np.save(filename,value[m])
+		else:
+			filename = os.path.join(outdir,"%s.npy" % (key))
+			print "\tsaving %s..." % filename
+			np.save(filename, value)
+
 def saveModel(model, outdir, compress=False, only_first_moments=True):
 	# Function to save a trained model to be load in R:
 	# 	Expectations and parameters are stored as .npy objects to be loaded in R using the RcppCNPy package
@@ -86,7 +98,6 @@ def saveModel(model, outdir, compress=False, only_first_moments=True):
 			# Multi view node case
 			if type(value) == list:
 				for m in xrange(len(value)):
-					pdb.set_trace()
 				# Iterate over expectations
 				# for key,value in expectations[m].iteritems():
 					filename = os.path.join(outdir,"%s_%s_%d.npy" % (node,key,m+1))

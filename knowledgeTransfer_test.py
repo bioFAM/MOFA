@@ -91,30 +91,11 @@ def run_test(test_ix):
     theta_view_3 = s.ones([D[2], K]) * s.random.uniform(0, 1, K)
 
     theta = [theta_view_1, theta_view_2, theta_view_3]
+    data['theta'] = theta
 
     annotation_bool = True
 
-    # theta = [ s.ones(K)*0.5 for m in xrange(M) ]
-    # theta = [ s.ones(K)*0.5 for m in xrange(M) ]
-
-
-    # TODO to change, initialisation and that should be it
-    # if factor_wise:
-    #     theta_priors = s.random.uniform(0, 1, M*K)
-    #     theta_priors = s.reshape(theta_priors, [M, K])
-    #     theta = [theta_priors[m, :] for m in xrange(M)]
-    #     sparsity_truth[3 * test_ix:(3 * test_ix + 3), 0] = test_ix
-    #     sparsity_truth[3 * test_ix:(3 * test_ix + 3), 1] = [0,1,2]
-    #     sparsity_truth[3 * test_ix:(3 * test_ix + 3), 2:] = theta_priors
-    #
-    # else:
-    #     theta_priors = s.random.uniform(0, 1, 3)
-    #     sparsity_truth[3 * test_ix:(3 * test_ix + 3), 0] = test_ix
-    #     sparsity_truth[3 * test_ix:(3 * test_ix + 3), 1] = [0,1,2]
-    #     sparsity_truth[3 * test_ix:(3 * test_ix + 3), 2:] = s.reshape(theta_priors, [3,1])
-    #     theta = [s.ones(K) * theta_priors[m] for m in xrange(M)]
-
-    data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'], annotation=annotation_bool)
+    data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=data['theta'], alpha=data['alpha'], annotation=annotation_bool)
 
     data['mu'] = [s.zeros(D[m]) for m in xrange(M)]
     data['tau'] = [stats.uniform.rvs(loc=1, scale=5, size=D[m]) for m in xrange(M)]
@@ -351,10 +332,6 @@ def run_test(test_ix):
     if not os.path.exists(os.path.join(outdir, "opts")):
         os.makedirs(os.path.join(outdir, "opts"))
 
-    # TODO save results
-
-    # needs to save some results here
-
 
         # Save the model parameters and expectations
     print "\nSaving model..."
@@ -370,8 +347,12 @@ def run_test(test_ix):
     print "\nSaving training opts..."
     file_name = os.path.join(outdir, "opts")
     opts = saveTrainingOpts(model=net,
-                            outdir=file_name)  # saving real values of sparsity and infered values
+                            outdir=file_name)
 
+    # Save data
+    print "\nSaving data..."
+    file_name = os.path.join(outdir, "data")
+    opts = saveData(data, outdir=file_name)
 
 
 

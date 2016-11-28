@@ -3,15 +3,10 @@
 setwd("/Users/ricard/git/scGFA/R/R")
 
 source("loadModel.R")
-source("GFAobject.R")
+model <- loadModel("/tmp/test/asd.hd5")
 
-infolder="/tmp/test/model"
-model = loadModelfromNpy(infolder)
-infolder <- "/Users/ricard/git/scGFA/scMT/tmp/opts"
-opts <- loadTrainingOpts(infolder)
-infolder <- "/Users/ricard/git/scGFA/scMT/tmp/stats"
-stats <- loadTrainingStats(infolder)
+getTrainOpts(model)
+getTrainStats(model)
 
-gfa <- new("GFATrainedModel", TrainStats=stats, TrainOpts=opts, Expectations=model)
-getTrainOpts(gfa)
-getTrainStats(gfa)
+source("proportion_variance.R")
+CalculateResidualVariance(model,active_genes_threshold=0.5, plot=T)

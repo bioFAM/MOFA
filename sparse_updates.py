@@ -188,8 +188,9 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
         S,WW,SWW = tmp["ES"],tmp["EWW"],tmp["ESWW"]
 
         # ARD prior on What
+        # IS THIS WRONG FOR SOME REASON ???
         # self.Q.a = self.P.a + D/2 # Updated in the initialisation
-        # self.Q.b = self.P.b + EWW.sum(axis=0)/2
+        # self.Q.b = self.P.b + WW.sum(axis=0)/2
 
         # ARD prior on W
         self.Q.a = self.P.a + S.sum(axis=0)/2

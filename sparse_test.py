@@ -2,7 +2,7 @@
 Script to test the spike and slab updates with gaussian and non-gaussian likelihoods
 """
 
-# from __future__ import division
+from __future__ import division
 from time import time
 import cPickle as pkl
 import scipy as s
@@ -37,7 +37,7 @@ data = {}
 tmp = Simulate(M=M, N=N, D=D, K=K)
 
 data['Z'] = s.zeros((N,K))
-data['Z'][:,0] = s.sin(s.arange(N)/(N/20))
+data['Z'][:,0] = s.sin(s.arange(1,N+1)/(N/20))
 data['Z'][:,1] = s.cos(s.arange(N)/(N/20))
 data['Z'][:,2] = 2*(s.arange(N)/N-0.5)
 data['Z'][:,3] = stats.norm.rvs(loc=0, scale=1, size=N)
@@ -47,11 +47,6 @@ data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
 # Add a known covariate
 # data['Z'] = s.c_[ data['Z'], s.asarray([True,False]*(N/2), dtype=s.float32) ]
 # covariate = 6
-
-# data['alpha'] = s.zeros((M,K))
-# data['alpha'][0,:] = [1,1,1e6,1,1e6,1e6]
-# data['alpha'][1,:] = [1,1e6,1,1e6,1,1e6]
-# data['alpha'][2,:] = [1e6,1,1,1e6,1e6,1]
 
 data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
 data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
@@ -66,44 +61,24 @@ data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-	likelihood="gaussian", missingness=0.02)
+	likelihood="gaussian", missingness=0.00)
 Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-	likelihood="poisson", missingness=0.02)
+	likelihood="poisson", missingness=0.00)
 Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-	likelihood="bernoulli", missingness=0.02)
+	likelihood="bernoulli", missingness=0.00)
 # Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
 	# likelihood="binomial", min_trials=10, max_trials=50, missingness=0.05)
 
-# s.savetxt("/tmp/test0.txt", Y_gaussian[0], delimiter="\t")
-# s.savetxt("/tmp/test1.txt", Y_gaussian[1], delimiter="\t")
-# s.savetxt("/tmp/test2.txt", Y_gaussian[2], delimiter="\t")
-
-# Y_gaussian = {}
-# Y_gaussian[0] = pd.read_csv("/tmp/test0.txt", delimiter="\t", header=None, index_col=None)
-# Y_gaussian[1] = pd.read_csv("/tmp/test1.txt", delimiter="\t", header=None, index_col=None)
-# Y_gaussian[2] = pd.read_csv("/tmp/test2.txt", delimiter="\t", header=None, index_col=None)
-
 data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
-
 # data["Y"] = Y_bernoulli
 # data["Y"] = Y_poisson
 # data["Y"] = Y_binomial
 # data["Y"] = Y_gaussian
 
-M_gaussian = [0]
-M_poisson = [1]
-M_bernoulli = [2]
-M_binomial = []
-
-# M_bernoulli = []
-# M_poisson = []
-# M_gaussian = [0,1,2]
-# M_binomial = []
-
-# M_bernoulli = []
-# M_poisson = []
-# M_gaussian = []
-# M_binomial = [0,1,2]
+# likelihood = ["gaussian","gaussian","gaussian"]
+# view_names = ["gaussian1","gaussian2","gaussian3"]
+likelihood = ["gaussian","poisson","bernoulli"]
+view_names = likelihood
 
 #################################
 ## Initialise Bayesian Network ##
@@ -149,7 +124,7 @@ alpha_qa = s.ones(K)
 alpha_qE = s.ones(K)*100
 for m in xrange(M):
 	alpha_list[m] = Alpha_Node(dim=(K,), pa=alpha_pa, pb=alpha_pb, qa=alpha_qa, qb=alpha_qb, qE=alpha_qE)
-	# alpha_qa = alpha_pa + s.ones(K)*D[m]/2
+	alpha_qa = alpha_pa + s.ones(K)*D[m]/2
 	# alpha_list[m] = Alpha_Node(dim=(K,), pa=alpha_pa, pb=alpha_pb, qa=alpha_qa[m], qb=alpha_qb, qE=alpha_qE)
 alpha = Multiview_Variational_Node((K,)*M, *alpha_list)
 
@@ -164,20 +139,20 @@ for m in xrange(M):
 	SW_list[m] = SW_Node(dim=(D[m],K), ptheta=S_ptheta, qtheta=S_qtheta, qmean=W_qmean, qvar=W_qvar)
 SW = Multiview_Variational_Node(M, *SW_list)
 
+
 # tau/kappa (mixed node)
 tau_list = [None]*M
 for m in xrange(M):
-	if m in M_poisson:
-		tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0).data
-		# tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0)
+	if likelihood[m] == "poisson":
+		tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0) 
 		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
-	elif m in M_bernoulli:
+	elif likelihood[m] == "bernoulli":
 		tmp = s.ones(D[m])*0.25 
 		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
-	elif m in M_binomial:
+	elif likelihood[m] == "binomial":
 		tmp = 0.25*s.amax(data["Y"]["tot"][m],axis=0)
 		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
-	elif m in M_gaussian:
+	elif likelihood[m] == "gaussian":
 		tau_pa = 1e-14
 		tau_pb = 1e-14
 		tau_qa = tau_pa + s.ones(D[m])*N/2
@@ -190,16 +165,15 @@ tau = Multiview_Mixed_Node(M,*tau_list)
 # Y/Yhat (mixed node)
 Y_list = [None]*M
 for m in xrange(M):
-	if m in M_gaussian:
+	if likelihood[m] == "gaussian":
 		Y_list[m] = Y_Node(dim=(N,D[m]), obs=data['Y'][m])
-	elif m in M_poisson:
+	elif likelihood[m] == "poisson":
 		Y_list[m] = Poisson_PseudoY_Node(dim=(N,D[m]), obs=data['Y'][m], Zeta=None, E=None)
-	elif m in M_bernoulli:
+	elif likelihood[m] == "bernoulli":
 		Y_list[m] = Bernoulli_PseudoY_Node(dim=(N,D[m]), obs=data['Y'][m], Zeta=None, E=None)
-	elif m in M_binomial:
+	elif likelihood[m] == "binomial":
 		Y_list[m] = Binomial_PseudoY_Node(dim=(N,D[m]), tot=data['Y']["tot"][m], obs=data['Y']["obs"][m], Zeta=None, E=None)
 Y = Multiview_Mixed_Node(M, *Y_list)
-
 
 ############################
 ## Define Markov Blankets ##
@@ -209,7 +183,7 @@ Z.addMarkovBlanket(SW=SW, tau=tau, Y=Y)
 for m in xrange(M):
 	alpha.nodes[m].addMarkovBlanket(SW=SW.nodes[m])
 	SW.nodes[m].addMarkovBlanket(Z=Z, tau=tau.nodes[m], alpha=alpha.nodes[m], Y=Y.nodes[m])
-	if m in M_gaussian:
+	if likelihood[m] == "gaussian":
 		Y.nodes[m].addMarkovBlanket(Z=Z, SW=SW.nodes[m], tau=tau.nodes[m])
 		tau.nodes[m].addMarkovBlanket(SW=SW.nodes[m], Z=Z, Y=Y.nodes[m])
 	else:
@@ -238,7 +212,7 @@ net.setSchedule(schedule)
 #############################
 
 options = {}
-options['maxiter'] = 500
+options['maxiter'] = 200
 options['tolerance'] = 1E-2
 options['forceiter'] = True
 # options['elbofreq'] = options['maxiter']+1
@@ -256,50 +230,14 @@ net.options = options
 ####################
 
 net.iterate()
-exit()
-
-# from utils import corr
-# Z = net.nodes["Z"].getExpectation()
-# r = corr(Z.T,Z.T)
-# print r
-
-# import pandas as pd
-# print pd.DataFrame(net.nodes["alpha"].getExpectation())
 
 ##################
 ## Save results ##
 ##################
 
-# print "\nSaving model..."
-# saveModel(net, outfile="/tmp/test/asd.hd5")
+print "\nSaving model..."
+sample_names = [ "sample_%d" % n for n in xrange(N)]
+feature_names = [[ "feature_%d" % n for n in xrange(D[m])] for m in xrange(M)]
 
-# outdir="/tmp/test"
-# if not os.path.exists(outdir):
-#     os.makedirs(outdir)
-# if not os.path.exists(os.path.join(outdir,"data")):
-#     os.makedirs(os.path.join(outdir,"data"))
-# if not os.path.exists(os.path.join(outdir,"model")):
-#     os.makedirs(os.path.join(outdir,"model"))
-# if not os.path.exists(os.path.join(outdir,"stats")):
-#     os.makedirs(os.path.join(outdir,"stats"))
-# if not os.path.exists(os.path.join(outdir,"opts")):
-#     os.makedirs(os.path.join(outdir,"opts"))
-
-# Save the training data
-# print "\nSaving data..."
-# pseudodata = net.nodes["Y"].getExpectation()
-# for m in xrange(M): np.save(file="%s/data/Y_%d.npy" % (outdir,m+1), arr=data["Y"][m].data)
-# for m in xrange(M): np.save(file="%s/model/Y_E_%d.npy" % (outdir,m+1), arr=pseudodata[m].data)
-
-# # Save the model parameters and expectations
-# print "\nSaving model..."
-# saveModel(net, outdir=os.path.join(outdir,"model"))
-
-# # Save training statistics
-# print "\nSaving training stats..."
-# opts = saveTrainingStats(model=net, outdir=os.path.join(outdir,"stats"))
-
-# # Save training options
-# print "\nSaving training opts..."
-# opts = saveTrainingOpts(model=net, outdir=os.path.join(outdir,"opts"))
-
+saveModel(net, outfile="/tmp/test/asd.hd5", view_names=view_names, 
+	sample_names=sample_names, feature_names=feature_names)

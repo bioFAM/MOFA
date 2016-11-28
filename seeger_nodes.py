@@ -96,9 +96,15 @@ class PseudoY(Unobserved_Variational_Node):
 
     def getObservations(self):
         return self.obs
-        
+
     def getExpectations(self):
-        return { 'obs':self.getObservations() }
+        return { 'E':self.getExpectation() }
+
+    def getParameters(self):
+        return { 'zeta':self.Zeta }
+        
+    # def getExpectations(self):
+        # return { 'obs':self.getObservations() }
 
     def calculateELBO(self):
         # Compute Lower Bound using the Gaussian likelihood with pseudodata

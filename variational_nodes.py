@@ -78,9 +78,9 @@ class Observed_Variational_Node(Variational_Node):
         return self.obs
     def getExpectation(self):
         return self.getObservations()
-    # def getExpectations(self):
-        # return { "obs":self.getObservations() }
-
+    def getExpectations(self):
+        return {'E':self.getObservations()}
+        
 class Unobserved_Variational_Node(Variational_Node):
     """ 
     Abstract class for an unobserved variational node in a Bayesian probabilistic model.
@@ -148,8 +148,9 @@ class MultivariateGaussian_Unobserved_Variational_Node(Unobserved_Variational_No
         # self.P = MultivariateGaussian(dim=dim, mean=pmean, cov=pcov)
         self.Q = MultivariateGaussian(dim=dim, mean=qmean, cov=qcov, E=qE, E2=qE2)
 
-	def getParameters(self):
-		return { 'mean':self.Q.mean, 'cov':self.Q.cov }
+    def getParameters(self):
+        return { 'mean':self.Q.mean, 'cov':self.Q.cov }
+
     def getExpectations(self):
         # return { 'E':self.Q.E, 'E2':self.Q.E2, 'lnE':None }
         return { 'E':self.Q.E, 'E2':self.Q.E2 }

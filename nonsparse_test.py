@@ -3,7 +3,7 @@
 Script to test the non-sparse updated with non-gaussian likelihoods
 """
 
-# from __future__ import division
+from __future__ import division
 from time import time
 import cPickle as pkl
 import scipy as s
@@ -18,7 +18,7 @@ from utils import saveModel
 
 # Import manually defined updates
 from multiview_nodes import *
-from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node, Zeta_Node
+from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
 from local_nodes import Local_Node, Observed_Local_Node
 from nonsparse_updates import Y_Node, Alpha_Node, W_Node, Tau_Node, Z_Node, Y_Node
 # from nonsparse_unvectorised_updates import Y_Node, Alpha_Node, W_Node, Tau_Node, Z_Node, Y_Node
@@ -54,26 +54,24 @@ data['alpha'][2,:] = [1e6,1,1,1e6,1e6,1]
 data['W'], _ = tmp.initW_ard(alpha=data['alpha'])
 data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 # data['tau']= [ s.ones(D[m])*1000 for m in xrange(M) ]
-data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
+data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-	likelihood="gaussian", missingness=0.05)
+	likelihood="gaussian", missingness=0.00)
 Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-	likelihood="poisson", missingness=0.05)
+	likelihood="poisson", missingness=0.00)
 Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
 	likelihood="bernoulli", missingness=0.0)
-Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-	likelihood="binomial", missingness=0.0, min_trials=10, max_trials=50)
+# Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+	# likelihood="binomial", missingness=0.0, min_trials=10, max_trials=50)
 
-data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
+# data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 # data["Y"] = Y_bernoulli
 # data["Y"] = Y_poisson
 # data["Y"] = Y_binomial
-# data["Y"] = Y_gaussian
+data["Y"] = Y_gaussian
 
-M_bernoulli = [2]
-M_poisson = [1]
-M_gaussian = [0]
-M_binomial = []
+likelihood = ["gaussian","gaussian","gaussian"]
+view_names = ["gaussian1","gaussian2","gaussian3"]
 
 #################################
 ## Initialise Bayesian Network ##
@@ -82,7 +80,7 @@ M_binomial = []
 net = BayesNet()
 
 # Define initial number of latent variables
-K = 15
+K = 10
 
 # Define model dimensionalities
 net.dim["M"] = M
@@ -113,6 +111,7 @@ Z.updateExpectations()
 alpha_list = [None]*M
 alpha_pa = 1e-14
 alpha_pb = 1e-14
+# alpha_qa = s.ones(K)
 alpha_qb = s.ones(K)
 alpha_qE = s.ones(K)*100
 for m in xrange(M):
@@ -133,16 +132,16 @@ W = Multiview_Variational_Node(M, *W_list)
 # tau/kappa (mixed node)
 tau_list = [None]*M
 for m in xrange(M):
-	if m in M_poisson:
+	if likelihood[m] == "poisson":
 		tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0) 
 		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
-	elif m in M_bernoulli:
+	elif likelihood[m] == "bernoulli":
 		tmp = s.ones(D[m])*0.25 
 		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
-	elif m in M_binomial:
+	elif likelihood[m] == "binomial":
 		tmp = 0.25*s.amax(data["Y"]["tot"][m],axis=0)
 		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
-	elif m in M_gaussian:
+	elif likelihood[m] == "gaussian":
 		tau_pa = 1e-14
 		tau_pb = 1e-14
 		tau_qa = tau_pa + s.ones(D[m])*N/2
@@ -152,28 +151,18 @@ for m in xrange(M):
 tau = Multiview_Mixed_Node(M,*tau_list)
 
 
-# zeta (local node)
-# not initialised since it is the first update
-Zeta_list = [None]*M
-for m in xrange(M):
-	if m not in M_gaussian:
-		Zeta_list[m] = Zeta_Node(dim=(N,D[m]), initial_value=None) 
-	else:
-		Zeta_list[m] = None
-Zeta = Multiview_Local_Node(M, *Zeta_list)
-
 
 # Y/Yhat (mixed node)
 Y_list = [None]*M
 for m in xrange(M):
-	if m in M_gaussian:
+	if likelihood[m] == "gaussian":
 		Y_list[m] = Y_Node(dim=(N,D[m]), obs=data['Y'][m])
-	elif m in M_poisson:
-		Y_list[m] = Poisson_PseudoY_Node(dim=(N,D[m]), obs=data['Y'][m], E=None)
-	elif m in M_bernoulli:
-		Y_list[m] = Bernoulli_PseudoY_Node(dim=(N,D[m]), obs=data['Y'][m], E=None)
-	elif m in M_binomial:
-		Y_list[m] = Binomial_PseudoY_Node(dim=(N,D[m]), tot=data['Y']["tot"][m], obs=data['Y']["obs"][m], E=None)
+	elif likelihood[m] == "poisson":
+		Y_list[m] = Poisson_PseudoY_Node(dim=(N,D[m]), obs=data['Y'][m], Zeta=None, E=None)
+	elif likelihood[m] == "bernoulli":
+		Y_list[m] = Bernoulli_PseudoY_Node(dim=(N,D[m]), obs=data['Y'][m], Zeta=None, E=None)
+	elif likelihood[m] == "binomial":
+		Y_list[m] = Binomial_PseudoY_Node(dim=(N,D[m]), tot=data['Y']["tot"][m], obs=data['Y']["obs"][m], Zeta=None, E=None)
 Y = Multiview_Mixed_Node(M, *Y_list)
 
 
@@ -185,21 +174,20 @@ Z.addMarkovBlanket(W=W, tau=tau, Y=Y)
 for m in xrange(M):
 	alpha.nodes[m].addMarkovBlanket(W=W.nodes[m])
 	W.nodes[m].addMarkovBlanket(Z=Z, tau=tau.nodes[m], alpha=alpha.nodes[m], Y=Y.nodes[m])
-	if m in M_gaussian:
+	if likelihood[m] == "gaussian":
 		Y.nodes[m].addMarkovBlanket(Z=Z, W=W.nodes[m], tau=tau.nodes[m])
 		tau.nodes[m].addMarkovBlanket(W=W.nodes[m], Z=Z, Y=Y.nodes[m])
 	else:
-		Zeta.nodes[m].addMarkovBlanket(Z=Z, W=W.nodes[m])
-		Y.nodes[m].addMarkovBlanket(Z=Z, W=W.nodes[m], kappa=tau.nodes[m], zeta=Zeta.nodes[m])
+		Y.nodes[m].addMarkovBlanket(Z=Z, W=W.nodes[m], kappa=tau.nodes[m])
 
 ##################################
 ## Add the nodes to the network ##
 ##################################
 
-net.addNodes(Zeta=Zeta, W=W, tau=tau, Z=Z, Y=Y, alpha=alpha)
+net.addNodes(W=W, tau=tau, Z=Z, Y=Y, alpha=alpha)
 
 # Define update schedule
-schedule = ["Zeta","Y","W","Z","alpha","tau"]
+schedule = ["Y","W","Z","alpha","tau"]
 net.setSchedule(schedule)
 
 #############################
@@ -207,7 +195,7 @@ net.setSchedule(schedule)
 #############################
 
 options = {}
-options['maxiter'] = 500
+options['maxiter'] = 200
 options['tolerance'] = 1E-2
 options['forceiter'] = True
 # options['elbofreq'] = options['maxiter']+1
@@ -231,4 +219,10 @@ net.iterate()
 ## Save results ##
 ##################
 
-# saveModel(net, outdir="/tmp/test", compress=False)
+print "\nSaving model..."
+sample_names = [ "sample_%d" % n for n in xrange(N)]
+feature_names = [[ "feature_%d" % n for n in xrange(D[m])] for m in xrange(M)]
+
+saveModel(net, outfile="/tmp/test/asd.hd5", view_names=view_names, 
+	sample_names=sample_names, feature_names=feature_names)
+

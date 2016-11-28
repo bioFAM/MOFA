@@ -256,6 +256,10 @@ class BayesNet(object):
         # Method to return training options
         return self.options
 
+    def getTrainingData(self):
+        # Method to return training options
+        return self.nodes["Y"].getObservations()
+
     def calculateELBO(self, *nodes):
         # Method to calculate the Evidence Lower Bound for a set of nodes
         if len(nodes) == 0: nodes = self.nodes.keys()

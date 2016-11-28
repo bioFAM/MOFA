@@ -45,10 +45,8 @@ def ddot(d, mtx, left=True):
 	    return d*mtx
 
 
-def saveParameters(model, hdf5):
+def saveParameters(model, hdf5, view_names=None):
 
-	# STOPPED HER
-	
 	# Get nodes from the model
 	nodes = model.getNodes()
 
@@ -57,7 +55,6 @@ def saveParameters(model, hdf5):
 
 	# Iterate over nodes
 	for node in nodes:
-		print node
 
 		# Collect node expectation
 		parameters = nodes[node].getParameters()
@@ -67,61 +64,105 @@ def saveParameters(model, hdf5):
 
 		# Multi-view nodes
 		if type(parameters) == list:
-			# Create subsubgroup for the view
 			# Loop through the views
 			for m in xrange(len(parameters)):
-				view_subgrp = node_subgrp.create_group("%s%d" % (node,m))
+				if view_names is not None: 
+					tmp = view_names[m]
+				else:
+					tmp = "%d" % m 	
+				# Create subsubgroup for the view
+				view_subgrp = node_subgrp.create_group(tmp)
 				# Loop through the parameters
-				for param_name in parameters[m].keys():
-					view_subgrp.create_dataset("%s%d_%s" % (node,m,param_name), data=parameters[m][param_name])
+				if parameters[m] is not None:
+					for param_name in parameters[m].keys():
+						view_subgrp.create_dataset(param_name, data=parameters[m][param_name].T)
 		# Single-view nodes
-		# else:
-			# for param_name,param_value in parameters.iteritems():
-				# view_subgrp.create_dataset("%s_%s" % (node,m,param_name), data=parameters[m][param_name])	pass
+		else:
+			for param_name in parameters.keys():
+				node_subgrp.create_dataset("%s" % (param_name), data=parameters[param_name].T)
+	pass
 
-def saveExpectations(model, hdf5):
+def saveExpectations(model, hdf5, view_names=None):
 
 	# Get nodes from the model
 	nodes = model.getNodes()
 
-	# Load HD5 file
-	# Create groups 
 	exp_grp = hdf5.create_group("expectations")
 
 	# Iterate over nodes
 	for node in nodes:
 
 		# Collect node expectations
-		expectations = nodes[node].getExpectation()
+		expectations = nodes[node].getExpectations()
+
+		# Create subgroup for the node
+		node_subgrp = exp_grp.create_group(node)
 
 		# Multi-view nodes
 		if type(expectations) == list:
-			# Create subgroup for the node
-			node_subgrp = exp_grp.create_group(node)
+
 			# Iterate over views
 			for m in xrange(len(expectations)):
-				node_subgrp.create_dataset("%s%d" % (node,m), data=expectations[m])
+				if view_names is not None: 
+					tmp = view_names[m]
+				else:
+					tmp = "%d" % m 
+
+				# Create subsubgroup for the view
+				view_subgrp = node_subgrp.create_group(tmp)
+
+				# Loop through the expectations
+				if expectations[m] is not None:
+					for exp_name in expectations[m].keys():
+						view_subgrp.create_dataset(exp_name, data=expectations[m][exp_name].T)
 
 		# Single-view nodes
 		else:
-			exp_grp.create_dataset("%s" % node, data=expectations)
+
+			for exp_name in expectations.keys():
+				node_subgrp.create_dataset("%s" % (exp_name), data=expectations[exp_name].T)
+
+	pass
+
+def saveTrainingStats(model, hdf5):
+	stats = model.getTrainingStats()
+	stats_grp = hdf5.create_group("training_stats")
+	stats_grp.create_dataset("activeK", data=stats["activeK"])
+	stats_grp.create_dataset("elbo", data=stats["elbo"])
+	stats_grp.create_dataset("elbo_terms", data=stats["elbo_terms"].T)
+	stats_grp['elbo_terms'].attrs['colnames'] = list(stats["elbo_terms"].columns.values)
+	pass
+
+def saveTrainingOpts(model, hdf5):
+	opts = model.getTrainingOpts()
+	hdf5.create_dataset("training_opts", data=opts.values())
+	hdf5['training_opts'].attrs['names'] = opts.keys()
 	pass
 
 
-def saveModel(model, outfile):
+def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_names=None):
+	data = model.getTrainingData()
+	data_grp = hdf5.create_group("training_data")
+	for m in xrange(len(data)):
+		view = view_names[m] if view_names is not None else str(m)
+		data_grp.create_dataset(view, data=data[m].data.T)
+		if feature_names is not None: 
+			data_grp[view].attrs['colnames'] = feature_names[m]
+		if sample_names is not None: 
+			data_grp[view].attrs['rownames'] = sample_names
+	pass
+
+def saveModel(model, outfile, view_names=None, sample_names=None, feature_names=None):
 	assert model.trained == True, "Model is not trained yet"
 
 	hdf5 = h5py.File(outfile,'w')
-	# saveExpectations(model,hdf5)
-	saveParameters(model,hdf5)
-
+	saveExpectations(model,hdf5,view_names)
+	saveParameters(model,hdf5,view_names)
+	saveTrainingStats(model,hdf5)
+	saveTrainingOpts(model,hdf5)
+	saveTrainingData(model, hdf5, view_names, sample_names, feature_names)
+	hdf5.close()
 	pass
-
-# def saveTrainingStats(model, outdir):
-#     stats = model.getTrainingStats()
-#     np.savetxt(X=stats["activeK"], fmt='%d', fname=os.path.join(outdir,"activeK.txt"), delimiter=' ')
-#     np.savetxt(X=stats["elbo"], fmt='%0.02f', fname=os.path.join(outdir,"elbo.txt"), delimiter=' ')
-#     stats["elbo_terms"].to_csv(os.path.join(outdir,"elbo_terms.txt"), sep="\t", header=True, index=False)
 
 # def saveTrainingOpts(model, outdir):
 #     opts = model.getTrainingOpts()

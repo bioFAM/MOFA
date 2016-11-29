@@ -355,7 +355,7 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
     """
 
     def __init__(self, dim, pa=1., pb=1., qa=1., qb=1., qE=None):
-        Beta_Unobserved_Variational_Node.__init__(self, dim, pa, pb, qa, qb)
+        Beta_Unobserved_Variational_Node.__init__(self, dim, pa, pb, qa, qb, qE)
 
     def updateParameters(self, factors_selection=None):
         # get needed node from the markov_blanket
@@ -385,9 +385,6 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
         self.P.b = self.P.b[keep]
         self.P.E = self.P.E[keep]
         # update dimensionalities
-        print self.P.dim
-        print self.Q.dim
-        exit()
         self.P.dim = (len(keep),)
         self.Q.dim = (len(keep),)
         self.dim = (len(keep),)
@@ -404,14 +401,13 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
         lbq = tmp2.sum()
 
         return lbp - lbq
-        # return 0
 
 # inheritance to Variational_Node is purely technical (so that there is an
 # update_parameters function for instance)
 class Theta_Constant_Node(Constant_Node, Variational_Node):
     """docstring for Theta_Constant_Node."""
-    def __init__(self, dim, p_theta):
-        super(Theta_Constant_Node, self).__init__(dim, p_theta)
+    def __init__(self, dim, value):
+        super(Theta_Constant_Node, self).__init__(dim, value)
         self.precompute()
 
     def precompute(self):

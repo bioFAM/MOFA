@@ -384,9 +384,6 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
         self.P.b = self.P.b[keep]
         self.P.E = self.P.E[keep]
         # update dimensionalities
-        print self.P.dim
-        print self.Q.dim
-        exit()
         self.P.dim = (len(keep),)
         self.Q.dim = (len(keep),)
         self.dim = (len(keep),)

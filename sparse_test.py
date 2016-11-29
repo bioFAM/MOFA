@@ -16,8 +16,8 @@ import pandas as pd
 from simulate import Simulate
 from BayesNet import BayesNet
 from multiview_nodes import *
+from nodes import Constant_Node
 from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
-from local_nodes import Local_Node, Observed_Local_Node
 from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node, Theta_Node_No_Annotation, Theta_Constant_Node
 from utils import *
 
@@ -145,13 +145,13 @@ tau_list = [None]*M
 for m in xrange(M):
 	if likelihood[m] == "poisson":
 		tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0) 
-		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
+		tau_list[m] = Constant_Node(dim=(D[m],), value=tmp)
 	elif likelihood[m] == "bernoulli":
 		tmp = s.ones(D[m])*0.25 
-		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
+		tau_list[m] = Constant_Node(dim=(D[m],), value=tmp)
 	elif likelihood[m] == "binomial":
 		tmp = 0.25*s.amax(data["Y"]["tot"][m],axis=0)
-		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
+		tau_list[m] = Constant_Node(dim=(D[m],), value=tmp)
 	elif likelihood[m] == "gaussian":
 		tau_pa = 1e-14
 		tau_pb = 1e-14
@@ -226,7 +226,7 @@ net.setSchedule(schedule)
 #############################
 
 options = {}
-options['maxiter'] = 200
+options['maxiter'] = 500
 options['tolerance'] = 1E-2
 options['forceiter'] = True
 # options['elbofreq'] = options['maxiter']+1

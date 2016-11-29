@@ -7,7 +7,6 @@ import cPickle as pkl
 import pandas as pd
 
 from nodes import Node
-from local_nodes import Local_Node
 from variational_nodes import Unobserved_Variational_Node, Variational_Node
 from utils import corr
 

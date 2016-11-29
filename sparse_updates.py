@@ -5,9 +5,7 @@ import numpy.ma as ma
 # Import manually defined functions
 from variational_nodes import *
 from utils import *
-import pdb
-import math
-from constant_nodes import Constant_Node
+from nodes import Constant_Node
 
 import scipy.special as special
 
@@ -404,7 +402,7 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
 
 # inheritance to Variational_Node is purely technical (so that there is an
 # update_parameters function for instance)
-class Theta_Constant_Node(Constant_Node, Variational_Node):
+class Theta_Constant_Node(Constant_Node):
     """docstring for Theta_Constant_Node."""
     def __init__(self, dim, value):
         super(Theta_Constant_Node, self).__init__(dim, value)

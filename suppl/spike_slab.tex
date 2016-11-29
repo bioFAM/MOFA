@@ -1,7 +1,7 @@
 \documentclass[10pt, a4paper,openany]{report}
 
 %% Load packages %%
-%\usepackage[applemac]{inputenx}  
+%\usepackage[applemac]{inputenx}
 \usepackage[english]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
@@ -11,14 +11,14 @@
 
 
 %% Load personalised commands %%
-\input{/Users/ricard/Dropbox/LaTeX/utils.tex}
+\input{utils.tex}
 
 
 \begin{document}
 
 \section{Hard sparsity prior: spike and Slab}
 %The variational distribution over sparse weights has a factorial nature: it can be written as a mixture of $2^M$ components where $M$ is the number of weights.
-%EXPLAIN SOME THEORY 
+%EXPLAIN SOME THEORY
 
 \subsection{The model}
 We have a data set $\bfY$ of $M$ input views with dimensionality $\bfY^m \in \R^{N \times D_m}$. The sparse group factor analysis model is defined as follows:
@@ -107,7 +107,7 @@ Update for $q(s_{dk}^m)$:
 \]
 where
 \begin{align*}
-\lambda_{dk}^m = \log\frac{\theta}{1-\theta} + 0.5\log\frac{\la\alpha_k^m\ra}{\la\tau_d^m\ra} - 0.5\log\Big( \sum_{n=1}^{N} \la z_{nk}^2 \ra + \frac{\la\alpha_k^m\ra}{\la\tau_d^m\ra} \Big) \\
+\lambda_{dk}^m = \la \log\frac{\theta}{1-\theta} \ra + 0.5\log\frac{\la\alpha_k^m\ra}{\la\tau_d^m\ra} - 0.5\log\Big( \sum_{n=1}^{N} \la z_{nk}^2 \ra + \frac{\la\alpha_k^m\ra}{\la\tau_d^m\ra} \Big) \\
 + \frac{\la\tau_d^m\ra}{2} \frac{ \Big( \sum_{n=1}^{N} y_{nd}^m \la z_{nk} \ra - \sum_{j \neq k} \la s_{dj}^m\hat{w}_{dj}^m\ra \sum_{n=1}^{N} \la z_{nk} \ra \la z_{nj} \ra \Big)^2} {\sum_{n=1}^{N} \la z_{nk}^2 \ra + \frac{\la\alpha_k^m\ra}{\la\tau_d^m\ra} }
 \end{align*}
 Update for $q(\hat{w}_{dk}^m)$:
@@ -138,7 +138,7 @@ Term from the prior $\log p(\alpha_k^m)$:
 \]
 Term from the prior $\log p(\bfw_{:k}^m) = \sum_{d=1}^{D_m} \log p(s_{dk}^m,\hat{w}_{dk}^m)$:
 \[
-\frac{D_m}{2}\log(\alpha_k^m) -\frac{\alpha_k^m}{2}\sum_{d=1}^{D} \la \hat{w}_{dk}^2 \ra + \sum_{d=1}^{D_m} \{ \la s_{dk}^m \ra \log\theta + (1-\la s_{dk}^m \ra)\log(1-\theta) \} + \const
+\frac{D_m}{2}\log(\alpha_k^m) -\frac{\alpha_k^m}{2}\sum_{d=1}^{D} \la \hat{w}_{dk}^2 \ra + \sum_{d=1}^{D_m} \{ \la s_{dk}^m \ra \log\theta_0 + (1-\la s_{dk}^m \ra) \log(1-\theta_0)  \} + \const
 \]
 Writing everything together:
 \[
@@ -181,6 +181,16 @@ where
 \hat{b}_{md}^{\tau} = b_0^{\tau} + \frac{1}{2} \sum_{n=1}^{N} \la (y_{nd}^m - \sum_k^{K} \hat{w}_{dk}^m s_{dk}^m z_{n,k})^2 \ra
 \]
 
+\subsection*{Spike and Slab sparsity parameter $\theta$}
+Unless a given factor is specifically annotated in a given view, the sparisty parameter $\theta^m_{k}$ of the Spike and Slab prior on $w_{k,d}^m, \forall d$ is given a Beta prior: $P(\theta_k^m) = \mathrm{Beta} (a_0, b_0)$. The postrerior $q(\theta_k^m)$ is Beta distributed and the update of its parameters $a_k^m$ and $b_k^m$ are given below:\\
+
+\begin{equation*}
+  \begin{aligned}
+    &a_{k}^m = \sum_{d} \la S^m_{k,d}\ra + a_0\\
+    &b_{k}^m = b_0 - \sum_{d} \la S^m_{k,d}\ra + D_m
+  \end{aligned}
+\end{equation*}
+
 \subsection{Lower bound}
 
 \subsubsection{Likelihood term}
@@ -214,7 +224,7 @@ Extending terms and rearranging:
 $p(\hat{\bfW},\bfS)$:
 \begin{align*}
 -\sum_{m=1}^{M}\frac{KD_m}{2}\log(2\pi) + \sum_{m=1}^{M}\frac{D_m}{2}\sum_{k=1}^{K} \log(\alpha_k^m) - \sum_{m=1}^{M} \frac{\alpha_k^m}{2} \sum_{d=1}^{D_m} \sum_{k=1}^{K} \la (\hat{w}_{dk}^m)^2 \ra \\
-+ \log(\theta) \sum_{m=1}^{M} \sum_{d=1}^{D_m} \sum_{k=1}^{K} \la s_{dk}^m \ra + \log(1-\theta) \sum_{m=1}^{M} \sum_{d=1}^{D_m}\sum_{k=1}^{K} (1- \la s_{dk}^m \ra)
++ \la \log(\theta) \ra \sum_{m=1}^{M} \sum_{d=1}^{D_m} \sum_{k=1}^{K} \la s_{dk}^m \ra + \la \log(1-\theta) \ra \sum_{m=1}^{M} \sum_{d=1}^{D_m}\sum_{k=1}^{K} (1- \la s_{dk}^m \ra)
 \end{align*}
 %$p(\hat{\bfW})$:
 %\[
@@ -230,7 +240,7 @@ $q(\hat{\bfW},\bfS)$:
 \end{align*}
 %$p(\bfS)$:
 %\[
-%\log(\theta) \sum_{d=1}^{D}\sum_{k=1}^{K} \la s_{dk} \ra + \log(1-\theta) \sum_{d=1}^{D}\sum_{k=1}^{K} (1- \la s_{dk} \ra)
+%\la \log(\theta) \ra \sum_{d=1}^{D}\sum_{k=1}^{K} \la s_{dk} \ra + \la \log(1-\theta) \ra \sum_{d=1}^{D}\sum_{k=1}^{K} (1- \la s_{dk} \ra)
 %\]
 %$q(\bfS)$:
 %\[
@@ -266,6 +276,16 @@ $q(\hat{\bfW},\bfS)$:
 \[
 \mathbb{E} [\log Q(\btau)] = \sum_{m=1}^{M}\sum_{d=1}^{D_m} \Big( \hat{a}_{dm}^\tau \log \hat{b}_{dm}^\tau + (\hat{a}_{dm}^\tau - 1) \la \log \tau_d^m \ra - \hat{b}_{dm}^\tau \la \tau_d^m \ra - \log \Gamma(\hat{a}_{dm}^\tau) \Big)
 \]
+
+\subsection*{Theta}
+\begin{equation*}
+    \begin{aligned}
+      &\mathbb{E}\left[ \log P(\theta) \right] = \sum_{m=1}^M \sum_{k=1}^K\sum_{d=1}^{D_m}\left( (a_0 - 1) \times \la \log(\pi^m_{d, k}) \ra + (b_0 -1) \la \log(1 - \pi^m_{d, k}) \ra - \log (\mathrm{B} (a_0, b_0))\right) \\
+      &\mathbb{E}\left[ \log Q(\theta) \right] = \sum_{m=1}^M \sum_{k=1}^K\sum_{d=1}^{D_m}\left( (a^m_{k,d} - 1) \times \la \log(\pi^m_{d, k}) \ra + (b^m_{k,d} -1) \la \log(1 - \pi^m_{d, k}) \ra - \log (\mathrm{B} (a^m_{k,d}, b^m_{k,d})) \right) \\
+    \end{aligned}
+\end{equation*}
+
+
 where the expectations are calculated as follows:
 
 \subsection*{Expectations}
@@ -300,5 +320,6 @@ The expectations are calculated as follows:
 &(y_{nd}^m)^2 - 2y_{nd}^m \sum_k^{K} \la w_{dk}^m s_{dk}^m \ra \la z_{nk} \ra + \sum_k^{K}\sum_j^{K} \la w_{dk}^m s_{dk}^m \ra \la z_{nk} \ra \la w_{dj}^m s_{dj}^m \ra \la z_{nj} \ra = \\
 &(y_{nd}^m)^2 - 2y_{nd}^m \sum_k^{K} \la w_{dk}^m s_{dk}^m \ra \la z_{nk} \ra + \sum_k^{K} \la (w_{dk}^m s_{dk}^m)^2 \ra \la z_{nk}^2 \ra + 2\sum_{j > k}^{K} \la w_{dk}^m s_{dk}^m \ra \la w_{dj}^m s_{dj}^m \ra \la z_{nk} \ra \la z_{nj} \ra
 \end{align*}
+
 
 \end{document}

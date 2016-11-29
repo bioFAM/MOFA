@@ -268,4 +268,6 @@ class BayesNet(object):
             elbo[node] = float(self.nodes[node].calculateELBO())
             elbo["total"] += elbo[node]
         return elbo
+
+        
         

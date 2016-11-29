@@ -20,7 +20,7 @@ Extensions with respect to the Gaussian Group Factor Analysis:
 
 (Derivation of equations can be found in file XX)
 
-Current nodes: 
+Current nodes:
     Y_Node: observed data
     SW_Node: spike and slab weights
     Tau_Node: precision of the noise
@@ -39,8 +39,8 @@ Each node is a Variational_Node() class with the following main variables:
 
     Important attributes:
     - markov_blanket: dictionary that defines the set of nodes that are in the markov blanket of the current node
-    - Q: an instance of Distribution() which contains the specification of the variational distribution 
-    - P: an instance of Distribution() which contains the specification of the prior distribution 
+    - Q: an instance of Distribution() which contains the specification of the variational distribution
+    - P: an instance of Distribution() which contains the specification of the prior distribution
     - dim: dimensionality of the node
 
 """
@@ -54,7 +54,7 @@ class Y_Node(Observed_Variational_Node):
         Observed_Variational_Node.__init__(self, dim, obs)
 
         # Create a boolean mask of the data to hidden missing values
-        if type(self.obs) != ma.MaskedArray: 
+        if type(self.obs) != ma.MaskedArray:
             self.mask()
         # Precompute some terms
         self.precompute()
@@ -115,7 +115,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         self.Q.var = 1./tmp
 
         # Mean
-        if any(self.covariates): 
+        if any(self.covariates):
             oldmean = self.Q.mean[:,self.covariates]
 
         for k in xrange(self.K):
@@ -209,7 +209,7 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
         # ARD prior on What
         # pdb.set_trace()
         self.Q.b = self.P.b + EWW.sum(axis=0)/2.
-        self.Q.a = s.repeat(self.P.a + EWW.shape[0]/2., self.K) # Updated in the initialisation
+        self.Q.a = s.repeat(self.P.a + EWW.shape[0]/2., self.K)
 
         # ARD prior on W
         # self.Q.a = self.P.a + S.sum(axis=0)/2

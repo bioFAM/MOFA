@@ -81,7 +81,7 @@ class Observed_Variational_Node(Variational_Node):
         return self.getObservations()
     def getExpectations(self):
         return {'E':self.getObservations()}
-        
+
 class Unobserved_Variational_Node(Variational_Node):
     """
     Abstract class for an unobserved variational node in a Bayesian probabilistic model.
@@ -247,7 +247,7 @@ class Beta_Unobserved_Variational_Node(Unobserved_Variational_Node):
     Abstract class for a variational node where both P(x) and Q(x) are beta
     distributions
     """
-    def __init__(self, dim, pa, pb, qa=1., qb=1.):
+    def __init__(self, dim, pa, pb, qa=1., qb=1., qE=None):
         super(Beta_Unobserved_Variational_Node, self).__init__(dim)
         self.P = Beta(dim, pa, pb)
         self.Q = Beta(dim, qa, qb)

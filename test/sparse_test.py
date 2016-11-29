@@ -16,9 +16,9 @@ import pandas as pd
 from simulate import Simulate
 from BayesNet import BayesNet
 from multiview_nodes import *
+from nodes import Constant_Node
 from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
-from local_nodes import Local_Node, Observed_Local_Node
-from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node
+from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node, Theta_Node_No_Annotation, Theta_Constant_Node
 from utils import *
 
 ###################
@@ -145,13 +145,13 @@ tau_list = [None]*M
 for m in xrange(M):
 	if likelihood[m] == "poisson":
 		tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0) 
-		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
+		tau_list[m] = Constant_Node(dim=(D[m],), value=tmp)
 	elif likelihood[m] == "bernoulli":
 		tmp = s.ones(D[m])*0.25 
-		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
+		tau_list[m] = Constant_Node(dim=(D[m],), value=tmp)
 	elif likelihood[m] == "binomial":
 		tmp = 0.25*s.amax(data["Y"]["tot"][m],axis=0)
-		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
+		tau_list[m] = Constant_Node(dim=(D[m],), value=tmp)
 	elif likelihood[m] == "gaussian":
 		tau_pa = 1e-14
 		tau_pb = 1e-14
@@ -175,14 +175,27 @@ for m in xrange(M):
 		Y_list[m] = Binomial_PseudoY_Node(dim=(N,D[m]), tot=data['Y']["tot"][m], obs=data['Y']["obs"][m], Zeta=None, E=None)
 Y = Multiview_Mixed_Node(M, *Y_list)
 
+# Theta node
+# DIMENSIOANLITY OF THETA?
+Theta_list = [None] * M
+learn_theta = False
+for m in xrange(M):
+	if learn_theta:
+		Theta_list[m] = Theta_Node_No_Annotation(dim=(K,), qE=None)
+	else:
+		Theta_list[m] = Theta_Constant_Node(dim=(K,),value=0.5)
+Theta = Multiview_Mixed_Node(M, *Theta_list)
+
+
 ############################
 ## Define Markov Blankets ##
 ############################
 
 Z.addMarkovBlanket(SW=SW, tau=tau, Y=Y)
 for m in xrange(M):
+	Theta.nodes[m].addMarkovBlanket(SW=SW.nodes[m])
 	alpha.nodes[m].addMarkovBlanket(SW=SW.nodes[m])
-	SW.nodes[m].addMarkovBlanket(Z=Z, tau=tau.nodes[m], alpha=alpha.nodes[m], Y=Y.nodes[m])
+	SW.nodes[m].addMarkovBlanket(Z=Z, tau=tau.nodes[m], alpha=alpha.nodes[m], Y=Y.nodes[m], Theta=Theta.nodes[m])
 	if likelihood[m] == "gaussian":
 		Y.nodes[m].addMarkovBlanket(Z=Z, SW=SW.nodes[m], tau=tau.nodes[m])
 		tau.nodes[m].addMarkovBlanket(SW=SW.nodes[m], Z=Z, Y=Y.nodes[m])
@@ -193,6 +206,7 @@ for m in xrange(M):
 ## Update required expectations ##
 ##################################
 
+# TO-DO: WE SHOUDL DO SOMETHING WITH THIS
 SW.updateExpectations()
 Z.Q.updateExpectations()
 
@@ -200,10 +214,10 @@ Z.Q.updateExpectations()
 ## Add the nodes to the network ##
 ##################################
 
-net.addNodes(SW=SW, tau=tau, Z=Z, Y=Y, alpha=alpha)
+net.addNodes(Theta=Theta, SW=SW, tau=tau, Z=Z, Y=Y, alpha=alpha)
 
 # Define update schedule
-schedule = ["Y","SW","Z","alpha","tau"]
+schedule = ["Y","SW","Z","alpha","tau","Theta"]
 
 net.setSchedule(schedule)
 
@@ -212,7 +226,7 @@ net.setSchedule(schedule)
 #############################
 
 options = {}
-options['maxiter'] = 200
+options['maxiter'] = 500
 options['tolerance'] = 1E-2
 options['forceiter'] = True
 # options['elbofreq'] = options['maxiter']+1

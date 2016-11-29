@@ -3,7 +3,6 @@ import scipy as s
 import numpy.ma as ma
 
 from variational_nodes import Unobserved_Variational_Node
-from local_nodes import Unobserved_Local_Node
 from utils import sigmoid
 
 """
@@ -11,25 +10,6 @@ Module to define updates for non-conjugate matrix factorisation models using the
 Reference: 'Fast Variational Bayesian Inference for Non-Conjugate Matrix Factorisation models' by Seeger and Bouchard (2012)
 """
 
-
-# class Zeta_Node(Unobserved_Local_Node):
-#     """ 
-#     Abstract class for the local variational variable zeta that represents the location of the
-#     Taylor expansion for the upper bound on the log likelihood.
-#     It is required for the approximation that leads to closed-form VB updates in non-conjugate matrix factorisation models
-
-#     Notice that Zeta is a local node, not a variational node!
-#     """
-#     def __init__(self, dim, initial_value=None):
-#         # Inputs:
-#         #  dim (ndarray): dimensionality of the node
-#         #  initial_value (ndarray): initial value of Zeta
-#         Unobserved_Local_Node.__init__(self, dim, initial_value)
-
-#     def update(self):
-#         Z = self.markov_blanket["Z"].getExpectation()
-#         W = self.markov_blanket["W"].getExpectation()
-#         self.value = s.dot(Z,W.T)
 
 ################
 ## Pseudodata ##

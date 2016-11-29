@@ -1,5 +1,4 @@
 """
-Script to run a single trial of scGFA 
 """
 
 # Import required modules
@@ -17,70 +16,7 @@ from init_nodes import *
 from BayesNet import BayesNet
 
 
-# Function to run a single trial of the model
-def runSingleTrial(data, model_opts, train_opts, seed=None):
-
-    s.random.seed(seed)
-
-    ######################
-    ## Define the model ##
-    ######################
-
-    # Define dimensionalities
-    M = len(data)
-    N = data[0].shape[0]
-    D = s.asarray([ data[m].shape[1] for m in xrange(M) ])
-    K = model_opts["k"]
-
-    dim = {'M':M, 'N':N, 'D':D, 'K':K }
-
-    # Define and initialise the nodes
-    if model_opts["sparse"]:
-        init = init_scGFA(dim,data,model_opts["likelihood"])
-        init.initSW(S_ptheta=0.5) 
-    else:
-        init = init_GFA(dim,data,model_opts["likelihood"])
-        init.initW() 
-    init.initZ(type="random")
-    init.initAlpha(pa=1e-5, pb=1e-5, qb=1., qE=100.)
-    init.initTau(pa=1e-5, pb=1e-5, qb=1., qE=100.)
-    init.initZeta()
-    init.initY()
-    init.MarkovBlanket()
-
-
-    ##################################
-    ## Add the nodes to the network ##
-    ##################################
-
-    # Initialise Bayesian Network
-    net = BayesNet(dim=dim)
-
-    # Initialise sparse model
-    if model_opts["sparse"]:
-        net.addNodes(Zeta=init.Zeta, SW=init.SW, tau=init.Tau, Z=init.Z, Y=init.Y, alpha=init.Alpha)
-        # this si wrong, make general
-        schedule = ["Zeta","Y","SW","Z","alpha","tau"]
-
-    # Initialise non-sparse model
-    # else:
-        # net.addNodes(W=init.W, tau=init.Tau, Z=init.Z, Y=init.Y, alpha=init.Alpha)
-        # schedule = ["W","Z","alpha","tau"]
-
-    # Add training schedule
-    net.setSchedule(schedule)
-
-    # Add training options
-    net.options = train_opts
-
-    ####################
-    ## Start training ##
-    ####################
-
-    net.iterate()
-
-    return net
-
+# Function to load the data
 def loadData(data_opts):
     Y = list()
     for m in xrange(len(data_opts['input_files'])):
@@ -96,8 +32,72 @@ def loadData(data_opts):
         Y.append(tmp)
     return Y
 
-def runMultipleTrials(data_opts, model_opts, train_opts, cores):
+# Function to run a single trial of the model
+def runSingleTrial(data, model_opts, train_opts, seed=None):
 
+    # set the seed
+    s.random.seed(seed)
+
+    ######################
+    ## Define the model ##
+    ######################
+
+    # Define dimensionalities
+    M = len(data)
+    N = data[0].shape[0]
+    D = s.asarray([ data[m].shape[1] for m in xrange(M) ])
+    K = model_opts["k"]
+
+    dim = {'M':M, 'N':N, 'D':D, 'K':K }
+
+    # Define and initialise the nodes
+
+    init = init_scGFA(dim, data, model_opts["likelihood"])
+
+    init.initSW(ptheta=model_opts["prior_SW"]["theta"], pmean=model_opts["prior_SW"]["mean"], pvar=model_opts["prior_SW"]["var"],
+                qtheta=model_opts["init_SW"]["theta"], qmean=model_opts["init_SW"]["mean"], qvar=model_opts["init_SW"]["var"])
+    init.initZ(type="random", pmean=model_opts["init_Z"]["mean"], pvar=model_opts["init_Z"]["var"])
+
+    init.initAlpha(pa=model_opts["prior_alpha"]['a'], pb=["prior_alpha"]['b'], 
+                   qb=["init_alpha"]['a'], qb=["init_alpha"]['b'], qE=["init_alpha"]['E'])
+    init.initTau(pa=model_opts["prior_tau"]['a'], pb=["prior_tau"]['b'], 
+                 qb=["init_tau"]['a'], qb=["init_tau"]['b'], qE=["init_tau"]['E'])
+
+    init.initThetaLearn()
+    init.initThetaConst()
+    init.initY()
+    init.MarkovBlanket()
+
+
+    ##################################
+    ## Add the nodes to the network ##
+    ##################################
+
+    # Initialise Bayesian Network
+    net = BayesNet(dim=dim)
+
+    # Initialise sparse model
+    net.addNodes(Theta=init.Theta, SW=init.SW, tau=init.Tau, Z=init.Z, Y=init.Y, alpha=init.Alpha)
+    # this si wrong, make general
+    schedule = ["Zeta","Y","SW","Z","alpha","tau"]
+
+    # Add training schedule
+    net.setSchedule(schedule)
+
+    # Add training options
+    net.options = train_opts
+
+    ####################
+    ## Start training ##
+    ####################
+
+    net.iterate()
+
+    return net
+
+# Function to run multiple trials of the model
+def runMultipleTrials(data_opts, model_opts, train_opts, cores):
+    
     # Create the output folders
     if not os.path.exists(train_opts['outdir']):
         os.makedirs(train_opts['outdir'])
@@ -149,13 +149,25 @@ if __name__ == '__main__':
     data_opts['colnames'] = 0
     data_opts['delimiter'] = "\t"
     
-
     # Define the model options
     model_opts = {}
     model_opts['likelihood'] = ("gaussian","gaussian","bernoulli")
     model_opts['sparse'] = True
     model_opts['k'] = 10
     
+    # Define priors
+    model_opts["prior_Z"] = { 'mean':0., 'var'=1. }
+    model_opts["prior_alpha"] = [{ 'a':1e-14, 'b'=1e-14 }] * len(data_opts['view_names'])
+    model_opts["prior_SW"] = [{ 'theta':0.5, 'mean'=0, 'var'=1 }] * len(data_opts['view_names'])
+    model_opts["prior_tau"] = [{ 'a':1e-14, 'var'=1e-14 }] * len(data_opts['view_names'])
+
+    # Define initialisation options
+    model_opts["init_Z"] = { 'mean':0., 'var'=1. }
+    model_opts["init_alpha"] = [{ 'a':1e-14, 'b'=1e-14, 'E'=100. }] * len(data_opts['view_names'])
+    model_opts["init_SW"] = [{ 'theta':0.5, 'mean'=0, 'var'=1 }] * len(data_opts['view_names'])
+    model_opts["init_tau"] = [{ 'a':1e-14, 'var'=1e-14, 'E'=100.}] * len(data_opts['view_names'])
+
+
     # Define the training options
     train_opts = {}
     train_opts['maxiter'] = 50

@@ -5,8 +5,7 @@ import numpy.ma as ma
 # Import manually defined functions
 from variational_nodes import *
 from utils import *
-import pdb
-import math
+from nodes import Constant_Node
 
 import scipy.special as special
 
@@ -341,7 +340,6 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             # pdb.set_trace()
         return lb_w + lb_s
 
-#
 class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
     """
     This class comtain a Theta node associate to factors for which
@@ -354,8 +352,8 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
     order to choose from the S matrix
     """
 
-    def __init__(self, dim, pa=1., pb=1., qa=1., qb=1.):
-        Beta_Unobserved_Variational_Node.__init__(self, dim, pa, pb, qa, qb)
+    def __init__(self, dim, pa=1., pb=1., qa=1., qb=1., qE=None):
+        Beta_Unobserved_Variational_Node.__init__(self, dim, pa, pb, qa, qb, qE)
 
     def updateParameters(self, factors_selection=None):
         # get needed node from the markov_blanket
@@ -371,7 +369,6 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
 
     def getExpectations(self):
         return {'E':self.Q.E, 'lnE':self.Q.lnE, 'lnEInv':self.Q.lnEInv}
-    # TODO implement ELBO term
 
     def removeFactors(self, *idx):
         keep = s.setdiff1d(s.arange(self.dim[0]),idx)
@@ -385,7 +382,9 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
         self.P.a = self.P.a[keep]
         self.P.b = self.P.b[keep]
         self.P.E = self.P.E[keep]
-        # others
+        # update dimensionalities
+        self.P.dim = (len(keep),)
+        self.Q.dim = (len(keep),)
         self.dim = (len(keep),)
 
     def calculateELBO(self):
@@ -400,4 +399,43 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
         lbq = tmp2.sum()
 
         return lbp - lbq
-        # return 0
+
+# inheritance to Variational_Node is purely technical (so that there is an
+# update_parameters function for instance)
+class Theta_Constant_Node(Constant_Node):
+    """docstring for Theta_Constant_Node."""
+    def __init__(self, dim, value):
+        super(Theta_Constant_Node, self).__init__(dim, value)
+        self.precompute()
+
+    def precompute(self):
+        self.E = self.value
+        self.lnE = s.log(self.value)
+        self.lnEInv = s.log(1-self.value)
+
+    def getExpectations(self):
+        return {'E': self.E, 'lnE': self.lnE, 'lnEInv': self.lnEInv}
+
+    # constant tehta does not contribute to ELBO
+    def calculateELBO(self):
+        return 0
+
+    # TODO what would be neater for all removeFcator functions would be to have
+    # a list of class mebers depending on factors and to be updated when removing
+    # factors -> only one def of the removeFactors function and then you just
+    # fill in the list according to the specific node
+    def removeFactors(self, *idx):
+        if len(self.dim) == 1:
+            keep = s.setdiff1d(s.arange(self.dim[0]),idx)
+            self.value = self.value[keep]
+            self.dim = (len(self.value),)
+            self.E = self.E[keep]
+            self.lnE = self.lnE[keep]
+            self.lnEInv = self.lnEInv[keep]
+        else:
+            keep = s.setdiff1d(s.arange(self.dim[1]),idx)
+            self.value = self.value[:, keep]
+            self.dim = self.value.shape
+            self.E = self.E[:, keep]
+            self.lnE = self.lnE[:, keep]
+            self.lnEInv = self.lnEInv[:, keep]

@@ -37,20 +37,25 @@ class Mixed_Theta_Nodes(Variational_Node, Constant_Node):
 
     def getExpectations(self):
         # get expectations or values for each node and return concatenated array
-        values_annotated = self.annotated_theta.getValue()
+        values_annotated = self.annotated_theta.getExpectations()['E']
+        values_annotated_ln = self.annotated_theta.getExpectations()['lnE']
+        values_annotated_lnInv = self.annotated_theta.getExpectations()['lnEInv']
+
         exp = self.non_annotated_theta.getExpectations()['E']
         lnExp = self.non_annotated_theta.getExpectations()['lnE']
         lnExpInv = self.non_annotated_theta.getExpectations()['lnEInv']
 
-        # deal with different dimensions
-        if exp.shape != values_annotated.shape:
-            exp = s.repeat(exp[None, :], values_annotated.shape[0], 0)
-            lnExp = s.repeat(lnExp[None, :], values_annotated.shape[0], 0)
-            lnExpInv = s.repeat(lnExpInv[None, :], values_annotated.shape[0], 0)
+        # deal with different dimensions TODO handle other cases here ?
+        # TODO this does not handle learnign some theta and not others for
+        # example (wrong dimensions for constant) could be useful for having
+        # mixed sparsity levels
+        exp = s.repeat(exp[None, :], values_annotated.shape[0], 0)
+        lnExp = s.repeat(lnExp[None, :], values_annotated.shape[0], 0)
+        lnExpInv = s.repeat(lnExpInv[None, :], values_annotated.shape[0], 0)
 
         E = s.concatenate((values_annotated, exp), axis=1)
-        lnE = s.concatenate((s.log(values_annotated), lnExp), axis=1)
-        lnEInv = s.concatenate((s.log(1-values_annotated), lnExpInv), axis=1)
+        lnE = s.concatenate((values_annotated_ln, lnExp), axis=1)
+        lnEInv = s.concatenate((values_annotated_lnInv, lnExpInv), axis=1)
         return dict({'E': E, 'lnE': lnE, 'lnEInv':lnEInv})
 
     def getExpectation(self):
@@ -63,7 +68,6 @@ class Mixed_Theta_Nodes(Variational_Node, Constant_Node):
         # the argument contains the indices of the non_annotated factors
         self.non_annotated_theta.updateParameters(self.non_annotated_factors_ix)
 
-    # TODO implement
     def calculateELBO(self):
         return self.non_annotated_theta.calculateELBO()
 

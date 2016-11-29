@@ -45,7 +45,10 @@ class Mixed_Theta_Nodes(Variational_Node, Constant_Node):
         lnExp = self.non_annotated_theta.getExpectations()['lnE']
         lnExpInv = self.non_annotated_theta.getExpectations()['lnEInv']
 
-        # deal with different dimensions
+        # deal with different dimensions TODO handle other cases here ?
+        # TODO this does not handle learnign some theta and not others for
+        # example (wrong dimensions for constant) could be useful for having
+        # mixed sparsity levels
         exp = s.repeat(exp[None, :], values_annotated.shape[0], 0)
         lnExp = s.repeat(lnExp[None, :], values_annotated.shape[0], 0)
         lnExpInv = s.repeat(lnExpInv[None, :], values_annotated.shape[0], 0)

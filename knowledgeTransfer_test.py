@@ -247,7 +247,7 @@ def run_test(test_ix):
             # annotations = s.concatenate((annotation_theta1[:,None], annotation_theta2[:,None],
                                         #   annotation_theta3[:,None], sup_annotation), axis=1)
             annotations = annotation_theta1[:,None]
-            annotated_node = Constant_Node((D[0],1), annotations)
+            annotated_node = Theta_Constant_Node((D[0],1), annotations)
             non_annotated_node = Theta_Node_No_Annotation((9,))
             Theta_list[0] = Mixed_Theta_Nodes(annotated_node, non_annotated_node)
             # Other two views, no annotation

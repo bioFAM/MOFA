@@ -17,7 +17,7 @@ from BayesNet import BayesNet
 from multiview_nodes import *
 from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
 from local_nodes import Local_Node, Observed_Local_Node
-from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node, Theta_Node_No_Annotation
+from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node, Theta_Node_No_Annotation, Theta_Constant_Node
 from utils import *
 
 import numpy as np
@@ -258,7 +258,9 @@ def run_test(test_ix):
             Theta = Multiview_Variational_Node(M, *Theta_list)
 
         else:
-            for m in xrange(0, M):
+            # also tries to have a fixed node
+            Theta_list[0] = Theta_Constant_Node((K,), 0.5)
+            for m in xrange(1, M):
                 dim = (K,)
                 Theta_list[m] = Theta_Node_No_Annotation(dim)
             Theta = Multiview_Variational_Node(M, *Theta_list)

@@ -17,6 +17,11 @@ class Constant_Node(Node):
         return self.value
 
     def removeFactors(self, *idx):
-        keep = s.setdiff1d(s.arange(self.dim[1]),idx)
-        self.value = self.value[:, keep]
-        self.dim = self.value.shape
+        if len(self.dim) == 1:
+            keep = s.setdiff1d(s.arange(self.dim[0]),idx)
+            self.value = self.value[keep]
+            self.dim = (len(self.value),)
+        else:
+            keep = s.setdiff1d(s.arange(self.dim[1]),idx)
+            self.value = self.value[:, keep]
+            self.dim = self.value.shape

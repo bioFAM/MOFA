@@ -1,8 +1,9 @@
-import scipy as s 
+import scipy as s
 
 from nodes import Node
 from local_nodes import Local_Node
 from variational_nodes import Variational_Node
+from constant_nodes import Constant_Node
 
 """
 Module to define multi-view nodes in a Bayesian network
@@ -13,7 +14,7 @@ All multiview nodes (either variational or not variational) have two main attrib
 """
 
 class Multiview_Node(Node):
-    """ 
+    """
     General class for multiview nodes in a Bayesian network
     """
     def __init__(self, M, *nodes):
@@ -46,7 +47,7 @@ class Multiview_Node(Node):
 
 # class Multiview_Local_Node(Multiview_Node,Local_Node):
 class Multiview_Local_Node(Multiview_Node):
-    """ 
+    """
     General class for multiview local nodes
     """
     def __init__(self, M, *nodes):
@@ -54,7 +55,7 @@ class Multiview_Local_Node(Multiview_Node):
         Multiview_Node.__init__(self, M, *nodes)
 
     def update(self):
-        # Update parameters 
+        # Update parameters
         for m in self.idx: self.nodes[m].update()
         pass
     def getValue(self):
@@ -65,7 +66,7 @@ class Multiview_Local_Node(Multiview_Node):
         # return self.getValue()
 
 class Multiview_Variational_Node(Multiview_Node, Variational_Node):
-    """ 
+    """
     General class for multiview variational nodes.
     """
     def __init__(self, M, *nodes):
@@ -75,7 +76,7 @@ class Multiview_Variational_Node(Multiview_Node, Variational_Node):
 
     def update(self):
         # Update both parameters and expectations
-        for m in self.idx: 
+        for m in self.idx:
             self.nodes[m].updateParameters()
             self.nodes[m].updateExpectations()
         pass
@@ -112,6 +113,6 @@ class Multiview_Mixed_Node(Multiview_Local_Node, Multiview_Variational_Node):
             if isinstance(self.nodes[m],Variational_Node):
                 lb += self.nodes[m].calculateELBO()
         return lb
-        
+
     def getObservations(self):
         return [ self.nodes[m].getObservations() for m in self.idx ]

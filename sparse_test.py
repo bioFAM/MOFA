@@ -18,7 +18,7 @@ from BayesNet import BayesNet
 from multiview_nodes import *
 from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
 from local_nodes import Local_Node, Observed_Local_Node
-from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node
+from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node, Theta_Node_No_Annotation
 from utils import *
 
 ###################

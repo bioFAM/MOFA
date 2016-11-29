@@ -341,7 +341,6 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             # pdb.set_trace()
         return lb_w + lb_s
 
-#
 class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
     """
     This class comtain a Theta node associate to factors for which
@@ -371,7 +370,6 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
 
     def getExpectations(self):
         return {'E':self.Q.E, 'lnE':self.Q.lnE, 'lnEInv':self.Q.lnEInv}
-    # TODO implement ELBO term
 
     def removeFactors(self, *idx):
         keep = s.setdiff1d(s.arange(self.dim[0]),idx)
@@ -385,7 +383,12 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
         self.P.a = self.P.a[keep]
         self.P.b = self.P.b[keep]
         self.P.E = self.P.E[keep]
-        # others
+        # update dimensionalities
+        print self.P.dim
+        print self.Q.dim
+        exit()
+        self.P.dim = (len(keep),)
+        self.Q.dim = (len(keep),)
         self.dim = (len(keep),)
 
     def calculateELBO(self):
@@ -400,4 +403,3 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
         lbq = tmp2.sum()
 
         return lbp - lbq
-        # return 0

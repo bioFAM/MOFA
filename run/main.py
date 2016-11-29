@@ -1,5 +1,4 @@
 """
-Script to run a single trial of scGFA 
 """
 
 # Import required modules
@@ -17,9 +16,26 @@ from init_nodes import *
 from BayesNet import BayesNet
 
 
+# Function to load the data
+def loadData(data_opts):
+    Y = list()
+    for m in xrange(len(data_opts['input_files'])):
+        file = data_opts['input_files'][m]
+
+        # Read file (with row and column names)
+        tmp = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"])
+
+        # Center the data
+        if data_opts['center'][m]: 
+            tmp = (tmp - tmp.mean())
+
+        Y.append(tmp)
+    return Y
+
 # Function to run a single trial of the model
 def runSingleTrial(data, model_opts, train_opts, seed=None):
 
+    # set the seed
     s.random.seed(seed)
 
     ######################
@@ -35,6 +51,8 @@ def runSingleTrial(data, model_opts, train_opts, seed=None):
     dim = {'M':M, 'N':N, 'D':D, 'K':K }
 
     # Define and initialise the nodes
+    ZETA IS NOT A NODE ANYMORE, MODIFY THAT
+
     if model_opts["sparse"]:
         init = init_scGFA(dim,data,model_opts["likelihood"])
         init.initSW(S_ptheta=0.5) 
@@ -81,23 +99,9 @@ def runSingleTrial(data, model_opts, train_opts, seed=None):
 
     return net
 
-def loadData(data_opts):
-    Y = list()
-    for m in xrange(len(data_opts['input_files'])):
-        file = data_opts['input_files'][m]
-
-        # Read file (with row and column names)
-        tmp = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"])
-
-        # Center the data
-        if data_opts['center'][m]: 
-            tmp = (tmp - tmp.mean())
-
-        Y.append(tmp)
-    return Y
-
+# Function to run multiple trials of the model
 def runMultipleTrials(data_opts, model_opts, train_opts, cores):
-
+    
     # Create the output folders
     if not os.path.exists(train_opts['outdir']):
         os.makedirs(train_opts['outdir'])
@@ -149,13 +153,22 @@ if __name__ == '__main__':
     data_opts['colnames'] = 0
     data_opts['delimiter'] = "\t"
     
-
     # Define the model options
     model_opts = {}
     model_opts['likelihood'] = ("gaussian","gaussian","bernoulli")
     model_opts['sparse'] = True
     model_opts['k'] = 10
     
+    # Define priors
+    model_opts["prior_Z"] = { 'mean':0., 'var'=1. }
+    model_opts["prior_tau"] = [{ 'a':1e-14, 'var'=1e-14 }] * len(data_opts['view_names'])
+    model_opts["prior_alpha"] = [{ 'a':1e-14, 'var'=1e-14 }] * len(data_opts['view_names'])
+    model_opts["prior_SW"] = [{ 'a':1e-14, 'var'=1e-14 }] * len(data_opts['view_names'])
+
+    theta=S_ptheta, mean=W_pmean, var=W_pvar) 
+
+    # Define initialisation options
+
     # Define the training options
     train_opts = {}
     train_opts['maxiter'] = 50

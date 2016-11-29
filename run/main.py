@@ -62,6 +62,7 @@ def runSingleTrial(data, model_opts, train_opts, seed=None):
                    qb=["init_alpha"]['a'], qb=["init_alpha"]['b'], qE=["init_alpha"]['E'])
     init.initTau(pa=model_opts["prior_tau"]['a'], pb=["prior_tau"]['b'], 
                  qb=["init_tau"]['a'], qb=["init_tau"]['b'], qE=["init_tau"]['E'])
+
     init.initThetaLearn()
     init.initThetaConst()
     init.initY()
@@ -76,15 +77,9 @@ def runSingleTrial(data, model_opts, train_opts, seed=None):
     net = BayesNet(dim=dim)
 
     # Initialise sparse model
-    if model_opts["sparse"]:
-        net.addNodes(Theta=init.Theta, SW=init.SW, tau=init.Tau, Z=init.Z, Y=init.Y, alpha=init.Alpha)
-        # this si wrong, make general
-        schedule = ["Zeta","Y","SW","Z","alpha","tau"]
-
-    # Initialise non-sparse model
-    # else:
-        # net.addNodes(W=init.W, tau=init.Tau, Z=init.Z, Y=init.Y, alpha=init.Alpha)
-        # schedule = ["W","Z","alpha","tau"]
+    net.addNodes(Theta=init.Theta, SW=init.SW, tau=init.Tau, Z=init.Z, Y=init.Y, alpha=init.Alpha)
+    # this si wrong, make general
+    schedule = ["Zeta","Y","SW","Z","alpha","tau"]
 
     # Add training schedule
     net.setSchedule(schedule)

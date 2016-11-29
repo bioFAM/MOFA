@@ -62,8 +62,6 @@ class init_scGFA(initModel):
         # self.Z.updateExpectations()
 
 
-        def __init__(self, dim, qmean, qvar, ptheta, qtheta):
-
     def initSW(self, ptheta, pmean, pvar, qtheta, qmean, qvar):
         # Method to initialise the spike-slab variable (product of bernoulli and gaussian variables)
         # TO-DO: RIGHT NOW PMEAN AND PVAR ARE NOT USED
@@ -127,18 +125,23 @@ class init_scGFA(initModel):
         self.Y = Multiview_Mixed_Node(self.M, *Y_list)
 
 
-    def initThetaLearn(self, ptheta, pa, pb, qa., qb):
+    def initThetaLearn(self, pa, pb, qa, qb, qE):
         # Method to initialise the theta node
         # TO-DO: ADD ANNOTATIONS
         Theta_list = [None] * M
         learn_theta = True
         for m in xrange(M):
-            if learn_theta:
-                Theta_list[m] = Theta_Node_No_Annotation((self.K,))
-            else:
-        Theta = Multiview_Mixed_Node(M, *Theta_list)
+            Theta_list[m] = Theta_Node_No_Annotation(dim=(self.K,), pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+        Theta = Multiview_Variational_Node(M, *Theta_list)
 
-                Theta_list[m] = Constant_Node((D[m],K),0.5)
+
+    def initThetaConst(self, value):
+        # Method to initialise the theta node
+        Theta_list = [None] * M
+        learn_theta = True
+        for m in xrange(M):
+            Theta_list[m] = Theta_Constant_Node(dim=(dim=(K,)), value=0.5)
+        Theta = Multiview_Mixed_Node(M, *Theta_list)
 
 
 
@@ -146,13 +149,14 @@ class init_scGFA(initModel):
         # Method to define the markov blanket
         self.Z.addMarkovBlanket(SW=self.SW, tau=self.Tau, Y=self.Y)
         for m in xrange(self.M):
+            self.Theta.nodes[m].addMarkovBlanket(SW=SW.nodes[m])
             self.Alpha.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m])
-            self.SW.nodes[m].addMarkovBlanket(Z=self.Z, tau=self.Tau.nodes[m], alpha=self.Alpha.nodes[m], Y=self.Y.nodes[m])
+            self.SW.nodes[m].addMarkovBlanket(Z=self.Z, tau=self.Tau.nodes[m], alpha=self.Alpha.nodes[m], Y=self.Y.nodes[m], Theta=self.Theta.nodes[m])
             if self.lik[m] is "gaussian":
                 self.Y.nodes[m].addMarkovBlanket(Z=self.Z, SW=self.SW.nodes[m], tau=self.Tau.nodes[m])
                 self.Tau.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m], Z=self.Z, Y=self.Y.nodes[m])
             else:
-                self.Zeta.nodes[m].addMarkovBlanket(Z=self.Z, W=self.SW.nodes[m])
                 self.Y.nodes[m].addMarkovBlanket(Z=self.Z, W=self.SW.nodes[m], kappa=self.Tau.nodes[m], zeta=self.Zeta.nodes[m])
         # Update expectations of SW (we need to do it here because it requires the markov blanket to be defined )
+        # WE SHOULD SOMEHOW MODIFY THIS, SINCE IT DEPENDS ON THE ORDER OF UPDATES
         self.SW.updateExpectations()

@@ -7,6 +7,7 @@ from variational_nodes import *
 from utils import *
 import pdb
 import math
+from constant_nodes import Constant_Node
 
 import scipy.special as special
 
@@ -20,7 +21,7 @@ Extensions with respect to the Gaussian Group Factor Analysis:
 
 (Derivation of equations can be found in file XX)
 
-Current nodes: 
+Current nodes:
     Y_Node: observed data
     SW_Node: spike and slab weights
     Tau_Node: precision of the noise
@@ -39,8 +40,8 @@ Each node is a Variational_Node() class with the following main variables:
 
     Important attributes:
     - markov_blanket: dictionary that defines the set of nodes that are in the markov blanket of the current node
-    - Q: an instance of Distribution() which contains the specification of the variational distribution 
-    - P: an instance of Distribution() which contains the specification of the prior distribution 
+    - Q: an instance of Distribution() which contains the specification of the variational distribution
+    - P: an instance of Distribution() which contains the specification of the prior distribution
     - dim: dimensionality of the node
 
 """
@@ -54,7 +55,7 @@ class Y_Node(Observed_Variational_Node):
         Observed_Variational_Node.__init__(self, dim, obs)
 
         # Create a boolean mask of the data to hidden missing values
-        if type(self.obs) != ma.MaskedArray: 
+        if type(self.obs) != ma.MaskedArray:
             self.mask()
         # Precompute some terms
         self.precompute()
@@ -115,7 +116,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         self.Q.var = 1./tmp
 
         # Mean
-        if any(self.covariates): 
+        if any(self.covariates):
             oldmean = self.Q.mean[:,self.covariates]
 
         for k in xrange(self.K):
@@ -353,8 +354,8 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
     order to choose from the S matrix
     """
 
-    def __init__(self, dim, pa=1., pb=1., qa=1., qb=1.):
-        Beta_Unobserved_Variational_Node.__init__(self, dim, pa, pb, qa, qb)
+    def __init__(self, dim, pa=1., pb=1., qa=1., qb=1., qE=None):
+        Beta_Unobserved_Variational_Node.__init__(self, dim, pa, pb, qa, qb, qE)
 
     def updateParameters(self, factors_selection=None):
         # get needed node from the markov_blanket
@@ -400,3 +401,43 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
         lbq = tmp2.sum()
 
         return lbp - lbq
+
+# inheritance to Variational_Node is purely technical (so that there is an
+# update_parameters function for instance)
+class Theta_Constant_Node(Constant_Node, Variational_Node):
+    """docstring for Theta_Constant_Node."""
+    def __init__(self, dim, value):
+        super(Theta_Constant_Node, self).__init__(dim, value)
+        self.precompute()
+
+    def precompute(self):
+        self.E = self.value
+        self.lnE = s.log(self.value)
+        self.lnEInv = s.log(1-self.value)
+
+    def getExpectations(self):
+        return {'E': self.E, 'lnE': self.lnE, 'lnEInv': self.lnEInv}
+
+    # constant tehta does not contribute to ELBO
+    def calculateELBO(self):
+        return 0
+
+    # TODO what would be neater for all removeFcator functions would be to have
+    # a list of class mebers depending on factors and to be updated when removing
+    # factors -> only one def of the removeFactors function and then you just
+    # fill in the list according to the specific node
+    def removeFactors(self, *idx):
+        if len(self.dim) == 1:
+            keep = s.setdiff1d(s.arange(self.dim[0]),idx)
+            self.value = self.value[keep]
+            self.dim = (len(self.value),)
+            self.E = self.E[keep]
+            self.lnE = self.lnE[keep]
+            self.lnEInv = self.lnEInv[keep]
+        else:
+            keep = s.setdiff1d(s.arange(self.dim[1]),idx)
+            self.value = self.value[:, keep]
+            self.dim = self.value.shape
+            self.E = self.E[:, keep]
+            self.lnE = self.lnE[:, keep]
+            self.lnEInv = self.lnEInv[:, keep]

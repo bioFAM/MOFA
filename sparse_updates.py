@@ -187,9 +187,9 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
     def calculateELBO(self):
         p = self.P
         q = self.Q
-        lb_p = self.lbconst + (p.a-1)*s.sum(q.lnE) - p.b*s.sum(q.E)
+        # lb_p = self.lbconst + (p.a-1)*s.sum(q.lnE) - p.b*s.sum(q.E)
+        lb_p = self.lbconst + s.sum((p.a-1)*q.lnE) - s.sum(p.b*q.E)
         lb_q = s.sum(q.a*s.log(q.b)) + s.sum((q.a-1)*q.lnE) - s.sum(q.b*q.E) - s.sum(special.gammaln(q.a))
-
         return lb_p - lb_q
 
 class Alpha_Node(Gamma_Unobserved_Variational_Node):
@@ -199,16 +199,17 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
 
     def precompute(self):
         self.K = self.dim[0]
-        self.lbconst = self.K * ( self.P.a*s.log(self.P.b) - special.gammaln(self.P.a) )
+        # self.lbconst = self.K * ( self.P.a*s.log(self.P.b) - special.gammaln(self.P.a) )
+        self.lbconst = s.sum( self.P.a*s.log(self.P.b) - special.gammaln(self.P.a) )
 
     def updateParameters(self):
         tmp = self.markov_blanket["SW"].getExpectations()
         S,EWW,ESWW = tmp["ES"],tmp["EWW"],tmp["ESWW"]
 
         # ARD prior on What
-        # pdb.set_trace()
-        self.Q.b = self.P.b + EWW.sum(axis=0)/2.
-        self.Q.a = s.repeat(self.P.a + EWW.shape[0]/2., self.K) # Updated in the initialisation
+        self.Q.b = self.P.b + 0.5*EWW.sum(axis=0)
+        self.Q.a = self.P.a + 0.5*EWW.shape[0]
+        # self.Q.a = s.repeat(self.P.a + EWW.shape[0]/2., self.K)
 
         # ARD prior on W
         # self.Q.a = self.P.a + S.sum(axis=0)/2
@@ -217,22 +218,28 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
     def calculateELBO(self):
         p = self.P
         q = self.Q
-        lb_p = self.lbconst + (p.a-1)*s.sum(q.lnE) - p.b*s.sum(q.E)
+        # lb_p = self.lbconst + (p.a-1)*s.sum(q.lnE) - p.b*s.sum(q.E)
+        lb_p = self.lbconst + s.sum((p.a-1)*q.lnE) - s.sum(p.b*q.E)
         lb_q = s.sum(q.a*s.log(q.b)) + s.sum((q.a-1)*q.lnE) - s.sum(q.b*q.E) - s.sum(special.gammaln(q.a))
         return lb_p - lb_q
 
     def removeFactors(self, *idx):
         keep = s.setdiff1d(s.arange(self.K),idx)
+        # variational distribution terms
         self.Q.a = self.Q.a[keep]
         self.Q.b = self.Q.b[keep]
         self.Q.E = self.Q.E[keep]
         self.Q.lnE = self.Q.lnE[keep]
+        # prior terms (TO-DO: UPDATE EXPECTATIONS)
+        self.P.a = self.P.a[keep]
+        self.P.b = self.P.b[keep]
+        # others
         self.K = len(keep)
         self.dim = (self.K,1)
 
 class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
-    def __init__(self, dim, qmean, qvar, ptheta, qtheta):
-        BernoulliGaussian_Unobserved_Variational_Node.__init__(self, dim=dim, qmean=qmean, qvar=qvar, ptheta=ptheta, qtheta=qtheta)
+    def __init__(self, dim, pmean, pvar, qmean, qvar, ptheta, qtheta):
+        BernoulliGaussian_Unobserved_Variational_Node.__init__(self, dim=dim, pmean=pmean, pvar=pvar, ptheta=ptheta, qmean=qmean, qvar=qvar, qtheta=qtheta)
         self.precompute()
 
     def precompute(self):
@@ -296,6 +303,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
     def removeFactors(self, *idx):
         # Method to remove a set of (inactive) latent variables from the node
         keep = s.setdiff1d(s.arange(self.K),idx)
+        # variational distribution terms
         self.Q.mean = self.Q.mean[:,keep]
         self.Q.var = self.Q.var[:,keep]
         self.Q.theta = self.Q.theta[:,keep]
@@ -304,6 +312,11 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         self.Q.ESW = self.Q.ESW[:,keep]
         self.Q.ESWW = self.Q.ESWW[:,keep]
         self.Q.EWW = self.Q.EWW[:,keep]
+        # prior terms (TO-DO: UPDATE EXPECTATIONS)
+        self.P.mean = self.P.mean[:,keep]
+        self.P.var = self.P.var[:,keep]
+        self.P.theta = self.P.theta[:,keep]
+        # others
         self.K = len(keep)
         self.dim = (self.D,self.K)
 
@@ -378,7 +391,7 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
         self.Q.E = self.Q.E[keep]
         self.Q.lnE = self.Q.lnE[keep]
         self.Q.lnEInv = self.Q.lnEInv[keep]
-        # remove prior terms
+        # prior terms (TO-DO: UPDATE EXPECTATIONS)
         self.P.a = self.P.a[keep]
         self.P.b = self.P.b[keep]
         self.P.E = self.P.E[keep]
@@ -400,8 +413,6 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
 
         return lbp - lbq
 
-# inheritance to Variational_Node is purely technical (so that there is an
-# update_parameters function for instance)
 class Theta_Constant_Node(Constant_Node):
     """docstring for Theta_Constant_Node."""
     def __init__(self, dim, value):

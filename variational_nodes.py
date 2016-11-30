@@ -81,7 +81,6 @@ class Observed_Variational_Node(Variational_Node):
         return self.getObservations()
     def getExpectations(self):
         return {'E':self.getObservations()}
-
 class Unobserved_Variational_Node(Variational_Node):
     """
     Abstract class for an unobserved variational node in a Bayesian probabilistic model.
@@ -96,8 +95,9 @@ class Unobserved_Variational_Node(Variational_Node):
     def updateExpectations(self):
         self.Q.updateExpectations()
 
-    def getExpectation(self):
-        return self.Q.E
+    def getExpectation(self, dist="Q"):
+        if dist == "Q": return self.Q.E
+        if dist == "P": return self.P.E
 
 #######################################################
 ## Specific classes for unobserved variational nodes ##
@@ -127,11 +127,13 @@ class UnivariateGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node
         self.P = UnivariateGaussian(dim=dim, mean=pmean, var=pvar)
         self.Q = UnivariateGaussian(dim=dim, mean=qmean, var=qvar, E=qE, E2=qE2)
 
-    def getParameters(self):
-        return { 'mean': self.Q.mean, 'var': self.Q.var }
-    def getExpectations(self):
-        # return dict({'E':self.Q.E, 'E2':self.Q.E2, 'lnE':None})
-        return dict({'E':self.Q.E, 'E2':self.Q.E2 })
+    def getParameters(self, dist="Q"):
+        if dist == "Q": return { 'mean': self.Q.mean, 'var': self.Q.var }
+        if dist == "P": return { 'mean': self.P.mean, 'var': self.P.var }
+
+    def getExpectations(self, dist="Q"):
+        if dist == "Q": return { 'E':self.Q.E, 'E2':self.Q.E2 }
+        if dist == "P": return { 'E':self.P.E, 'E2':self.P.E2 }
 class MultivariateGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """
     Abstract class for a variational node where P(x) and Q(x)
@@ -139,7 +141,7 @@ class MultivariateGaussian_Unobserved_Variational_Node(Unobserved_Variational_No
 
     Currently the prior of this distribution is not used anywhere so it is ignored to save memory
     """
-    def __init__(self, dim, qmean, qcov, qE=None, qE2=None):
+    def __init__(self, dim, pmean, pcov, qmean, qcov, qE=None, qE2=None):
         # dim (2d tuple): dimensionality of the node
         # qmean (nd array): the mean parameter of the Q distribution
         # qcov (nd array): the covariance parameter of the Q distribution
@@ -148,15 +150,16 @@ class MultivariateGaussian_Unobserved_Variational_Node(Unobserved_Variational_No
         Unobserved_Variational_Node.__init__(self, dim)
 
         # Initialise the P and Q distributions
-        # self.P = MultivariateGaussian(dim=dim, mean=pmean, cov=pcov)
+        self.P = MultivariateGaussian(dim=dim, mean=pmean, cov=pcov)
         self.Q = MultivariateGaussian(dim=dim, mean=qmean, cov=qcov, E=qE, E2=qE2)
 
-    def getParameters(self):
-        return { 'mean':self.Q.mean, 'cov':self.Q.cov }
+    def getParameters(self, dist="Q"):
+        if dist == "Q": return { 'mean':self.Q.mean, 'cov':self.Q.cov }
+        if dist == "P": return { 'mean':self.P.mean, 'cov':self.P.cov }
 
-    def getExpectations(self):
-        # return { 'E':self.Q.E, 'E2':self.Q.E2, 'lnE':None }
-        return { 'E':self.Q.E, 'E2':self.Q.E2 }
+    def getExpectations(self, dist="Q"):
+        if dist == "Q": return { 'E':self.Q.E, 'E2':self.Q.E2 }
+        if dist == "P": return { 'E':self.P.E, 'E2':self.P.E2 }
 class Gamma_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """
     Abstract class for a variational node where P(x) and Q(x) are both gamma distributions
@@ -171,14 +174,15 @@ class Gamma_Unobserved_Variational_Node(Unobserved_Variational_Node):
         Unobserved_Variational_Node.__init__(self,dim)
 
         # Initialise the distributions
-        self.P = Gamma(dim=(1,), a=pa, b=pb)
+        self.P = Gamma(dim=dim, a=pa, b=pb)
         self.Q = Gamma(dim=dim, a=qa, b=qb, E=qE)
 
-    def getParameters(self):
-        return { 'a':self.Q.a, 'b':self.Q.b }
-    def getExpectations(self):
-        # return { 'E':self.Q.E, 'lnE':self.Q.lnE, 'E2':None }
-        return { 'E':self.Q.E, 'lnE':self.Q.lnE }
+    def getParameters(self, dist="Q"):
+        if dist == "Q": return { 'a':self.Q.a, 'b':self.Q.b }
+        if dist == "P": return { 'a':self.P.a, 'b':self.P.b }
+    def getExpectations(self, dist="Q"):
+        if dist == "Q": return { 'E':self.Q.E, 'lnE':self.Q.lnE }
+        if dist == "P": return { 'E':self.P.E, 'lnE':self.P.lnE }
 class Bernoulli_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """
     Abstract class for a variational node where P(x) and Q(x)
@@ -195,16 +199,20 @@ class Bernoulli_Unobserved_Variational_Node(Unobserved_Variational_Node):
         Unobserved_Variational_Node.__init__(self,dim)
 
         # Initialise the distributions
-        self.P = Bernoulli(dim=(1,), theta=ptheta)
+        self.P = Bernoulli(dim=dim, theta=ptheta)
         self.Q = Bernoulli(dim=dim, theta=qtheta, E=qE)
 
-    def getParameters(self):
-        return { 'theta':self.Q.theta }
-    def getExpectation(self):
-        return self.Q.E
-    def getExpectations(self):
-        # return { 'E':self.Q.E, 'E2':None, 'lnE':None }
-        return { 'E':self.Q.E }
+    def getParameters(self, dist="Q"):
+        if dist == "Q": return { 'theta':self.Q.theta }
+        if dist == "P": return { 'theta':self.P.theta }
+
+    def getExpectation(self, dist="Q"):
+        if dist == "Q": return self.Q.E
+        elif dist == "P": return self.P.E
+
+    def getExpectations(self, dist="Q"):
+        if dist == "Q": return { 'E':self.Q.E }
+        if dist == "P": return { 'E':self.P.E }
 class BernoulliGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """
     Abstract class for a variational node where P(x) and Q(x)
@@ -217,7 +225,7 @@ class BernoulliGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node)
 
     The only element from the prior distribution that is used is S_ptheta, for this reason I ignore the other elements
     """
-    def __init__(self, dim, qmean, qvar, ptheta, qtheta):
+    def __init__(self, dim, pmean, pvar, ptheta, qmean, qvar, qtheta):
 	    # dim (2d tuple): dimensionality of the node
 	    # qmean (nd array): the mean parameter of the Q distribution
 	    # qvar (nd array): the var parameter of the Q distribution
@@ -225,34 +233,38 @@ class BernoulliGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node)
 	    # qtheta (nd array): the theta parameter of the Q distribution
         Unobserved_Variational_Node.__init__(self,dim)
 
-        # Initialise the distributions
-        # self.P = BernoulliGaussian(dim=(1,), theta=S_ptheta, mean=W_pmean, var=W_pvar)
-        # initialise ptheta
-        if type(ptheta) == float or len(ptheta) == 1:
-            self.P_theta = ptheta * s.ones(dim[1])
-        else:
-            assert len(ptheta) == dim[1], "ptheta dimension mismatch"
-            self.P_theta = ptheta
+        # Initialise the prior distribution
+        self.P = BernoulliGaussian(dim=dim, theta=ptheta, mean=pmean, var=pvar)
 
+        # initialise the variational distribution
         self.Q = BernoulliGaussian(dim=dim, theta=qtheta, mean=qmean, var=qvar)
 
-    def getParameters(self):
-        return { 'theta':self.Q.theta, 'mean':self.Q.mean, 'var':self.Q.var }
-    def getExpectation(self):
-        return self.Q.ESW
+    def getParameters(self, dist="Q"):
+        if dist == "Q": return { 'theta':self.Q.theta, 'mean':self.Q.mean, 'var':self.Q.var }
+        elif dist == "P": return { 'theta':self.P.theta, 'mean':self.P.mean, 'var':self.P.var }
 
-
+    def getExpectation(self, dist="Q"):
+        if dist == "Q": return self.Q.ESW
+        elif dist == "P": return self.P.ESW
 class Beta_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """
     Abstract class for a variational node where both P(x) and Q(x) are beta
     distributions
     """
-    def __init__(self, dim, pa, pb, qa=1., qb=1., qE=None):
+    def __init__(self, dim, pa, pb, qa, qb, qE=None):
         super(Beta_Unobserved_Variational_Node, self).__init__(dim)
         self.P = Beta(dim, pa, pb)
         self.Q = Beta(dim, qa, qb)
 
-    def getParameters(self):
-        return { 'a':self.Q.a, 'b':self.Q.b }
-    def getExpectations(self):
-        return { 'E':self.Q.E}
+    def getParameters(self, dist="Q"):
+        if dist == "Q": return { 'a':self.Q.a, 'b':self.Q.b }
+        elif dist == "P": return { 'a':self.P.a, 'b':self.P.b }
+            
+    def getExpectation(self, dist="Q"):
+        if dist == "Q": return self.Q.E
+        elif dist == "P": return self.P.E
+
+    def getExpectations(self, dist="Q"):
+        if dist == "Q": return { 'E':self.Q.E}
+        elif dist == "P": return { 'E':self.P.E}
+

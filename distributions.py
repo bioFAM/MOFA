@@ -142,16 +142,15 @@ class UnivariateGaussian(Distribution):
         Distribution.__init__(self, dim)
 
         ## Initialise parameters ##
-        # If 'mean' or 'var' are scalars, broadcast it to all dimensions
-        if isinstance(mean,(int,float)): mean = s.ones(dim) * mean
-        self.mean = mean
-        if isinstance(var,(int,float)): var = s.ones(dim) * var
-        self.var = var
+        self.mean = s.ones(dim) * mean
+        self.var = s.ones(dim) * var
 
         ## Initialise expectations ##
-        # DO IT PROPERLY, COPY FROM GAMMA OR POISSON
-        if E is not None: self.E = E
-        if E2 is not None: self.E2 = E2
+        # WHAT ABOUT E2 NOW...?
+        if E is None:
+            self.updateExpectations()
+        else:
+            self.E = s.ones(dim) * E
 
         # Check that dimensionality match
         assert self.mean.shape == self.var.shape == self.dim, "Dimensionalities do not match"
@@ -173,8 +172,6 @@ class UnivariateGaussian(Distribution):
 
     def entropy(self):
         return s.sum( 0.5*s.log(self.var) + 0.5*(1+s.log(2*s.pi)) )
-
-
 class Gamma(Distribution):
     """
     This class can store an arbitrary number of Gamma distributions
@@ -188,25 +185,22 @@ class Gamma(Distribution):
     H[x] = ln(Gamma(a)) - (a-1)*digamma(a) - ln(b) + a
     """
 
-    def __init__(self, dim=(1,), a=1E-3, b=1E-3, E=None, lnE=None):
+    def __init__(self, dim, a, b, E=None, lnE=None):
         Distribution.__init__(self, dim)
 
         ## Initialise parameters ##
-        # If 'a' or 'b' are scalars, broadcast it to all dimensions
-        if isinstance(a,(int,float)): a = s.ones(dim) * a
-        if isinstance(b,(float,int)): b = s.ones(dim) * b
-        self.a = a
-        self.b = b
-        # pdb.set_trace()
+        self.a = s.ones(dim) * a
+        self.b = s.ones(dim) * b
 
         ## Initialise expectations ##
-        if E is not None:
-            if isinstance(E,(float,int)): E = s.ones(dim) * E
-        self.E = E
-
-        if lnE is not None:
-            if isinstance(lnE,(float,int)): lnE = s.ones(dim) * lnE
-        self.lnE = lnE
+        if E is None:
+            self.updateExpectations()
+        else:
+            self.E = s.ones(dim) * E
+        # (TO-DO) WHAT ABOUT lnE
+        # if lnE is None:
+            # if isinstance(lnE,(float,int)): lnE = s.ones(dim) * lnE
+        # self.lnE = lnE
 
     def updateExpectations(self):
         self.E = self.a/self.b
@@ -219,8 +213,6 @@ class Gamma(Distribution):
     def loglik(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
         return s.sum( -s.log(special.gamma(self.a)) + self.a*s.log(self.b) * (self.a-1)*s.log(x) -self.b*x )
-
-
 class Poisson(Distribution):
     """
     Class for a Poisson distribution.
@@ -237,16 +229,13 @@ class Poisson(Distribution):
         Distribution.__init__(self, dim)
 
         # Initialise parameters
-        # If 'theta' is a scalar, broadcast it to all dimensions
-        if isinstance(theta,(float,int)): a = s.ones(dim) * theta
-        self.theta = theta
+        self.theta = s.ones(dim) * theta
 
         # Initialise expectations
-        if E is not None:
-            if isinstance(E,(float,int)): E = s.ones(dim) * E
+        if E is None:
+            self.updateExpectations()
         else:
-            E = s.zeros(dim)
-        self.E = E
+            self.E = s.ones(dim) * E
 
         # Check that dimensionality match
         assert self.theta.shape == self.E.shape == self.dim, "Dimensionalities do not match"
@@ -281,15 +270,14 @@ class Bernoulli(Distribution):
 
         ## Initialise parameters ##
         # If 'theta' is a scalar, broadcast it to all dimensions
-        if isinstance(theta,(float,int)): theta = s.ones(dim) * theta
+        theta = s.ones(dim) * theta
         self.theta = theta
 
         ## Initialise expectations ##
         if E is None:
-            E = self.theta
+            self.updateExpectations()
         else:
-            if isinstance(E,(float,int)): E = s.ones(dim) * E
-        self.E = E
+            self.E = s.ones(dim) * E
 
         # Check that dimensionality match
         assert self.theta.shape == self.E.shape == self.dim, "Dimensionalities do not match"
@@ -324,9 +312,9 @@ class BernoulliGaussian(Distribution):
         # Broadcast input scalars to all dimensions
 
         # If 'theta' is a scalar, broadcast it to all dimensions
-        if isinstance(theta,(float,int)): theta = s.ones(dim) * theta
-        if isinstance(mean,(float,int)): mean = s.ones(dim) * mean
-        if isinstance(var,(float,int)): var = s.ones(dim) * var
+        theta = s.ones(dim) * theta
+        mean = s.ones(dim) * mean
+        var = s.ones(dim) * var
 
         self.theta = theta
         self.mean = mean
@@ -352,19 +340,14 @@ class Binomial(Distribution):
 
         ## Initialise parameters ##
         # Broadcast scalars to all dimensions
-        if isinstance(theta,(float,int)): theta = s.ones(dim) * theta
-        if isinstance(N,(float,int)): N = s.ones(dim) * N
-        # if isinstance(K,(float,int)): K = s.ones(dim) * K
-        self.theta = theta
-        self.N = N
-        # self.K = K
+        self.theta = s.ones(dim) * theta
+        self.N = s.ones(dim) * N
 
         ## Initialise expectations ##
         if E is None:
             self.updateExpectations()
         else:
-            if isinstance(E,(float,int)): E = s.ones(dim) * E
-            self.E = E
+            self.E = s.ones(dim) * E
 
         # Check that dimensionalities match
         assert self.theta.shape == self.E.shape == self.N.shape == self.dim, "Dimensionalities do not match"
@@ -396,38 +379,20 @@ class Beta(Distribution):
     def __init__(self, dim, a, b, E=None):
         Distribution.__init__(self, dim)
 
-        ## Initialise parameters ##
-        # Broadcast scalars to all dimensions
-        if isinstance(a,(float,int)): a = s.ones(dim) * a
-        if isinstance(b,(float,int)): b = s.ones(dim) * b
-        self.a = a
-        self.b = b
+        # Initialise parameters
+        self.a = s.ones(dim) * a
+        self.b = s.ones(dim) * b
 
-        ## Initialise expectations ##
+        # Initialise expectations
         if E is None:
             self.updateExpectations()
         else:
-            if isinstance(E,(float,int)): E = s.ones(dim) * E
-            self.E = E
+            self.E = s.ones(dim) * E
+
         # Check that dimensionalities match
         assert self.a.shape == self.E.shape == self.b.shape == self.dim, "Dimensionalities do not match"
 
     def updateExpectations(self):
         self.E = s.divide(self.a,self.a+self.b)
         self.lnE = special.digamma(self.a) - special.digamma(self.a + self.b)
-        # expectation of ln(1-X)
-        self.lnEInv = special.digamma(self.b) - special.digamma(self.a + self.b)
-
-    def density(self, x):
-        assert x.shape == self.dim, "Problem with the dimensionalities"
-        assert x.dtype == int, "x has to be an integer array"
-        pass
-        # return s.prod( stats.binom.pmf(x, self.N, self.theta) )
-        # return s.prod( special.binom(self.N,x) * self.theta**x * (1-self.theta)**(self.N-x) )
-
-    def loglik(self, x):
-        assert x.shape == self.dim, "Problem with the dimensionalities"
-        assert x.dtype == int, "x has to be an integer array"
-        pass
-        # return s.sum (stats.binom.logpmf(x, self.N, self.theta) )
-        # return s.sum( s.log(special.binom(self.N,x)) + x*s.log(self.theta) + (self.N-x)*s.log(1-self.theta) )
+        self.lnEInv = special.digamma(self.b) - special.digamma(self.a + self.b) # expectation of ln(1-X)

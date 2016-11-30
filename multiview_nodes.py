@@ -31,6 +31,9 @@ class Multiview_Node(Node):
         # Remove factors/latent variables
         for m in self.idx: self.nodes[m].removeFactors(idx)
 
+    def getNodes(self):
+        return self.nodes
+        
     def getExpectation(self):
         # Get the current estimate of the first moment
         return [ self.nodes[m].getExpectation() for m in self.idx ]

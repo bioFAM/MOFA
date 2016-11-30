@@ -3,16 +3,14 @@ Script to test the spike and slab updates with gaussian and non-gaussian likelih
 """
 
 from __future__ import division
-from time import time
-import cPickle as pkl
 import scipy as s
-import os
-import scipy.special as special
+from sys import path
 import scipy.stats as stats
-import numpy.linalg  as linalg
 import pandas as pd
 
+
 # Import manually defined functions
+path.insert(0,"../")
 from simulate import Simulate
 from BayesNet import BayesNet
 from multiview_nodes import *
@@ -132,11 +130,14 @@ alpha = Multiview_Variational_Node((K,)*M, *alpha_list)
 # W (variational node)
 SW_list = [None]*M
 S_ptheta = 0.5
+W_pvar = s.nan
+W_pmean = s.nan
 for m in xrange(M):
 	S_qtheta = s.ones((D[m],K))*S_ptheta
 	W_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(D[m],K))
 	W_qvar = s.ones((D[m],K))
-	SW_list[m] = SW_Node(dim=(D[m],K), ptheta=S_ptheta, qtheta=S_qtheta, qmean=W_qmean, qvar=W_qvar)
+	# SW_list[m] = SW_Node(dim=(D[m],K), ptheta=S_ptheta, qtheta=S_qtheta, qmean=W_qmean, qvar=W_qvar)
+	SW_list[m] = SW_Node(dim=(D[m],K), pmean=W_pmean, pvar=W_pvar, ptheta=S_ptheta, qmean=W_qmean, qvar=W_qvar, qtheta=S_qtheta)
 SW = Multiview_Variational_Node(M, *SW_list)
 
 
@@ -161,7 +162,6 @@ for m in xrange(M):
 		tau_list[m] = Tau_Node(dim=(D[m],), pa=tau_pa, pb=tau_pb, qa=tau_qa, qb=tau_qb, qE=tau_qE)
 tau = Multiview_Mixed_Node(M,*tau_list)
 
-
 # Y/Yhat (mixed node)
 Y_list = [None]*M
 for m in xrange(M):
@@ -176,16 +176,16 @@ for m in xrange(M):
 Y = Multiview_Mixed_Node(M, *Y_list)
 
 # Theta node
-# DIMENSIOANLITY OF THETA?
 Theta_list = [None] * M
 learn_theta = False
-for m in xrange(M):
-	if learn_theta:
+if learn_theta:
+	for m in xrange(M):
 		Theta_list[m] = Theta_Node_No_Annotation(dim=(K,), qE=None)
-	else:
+	Theta = Multiview_Variational_Node(M, *Theta_list)
+else:
+	for m in xrange(M):
 		Theta_list[m] = Theta_Constant_Node(dim=(K,),value=0.5)
-Theta = Multiview_Mixed_Node(M, *Theta_list)
-
+	Theta = Multiview_Constant_Node(M, *Theta_list)
 
 ############################
 ## Define Markov Blankets ##

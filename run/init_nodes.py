@@ -10,7 +10,7 @@ import sklearn.decomposition
 
 path.insert(0,"../")
 from multiview_nodes import *
-from local_nodes import *
+from nodes import *
 from seeger_nodes import *
 
 from sparse_updates import *
@@ -67,10 +67,13 @@ class init_scGFA(initModel):
         # TO-DO: RIGHT NOW PMEAN AND PVAR ARE NOT USED
         SW_list = [None]*self.M
         for m in xrange(self.M):
-            qtheta = s.ones((self.D[m],self.K))*qtheta
-            qmean = stats.norm.rvs(loc=qmean, scale=qvar, size=(self.D[m],self.K))
-            qvar = s.ones((self.D[m],self.K))*qvar
-            SW_list[m] = SW_Node(dim=(self.D[m],self.K), ptheta=ptheta, qtheta=qtheta, qmean=qmean, qvar=qvar)
+            SW_list[m] = SW_Node(
+                dim=(self.D[m],self.K), 
+                ptheta=s.ones((self.D[m],self.K))*ptheta[m],
+                qtheta=s.ones((self.D[m],self.K))*qtheta[m],
+                qmean=stats.norm.rvs(loc=qmean[m], scale=qvar[m], size=(self.D[m],self.K)),
+                qvar=s.ones((self.D[m],self.K))*qvar[m]
+                )
         self.SW = Multiview_Variational_Node(self.M, *SW_list)
 
     def initAlpha(self, pa, pb, qa, qb, qE):
@@ -140,7 +143,7 @@ class init_scGFA(initModel):
         Theta_list = [None] * M
         learn_theta = True
         for m in xrange(M):
-            Theta_list[m] = Theta_Constant_Node(dim=(dim=(K,)), value=0.5)
+            Theta_list[m] = Theta_Constant_Node(dim=(K,), value=value)
         Theta = Multiview_Mixed_Node(M, *Theta_list)
 
 

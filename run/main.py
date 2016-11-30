@@ -55,17 +55,24 @@ def runSingleTrial(data, model_opts, train_opts, seed=None):
     init = init_scGFA(dim, data, model_opts["likelihood"])
 
     init.initSW(ptheta=model_opts["prior_SW"]["theta"], pmean=model_opts["prior_SW"]["mean"], pvar=model_opts["prior_SW"]["var"],
-                qtheta=model_opts["init_SW"]["theta"], qmean=model_opts["init_SW"]["mean"], qvar=model_opts["init_SW"]["var"])
+                qtheta=model_opts["init_SW"]["theta"],  qmean=model_opts["init_SW"]["mean"],  qvar=model_opts["init_SW"]["var"])
+
     init.initZ(type="random", pmean=model_opts["init_Z"]["mean"], pvar=model_opts["init_Z"]["var"])
+    exit()
+    init.initAlpha(pa=model_opts["prior_alpha"]['a'], pb=model_opts["prior_alpha"]['b'], 
+                   qa=model_opts["init_alpha"]['a'], qb=model_opts["init_alpha"]['b'], qE=model_opts["init_alpha"]['E'])
+    init.initTau(pa=model_opts["prior_tau"]['a'], pb=model_opts["prior_tau"]['b'], 
+                 qa=model_opts["init_tau"]['a'], qb=model_opts["init_tau"]['b'], qE=model_opts["init_tau"]['E'])
 
-    init.initAlpha(pa=model_opts["prior_alpha"]['a'], pb=["prior_alpha"]['b'], 
-                   qb=["init_alpha"]['a'], qb=["init_alpha"]['b'], qE=["init_alpha"]['E'])
-    init.initTau(pa=model_opts["prior_tau"]['a'], pb=["prior_tau"]['b'], 
-                 qb=["init_tau"]['a'], qb=["init_tau"]['b'], qE=["init_tau"]['E'])
+    if model_opts['learn_theta']:
+        init.initThetaLearn(pa=model_opts["prior_theta"]['a'], pb=model_opts["prior_theta"]['b'], 
+                            qa=model_opts["init_theta"]['a'], qb=model_opts["init_theta"]['b'], qE=model_opts["init_theta"]['E'])
 
-    init.initThetaLearn()
-    init.initThetaConst()
+    else:
+        init.initThetaConst(value=model_opts["init_theta"]['value'])
+
     init.initY()
+
     init.MarkovBlanket()
 
 
@@ -78,11 +85,9 @@ def runSingleTrial(data, model_opts, train_opts, seed=None):
 
     # Initialise sparse model
     net.addNodes(Theta=init.Theta, SW=init.SW, tau=init.Tau, Z=init.Z, Y=init.Y, alpha=init.Alpha)
-    # this si wrong, make general
-    schedule = ["Zeta","Y","SW","Z","alpha","tau"]
 
     # Add training schedule
-    net.setSchedule(schedule)
+    net.setSchedule(model_opts["schedule"])
 
     # Add training options
     net.options = train_opts
@@ -152,21 +157,32 @@ if __name__ == '__main__':
     # Define the model options
     model_opts = {}
     model_opts['likelihood'] = ("gaussian","gaussian","bernoulli")
-    model_opts['sparse'] = True
+    model_opts['learn_theta'] = True
     model_opts['k'] = 10
     
+
     # Define priors
-    model_opts["prior_Z"] = { 'mean':0., 'var'=1. }
-    model_opts["prior_alpha"] = [{ 'a':1e-14, 'b'=1e-14 }] * len(data_opts['view_names'])
-    model_opts["prior_SW"] = [{ 'theta':0.5, 'mean'=0, 'var'=1 }] * len(data_opts['view_names'])
-    model_opts["prior_tau"] = [{ 'a':1e-14, 'var'=1e-14 }] * len(data_opts['view_names'])
+    M = len(data_opts['view_names'])
+    model_opts["prior_Z"] = { 'mean':[0.]*M, 'var':[1.]*M }
+    model_opts["prior_alpha"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
+    model_opts["prior_SW"] = { 'theta':[.5]*M, 'mean':[0.]*M, 'var':[1.]*M }
+    model_opts["prior_tau"] = { 'a':[1e-14]*M, 'var':[1e-14]*M }
+    if model_opts['learn_theta']: 
+        model_opts["prior_theta"] = { 'a':[1]*M, 'b':[1]*M }
 
     # Define initialisation options
-    model_opts["init_Z"] = { 'mean':0., 'var'=1. }
-    model_opts["init_alpha"] = [{ 'a':1e-14, 'b'=1e-14, 'E'=100. }] * len(data_opts['view_names'])
-    model_opts["init_SW"] = [{ 'theta':0.5, 'mean'=0, 'var'=1 }] * len(data_opts['view_names'])
-    model_opts["init_tau"] = [{ 'a':1e-14, 'var'=1e-14, 'E'=100.}] * len(data_opts['view_names'])
+    model_opts["init_Z"] = { 'mean':[0.]*M, 'var':[1.]*M }
+    model_opts["init_alpha"] = { 'a':[1e-14]*M, 'b':[1e-14]*M, 'E':100. }
+    model_opts["init_SW"] = { 'theta':[0.5]*M, 'mean':[0.]*M, 'var':[1.]*M }
+    model_opts["init_tau"] = { 'a':[1e-14]*M, 'var':[1e-14]*M, 'E':100. }
+    if model_opts['learn_theta']: 
+        model_opts["init_theta"] = { 'a':[1.]*M, 'b':[1.]*M, 'E':[0.5]*M }
+    else:
+        model_opts["init_theta"] = { 'value':[0.5]*M }
 
+
+    # Define schedule of updates
+    model_opts['schedule'] = ["Y","SW","Z","alpha","tau","theta"]
 
     # Define the training options
     train_opts = {}

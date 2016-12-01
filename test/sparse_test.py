@@ -136,7 +136,6 @@ for m in xrange(M):
 	S_qtheta = s.ones((D[m],K))*S_ptheta
 	W_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(D[m],K))
 	W_qvar = s.ones((D[m],K))
-	# SW_list[m] = SW_Node(dim=(D[m],K), ptheta=S_ptheta, qtheta=S_qtheta, qmean=W_qmean, qvar=W_qvar)
 	SW_list[m] = SW_Node(dim=(D[m],K), pmean=W_pmean, pvar=W_pvar, ptheta=S_ptheta, qmean=W_qmean, qvar=W_qvar, qtheta=S_qtheta)
 SW = Multiview_Variational_Node(M, *SW_list)
 
@@ -157,7 +156,7 @@ for m in xrange(M):
 		tau_pa = 1e-14
 		tau_pb = 1e-14
 		tau_qa = tau_pa + s.ones(D[m])*N/2
-		tau_qb = s.zeros(D[m])
+		tau_qb = s.nan
 		tau_qE = s.zeros(D[m]) + 100
 		tau_list[m] = Tau_Node(dim=(D[m],), pa=tau_pa, pb=tau_pb, qa=tau_qa, qb=tau_qb, qE=tau_qE)
 tau = Multiview_Mixed_Node(M,*tau_list)
@@ -166,7 +165,7 @@ tau = Multiview_Mixed_Node(M,*tau_list)
 Y_list = [None]*M
 for m in xrange(M):
 	if likelihood[m] == "gaussian":
-		Y_list[m] = Y_Node(dim=(N,D[m]), obs=data['Y'][m])
+		Y_list[m] = Y_Node(dim=(N,D[m]), value=data['Y'][m])
 	elif likelihood[m] == "poisson":
 		Y_list[m] = Poisson_PseudoY_Node(dim=(N,D[m]), obs=data['Y'][m], Zeta=None, E=None)
 	elif likelihood[m] == "bernoulli":
@@ -177,14 +176,20 @@ Y = Multiview_Mixed_Node(M, *Y_list)
 
 # Theta node
 Theta_list = [None] * M
-learn_theta = False
+learn_theta = True
 if learn_theta:
+	theta_pa = 1.
+	theta_pb = 1.
+	theta_qb = 1.
+	theta_qa = 1.
+	theta_qE = None
 	for m in xrange(M):
-		Theta_list[m] = Theta_Node_No_Annotation(dim=(K,), qE=None)
+		Theta_list[m] = Theta_Node_No_Annotation(dim=(K,), pa=theta_pa, pb=theta_pb, qa=theta_qa, qb=theta_qb, qE=theta_qE)
 	Theta = Multiview_Variational_Node(M, *Theta_list)
 else:
+	value = 0.5
 	for m in xrange(M):
-		Theta_list[m] = Theta_Constant_Node(dim=(K,),value=0.5)
+		Theta_list[m] = Theta_Constant_Node(dim=(K,),value=value)
 	Theta = Multiview_Constant_Node(M, *Theta_list)
 
 ############################
@@ -226,7 +231,7 @@ net.setSchedule(schedule)
 #############################
 
 options = {}
-options['maxiter'] = 500
+options['maxiter'] = 400
 options['tolerance'] = 1E-2
 options['forceiter'] = True
 # options['elbofreq'] = options['maxiter']+1
@@ -244,6 +249,8 @@ net.options = options
 ####################
 
 net.iterate()
+
+exit()
 
 ##################
 ## Save results ##

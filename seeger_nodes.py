@@ -19,8 +19,8 @@ class PseudoY(Unobserved_Variational_Node):
     """
     General class for pseudodata nodes
 
-    Notice that they are defined as Variational Nodes because they have a lower bound associated with it,
-    but we are not using the .P and .Q distribution attributes
+    IMPROVE EXPLANATION
+
     """
     def __init__(self, dim, obs, Zeta=None, E=None):
         # Inputs:
@@ -33,15 +33,15 @@ class PseudoY(Unobserved_Variational_Node):
         # Initialise observed data 
         self.obs = obs
 
+        # Initialise Zeta
+        self.Zeta = Zeta
+
         # Create a boolean mask of the data to hidden missing values
         if type(self.obs) != ma.MaskedArray: 
             self.mask()
 
         # Precompute some terms
         self.precompute()
-
-        # Initialise Zeta
-        self.Zeta = Zeta
 
         # Initialise expectation
         if E is not None:

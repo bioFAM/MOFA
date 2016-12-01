@@ -5,8 +5,6 @@ import numpy.linalg as linalg
 import scipy.special as special
 import scipy.stats as stats
 
-import pdb
-
 from utils import *
 
 """
@@ -22,6 +20,10 @@ There are cases (mainly with the BernoulliGaussian distribution) where some expe
 require expectations from other distributions. In that case, I prefer to define the expectations together with the updates
 of the corresponding node, instead of doing it here.
 
+TO-DO:
+- we should pass parametrs and expectations to Distribution() and perform sanity checks there
+- Improve initialisation of Multivariate Gaussian
+- Sanity checks on setter and getter functions
 """
 
 # General class for probability distributions
@@ -29,6 +31,7 @@ class Distribution(object):
     """ Abstract class for a distribution """
     def __init__(self, dim):
         self.dim = dim
+
     def density(self):
         pass
     def loglik(self):
@@ -39,6 +42,43 @@ class Distribution(object):
         pass
     def updateExpectations(self):
         pass
+
+    def getParameters(self):
+        # Getter function for parameters
+        return self.params
+
+    def setParameters(self,**params):
+        # Setter function for parameters
+        self.params = params
+
+    def getExpectations(self):
+        # Getter function for expectations
+        return self.expectations
+
+    def removeDimensions(self, axis, idx):
+        # Method to remove undesired dimensions
+        # - axis (int): axis from where to remove the elements
+        # - idx (numpy array): indices of the elements to remove
+        assert axis <= len(self.dim)
+        assert s.all(idx < self.dim[axis])
+        for k in self.params.keys(): self.params[k] = s.delete(self.params[k], idx, axis)
+        for k in self.expectations.keys(): self.expectations[k] = s.delete(self.expectations[k], idx, axis)
+        self.updateDim(axis=axis, new_dim=self.dim[axis]-len(idx))
+
+    def updateDim(self, axis, new_dim):
+        # Function to update the dimensionality of a particular axis
+        # this seems inefficient but tuples cannot be modified...
+        dim = list(self.dim)
+        dim[axis] = new_dim
+        self.dim = tuple(dim)
+
+    def CheckDimensionalities(self):
+        # Method to do a sanity check on the dimensionalities
+        p_dim = set(map(s.shape, self.params.values()))
+        e_dim = set(map(s.shape, self.expectations.values()))
+        assert len(p_dim) == 1, "Parameters have different dimensionalities"
+        assert len(e_dim) == 1, "Expectations have different dimensionalities"
+        assert e_dim == p_dim, "Parameters and Expectations have different dimensionality"
 
 # Specific classes for probability distributions
 class MultivariateGaussian(Distribution):
@@ -63,7 +103,7 @@ class MultivariateGaussian(Distribution):
     - E[X]: (N,D)
     - E[X^2]: (N,D,D)
     """
-    def __init__(self, dim, mean, cov, E=None, E2=None):
+    def __init__(self, dim, mean, cov, E=None):
         Distribution.__init__(self, dim)
 
         # Check dimensions are correct
@@ -88,36 +128,42 @@ class MultivariateGaussian(Distribution):
         assert cov.shape[1] == mean.shape[1] == dim[1], "Error in the dimensionalities"
         assert cov.shape[0] == mean.shape[0] == dim[0], "Error in the dimensionalities"
 
-        self.mean = mean
-        self.cov = cov
+        self.params = {'mean':mean, 'cov':cov }
 
-        ## Initialise expectations ##
-        if E is not None: self.E = E
-        if E2 is not None: self.E2 = E2
+        # Initialise expectations
+        if E is None:
+            self.updateExpectations()
+        else:
+            self.expectations = { 'E':E }
+
+        # TO-DO: SANITY CHECKS ON EXPECTATIONS
+
 
     def updateExpectations(self):
         # Update first and second moments using current parameters
-        self.E = self.mean.copy()
+        E = self.mean
 
         # self.E2 = s.empty( (self.dim[0],self.dim[1],self.dim[1]) )
         # for i in xrange(self.dim[0]):
         #     self.E2[i,:,:] = s.outer(self.E[i,:],self.E[i,:]) + self.cov[i,:,:]
 
-        self.E2 = self.cov.copy()
+        E2 = self.params['cov'].copy()
         for i in xrange(self.dim[0]):
-            self.E2[i,:,:] += s.outer(self.E[i,:],self.E[i,:])
-        pass
+            E2[i,:,:] += s.outer(E[i,:],E[i,:])
+
+        self.expectations = {'E':E, 'E2':E2}
+
     def density(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
-        return s.sum( stats.multivariate_normal.pdf(x, mean=self.mean[n,:], cov=self.cov[n,:,:]) )
+        return s.sum( stats.multivariate_normal.pdf(x, mean=self.params['mean'][n,:], cov=self.params['cov'][n,:,:]) )
 
     def loglik(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
         l = 0.
         D = self.dim[1]
         for n in xrange(self.dim[0]):
-            qterm = (x[n,:]-self.mean[n,:]).T.dot(linalg.det(self.cov[n,:,:])).dot(x[n,:]-self.mean[n,:])
-            l += -0.5*D*s.log(2*s.pi) - 0.5*s.log(linalg.det(self.cov[n,:,:])) -0.5*qterm
+            qterm = (x[n,:]-self.params['mean'][n,:]).T.dot(linalg.det(self.params['cov'][n,:,:])).dot(x[n,:]-self.params['mean'][n,:])
+            l += -0.5*D*s.log(2*s.pi) - 0.5*s.log(linalg.det(self.params['cov'][n,:,:])) -0.5*qterm
         return l
         # return s.sum( s.log(stats.multivariate_normal.pdf(x, mean=self.mean[n,:], cov=self.cov[n,:,:])) )
 
@@ -138,40 +184,42 @@ class UnivariateGaussian(Distribution):
     H[x] = 0.5*log(sigma^2) + 0.5*(1+log(2pi))
 
     """
-    def __init__(self, dim, mean, var, E=None, E2=None):
+    def __init__(self, dim, mean, var, E=None):
         Distribution.__init__(self, dim)
 
-        ## Initialise parameters ##
-        self.mean = s.ones(dim) * mean
-        self.var = s.ones(dim) * var
+        # Initialise parameters
+        mean = s.ones(dim) * mean
+        var = s.ones(dim) * var
+        self.params = { 'mean':mean, 'var':var }
 
-        ## Initialise expectations ##
-        # WHAT ABOUT E2 NOW...?
+        # Initialise expectations 
         if E is None:
             self.updateExpectations()
         else:
             self.E = s.ones(dim) * E
 
-        # Check that dimensionality match
-        assert self.mean.shape == self.var.shape == self.dim, "Dimensionalities do not match"
+        # Check that dimensionalities match
+        self.CheckDimensionalities()
 
     def updateExpectations(self):
         # Update first and second moments using current parameters
-        self.E = self.mean.copy()
-        self.E2 = self.E**2 + self.var
+        E = self.params['mean']
+        E2 = E**2 + self.params['var']
+        self.expectations = { 'E':E, 'E2':E2 }
+
 
     def density(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
         # print stats.norm.pdf(x, loc=self.mean, scale=s.sqrt(self.var))
-        return s.sum( (1/s.sqrt(2*s.pi*self.var)) * s.exp(-0.5*(x-self.mean)**2/self.var) )
+        return s.sum( (1/s.sqrt(2*s.pi*self.params['var'])) * s.exp(-0.5*(x-self.params['mean'])**2/self.params['var']) )
 
     def loglik(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
         # return s.log(stats.norm.pdf(x, loc=self.mean, scale=s.sqrt(self.var)))
-        return s.sum( -0.5*s.log(2*s.pi) - 0.5*s.log(self.var) -0.5*(x-self.mean)**2/self.var )
+        return s.sum( -0.5*s.log(2*s.pi) - 0.5*s.log(self.params['var']) -0.5*(x-self.params['mean'])**2/self.params['var'] )
 
     def entropy(self):
-        return s.sum( 0.5*s.log(self.var) + 0.5*(1+s.log(2*s.pi)) )
+        return s.sum( 0.5*s.log(self.params['var']) + 0.5*(1+s.log(2*s.pi)) )
 class Gamma(Distribution):
     """
     This class can store an arbitrary number of Gamma distributions
@@ -185,34 +233,35 @@ class Gamma(Distribution):
     H[x] = ln(Gamma(a)) - (a-1)*digamma(a) - ln(b) + a
     """
 
-    def __init__(self, dim, a, b, E=None, lnE=None):
+    def __init__(self, dim, a, b, E=None):
         Distribution.__init__(self, dim)
 
-        ## Initialise parameters ##
-        self.a = s.ones(dim) * a
-        self.b = s.ones(dim) * b
+        # Initialise parameters
+        a = s.ones(dim) * a
+        b = s.ones(dim) * b
+        self.params = { 'a':a, 'b':b }
 
-        ## Initialise expectations ##
+        # Initialise expectations
         if E is None:
             self.updateExpectations()
         else:
-            self.E = s.ones(dim) * E
-        # (TO-DO) WHAT ABOUT lnE
-        # if lnE is None:
-            # if isinstance(lnE,(float,int)): lnE = s.ones(dim) * lnE
-        # self.lnE = lnE
+            self.expectations = { 'E':s.ones(dim)*E }
+
+        # Check that dimensionalities match
+        self.CheckDimensionalities()
 
     def updateExpectations(self):
-        self.E = self.a/self.b
-        self.lnE = special.digamma(self.a) - s.log(self.b)
+        E = self.params['a']/self.params['b']
+        lnE = special.digamma(self.params['a']) - s.log(self.params['b'])
+        self.expectations = { 'E':E, 'lnE':lnE }
 
     def density(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
-        return s.prod( (1/special.gamma(self.a)) * self.b**self.a * x**(self.a-1) * s.exp(-self.b*x) )
+        return s.prod( (1/special.gamma(self.params['a'])) * self.params['b']**self.params['a'] * x**(self.params['a']-1) * s.exp(-self.params['b']*x) )
 
     def loglik(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
-        return s.sum( -s.log(special.gamma(self.a)) + self.a*s.log(self.b) * (self.a-1)*s.log(x) -self.b*x )
+        return s.sum( -s.log(special.gamma(self.params['a'])) + self.params['a']*s.log(self.params['b']) * (self.params['a']-1)*s.log(x) -self.params['b']*x )
 class Poisson(Distribution):
     """
     Class for a Poisson distribution.
@@ -229,24 +278,26 @@ class Poisson(Distribution):
         Distribution.__init__(self, dim)
 
         # Initialise parameters
-        self.theta = s.ones(dim) * theta
+        theta = s.ones(dim) * theta
+        self.params = { 'theta':theta }
 
         # Initialise expectations
         if E is None:
             self.updateExpectations()
         else:
-            self.E = s.ones(dim) * E
+            self.expectations = { 'E':s.ones(dim)*E }
 
-        # Check that dimensionality match
-        assert self.theta.shape == self.E.shape == self.dim, "Dimensionalities do not match"
+        # Check that dimensionalities match
+        self.CheckDimensionalities()
 
     def updateExpectations(self):
-        self.E = self.theta.copy()
+        E = self.params['theta']
+        self.expectations = { 'E':E }
 
     def density(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
         assert x.dtype == int, "x has to be an integer array"
-        theta = self.theta.flatten()
+        theta = self.params['theta'].flatten()
         x = x.flatten()
         # return s.prod (stats.poisson.pmf(x,theta) )
         return s.prod( s.divide(theta**x * s.exp(-theta),s.misc.factorial(x)) )
@@ -254,7 +305,7 @@ class Poisson(Distribution):
     def loglik(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
         assert x.dtype == int, "x has to be an integer array"
-        theta = self.theta.flatten()
+        theta = self.params['theta'].flatten()
         x = x.flatten()
         # return s.log( s.prod (stats.poisson.pmf(x,theta) ))
         return s.sum( x*s.log(theta) - theta - s.log(s.misc.factorial(x)) )
@@ -266,32 +317,32 @@ class Bernoulli(Distribution):
 
     """
     def __init__(self, dim, theta, E=None):
-        Distribution.__init__(self, dim)
+        Distribution.__init__(self, dim, params, expectations)
 
-        ## Initialise parameters ##
-        # If 'theta' is a scalar, broadcast it to all dimensions
+        # Initialise parameters
         theta = s.ones(dim) * theta
-        self.theta = theta
+        self.params = { 'theta':theta }
 
-        ## Initialise expectations ##
+        # Initialise expectations
         if E is None:
             self.updateExpectations()
         else:
-            self.E = s.ones(dim) * E
+            self.expectations = { 'E':s.ones(dim)*E }
 
-        # Check that dimensionality match
-        assert self.theta.shape == self.E.shape == self.dim, "Dimensionalities do not match"
+        # Check that dimensionalities match
+        self.CheckDimensionalities()
 
     def updateExpectations(self):
-        self.E = self.theta
+        E = self.params['theta']
+        self.expectations = { 'E':E }
 
     def density(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
-        return s.prod( self.theta**x * (1-self.theta)**(1-x) )
+        return s.prod( self.params['theta']**x * (1-self.params['theta'])**(1-x) )
 
     def loglik(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
-        return s.sum( x*self.theta + (1-x)*(1-self.theta) )
+        return s.sum( x*self.params['theta'] + (1-x)*(1-self.params['theta']) )
 class BernoulliGaussian(Distribution):
     """
     Class to store an arbitrary number of Bernoulli-Gaussian distributions (see paper Spike and Slab
@@ -299,32 +350,34 @@ class BernoulliGaussian(Distribution):
 
     Equations:
     p(w,s) = Normal(w|mean,var) * Bernoulli(s|theta)
+    FINISH EQUATIONS
 
     This distribution has several expectations that are required for the variational updates, and they depend
     on other parameters (alpha from the ARD prior). For this reason I decided to define the expectations in the
     class of the corresponding node, instead of doing it here.
 
     """
-    def __init__(self, dim, mean, var, theta):
+    def __init__(self, dim, mean, var, theta, ES=None, EW=None):
+        # dim:
+        # mean: mean of the normal distribution
+        # var: variance of the normal distribution
+        # theta: parameter of the bernoulli distribution
+
         Distribution.__init__(self,dim)
 
-        ## Initialise parameters ##
-        # Broadcast input scalars to all dimensions
-
-        # If 'theta' is a scalar, broadcast it to all dimensions
+        # Initialise parameters
         theta = s.ones(dim) * theta
         mean = s.ones(dim) * mean
         var = s.ones(dim) * var
+        self.params = { 'theta':theta, 'mean':mean, 'var':var }
 
-        self.theta = theta
-        self.mean = mean
-        self.var = var
+        # initialise expectations
+        if E is None:
+            self.updateExpectations()
+        else:
+            E = s.ones(dim)*E
+            self.expectations = { 'E':E }
 
-    def density(self, x):
-        pass
-
-    def loglik(self, x):
-        pass
 class Binomial(Distribution):
     """
     Class to store an arbitrary number of Binomial distributions
@@ -338,34 +391,36 @@ class Binomial(Distribution):
     def __init__(self, dim, N, theta, E=None):
         Distribution.__init__(self, dim)
 
-        ## Initialise parameters ##
-        # Broadcast scalars to all dimensions
-        self.theta = s.ones(dim) * theta
-        self.N = s.ones(dim) * N
+        # Initialise parameters
+        theta = s.ones(dim)*theta
+        N = s.ones(dim)*N
+        self.params = { 'theta':theta, 'N':N }
 
-        ## Initialise expectations ##
+        # Initialise expectations 
         if E is None:
             self.updateExpectations()
         else:
-            self.E = s.ones(dim) * E
+            E = s.ones(dim)*E
+            self.expectations = { 'E':E }
 
         # Check that dimensionalities match
-        assert self.theta.shape == self.E.shape == self.N.shape == self.dim, "Dimensionalities do not match"
+        self.CheckDimensionalities()
 
     def updateExpectations(self):
-        self.E = self.N * self.theta
+        E = self.params["N"] * self.params["N"]
+        self.expectations = { 'E':E }
 
     def density(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
         assert x.dtype == int, "x has to be an integer array"
-        # return s.prod( stats.binom.pmf(x, self.N, self.theta) )
-        return s.prod( special.binom(self.N,x) * self.theta**x * (1-self.theta)**(self.N-x) )
+        # return s.prod( stats.binom.pmf(x, self.params["N"], self.theta) )
+        return s.prod( special.binom(self.params["N"],x) * self.params["theta"]**x * (1-self.params["theta"])**(self.params["N"]-x) )
 
     def loglik(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
         assert x.dtype == int, "x has to be an integer array"
-        # print s.sum (stats.binom.logpmf(x, self.N, self.theta) )
-        return s.sum( s.log(special.binom(self.N,x)) + x*s.log(self.theta) + (self.N-x)*s.log(1-self.theta) )
+        # print s.sum (stats.binom.logpmf(x, self.params["N"], self.theta) )
+        return s.sum( s.log(special.binom(self.params["N"],x)) + x*s.log(self.params["theta"]) + (self.params["N"]-x)*s.log(1-self.params["theta"]) )
 class Beta(Distribution):
     """
     Class to store an arbitrary number of Beta distributions
@@ -380,19 +435,28 @@ class Beta(Distribution):
         Distribution.__init__(self, dim)
 
         # Initialise parameters
-        self.a = s.ones(dim) * a
-        self.b = s.ones(dim) * b
+        a = s.ones(dim)*a
+        b = s.ones(dim)*b
+        self.params = { 'a':a, 'b':b }
 
         # Initialise expectations
-        if E is None:
+        if E is None: 
             self.updateExpectations()
         else:
-            self.E = s.ones(dim) * E
+            self.expectations = { 'E':s.ones(dim)*E }
 
         # Check that dimensionalities match
-        assert self.a.shape == self.E.shape == self.b.shape == self.dim, "Dimensionalities do not match"
+        self.CheckDimensionalities()
 
     def updateExpectations(self):
-        self.E = s.divide(self.a,self.a+self.b)
-        self.lnE = special.digamma(self.a) - special.digamma(self.a + self.b)
-        self.lnEInv = special.digamma(self.b) - special.digamma(self.a + self.b) # expectation of ln(1-X)
+        a, b = self.params['a'], self.params['b']
+        E = s.divide(a,a+b)
+        lnE = special.digamma(a) - special.digamma(a+b)
+        lnEInv = special.digamma(b) - special.digamma(a+b) # expectation of ln(1-X)
+        self.expectations = { 'E':E, 'lnE':lnE, 'lnEInv':lnEInv }
+
+# if __name__ == "__main__":
+#     a = Beta(dim=(10,20), a=1, b=1, E=3)
+#     a.removeDimensions(s.asarray([1,2,3]),0)
+#     exit()
+

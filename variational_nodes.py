@@ -4,7 +4,6 @@ import scipy as s
 
 from nodes import *
 from distributions import *
-import pdb
 
 
 """
@@ -28,59 +27,39 @@ Variational nodes have the following main variables:
 """
 
 
+"""
+to-do: 
+- improve bernoulli gaussian
+"""
+
 ###########################################
 ## General classes for variational nodes ##
 ###########################################
 
 class Variational_Node(Node):
     """
-    Abstract class for a multi-view variational node in a Bayesian probabilistic model.
-    Variational nodes can be observed or unobserved
+    Abstract class for a variational node in a Bayesian probabilistic model.
+    Variational nodes can be observed (constant) or unobserved
     """
     def __init__(self, dim):
         Node.__init__(self,dim)
+
     def calculateELBO(self):
-        # General function to calculate the ELBO of the node
+        # General method to calculate the ELBO of the node
         return 0.
-    def updateExpectations(self):
-        # General function to update expectations of the Q distribution
-        pass
-    def getExpectation(self):
-        # General function to get the expectated value of the Q distribution
-        pass
-    def getExpectations(self):
-        # General function to get all relevant moments
-        pass
-    def updateParameters(self):
-        # General function to update parameters of the Q distribution
-        pass
-    def update(self):
-        # General function to update both parameters and expectations
-        self.updateParameters()
-        self.updateExpectations()
-    def getParameters(self):
-        # General function to get the parameters of the distributions
-        pass
 
 ###################################################################
 ## General classes for observed and unobserved variational nodes ##
 ###################################################################
 
-class Observed_Variational_Node(Variational_Node):
+class Constant_Variational_Node(Variational_Node,Constant_Node):
     """
-    Abstract class for an observed variational node in a Bayesian probabilistic model.
-    Observed variational nodes only contain a single distribution Q(X) which will be stored as
-    instances of Distribution() as a .Q attribute.
+    Abstract class for an observed/constant variational node in a Bayesian probabilistic model.
     """
-    def __init__(self, dim, obs):
-        Variational_Node.__init__(self, dim)
-        self.obs = obs
-    def getObservations(self):
-        return self.obs
-    def getExpectation(self):
-        return self.getObservations()
-    def getExpectations(self):
-        return {'E':self.getObservations()}
+    def __init__(self, dim, value):
+        # SHOULD WE ALSO INITIALISE VARIATIONAL_NODE ..?
+        Constant_Node.__init__(self, dim, value)
+
 class Unobserved_Variational_Node(Variational_Node):
     """
     Abstract class for an unobserved variational node in a Bayesian probabilistic model.
@@ -92,12 +71,27 @@ class Unobserved_Variational_Node(Variational_Node):
         Variational_Node.__init__(self, dim)
         self.P = None
         self.Q = None
-    def updateExpectations(self):
-        self.Q.updateExpectations()
+    def updateExpectations(self, dist="Q"):
+        # Method to update expectations of the node
+        if dist == "Q": self.Q.updateExpectations()
 
     def getExpectation(self, dist="Q"):
-        if dist == "Q": return self.Q.E
-        if dist == "P": return self.P.E
+        # Method to get the first moment (expectation) of the node
+        if dist == "Q": expectations = self.Q.getExpectations()
+        elif dist == "P": expectations = self.P.getExpectations()
+        return expectations["E"]
+
+    def getExpectations(self, dist="Q"):
+        # Method to get all relevant moments of the node
+        if dist == "Q": expectations = self.Q.getExpectations()
+        elif dist == "P": expectations = self.P.getExpectations()
+        return expectations
+
+    def getParameters(self, dist="Q"):
+        # Method to get all parameters of the node
+        if dist == "Q": params = self.Q.getParameters()
+        elif dist == "P": params = self.P.getParameters()
+        return params
 
 #######################################################
 ## Specific classes for unobserved variational nodes ##
@@ -105,61 +99,40 @@ class Unobserved_Variational_Node(Variational_Node):
 
 class UnivariateGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """
-    Abstract class for a variational node where P(x) and Q(x)
+    Abstract class for a variational node where P(.) and Q(.)
     are both univariate Gaussian distributions.
-
-    To save memory, we follow common practice and the the prior distribution is
-    assumed to be the same for all elements
     """
-    def __init__(self, dim, pmean, pvar, qmean, qvar, qE=None, qE2=None):
+    def __init__(self, dim, pmean, pvar, qmean, qvar, qE=None):
 	    # dim (2d tuple): dimensionality of the node
 	    # pmean (nd array): the mean parameter of the P distribution
 	    # qmean (nd array): the mean parameter of the Q distribution
 	    # pvar (nd array): the variance parameter of the P distribution
 	    # qvar (nd array): the variance parameter of the Q distribution
 	    # qE (nd array): the initial first moment of the Q distribution
-	    # qE2 (nd array): the initial second moment of the Q distribution
         Unobserved_Variational_Node.__init__(self, dim)
 
         # Initialise the P and Q distributions
-        # MODIFIED: dimensions of self.P have to match those of Q to allow informative
-        # prior
         self.P = UnivariateGaussian(dim=dim, mean=pmean, var=pvar)
-        self.Q = UnivariateGaussian(dim=dim, mean=qmean, var=qvar, E=qE, E2=qE2)
+        self.Q = UnivariateGaussian(dim=dim, mean=qmean, var=qvar, E=qE)
 
-    def getParameters(self, dist="Q"):
-        if dist == "Q": return { 'mean': self.Q.mean, 'var': self.Q.var }
-        if dist == "P": return { 'mean': self.P.mean, 'var': self.P.var }
-
-    def getExpectations(self, dist="Q"):
-        if dist == "Q": return { 'E':self.Q.E, 'E2':self.Q.E2 }
-        if dist == "P": return { 'E':self.P.E, 'E2':self.P.E2 }
 class MultivariateGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """
-    Abstract class for a variational node where P(x) and Q(x)
+    Abstract class for a variational node where P(.) and Q(.)
     are both multivariate Gaussian distributions.
-
-    Currently the prior of this distribution is not used anywhere so it is ignored to save memory
     """
-    def __init__(self, dim, pmean, pcov, qmean, qcov, qE=None, qE2=None):
+    def __init__(self, dim, pmean, pcov, qmean, qcov, qE=None):
         # dim (2d tuple): dimensionality of the node
+        # pmean (nd array): the mean parameter of the P distribution
+        # pcov (nd array): the covariance parameter of the P distribution
         # qmean (nd array): the mean parameter of the Q distribution
         # qcov (nd array): the covariance parameter of the Q distribution
         # qE (nd array): the initial first moment of the Q distribution
-        # qE2 (nd array): the initial second moment of the Q distribution
         Unobserved_Variational_Node.__init__(self, dim)
 
         # Initialise the P and Q distributions
         self.P = MultivariateGaussian(dim=dim, mean=pmean, cov=pcov)
-        self.Q = MultivariateGaussian(dim=dim, mean=qmean, cov=qcov, E=qE, E2=qE2)
+        self.Q = MultivariateGaussian(dim=dim, mean=qmean, cov=qcov, E=qE)
 
-    def getParameters(self, dist="Q"):
-        if dist == "Q": return { 'mean':self.Q.mean, 'cov':self.Q.cov }
-        if dist == "P": return { 'mean':self.P.mean, 'cov':self.P.cov }
-
-    def getExpectations(self, dist="Q"):
-        if dist == "Q": return { 'E':self.Q.E, 'E2':self.Q.E2 }
-        if dist == "P": return { 'E':self.P.E, 'E2':self.P.E2 }
 class Gamma_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """
     Abstract class for a variational node where P(x) and Q(x) are both gamma distributions
@@ -167,9 +140,9 @@ class Gamma_Unobserved_Variational_Node(Unobserved_Variational_Node):
     def __init__(self, dim, pa, pb, qa, qb, qE=None):
 	    # dim (2d tuple): dimensionality of the node
 	    # pa (nd array): the 'a' parameter of the P distribution
+	    # qa (nd array): the 'b' parameter of the P distribution
 	    # qa (nd array): the 'a' parameter of the Q distribution
-	    # pa (nd array): the 'b' parameter of the P distribution
-	    # pb (nd array): the 'b' parameter of the Q distribution
+	    # qb (nd array): the 'b' parameter of the Q distribution
 	    # qE (nd array): the initial expectation of the Q distribution
         Unobserved_Variational_Node.__init__(self,dim)
 
@@ -177,66 +150,40 @@ class Gamma_Unobserved_Variational_Node(Unobserved_Variational_Node):
         self.P = Gamma(dim=dim, a=pa, b=pb)
         self.Q = Gamma(dim=dim, a=qa, b=qb, E=qE)
 
-    def getParameters(self, dist="Q"):
-        if dist == "Q": return { 'a':self.Q.a, 'b':self.Q.b }
-        if dist == "P": return { 'a':self.P.a, 'b':self.P.b }
-    def getExpectations(self, dist="Q"):
-        if dist == "Q": return { 'E':self.Q.E, 'lnE':self.Q.lnE }
-        if dist == "P": return { 'E':self.P.E, 'lnE':self.P.lnE }
 class Bernoulli_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """
-    Abstract class for a variational node where P(x) and Q(x)
+    Abstract class for a variational node where P(.) and Q(.)
     are both bernoulli distributions.
-
-    To save memory, we follow common practice and the the prior distribution is
-    assumed to be the same for all elements
     """
     def __init__(self, dim, ptheta, qtheta, qE=None):
 	    # dim (2d tuple): dimensionality of the node
 	    # ptheta (nd array): the 'theta' parameter of the P distribution
 	    # qtheta (nd array): the 'theta' parameter of the Q distribution
-	    # qE (nd array): the current moment of the Q distribution
+	    # qE (nd array): initial first moment of the Q distribution
         Unobserved_Variational_Node.__init__(self,dim)
 
         # Initialise the distributions
         self.P = Bernoulli(dim=dim, theta=ptheta)
         self.Q = Bernoulli(dim=dim, theta=qtheta, E=qE)
 
-    def getParameters(self, dist="Q"):
-        if dist == "Q": return { 'theta':self.Q.theta }
-        if dist == "P": return { 'theta':self.P.theta }
-
-    def getExpectation(self, dist="Q"):
-        if dist == "Q": return self.Q.E
-        elif dist == "P": return self.P.E
-
-    def getExpectations(self, dist="Q"):
-        if dist == "Q": return { 'E':self.Q.E }
-        if dist == "P": return { 'E':self.P.E }
 class BernoulliGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """
-    Abstract class for a variational node where P(x) and Q(x)
+    Abstract class for a variational node where P(.) and Q(.)
     are joint gaussian-bernoulli distributions (see paper  Spike and Slab Variational Inference for
     Multi-Task and Multiple Kernel Learning by Titsias and Gredilla)
-
-    This distribution has several expectations that are required for the variational updates, and they depend
-    on other parameters (alpha from the ARD prior). For this reason I decided to define the expectations in the
-    class of the corresponding node, instead of doing it here.
-
-    The only element from the prior distribution that is used is S_ptheta, for this reason I ignore the other elements
     """
     def __init__(self, dim, pmean, pvar, ptheta, qmean, qvar, qtheta):
 	    # dim (2d tuple): dimensionality of the node
-	    # qmean (nd array): the mean parameter of the Q distribution
-	    # qvar (nd array): the var parameter of the Q distribution
+        # pmean (nd array): the mean parameter of the P distribution
+        # pvar (nd array): the var parameter of the P distribution
 	    # ptheta (nd array): the theta parameter of the P distribution
+        # qmean (nd array): the mean parameter of the Q distribution
+        # qvar (nd array): the var parameter of the Q distribution
 	    # qtheta (nd array): the theta parameter of the Q distribution
         Unobserved_Variational_Node.__init__(self,dim)
 
-        # Initialise the prior distribution
+        # Initialise the P and Q distributions
         self.P = BernoulliGaussian(dim=dim, theta=ptheta, mean=pmean, var=pvar)
-
-        # initialise the variational distribution
         self.Q = BernoulliGaussian(dim=dim, theta=qtheta, mean=qmean, var=qvar)
 
     def getParameters(self, dist="Q"):
@@ -246,25 +193,22 @@ class BernoulliGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node)
     def getExpectation(self, dist="Q"):
         if dist == "Q": return self.Q.ESW
         elif dist == "P": return self.P.ESW
+
 class Beta_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """
-    Abstract class for a variational node where both P(x) and Q(x) are beta
+    Abstract class for a variational node where both P(.) and Q(.) are beta
     distributions
     """
     def __init__(self, dim, pa, pb, qa, qb, qE=None):
+        # dim (2d tuple): dimensionality of the node
+        # pa (nd array): the 'a' parameter of the P distribution
+        # qa (nd array): the 'b' parameter of the P distribution
+        # qa (nd array): the 'a' parameter of the Q distribution
+        # qb (nd array): the 'b' parameter of the Q distribution
+        # qE (nd array): the initial expectation of the Q distribution
         super(Beta_Unobserved_Variational_Node, self).__init__(dim)
+
+        # Initialise P and Q distributions
         self.P = Beta(dim, pa, pb)
-        self.Q = Beta(dim, qa, qb)
-
-    def getParameters(self, dist="Q"):
-        if dist == "Q": return { 'a':self.Q.a, 'b':self.Q.b }
-        elif dist == "P": return { 'a':self.P.a, 'b':self.P.b }
-            
-    def getExpectation(self, dist="Q"):
-        if dist == "Q": return self.Q.E
-        elif dist == "P": return self.P.E
-
-    def getExpectations(self, dist="Q"):
-        if dist == "Q": return { 'E':self.Q.E}
-        elif dist == "P": return { 'E':self.P.E}
+        self.Q = Beta(dim, qa, qb, qE)
 

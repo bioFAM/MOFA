@@ -138,7 +138,7 @@ class BayesNet(object):
         # Drop the factors
         if len(drop) > 0:
             for node in self.nodes.keys():
-                self.nodes[node].removeFactors(*drop)
+                self.nodes[node].removeFactors(drop)
         self.dim['K'] -= len(drop)
 
         # Update the active number of latent variables

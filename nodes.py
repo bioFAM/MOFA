@@ -15,33 +15,58 @@ class Node(object):
     """
     def __init__(self, dim):
     	self.dim = dim
-    	pass
+
     def addMarkovBlanket(self, **kwargs):
-    	# Function to define the Markov blanket of the node 
+    	# Method to define the Markov blanket of the node 
         self.markov_blanket = kwargs
 
     def update(self):
+        # General method to update a node
         pass
 
     def removeFactors(self, *idx):
-        # General function to remove factors
+        # General method to remove factors from a node
         pass
 
-    def updateParameters(self):
-        pass
+    def update(self):
+        # General method to update both parameters and expectations
+        self.updateParameters()
+        self.updateExpectations()
 
     def updateExpectations(self):
-        pass
-
-    def getParameters(self):
+        # General method to update the expectations of a node
         pass
 
     def getExpectations(self):
+        # General method to get the expectations of a node
         pass
+
+    def getExpectation(self):
+        # General method to get the first moment (expectation) of a node
+        pass
+
+    def updateParameters(self):
+        # General function to update parameters of the Q distribution
+        pass
+
+    def getParameters(self):
+        # General function to get the parameters of the distributions
+        pass
+
+    def updateDim(self, axis, new_dim):
+        # Method to update the dimensionality of a node
+        # this seems inefficient but self.dim is a tuple and it cannot be modified using
+        # something like self.dim[axis] = new_dim
+        dim = list(self.dim)
+        dim[axis] = new_dim
+        self.dim = tuple(dim)
 
 
 class Constant_Node(Node):
     """
+    General class for a constant node in a Bayesian network
+    Constant nodes do not have expectations or parameters but just values.
+    However, for technical reasons Expectations are defined to be the same as the values
     """
     def __init__(self, dim, value):
         self.dim = dim

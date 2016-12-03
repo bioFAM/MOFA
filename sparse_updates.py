@@ -396,11 +396,6 @@ class Theta_Node(Beta_Unobserved_Variational_Node):
 
         return lb_p - lb_q
 
-    def removeFactors(self, idx):
-        self.P.removeDimensions(axis=0, idx=idx)
-        self.Q.removeDimensions(axis=0, idx=idx)
-        self.updateDim(axis=0, new_dim=self.dim[0]-len(idx))
-
 class Theta_Constant_Node(Constant_Variational_Node):
     def __init__(self, dim, value):
         super(Theta_Constant_Node, self).__init__(dim, value)

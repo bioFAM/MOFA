@@ -51,9 +51,21 @@ class Distribution(object):
         # Setter function for parameters
         self.params = params
 
+    def getExpectation(self):
+        # Getter function for expectations
+        return self.expectations['E']
+
     def getExpectations(self):
         # Getter function for expectations
         return self.expectations
+
+    def CheckDimensionalities(self):
+        # Method to do a sanity check on the dimensionalities
+        p_dim = set(map(s.shape, self.params.values()))
+        e_dim = set(map(s.shape, self.expectations.values()))
+        assert len(p_dim) == 1, "Parameters have different dimensionalities"
+        assert len(e_dim) == 1, "Expectations have different dimensionalities"
+        assert e_dim == p_dim, "Parameters and Expectations have different dimensionality"
 
     def removeDimensions(self, axis, idx):
         # Method to remove undesired dimensions
@@ -71,14 +83,6 @@ class Distribution(object):
         dim = list(self.dim)
         dim[axis] = new_dim
         self.dim = tuple(dim)
-
-    def CheckDimensionalities(self):
-        # Method to do a sanity check on the dimensionalities
-        p_dim = set(map(s.shape, self.params.values()))
-        e_dim = set(map(s.shape, self.expectations.values()))
-        assert len(p_dim) == 1, "Parameters have different dimensionalities"
-        assert len(e_dim) == 1, "Expectations have different dimensionalities"
-        assert e_dim == p_dim, "Parameters and Expectations have different dimensionality"
 
 # Specific classes for probability distributions
 class MultivariateGaussian(Distribution):
@@ -317,7 +321,7 @@ class Bernoulli(Distribution):
 
     """
     def __init__(self, dim, theta, E=None):
-        Distribution.__init__(self, dim, params, expectations)
+        Distribution.__init__(self, dim)
 
         # Initialise parameters
         theta = s.ones(dim) * theta
@@ -343,41 +347,87 @@ class Bernoulli(Distribution):
     def loglik(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
         return s.sum( x*self.params['theta'] + (1-x)*(1-self.params['theta']) )
+
 class BernoulliGaussian(Distribution):
     """
     Class to store an arbitrary number of Bernoulli-Gaussian distributions (see paper Spike and Slab
     Variational Inference for Multi-Task and Multiple Kernel Learning by Titsias and Gredilla)
 
+    The best way to characterise a joint Bernoulli-Gaussian distribution P(w,s) is by considering
+    its factorisation p(w|s)p(s) where s is a bernoulli distribution and w|s=0 and w|s=1 are normal distributions
+
     Equations:
     p(w,s) = Normal(w|mean,var) * Bernoulli(s|theta)
     FINISH EQUATIONS
 
-    This distribution has several expectations that are required for the variational updates, and they depend
-    on other parameters (alpha from the ARD prior). For this reason I decided to define the expectations in the
-    class of the corresponding node, instead of doing it here.
+    ROOM FOR IMPROVEMENT: i think the current code is inefficient because you have to keep track of the params
+    and expectations in both the factorised distributions and the joint one. I think
+    perhaps is better not to define new Bernoulli and UnivariateGaussian but work directly with the joint model
 
     """
-    def __init__(self, dim, mean, var, theta, ES=None, EW=None):
-        # dim:
-        # mean: mean of the normal distribution
-        # var: variance of the normal distribution
-        # theta: parameter of the bernoulli distribution
-
+    def __init__(self, dim, mean_S0, mean_S1, var_S0, var_S1, theta, EW_S0=None, EW_S1=None, ES=None):
         Distribution.__init__(self,dim)
+        self.S = Bernoulli(dim=dim, theta=theta, E=ES)
+        self.W_S0 = UnivariateGaussian(dim=dim, mean=mean_S0, var=var_S0, E=EW_S0)
+        self.W_S1 = UnivariateGaussian(dim=dim, mean=mean_S1, var=var_S1, E=EW_S1)
 
-        # Initialise parameters
-        theta = s.ones(dim) * theta
-        mean = s.ones(dim) * mean
-        var = s.ones(dim) * var
-        self.params = { 'theta':theta, 'mean':mean, 'var':var }
+        # Collect parameters
+        self.params = { 'mean_S0':mean_S0, 'mean_S1':mean_S1, 'var_S0':var_S0, 'var_S1':var_S1, 'theta':theta }
+        
+        # Collect expectations
+        self.updateExpectations()
 
-        # initialise expectations
-        if E is None:
-            self.updateExpectations()
-        else:
-            E = s.ones(dim)*E
-            self.expectations = { 'E':E }
+    def setParameters(self,**params):
+        # Setter function for parameters
+        self.S.setParameters(theta=params['theta'])
+        self.W_S0.setParameters(mean=params['mean_S0'], var=params['var_S0'])
+        self.W_S1.setParameters(mean=params['mean_S1'], var=params['var_S1'])
+        self.params = params
 
+    def updateParameters(self):
+        # Method to update the parameters of the joint distribution based on its constituent distributions
+        self.params = { 'theta':self.S.params["theta"], 
+                        'mean_S0':self.W_S0.params["mean"], 'var_S0':self.W_S0.params["var"],
+                        'mean_S1':self.W_S1.params["mean"], 'var_S1':self.W_S1.params["var"] }
+
+    def updateExpectations(self):
+        # Method to calculate the expectations based on the current estimates for the parameters
+
+        # Update expectations of the constituent distributions
+        self.S.updateExpectations()
+        self.W_S0.updateExpectations()
+        self.W_S1.updateExpectations()
+
+        # Calculate expectations of the joint distribution
+        ES = self.S.getExpectation()
+        EW = self.W_S1.getExpectation()
+        ESW = ES * EW
+        ESWW = ES * (EW**2 + self.params["var_S1"])
+        EWW = ES*(EW**2+self.params["var_S1"]) + (1-ES)*self.params["var_S0"]
+
+        # Collect expectations
+        self.expectations = {'E':ESW, 'ES':ES, 'EW':EW, 'ESW':ESW, 'ESWW':ESWW, 'EWW':EWW }
+
+    def removeDimensions(self, axis, idx):
+        # Method to remove undesired dimensions
+        # - axis (int): axis from where to remove the elements
+        # - idx (numpy array): indices of the elements to remove
+        assert axis <= len(self.dim)
+        assert s.all(idx < self.dim[axis])
+        self.S.removeDimensions(axis,idx)
+        self.W_S0.removeDimensions(axis,idx)
+        self.W_S1.removeDimensions(axis,idx)
+        self.updateParameters()
+        self.updateExpectations()
+
+    def updateDim(self, axis, new_dim):
+        # Function to update the dimensionality of a particular axis
+        self.S.updateDim(axis,new_dim)
+        self.W_S0.updateDim(axis,new_dim)
+        self.W_S1.updateDim(axis,new_dim)
+        dim = list(self.dim)
+        dim[axis] = new_dim
+        self.dim = tuple(dim)
 class Binomial(Distribution):
     """
     Class to store an arbitrary number of Binomial distributions
@@ -426,8 +476,8 @@ class Beta(Distribution):
     Class to store an arbitrary number of Beta distributions
 
     Equations:
-    p(x|a,b) =
-    log p(x|a,b) =
+    p(x|a,b) = GammaF(a+b)/(GammaF(a)*GammaF(b)) * x**(a-1) * (1-x)**(b-1)
+    log p(x|a,b) = log[GammaF(a+b)/(GammaF(a)*GammaF(b))] + (a-1)*x + (b-1)*(1-x)
     E[x] = a/(a+b)
     var[x] = a*b / ((a+b)**2 * (a+b+1))
     """

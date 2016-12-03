@@ -24,10 +24,6 @@ class Node(object):
         # General method to update a node
         pass
 
-    def removeFactors(self, *idx):
-        # General method to remove factors from a node
-        pass
-
     def update(self):
         # General method to update both parameters and expectations
         self.updateParameters()
@@ -61,7 +57,6 @@ class Node(object):
         dim[axis] = new_dim
         self.dim = tuple(dim)
 
-
 class Constant_Node(Node):
     """
     General class for a constant node in a Bayesian network
@@ -84,3 +79,10 @@ class Constant_Node(Node):
         
     def getExpectations(self):
         return { 'E':self.getValue() }
+
+    def removeFactors(self, idx, axis=None):
+        if hasattr(self,"factors_axis"): axis = self.factors_axis
+        if axis is not None:
+            self.value = s.delete(self.value, idx, axis)
+            self.updateDim(axis=axis, new_dim=self.dim[axis]-len(idx))
+

@@ -60,6 +60,7 @@ class Constant_Variational_Node(Variational_Node,Constant_Node):
         # SHOULD WE ALSO INITIALISE VARIATIONAL_NODE ..?
         Constant_Node.__init__(self, dim, value)
 
+
 class Unobserved_Variational_Node(Variational_Node):
     """
     Abstract class for an unobserved variational node in a Bayesian probabilistic model.
@@ -93,6 +94,13 @@ class Unobserved_Variational_Node(Variational_Node):
         elif dist == "P": params = self.P.getParameters()
         return params
 
+    def removeFactors(self, idx, axis=None):
+        # Method to remove entire factors from the nodes
+        if hasattr(self,"factors_axis"): axis = self.factors_axis
+        if axis is not None:
+            self.P.removeDimensions(axis=axis, idx=idx)
+            self.Q.removeDimensions(axis=axis, idx=idx)
+            self.updateDim(axis=axis, new_dim=self.dim[axis]-len(idx))
 #######################################################
 ## Specific classes for unobserved variational nodes ##
 #######################################################
@@ -172,7 +180,9 @@ class BernoulliGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node)
     are joint gaussian-bernoulli distributions (see paper  Spike and Slab Variational Inference for
     Multi-Task and Multiple Kernel Learning by Titsias and Gredilla)
     """
-    def __init__(self, dim, pmean, pvar, ptheta, qmean, qvar, qtheta):
+    def __init__(self, dim, 
+        pmean_S0, pmean_S1, pvar_S0, pvar_S1, ptheta,
+        qmean_S0, qmean_S1, qvar_S0, qvar_S1, qtheta, qEW_S0=None, qEW_S1=None, qES=None):
 	    # dim (2d tuple): dimensionality of the node
         # pmean (nd array): the mean parameter of the P distribution
         # pvar (nd array): the var parameter of the P distribution
@@ -183,16 +193,8 @@ class BernoulliGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node)
         Unobserved_Variational_Node.__init__(self,dim)
 
         # Initialise the P and Q distributions
-        self.P = BernoulliGaussian(dim=dim, theta=ptheta, mean=pmean, var=pvar)
-        self.Q = BernoulliGaussian(dim=dim, theta=qtheta, mean=qmean, var=qvar)
-
-    def getParameters(self, dist="Q"):
-        if dist == "Q": return { 'theta':self.Q.theta, 'mean':self.Q.mean, 'var':self.Q.var }
-        elif dist == "P": return { 'theta':self.P.theta, 'mean':self.P.mean, 'var':self.P.var }
-
-    def getExpectation(self, dist="Q"):
-        if dist == "Q": return self.Q.ESW
-        elif dist == "P": return self.P.ESW
+        self.P = BernoulliGaussian(dim=dim, theta=ptheta, mean_S0=pmean_S0, var_S0=pvar_S0, mean_S1=pmean_S1, var_S1=pvar_S1)
+        self.Q = BernoulliGaussian(dim=dim, theta=qtheta, mean_S0=qmean_S0, var_S0=qvar_S0, mean_S1=qmean_S1, var_S1=qvar_S1, EW_S0=qEW_S0, EW_S1=qEW_S1, ES=qES)
 
 class Beta_Unobserved_Variational_Node(Unobserved_Variational_Node):
     """

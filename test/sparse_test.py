@@ -16,7 +16,7 @@ from BayesNet import BayesNet
 from multiview_nodes import *
 from nodes import Constant_Node
 from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
-from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node, Theta_Node_No_Annotation, Theta_Constant_Node
+from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node, Theta_Node, Theta_Constant_Node
 from utils import *
 
 ###################
@@ -127,16 +127,23 @@ for m in xrange(M):
 alpha = Multiview_Variational_Node((K,)*M, *alpha_list)
 
 
-# W (variational node)
+# SW (variational node)
 SW_list = [None]*M
-S_ptheta = 0.5
-W_pvar = s.nan
-W_pmean = s.nan
+P_theta = s.nan
+P_mean_S1 = s.nan
+P_mean_S0 = s.nan
+P_var_S1 = s.nan
+P_var_S0 = s.nan
 for m in xrange(M):
-	S_qtheta = s.ones((D[m],K))*S_ptheta
-	W_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(D[m],K))
-	W_qvar = s.ones((D[m],K))
-	SW_list[m] = SW_Node(dim=(D[m],K), pmean=W_pmean, pvar=W_pvar, ptheta=S_ptheta, qmean=W_qmean, qvar=W_qvar, qtheta=S_qtheta)
+	Q_theta = s.ones((D[m],K))*0.5
+	Q_mean_S1 = s.stats.norm.rvs(loc=0, scale=1, size=(D[m],K))
+	Q_mean_S0 = 0.
+	Q_var_S0 = alpha_list[m].getExpectation()
+	Q_var_S1 = s.ones((D[m],K))
+	# SW_list[m] = SW_Node(dim=(D[m],K), pmean=W_pmean, pvar=W_pvar, ptheta=S_ptheta, qmean=W_qmean, qvar=W_qvar, qtheta=S_qtheta)
+	SW_list[m] = SW_Node(dim=(D[m],K),
+        pmean_S0=P_mean_S0, pmean_S1=P_mean_S0, pvar_S0=P_var_S0, pvar_S1=P_var_S1, ptheta=P_theta,
+        qmean_S0=Q_mean_S0, qmean_S1=Q_mean_S1, qvar_S0=Q_var_S0, qvar_S1=Q_var_S1, qtheta=Q_theta, qEW_S0=None, qEW_S1=None, qES=None)
 SW = Multiview_Variational_Node(M, *SW_list)
 
 
@@ -176,7 +183,7 @@ Y = Multiview_Mixed_Node(M, *Y_list)
 
 # Theta node
 Theta_list = [None] * M
-learn_theta = True
+learn_theta = False
 if learn_theta:
 	theta_pa = 1.
 	theta_pb = 1.
@@ -184,7 +191,7 @@ if learn_theta:
 	theta_qa = 1.
 	theta_qE = None
 	for m in xrange(M):
-		Theta_list[m] = Theta_Node_No_Annotation(dim=(K,), pa=theta_pa, pb=theta_pb, qa=theta_qa, qb=theta_qb, qE=theta_qE)
+		Theta_list[m] = Theta_Node(dim=(K,), pa=theta_pa, pb=theta_pb, qa=theta_qa, qb=theta_qb, qE=theta_qE)
 	Theta = Multiview_Variational_Node(M, *Theta_list)
 else:
 	value = 0.5

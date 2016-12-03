@@ -74,13 +74,14 @@ class Y_Node(Constant_Variational_Node):
 
 class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
     def __init__(self, dim, pmean, pvar, qmean, qvar, qE=None):
-        UnivariateGaussian_Unobserved_Variational_Node.__init__(self, dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE)
+        # UnivariateGaussian_Unobserved_Variational_Node.__init__(self, dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE)
+        super(Z_Node,self).__init__(dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE)
         self.precompute()
 
     def precompute(self):
         self.N = self.dim[0]
-        self.K = self.dim[1]
-        self.covariates = np.zeros(self.K, dtype=bool)
+        self.covariates = np.zeros(self.dim[1], dtype=bool)
+        self.factors_axis = 1
 
     def setCovariates(self, idx):
         # Method to define which factors are unupdated covariates
@@ -102,7 +103,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
 
         # Collect parameters from the P and Q distributions of this node
         P,Q = self.P.getParameters(), self.Q.getParameters()
-        Pmean, Pvar, Qmean, Qvar = P['mean'], P['var'], Q['mean'], Q['var']
+        Pmean, Pvar, Qmean = P['mean'], P['var'], Q['mean']
 
         # Variance
         tmp = (tau*SWW.T).sum(axis=1)
@@ -114,9 +115,9 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         if any(self.covariates):
             oldmean = Qmean[:,self.covariates]
 
-        for k in xrange(self.K):
+        for k in xrange(self.dim[1]):
             tmp1 = SW[:,k]*tau
-            tmp2 = Y - s.dot( Qmean[:,s.arange(self.K)!=k] , SW[:,s.arange(self.K)!=k].T )
+            tmp2 = Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )
             tmp3 = ma.dot(tmp2,tmp1)
             tmp3 += 1./Pvar[:,k] * Pmean[:,k]
             Qmean[:,k] = Qvar[:,k] * tmp3
@@ -127,12 +128,6 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
 
         # Save updated parameters of the Q distribution
         self.Q.setParameters(mean=Qmean, var=Qvar)
-
-    def removeFactors(self, idx):
-        self.P.removeDimensions(axis=1, idx=idx)
-        self.Q.removeDimensions(axis=1, idx=idx)
-        self.updateDim(axis=1, new_dim=self.dim[1]-len(idx))
-        self.K -= len(idx)
 
     def calculateELBO(self):
         # Collect parameters and expectations
@@ -148,13 +143,14 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         tmp2 = - (s.log(Pvar)/2.).sum()
 
         lb_p = tmp1 + tmp2
-        lb_q = - (s.log(Qvar).sum() + self.N*self.K)/2.
+        lb_q = - (s.log(Qvar).sum() + self.N*self.dim[1])/2.
 
         return lb_p-lb_q
 
 class Tau_Node(Gamma_Unobserved_Variational_Node):
     def __init__(self, dim, pa, pb, qa, qb, qE=None):
-        Gamma_Unobserved_Variational_Node.__init__(self, dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+        # Gamma_Unobserved_Variational_Node.__init__(self, dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+        super(Tau_Node,self).__init__(dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
         self.precompute()
 
     def precompute(self):
@@ -172,7 +168,7 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
 
         # Collect parameters from the P and Q distributions of this node
         P,Q = self.P.getParameters(), self.Q.getParameters()
-        Pa, Pb, Qa, Qb = P['a'], P['b'], Q['a'], Q['b']
+        Pa, Pb = P['a'], P['b']
 
         # Calculate terms for the update
         term1 = (Y**2).sum(axis=0).data 
@@ -202,13 +198,15 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
 
 class Alpha_Node(Gamma_Unobserved_Variational_Node):
     def __init__(self, dim, pa, pb, qa, qb, qE=None):
-        Gamma_Unobserved_Variational_Node.__init__(self, dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+        # Gamma_Unobserved_Variational_Node.__init__(self, dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+        super(Alpha_Node,self).__init__(dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
         self.precompute()
 
     def precompute(self):
         # self.K = self.dim[0]
         # self.lbconst = self.K * ( self.P.a*s.log(self.P.b) - special.gammaln(self.P.a) )
         self.lbconst = s.sum( self.P.params['a']*s.log(self.P.params['b']) - special.gammaln(self.P.params['a']) )
+        self.factors_axis = 0
 
     def updateParameters(self):
 
@@ -218,7 +216,7 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
 
         # Collect parameters from the P and Q distributions of this node
         P,Q = self.P.getParameters(), self.Q.getParameters()
-        Pa, Pb, Qa, Qb = P['a'], P['b'], Q['a'], Q['b']
+        Pa, Pb = P['a'], P['b']
 
         # ARD prior on What
         Qb = Pb + 0.5*EWW.sum(axis=0)
@@ -243,102 +241,92 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
 
         return lb_p - lb_q
 
-    def removeFactors(self, idx):
-        self.P.removeDimensions(axis=0, idx=idx)
-        self.Q.removeDimensions(axis=0, idx=idx)
-        self.updateDim(axis=0, new_dim=self.dim[0]-len(idx))
-
 class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
-    def __init__(self, dim, pmean, pvar, qmean, qvar, ptheta, qtheta):
-        BernoulliGaussian_Unobserved_Variational_Node.__init__(self, dim=dim, pmean=pmean, pvar=pvar, ptheta=ptheta, qmean=qmean, qvar=qvar, qtheta=qtheta)
+    # SHOULD WE USE **KWARGS AND *KARGS ONLY?
+    # def __init__(self, dim, pmean_S0, pmean_S1, pvar_S0, pvar_S1, ptheta, qmean_S0, qmean_S1, qvar_S0, qvar_S1, qtheta, qEW_S0=None, qEW_S1=None, qES=None):
+    def __init__(self, dim, pmean_S0, pmean_S1, pvar_S0, pvar_S1, ptheta, qmean_S0, qmean_S1, qvar_S0, qvar_S1, qtheta, qEW_S0=None, qEW_S1=None, qES=None):
+        super(SW_Node,self).__init__(dim, pmean_S0, pmean_S1, pvar_S0, pvar_S1, ptheta, qmean_S0, qmean_S1, qvar_S0, qvar_S1, qtheta, qEW_S0, qEW_S1, qES)
+        # BernoulliGaussian_Unobserved_Variational_Node.__init__(self, dim, pmean_S0, pmean_S1, pvar_S0, pvar_S1, ptheta, qmean_S0, qmean_S1, qvar_S0, qvar_S1, qtheta, qEW_S0, qEW_S1, qES)
         self.precompute()
 
     def precompute(self):
         self.D = self.dim[0]
-        self.K = self.dim[1]
+        # self.K = self.dim[1]
+        self.factors_axis = 1
 
     def updateParameters(self):
 
         # Collect expectations from other nodes
-        tmp = self.markov_blanket["Z"].getExpectations()
-        Z,ZZ = tmp["E"],tmp["E2"]
+        Ztmp = self.markov_blanket["Z"].getExpectations()
+        Z,ZZ = Ztmp["E"],Ztmp["E2"]
         tau = self.markov_blanket["tau"].getExpectation()
         Y = self.markov_blanket["Y"].getExpectation()
         alpha = self.markov_blanket["alpha"].getExpectation()
-        SW = self.Q.ESW[:]
-        # TODO make general in mixed node
-        theta_lnE = self.markov_blanket['Theta'].getExpectations()['lnE']
-        theta_lnEInv = self.markov_blanket['Theta'].getExpectations()['lnEInv']
+        thetatmp = self.markov_blanket['Theta'].getExpectations() # TODO make general in mixed node
+        theta_lnE, theta_lnEInv  = thetatmp['lnE'], thetatmp['lnEInv']
 
+        # Collect parameters and expectations from P and Q distributions of this node
+        SW = self.Q.getExpectations()["ESW"]
+        Q = self.Q.getParameters()
+        Qmean_S1, Qvar_S1, Qtheta = Q['mean_S1'], Q['var_S1'], Q['theta']
 
         # check dimensions of theta and expand if necessary
         # I THINK THIS SHOULD NOT BE HERE...
-        if theta_lnE.shape != self.Q.mean.shape:
-            theta_lnE = s.repeat(theta_lnE[None,:],self.Q.mean.shape[0],0)
-        if theta_lnEInv.shape != self.Q.mean.shape:
-            theta_lnEInv = s.repeat(theta_lnEInv[None,:],self.Q.mean.shape[0],0)
-
-        # Collect parameters from the P and Q distributions of this node
-        # ....
+        if theta_lnE.shape != Qmean_S1.shape:
+            theta_lnE = s.repeat(theta_lnE[None,:],Qmean_S1.shape[0],0)
+        if theta_lnEInv.shape != Qmean_S1.shape:
+            theta_lnEInv = s.repeat(theta_lnEInv[None,:],Qmean_S1.shape[0],0)
 
         all_term1 = theta_lnE - theta_lnEInv
         # all_term1 = s.log(theta/(1.-theta))
 
-
-        for k in xrange(self.K):
+        for k in xrange(self.dim[1]):
 
             term1 = all_term1[:, k]
             term2 = 0.5*s.log(s.divide(alpha[k],tau))
             term3 = 0.5*s.log(s.sum(ZZ[:,k]) + s.divide(alpha[k],tau))
             # term41 = ma.dot(Y.T,Z[:,k])
             term41 = ma.dot(Y.T,Z[:,k]).data
-            term42 = s.dot( SW[:,s.arange(self.K)!=k] , (Z[:,k]*Z[:,s.arange(self.K)!=k].T).sum(axis=1) )
+            term42 = s.dot( SW[:,s.arange(self.dim[1])!=k] , (Z[:,k]*Z[:,s.arange(self.dim[1])!=k].T).sum(axis=1) )
             term43 = s.sum(ZZ[:,k]) + s.divide(alpha[k],tau)
             term4 = 0.5*tau * s.divide((term41-term42)**2,term43)
 
             # Update S
-            self.Q.theta[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
+            Qtheta[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
 
             # Update W
-            self.Q.mean[:,k] = s.divide(term41-term42,term43)
-            self.Q.var[:,k] = s.divide(1,tau*term43)
+            Qmean_S1[:,k] = s.divide(term41-term42,term43)
+            Qvar_S1[:,k] = s.divide(1,tau*term43)
 
             # Update Expectations for the next iteration
-            SW[:,k] = self.Q.theta[:,k] * self.Q.mean[:,k]
+            SW[:,k] = Qtheta[:,k] * Qmean_S1[:,k]
 
-    def updateExpectations(self):
-        alpha = self.markov_blanket["alpha"].getExpectation()
-        self.Q.ES = self.Q.theta[:]
-        self.Q.EW = self.Q.mean[:]
-        self.Q.ESW = self.Q.ES * self.Q.EW
-        self.Q.ESWW = self.Q.ES * (self.Q.EW**2 + self.Q.var)
-        self.Q.EWW = self.Q.ES * (self.Q.EW**2 + self.Q.var)  + (1-self.Q.ES)*s.repeat(1/alpha[None,:],self.D,0)
-
-    def getExpectations(self):
-        return dict({'ES':self.Q.ES, 'EW':self.Q.EW, 'ESW':self.Q.ESW,'ESWW':self.Q.ESWW, 'EWW':self.Q.EWW})
+        # Save updated parameters of the Q distribution
+        self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=s.repeat(1/alpha[None,:],self.D,0), 
+                             mean_S1=Qmean_S1, var_S1=Qvar_S1, theta=Qtheta )
 
     def calculateELBO(self):
-        # Calculate Variational Evidence Lower Bound
+
+        # Collect parameters and expectations
+        Qpar,Qexp = self.Q.getParameters(), self.Q.getExpectations()
+        S,WW = Qexp["ES"], Qexp["EWW"]
+        Qvar = Qpar['var_S1']
         alpha = self.markov_blanket["alpha"].getExpectations()
-        exp = self.getExpectations()
-        S = exp["ES"]
-        WW = exp["EWW"]
-        theta_lnE = self.markov_blanket['Theta'].getExpectations()['lnE']
-        theta_lnEInv = self.markov_blanket['Theta'].getExpectations()['lnEInv']
+        theta = self.markov_blanket['Theta'].getExpectations()
+
 
         # Calculate ELBO for W
         lb_pw = (self.D*alpha["lnE"].sum() - s.sum(alpha["E"]*WW))/2
-        lb_qw = -0.5*self.K*self.D - 0.5*s.log(S*self.Q.var + ((1-S)/alpha["E"])).sum()
+        lb_qw = -0.5*self.dim[1]*self.D - 0.5*s.log(S*Qvar + ((1-S)/alpha["E"])).sum()
         lb_w = lb_pw - lb_qw
 
         # Calculate ELBO for S
-        # pdb.set_trace()
         # Slower = 0.00001
         # Supper = 0.99999
         # S[S<Slower] = Slower
         # S[S>Supper] = Supper
 
-        lb_ps = s.sum( S*theta_lnE + (1-S)*theta_lnEInv)
+        lb_ps = s.sum( S*theta['lnE'] + (1-S)*theta['lnEInv'])
 
         lb_qs_tmp = S*s.log(S) + (1-S)*s.log(1-S)
         lb_qs_tmp[s.isnan(lb_qs_tmp)] = 0
@@ -348,32 +336,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
 
         return lb_w + lb_s
 
-    def removeFactors(self, idx):
-        # Method to remove a set of (inactive) latent variables from the node
-        keep = s.setdiff1d(s.arange(self.K),idx)
-        # variational distribution terms
-        self.Q.mean = self.Q.mean[:,keep]
-        self.Q.var = self.Q.var[:,keep]
-        self.Q.theta = self.Q.theta[:,keep]
-        self.Q.ES = self.Q.ES[:,keep]
-        self.Q.EW = self.Q.EW[:,keep]
-        self.Q.ESW = self.Q.ESW[:,keep]
-        self.Q.ESWW = self.Q.ESWW[:,keep]
-        self.Q.EWW = self.Q.EWW[:,keep]
-        # prior terms (TO-DO: UPDATE EXPECTATIONS)
-        self.P.mean = self.P.mean[:,keep]
-        self.P.var = self.P.var[:,keep]
-        self.P.theta = self.P.theta[:,keep]
-        # others
-        self.K = len(keep)
-        self.dim = (self.D,self.K)
-
-    # def removeFactors(self, idx):
-        # self.P.removeDimensions(axis=1, idx=idx)
-        # self.Q.removeDimensions(axis=1, idx=idx)
-        # self.updateDim(axis=1, new_dim=self.dim[1]-len(idx))
-
-class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
+class Theta_Node(Beta_Unobserved_Variational_Node):
     """
     This class comtain a Theta node associate to factors for which
     we dont have annotations.
@@ -386,7 +349,12 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
     """
 
     def __init__(self, dim, pa, pb, qa, qb, qE=None):
-        Beta_Unobserved_Variational_Node.__init__(self, dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+        # Beta_Unobserved_Variational_Node.__init__(self, dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+        super(Theta_Node,self).__init__(dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+        self.precompute()
+
+    def precompute(self):
+        self.factors_axis = 1
 
     def updateParameters(self, factors_selection=None):
 
@@ -394,8 +362,8 @@ class Theta_Node_No_Annotation(Beta_Unobserved_Variational_Node):
         S = self.markov_blanket['SW'].getExpectations()["ES"]
 
         # Collect parameters from the P and Q distributions of this node
-        Pa, Pb = self.P.params['a'], self.P.params['b']
-        Qa, Qb = self.Q.params['a'], self.Q.params['b']
+        P = self.P.getParameters()
+        Pa, Pb = P['a'], P['b']
 
         # Precompute terms
         if factors_selection is not None:
@@ -443,9 +411,15 @@ class Theta_Constant_Node(Constant_Variational_Node):
         self.lnE = s.log(self.value)
         self.lnEInv = s.log(1-self.value)
 
+    def getExpectations(self):
+        return { 'E':self.E, 'lnE':self.lnE, 'lnEInv':self.lnEInv }
 
-    # TO-DO...
-    # def removeFactors(self, idx):
-    #     self.P.removeDimensions(self, idx, axis=1)
-    #     self.Q.removeDimensions(self, idx, axis=1)
+    def removeFactors(self, idx, axis=0):
+        # Ideally we want this node to use the removeFactors defined in Node()
+        # but the problem is that we also need to update the "expectations", so i need
+        # to call precompute()
+        self.value = s.delete(self.value, idx, axis)
+        self.precompute()
+        self.updateDim(axis=axis, new_dim=self.dim[axis]-len(idx))
+
 

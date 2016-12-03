@@ -73,9 +73,9 @@ class Y_Node(Constant_Variational_Node):
         return lik
 
 class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
-    def __init__(self, dim, pmean, pvar, qmean, qvar, qE=None):
+    def __init__(self, dim, pmean, pvar, qmean, qvar, qE=None, qE2=None):
         # UnivariateGaussian_Unobserved_Variational_Node.__init__(self, dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE)
-        super(Z_Node,self).__init__(dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE)
+        super(Z_Node,self).__init__(dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE, qE2=qE2)
         self.precompute()
 
     def precompute(self):
@@ -155,7 +155,8 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
 
     def precompute(self):
         self.D = self.dim[0]
-        self.lbconst = s.sum(self.D*(self.P.params['a']*s.log(self.P.params['b']) - special.gammaln(self.P.params['a'])))
+        # self.lbconst = s.sum(self.D*(self.P.params['a']*s.log(self.P.params['b']) - special.gammaln(self.P.params['a'])))
+        self.lbconst = s.sum(self.P.params['a']*s.log(self.P.params['b']) - special.gammaln(self.P.params['a']))
 
     def updateParameters(self):
 
@@ -193,7 +194,6 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         # Do the calculations
         lb_p = self.lbconst + s.sum((Pa-1)*QlnE) - s.sum(Pb*QE)
         lb_q = s.sum(Qa*s.log(Qb)) + s.sum((Qa-1)*QlnE) - s.sum(Qb*QE) - s.sum(special.gammaln(Qa))
-
         return lb_p - lb_q
 
 class Alpha_Node(Gamma_Unobserved_Variational_Node):

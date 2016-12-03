@@ -27,48 +27,27 @@ To-do:
 
 class BayesNet(object):
 
-    def __init__(self, dim={}, nodes={}, schedule=()):
+    # def __init__(self, dim={}, nodes={}, schedule=(), options={}, trial=1):
+    def __init__(self, dim, nodes, schedule, options, trial=1):
         #  dim: dictionary with the dimensions and its keynames, ex. {'N'=10, 'M'=3, ...}
         #  nodes: dictionary with all nodes where the keys are the name of the node and the values are instances of Variational_Node() or Multiview_Variational_Node() 
         #  schedule: tuple with the names of the nodes to be updated in the given order. Nodes not present in schedule will not be updated
-
+        # print schedule
+        # print nodes
         assert len(schedule) == len(nodes), "Different number of nodes and schedules provided"
 
         self.dim = dim
         self.nodes = nodes
         self.schedule = schedule
+        self.options = options
+        self.trial = trial
 
         # If schedule not provided, set it to the provided order of the nodes (use OrderedDict to define an ordered dictionary of the nodes)
-        if len(self.nodes) > 0 and len(self.schedule) == 0:
-            self.schedule = self.nodes.keys()
-
-        # Load default options
-        self.options = self.getDefaultOptions()
+        # if len(self.nodes) > 0 and len(self.schedule) == 0:
+            # self.schedule = self.nodes.keys()
 
         # Training flag
         self.trained = False
-
-    def getDefaultOptions(self):
-        # Method to define the default algorithmic options
-        default_options = {}
-        default_options['maxiter'] = 10
-        default_options['tolerance'] = 1E-4
-        default_options['forceiter'] = False
-        default_options['elbofreq'] = 1
-        default_options['savefreq'] = 1
-        default_options['savefolder'] = "/tmp"
-        default_options['verbosity'] = 2
-        default_options['dropK'] = True
-        default_options['dropK_threshold'] = 0.01
-        return default_options
-
-    # def loadOptions(self, **kwargs):
-    #     # Method to load a predefined set of options
-    #     # Inputs:
-    #     # - 'key': string with the name of the option/parameter
-    #     # - 'value': value of the corresponding option/parameter
-    #     for k in kwargs.keys(): assert k in self.default_options.keys(), "%s option does not exist" % k
-    #     self.options.update(kwargs)
         
     def addNodes(self, **kwargs):
         # Method to add Nodes to the Bayesian network
@@ -100,48 +79,53 @@ class BayesNet(object):
         assert set(schedule).issubset(self.nodes), "Adding schedule for nodes that are not defined"
         self.schedule = schedule
 
-    def removeInactiveFactors(self, threshold):
+    def removeInactiveFactors(self, by_norm=None, by_pvar=None, by_cor=None):
         # Method to remove inactive factors
+        assert not (by_norm == by_pvar == by_cor == None), "You need to set at least one shutting down mechanism"
 
+        drop_dic = {}
         # Option 1: absolute value of latent variable vectors
         #   Good: independent of likelihood type, works with pseudodata
         #   Bad: it is an approximation and covariates are never removed
-        Z = self.nodes["Z"].getExpectation()
-        drop = s.where( s.absolute(Z).mean(axis=0) < threshold )[0]
+        if by_norm is not None:
+            Z = self.nodes["Z"].getExpectation()
+            drop_dic["by_norm"] = s.where( s.absolute(Z).mean(axis=0) < by_norm )[0]
 
         # Option 2: proportion of residual variance explained by each factor
         #   Good: it is the proper way of doing it, 
         #   Bad: slow, does it work well with pseudodata?
-        # Z = self.nodes["Z"].getExpectation()
-        # Y = self.nodes["Y"].getExpectation()
-        # tau = self.nodes["tau"].getExpectation()
-        # alpha = self.nodes["alpha"].getExpectation()
+        # if by_var is not None:
+            # Z = self.nodes["Z"].getExpectation()
+            # Y = self.nodes["Y"].getExpectation()
+            # tau = self.nodes["tau"].getExpectation()
+            # alpha = self.nodes["alpha"].getExpectation()
 
-        # factor_pvar = s.zeros((self.dim['M'],self.dim['K']))
-        # for m in xrange(self.dim['M']):
-        #     residual_var = (s.var(Y[m],axis=0) - 1/tau[m]).sum()
-        #     for k in xrange(self.dim["K"]):
-        #         factor_var = (self.dim["D"][m]/alpha[m][k])# * s.var(Z[:,k])
-        #         factor_pvar[m,k] = factor_var / residual_var
-        # drop = s.where( (factor_pvar>threshold).sum(axis=0) == 0)[0]
+            # factor_pvar = s.zeros((self.dim['M'],self.dim['K']))
+            # for m in xrange(self.dim['M']):
+            #     residual_var = (s.var(Y[m],axis=0) - 1/tau[m]).sum()
+            #     for k in xrange(self.dim["K"]):
+            #         factor_var = (self.dim["D"][m]/alpha[m][k])# * s.var(Z[:,k])
+            #         factor_pvar[m,k] = factor_var / residual_var
+            # drop = s.where( (factor_pvar>by_pvar).sum(axis=0) == 0)[0]
 
         # Option 3: highly correlated factors
         # (Q) Which of the two factors should we remove? Maybe the one that explains less variation
-        # Z = self.nodes["Z"].getExpectation()
-        # r = s.absolute(corr(Z.T,Z.T))
-        # s.fill_diagonal(r,0)
-        # r *= s.tri(*r.shape)
-        # drop = s.where(r > 0.80)[0]
-        # if len(drop) > 0:
-        #     drop = [ s.random.choice(drop) ]
+        if by_cor is not None:
+            Z = self.nodes["Z"].getExpectation()
+            r = s.absolute(corr(Z.T,Z.T))
+            s.fill_diagonal(r,0)
+            r *= s.tri(*r.shape)
+            drop_dic["by_cor"] = s.where(r>by_cor)[0]
+            if len(drop_dic["by_cor"]) > 0:
+                drop_dic["by_cor"] = [ s.random.choice(drop_dic["by_cor"]) ]
 
         # Drop the factors
+        drop = s.unique(s.concatenate(drop_dic.values()))
         if len(drop) > 0:
             for node in self.nodes.keys():
                 self.nodes[node].removeFactors(drop)
         self.dim['K'] -= len(drop)
 
-        # Update the active number of latent variables
         if self.dim['K']==0:
             print "Shut down all components, no structure found in the data."
             exit()
@@ -169,8 +153,8 @@ class BayesNet(object):
             t = time();
 
             # Remove inactive latent variables
-            if self.options['dropK'] and iter > 5:
-                self.removeInactiveFactors(self.options['dropK_threshold'])
+            # if (len(self.options['dropK'])>0) and (iter>5):
+            self.removeInactiveFactors(**self.options['dropK'])
             activeK[iter-1] = self.dim["K"]
 
             # Update node by node, with E and M step merged
@@ -188,7 +172,7 @@ class BayesNet(object):
 
                     # Print ELBO monitoring
                     if self.options['verbosity'] > 0:
-                        print "Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, K=%d" % (iter,time()-t,elbo.iloc[i]["total"], delta_elbo, self.dim["K"])
+                        print "Trial %d, Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, K=%d" % (self.trial, iter,time()-t,elbo.iloc[i]["total"], delta_elbo, self.dim["K"])
                     if self.options['verbosity'] == 2:
                         print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
 
@@ -197,11 +181,11 @@ class BayesNet(object):
                         print "Converged!\n"
                         break
                 else:
-                    print "Iteration 1: time=%.2f ELBO=%.2f, K=%d" % (time()-t,elbo.iloc[i]["total"], self.dim["K"])
+                    print "Trial %d, Iteration 1: time=%.2f ELBO=%.2f, K=%d" % (self.trial, time()-t,elbo.iloc[i]["total"], self.dim["K"])
                     if self.options['verbosity'] == 2:
                         print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
             else:
-                if self.options['verbosity'] > 0: print "Iteration %d: time=%.2f, K=%d" % (iter,time()-t,self.dim["K"])
+                if self.options['verbosity'] > 0: print "Iteration %d: time=%.2f, K=%d\n" % (iter,time()-t,self.dim["K"])
 
             # Save the model
             if iter % self.options['savefreq'] == 0:

@@ -188,7 +188,7 @@ class UnivariateGaussian(Distribution):
     H[x] = 0.5*log(sigma^2) + 0.5*(1+log(2pi))
 
     """
-    def __init__(self, dim, mean, var, E=None):
+    def __init__(self, dim, mean, var, E=None, E2=None):
         Distribution.__init__(self, dim)
 
         # Initialise parameters
@@ -197,10 +197,15 @@ class UnivariateGaussian(Distribution):
         self.params = { 'mean':mean, 'var':var }
 
         # Initialise expectations 
+        self.expectations = {}
         if E is None:
             self.updateExpectations()
         else:
-            self.E = s.ones(dim) * E
+            self.expectations['E'] = s.ones(dim)*E 
+
+        if E2 is not None:
+            self.expectations['E2'] = s.ones(dim)*E2 
+
 
         # Check that dimensionalities match
         self.CheckDimensionalities()
@@ -347,7 +352,6 @@ class Bernoulli(Distribution):
     def loglik(self, x):
         assert x.shape == self.dim, "Problem with the dimensionalities"
         return s.sum( x*self.params['theta'] + (1-x)*(1-self.params['theta']) )
-
 class BernoulliGaussian(Distribution):
     """
     Class to store an arbitrary number of Bernoulli-Gaussian distributions (see paper Spike and Slab

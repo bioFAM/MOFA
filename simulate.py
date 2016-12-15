@@ -146,18 +146,19 @@ class Simulate(object):
         elif likelihood == "bernoulli":
             # Slow way
             for m in xrange(self.M):
-                for n in xrange(self.N):
-                    for d in xrange(self.D[m]):
+                # for n in xrange(self.N):
+                    # for d in xrange(self.D[m]):
                         # Without noise
-                        f = sigmoid( s.dot(Z[n,:],W[m][d,:].T) )
+                        # f = sigmoid( s.dot(Z[n,:],W[m][d,:].T) )
                         # With noise, problem: it shifts the sigmoid...
                         # f = sigmoid( s.dot(Z[n,:],W[m][d,:].T) + norm.rvs(loc=0,scale=1/s.sqrt(Tau[m][d])) )
 
                         # Sample from the Bernoulli distributionn
                         # Y[m][n,d] = bernoulli.rvs(f)
                         # Use the more likely state
-                        Y[m][n,d] = s.special.round(f)
-
+                        # Y[m][n,d] = s.special.round(f)
+                f = sigmoid( s.dot(Z,W[m].T) )
+                Y[m] = s.special.round(f)
         # Sample observations using a binomial likelihood
         elif likelihood == "binomial":
             Y = dict(tot=[s.zeros((self.N,self.D[m])) for m in xrange(self.M)],

@@ -30,19 +30,32 @@ CalculateProportionResidualVariance <- function(model, plot=F) {
   M <- length(Y)
   K <- ncol(Z)
   
-  # Calculate observed variance of each view
-  obs_var <- lapply(Y, function(y) apply(y,2,var,na.rm=T) )
+  ## Bayesian approach ##
+  tau <- model@Expectations$Tau
+  alpha <- model@Expectations$Alpha
+  residual_var <- sapply(names(Y), function(m) sum(apply(Y[[m]],2,var,na.rm=T) - 1/tau[[m]]$E))
+  # f_residual_var <- sapply(names(Y), function(m) sum(apply(Y[[m]],2,var) - 1/model@Expectations$Tau[[m]]$E) / sum(apply(Y[[m]],2,var)))
+  D <- sapply(Y, ncol)
+  prvar_mk <- sapply(names(Y), function(m) ((D[m]/alpha[[m]]$E)*apply(Z,2,var)/residual_var[m]))
   
-  # Calculate predicions using the model and the corresponding variance
-  Ypred_m <- lapply(1:M, function(m) Z%*%t(SW[[m]]))
-  pred_var <- lapply(Ypred_m, function(y) apply(y,2,var,na.rm=T) )
+  ## Non-Bayesian approach ##
   
-  # Calculate residual variance of each view
-  rvar_m <- sapply(1:M, function(m) sum(pred_var[[m]])/sum(obs_var[[m]]) )
-  
-  # Calculate fraction of residual variance explained by each factor in each view
-  Ypred_mk <- lapply(1:M, function(m) lapply(1:K, function(k) Z[,k]%*%t(SW[[m]][,k]) ) )
-  # rvar_mk <- sapply(1:M, function(m) sapply(1:K, function(k) sum(apply(Ypred[[m]][[k]],2,var)) / sum(obs_var[[m]]) ) )
+  # # Calculate observed variance of each view
+  # obs_var <- lapply(Y, function(y) apply(y,2,var,na.rm=T) )
+  # 
+  # # Calculate predicions using the model and the corresponding variance
+  # Ypred_m <- lapply(1:M, function(m) Z%*%t(SW[[m]]))
+  # pred_var <- lapply(Ypred_m, function(y) apply(y,2,var,na.rm=T) )
+  # 
+  # # Calculate proportion of residual variance (prvar) of each view (m)
+  # prvar_m <- sapply(1:M, function(m) sum(pred_var[[m]])/sum(obs_var[[m]]) )
+  # 
+  # # Calculate fraction of residual variance explained by each factor in each view
+  # # DOESNT SUM UP TO ONE
+  # Ypred_mk <- lapply(1:M, function(m) lapply(1:K, function(k) Z[,k]%*%t(SW[[m]][,k]) ) )
+  # # prvar_mk <- sapply(1:M, function(m) sapply(1:K, function(k) sum(apply(Ypred_mk[[m]][[k]],2,var)) / sum(obs_var[[m]]) ) )
+  # prvar_mk <- sapply(1:M, function(m) sapply(1:K, function(k) sum(apply(Ypred_mk[[m]][[k]],2,var)) / sum(pred_var[[m]]) ) )
+  # 
   
   # DOESNT SUM UP TO ONE IF I ONLY USE ACTIVE GENES
   # rvar_mk <- sapply(1:M, function(m) sapply(1:K, function(k) {
@@ -52,13 +65,17 @@ CalculateProportionResidualVariance <- function(model, plot=F) {
   #     } else {
   #       sum(apply(Ypred_mk[[m]][[k]][,active_genes],2,var)) / sum(apply(Ypred_m[[m]][,active_genes],2,var)) 
   #     }}))
-  rvar_mk <- sapply(1:M, function(m) sapply(1:K, function(k) 
-    sum(apply(Ypred_mk[[m]][[k]][,active_genes],2,var)) / sum(apply(Ypred_m[[m]][,active_genes],2,var)) ))
+  # rvar_mk <- sapply(1:M, function(m) sapply(1:K, function(k) 
+    # sum(apply(Ypred_mk[[m]][[k]][,active_genes],2,var)) / sum(apply(Ypred_m[[m]][,active_genes],2,var)) ))
   
+  # maybe use alpha...
+  colnames(prvar_mk) <- names(Y)
+  rownames(prvar_mk) <- colnames(Z)
+    
   # Bar plot with the residual variance for each view
   if (plot==T) {
     # TO-DO: PUT THE ZERO DOWN
-    df <- data.frame(view=names(model@TrainData), fvar=rvar_m)
+    df <- data.frame(view=names(model@Data), fvar=rvar_m)
     ggplot(df, aes(x=view,y=fvar)) +
       geom_bar(stat="identity", fill="blue") +
       ylab("Fraction of variance explained by the model") +
@@ -81,5 +98,5 @@ CalculateProportionResidualVariance <- function(model, plot=F) {
         panel.background = element_blank()
       )
   }
-  return(rvar_mk)
+  return(prvar_mk)
 }

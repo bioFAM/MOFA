@@ -9,14 +9,14 @@ FactorsCorrPlot <- function(object, cormethod="pearson", diag=T, display_type="u
   # tl.cex: size of text label for variable names
   # cl.cex: size of color label
   # tl.col: the colour of the text label
-  Z <- object@Expectations$Z
+  Z <- model@Expectations$Z$E
   h <- cor(x=Z, y=Z, method=cormethod)
   corrplot(h, method=visualisation_method, order="original", diag=diag, type=display_type,
            tl.col=tl.col, tl.cex=tl.cex, cl.cex=cl.cex)
 }
 
-corrPlot(gfa, cormethod="pearson", diag=T, display_type="upper", visualisation_method="circle",
-         title="", tl.cex=1.8, cl.cex=0.9, tl.col="black")
+# corrPlot(gfa, cormethod="pearson", diag=T, display_type="upper", visualisation_method="circle",
+         # title="", tl.cex=1.8, cl.cex=0.9, tl.col="black")
 
 # Faced scatterplot between latent variables
 FactorsFacedScatterPlot <- function(object, z_order=NULL, title="") {
@@ -43,4 +43,4 @@ FactorsFacedScatterPlot <- function(object, z_order=NULL, title="") {
   return(p)
 }
 
-FactorsFacedScatterPlot(gfa, z_order=c(1,2,3), title="")
+# FactorsFacedScatterPlot(gfa, z_order=c(1,2,3), title="")

@@ -31,6 +31,7 @@ class PseudoY(Unobserved_Variational_Node):
         Unobserved_Variational_Node.__init__(self, dim)
 
         # Initialise observed data 
+        assert obs.shape == dim, "Problems with the dimensionalities"
         self.obs = obs
 
         # Initialise Zeta
@@ -64,9 +65,10 @@ class PseudoY(Unobserved_Variational_Node):
         # self.N = self.dim[0]
         # self.D = self.dim[1]
         # self.lbconst = -0.5*self.N*self.D*s.log(2*s.pi)
-        self.N = self.dim[0] - ma.getmask(self.obs).sum(axis=0)
-        self.D = self.dim[1]
-        self.lbconst = -0.5*s.sum(self.N)*s.log(2*s.pi)
+        # self.N = self.dim[0] - ma.getmask(self.obs).sum(axis=0)
+        # self.D = self.dim[1]
+        # self.lbconst = -0.5*s.sum(self.N)*s.log(2*s.pi)
+        pass
 
     def updateExpectations(self):
         pass
@@ -75,6 +77,9 @@ class PseudoY(Unobserved_Variational_Node):
         return self.E
 
     def getObservations(self):
+        return self.obs
+
+    def getValue(self):
         return self.obs
 
     def getExpectations(self):
@@ -127,7 +132,6 @@ class Poisson_PseudoY_Node(PseudoY):
 
         # Initialise the observed data
         assert s.all(s.mod(self.obs, 1) == 0), "Data must not contain float numbers, only integers"
-        assert self.obs.shape == dim, "Problems with the dimensionalities"
         assert s.all(self.obs >= 0), "Data must not contain negative numbers"
 
     def ratefn(self, X):
@@ -142,8 +146,6 @@ class Poisson_PseudoY_Node(PseudoY):
         # Update the pseudodata
         kappa = self.markov_blanket["kappa"].getValue()
         self.E = self.Zeta - sigmoid(self.Zeta)*(1-self.obs/self.ratefn(self.Zeta))/kappa
-
-        pass
 
     def calculateELBO(self):
         # Compute Lower Bound using the Poisson likelihood with observed data
@@ -169,7 +171,6 @@ class Bernoulli_PseudoY_Node(PseudoY):
         yhat_ij = zeta_ij - f'(zeta_ij)/kappa 
                 = zeta_ij - 4*(sigmoid(zeta_ij) - y_ij)
 
-
     """
     def __init__(self, dim, obs, Zeta=None, E=None):
         # - dim (2d tuple): dimensionality of each view
@@ -182,8 +183,7 @@ class Bernoulli_PseudoY_Node(PseudoY):
 
     def updateExpectations(self):
         # Update the pseudodata
-        self.E = self.Zeta - 4*(sigmoid(self.Zeta) - self.obs)
-        pass
+        self.E = self.Zeta - 4.*(sigmoid(self.Zeta) - self.obs)
 
     def calculateELBO(self):
         # Compute Lower Bound using the Bernoulli likelihood with observed data
@@ -191,7 +191,6 @@ class Bernoulli_PseudoY_Node(PseudoY):
         W = self.markov_blanket["W"].getExpectation()
         tmp = s.dot(Z,W.T)
         lik = s.sum( self.obs*tmp - s.log(1+s.exp(tmp)) )
-
         return lik
 class Binomial_PseudoY_Node(PseudoY):
     """

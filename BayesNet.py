@@ -23,6 +23,7 @@ A Bayesian network requires the following information:
 
 To-do:
 - More sanity checks (algorithmic options)
+- assert nodes and options and so on is dic
 """
 
 class BayesNet(object):
@@ -49,21 +50,21 @@ class BayesNet(object):
         # Training flag
         self.trained = False
         
-    def addNodes(self, **kwargs):
-        # Method to add Nodes to the Bayesian network
-        # Inputs:
-        #   - **kwargs: instances of a descendent of the class Variational_Node()
-        # Output: dictionary with the mapping name-node(s).
+    # def addNodes(self, **kwargs):
+    #     # Method to add Nodes to the Bayesian network
+    #     # Inputs:
+    #     #   - **kwargs: instances of a descendent of the class Variational_Node()
+    #     # Output: dictionary with the mapping name-node(s).
         
-        # Sanity checks
-        assert len(kwargs) > 0, "Nothing was passed as argument"
-        assert all( [isinstance(x, Node) for x in kwargs.values()] ), "The nodes have to be a Variational_Node class instances"
-        assert len(set(kwargs.keys()).intersection(set(self.nodes.keys()))) == 0, "Some of the nodes is already present"
+    #     # Sanity checks
+    #     assert len(kwargs) > 0, "Nothing was passed as argument"
+    #     assert all( [isinstance(x, Node) for x in kwargs.values()] ), "The nodes have to be a Variational_Node class instances"
+    #     assert len(set(kwargs.keys()).intersection(set(self.nodes.keys()))) == 0, "Some of the nodes is already present"
         
-        # Update the nodes
-        self.nodes.update(kwargs) 
+    #     # Update the nodes
+    #     self.nodes.update(kwargs) 
 
-        pass
+    #     pass
 
     # def updateNodes(self, *kargs):
     #     # Method to update a particular set of nodes in the given order
@@ -81,9 +82,9 @@ class BayesNet(object):
 
     def removeInactiveFactors(self, by_norm=None, by_pvar=None, by_cor=None):
         # Method to remove inactive factors
-        assert not (by_norm == by_pvar == by_cor == None), "You need to set at least one shutting down mechanism"
 
         drop_dic = {}
+
         # Option 1: absolute value of latent variable vectors
         #   Good: independent of likelihood type, works with pseudodata
         #   Bad: it is an approximation and covariates are never removed
@@ -91,6 +92,8 @@ class BayesNet(object):
             Z = self.nodes["Z"].getExpectation()
             drop_dic["by_norm"] = s.where( s.absolute(Z).mean(axis=0) < by_norm )[0]
 
+        # print s.absolute(Z)
+        # print s.absolute(Z).mean(axis=0)
         # Option 2: proportion of residual variance explained by each factor
         #   Good: it is the proper way of doing it, 
         #   Bad: slow, does it work well with pseudodata?
@@ -121,6 +124,7 @@ class BayesNet(object):
 
         # Drop the factors
         drop = s.unique(s.concatenate(drop_dic.values()))
+
         if len(drop) > 0:
             for node in self.nodes.keys():
                 self.nodes[node].removeFactors(drop)
@@ -136,10 +140,9 @@ class BayesNet(object):
     def iterate(self):
         # Method to train the model
 
-        # Sanity checks
+        # Sanity checks 
         assert self.dim["K"] < self.dim["N"], "The number of latent variables have to be smaller than the number of samples"
         assert all(self.dim["D"] > self.dim["K"]), "The number of latent variables have to be smaller than the number of observed variables"
-        if not os.path.exists(self.options['savefolder']): os.makedirs(self.options['savefolder'])
 
         # Initialise variables to monitor training
         vb_nodes = self.getVariationalNodes().keys()
@@ -153,8 +156,8 @@ class BayesNet(object):
             t = time();
 
             # Remove inactive latent variables
-            # if (len(self.options['dropK'])>0) and (iter>5):
-            self.removeInactiveFactors(**self.options['dropK'])
+            if any(self.options['dropK'].values()):
+                self.removeInactiveFactors(**self.options['dropK'])
             activeK[iter-1] = self.dim["K"]
 
             # Update node by node, with E and M step merged
@@ -188,7 +191,7 @@ class BayesNet(object):
                 if self.options['verbosity'] > 0: print "Iteration %d: time=%.2f, K=%d\n" % (iter,time()-t,self.dim["K"])
 
             # Save the model
-            if iter % self.options['savefreq'] == 0:
+            if (self.options['savefreq'] is not s.nan) and (iter % self.options['savefreq'] == 0):
                 savefile = "%s/%d_model.pkl" % (self.options['savefolder'], iter)
                 if self.options['verbosity'] == 2: print "Saving the model in %s\n" % savefile 
                 pkl.dump(self, open(savefile,"wb"))
@@ -241,7 +244,7 @@ class BayesNet(object):
 
     def getTrainingData(self):
         # Method to return training options
-        return self.nodes["Y"].getObservations()
+        return self.nodes["Y"].getValues()
 
     def calculateELBO(self, *nodes):
         # Method to calculate the Evidence Lower Bound for a set of nodes

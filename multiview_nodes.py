@@ -118,5 +118,6 @@ class Multiview_Mixed_Node(Multiview_Constant_Node, Multiview_Variational_Node):
                 lb += self.nodes[m].calculateELBO()
         return lb
 
-    # def getObservations(self):
-        # return [ self.nodes[m].getObservations() for m in self.activeM ]
+    def getValues(self):
+        # AT SOME POINT WE HAVE TO REMOVE THIS FUNCTION AND REPLACE IT BY VALUE
+        return [ self.nodes[m].getValue() for m in self.activeM ]

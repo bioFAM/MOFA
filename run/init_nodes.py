@@ -1,6 +1,10 @@
 
 """
 Module to initalise the nodes
+
+TO-DO:
+- add covariates
+
 """
 
 import scipy as s
@@ -13,6 +17,7 @@ from nodes import *
 from multiview_nodes import *
 from seeger_nodes import *
 from sparse_updates import *
+
 
 # General class to initialise a Group Factor Analysis model
 class initModel(object):
@@ -41,31 +46,41 @@ class init_scGFA(initModel):
     def __init__(self, dim, data, lik):
         initModel.__init__(self, dim, data, lik)
 
-    def initZ(self, pmean, pvar, qmean, qvar, qE, qE2):
+    def initZ(self, pmean, pvar, qmean, qvar, qE=None, qE2=None, covariates=None):
         # Method to initialise the latent variables
+        # covariates (nd array): matrix of covariates with dimensions (nsamples,ncovariates)
 
         # Initialise first moment
-        if isinstance(qE,str):
-            if qE == "random":
-                qE = stats.norm.rvs(loc=0, scale=1, size=(self.N,self.K))
-            elif qE == "orthogonal":
-                print "Not implemented"
+        if qmean is not None:
+            if isinstance(qmean,str):
+                if qmean == "random":
+                    qmean = stats.norm.rvs(loc=0, scale=1, size=(self.N,self.K))
+                elif qmean == "orthogonal":
+                    print "Not implemented"
+                    exit()
+                elif qmean == "pca":
+                    pca = sklearn.decomposition.PCA(n_components=self.K, copy=True, whiten=True)
+                    tmp = s.concatenate(self.data,axis=0).T
+                    pca.fit(tmp)
+                    qmean = pca.components_.T
+
+            elif isinstance(qmean,s.ndarray):
+                assert qmean.shape == (self.N,self.K)
+
+            elif isinstance(qmean,(int,float)):
+                qmean = s.ones((self.N,self.K)) * qmean
+
+            else:
+                print "Wrong initialisation for Z"
                 exit()
-            elif qE == "pca":
-                pca = sklearn.decomposition.PCA(n_components=self.K, copy=True, whiten=True)
-                tmp = s.concatenate(self.data,axis=0).T
-                pca.fit(tmp)
-                qE = pca.components_.T
 
-        elif isinstance(qE,s.ndarray):
-            assert qE.shape == (self.N,self.K)
 
-        elif isinstance(qE,(int,float)):
-            qE = s.ones((self.N,self.K)) * qE
-
-        else:
-            print "Wrong initialisation for Z"
-            exit()
+        # Add covariates
+        if covariates is not None:
+            idx_covariates = s.arange(self.K)[-covariates.shape[1]:]
+            qmean[:,idx_covariates] = covariates
+            # qmean = s.c_[ qmean, covariates ]
+            # idx_covariates = s.arange(covariates.shape[1]) + self.K
 
         # Initialise the node
         self.Z = Z_Node(dim=(self.N,self.K), 
@@ -73,7 +88,8 @@ class init_scGFA(initModel):
                         pvar=s.ones((self.N,self.K))*pvar, 
                         qmean=s.ones((self.N,self.K))*qmean, 
                         qvar=s.ones((self.N,self.K))*qvar, 
-                        qE=qE, qE2=qE2)
+                        qE=qE, qE2=qE2,
+                        idx_covariates=idx_covariates)
         self.nodes["Z"] = self.Z
 
     def initSW(self, pmean_S0, pmean_S1, pvar_S0, pvar_S1, ptheta, qmean_S0, qmean_S1, qvar_S0, qvar_S1, qtheta, qEW_S0=None, qEW_S1=None, qES=None):
@@ -178,13 +194,13 @@ class init_scGFA(initModel):
 
     def MarkovBlanket(self):
         # Method to define the markov blanket
-        self.Z.addMarkovBlanket(SW=self.SW, tau=self.Tau, Y=self.Y)
+        self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y)
         for m in xrange(self.M):
             self.Theta.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m])
             self.Alpha.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m])
-            self.SW.nodes[m].addMarkovBlanket(Z=self.Z, tau=self.Tau.nodes[m], alpha=self.Alpha.nodes[m], Y=self.Y.nodes[m], Theta=self.Theta.nodes[m])
+            self.SW.nodes[m].addMarkovBlanket(Z=self.Z, Tau=self.Tau.nodes[m], Alpha=self.Alpha.nodes[m], Y=self.Y.nodes[m], Theta=self.Theta.nodes[m])
             if self.lik[m] is "gaussian":
-                self.Y.nodes[m].addMarkovBlanket(Z=self.Z, SW=self.SW.nodes[m], tau=self.Tau.nodes[m])
+                self.Y.nodes[m].addMarkovBlanket(Z=self.Z, SW=self.SW.nodes[m], Tau=self.Tau.nodes[m])
                 self.Tau.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m], Z=self.Z, Y=self.Y.nodes[m])
             else:
                 self.Y.nodes[m].addMarkovBlanket(Z=self.Z, W=self.SW.nodes[m], kappa=self.Tau.nodes[m])

@@ -24,11 +24,11 @@ from utils import *
 ###################
 
 # Define dimensionalities
-M = 3
+M = 1
 N = 100
-D = s.asarray([100,100,100])
+# D = s.asarray([100,100,100])
+D = s.asarray([10000])
 K = 6
-
 
 ## Simulate data  ##
 data = {}
@@ -48,50 +48,54 @@ data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
 
 data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
 data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
-data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
-data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
+# data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
+# data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
 theta = [ s.ones(K)*0.5 for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
 
 data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 
-data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
+# data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
+data['tau']= [ s.ones(D[m])*2 for m in xrange(M) ]
 
-Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-	likelihood="gaussian", missingness=0.00)
-Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-	likelihood="poisson", missingness=0.00)
+# Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+	# likelihood="gaussian", missingness=0.00)
+# Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+	# likelihood="poisson", missingness=0.00)
 Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
 	likelihood="bernoulli", missingness=0.00)
 # Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
 	# likelihood="binomial", min_trials=10, max_trials=50, missingness=0.05)
 
-data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
-# data["Y"] = Y_bernoulli
+# data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
+# data["Y"] = ( Y_bernoulli[0], Y_bernoulli[1], Y_bernoulli[2] )
+# data["Y"] = (Y_bernoulli[0],Y_bernoulli[1])
+# data["Y"] = (Y_gaussian[0],Y_gaussian[1])
 # data["Y"] = Y_poisson
 # data["Y"] = Y_binomial
-# data["Y"] = Y_gaussian
+# data["Y"] = (Y_gaussian[0],)
+# data["Y"] = (Y_poisson[0],)
+data["Y"] = (Y_bernoulli[0],)
 
-# likelihood = ["gaussian","gaussian","gaussian"]
-# view_names = ["gaussian1","gaussian2","gaussian3"]
-likelihood = ["gaussian","poisson","bernoulli"]
+# likelihood = ["bernoulli","bernoulli","bernoulli"]
+likelihood = ["bernoulli"]
+# likelihood = ["gaussian","gaussian"]
+# view_names = ["foo","bar"]
 view_names = likelihood
 
 #################################
 ## Initialise Bayesian Network ##
 #################################
 
-net = BayesNet()
-
 # Define initial number of latent variables
 K = 10
 
-# Define model dimensionalities
-net.dim["M"] = M
-net.dim["N"] = N
-net.dim["D"] = D
-net.dim["K"] = K
+dim = {}
+dim["M"] = M
+dim["N"] = N
+dim["D"] = D
+dim["K"] = K
 
 ###############
 ## Add nodes ##
@@ -124,7 +128,7 @@ for m in xrange(M):
 	alpha_list[m] = Alpha_Node(dim=(K,), pa=alpha_pa, pb=alpha_pb, qa=alpha_qa, qb=alpha_qb, qE=alpha_qE)
 	alpha_qa = alpha_pa + s.ones(K)*D[m]/2
 	# alpha_list[m] = Alpha_Node(dim=(K,), pa=alpha_pa, pb=alpha_pb, qa=alpha_qa[m], qb=alpha_qb, qE=alpha_qE)
-alpha = Multiview_Variational_Node((K,)*M, *alpha_list)
+Alpha = Multiview_Variational_Node((K,)*M, *alpha_list)
 
 
 # SW (variational node)
@@ -146,7 +150,6 @@ for m in xrange(M):
         qmean_S0=Q_mean_S0, qmean_S1=Q_mean_S1, qvar_S0=Q_var_S0, qvar_S1=Q_var_S1, qtheta=Q_theta, qEW_S0=None, qEW_S1=None, qES=None)
 SW = Multiview_Variational_Node(M, *SW_list)
 
-
 # tau/kappa (mixed node)
 tau_list = [None]*M
 for m in xrange(M):
@@ -166,7 +169,7 @@ for m in xrange(M):
 		tau_qb = s.nan
 		tau_qE = s.zeros(D[m]) + 100
 		tau_list[m] = Tau_Node(dim=(D[m],), pa=tau_pa, pb=tau_pb, qa=tau_qa, qb=tau_qb, qE=tau_qE)
-tau = Multiview_Mixed_Node(M,*tau_list)
+Tau = Multiview_Mixed_Node(M,*tau_list)
 
 # Y/Yhat (mixed node)
 Y_list = [None]*M
@@ -203,63 +206,54 @@ else:
 ## Define Markov Blankets ##
 ############################
 
-Z.addMarkovBlanket(SW=SW, tau=tau, Y=Y)
+Z.addMarkovBlanket(SW=SW, Tau=Tau, Y=Y)
 for m in xrange(M):
 	Theta.nodes[m].addMarkovBlanket(SW=SW.nodes[m])
-	alpha.nodes[m].addMarkovBlanket(SW=SW.nodes[m])
-	SW.nodes[m].addMarkovBlanket(Z=Z, tau=tau.nodes[m], alpha=alpha.nodes[m], Y=Y.nodes[m], Theta=Theta.nodes[m])
+	Alpha.nodes[m].addMarkovBlanket(SW=SW.nodes[m])
+	SW.nodes[m].addMarkovBlanket(Z=Z, Tau=Tau.nodes[m], Alpha=Alpha.nodes[m], Y=Y.nodes[m], Theta=Theta.nodes[m])
 	if likelihood[m] == "gaussian":
-		Y.nodes[m].addMarkovBlanket(Z=Z, SW=SW.nodes[m], tau=tau.nodes[m])
-		tau.nodes[m].addMarkovBlanket(SW=SW.nodes[m], Z=Z, Y=Y.nodes[m])
+		Y.nodes[m].addMarkovBlanket(Z=Z, SW=SW.nodes[m], Tau=Tau.nodes[m])
+		Tau.nodes[m].addMarkovBlanket(SW=SW.nodes[m], Z=Z, Y=Y.nodes[m])
 	else:
-		Y.nodes[m].addMarkovBlanket(Z=Z, W=SW.nodes[m], kappa=tau.nodes[m])
+		Y.nodes[m].addMarkovBlanket(Z=Z, W=SW.nodes[m], kappa=Tau.nodes[m])
 
-##################################
-## Update required expectations ##
-##################################
+# Update required expectations
+Z.updateExpectations()
+Theta.updateExpectations()
 
-# TO-DO: WE SHOUDL DO SOMETHING WITH THIS
-SW.updateExpectations()
-Z.Q.updateExpectations()
-
-##################################
-## Add the nodes to the network ##
-##################################
-
-net.addNodes(Theta=Theta, SW=SW, tau=tau, Z=Z, Y=Y, alpha=alpha)
-
-# Define update schedule
-schedule = ["Y","SW","Z","alpha","tau","Theta"]
-
-net.setSchedule(schedule)
+schedule = ["Y","SW","Z","Alpha","Tau","Theta"]
+nodes = { "Theta":Theta, "SW":SW, "Tau":Tau, "Z":Z, "Y":Y, "Alpha":Alpha }
 
 #############################
 ## Define training options ##
 #############################
 
 options = {}
-options['maxiter'] = 400
+options['maxiter'] = 5
 options['tolerance'] = 1E-2
 options['forceiter'] = True
 # options['elbofreq'] = options['maxiter']+1
 options['elbofreq'] = 1
-options['dropK'] = {}
-options['dropK']['by_norm'] = 0.01
-options['dropK']['by_pvar'] = None
-options['dropK']['by_cor'] = 0.80
+options['dropK'] = { 'by_norm':None, 'by_pvar':None, 'by_cor':None }
 options['savefreq'] = options['maxiter']+1
 options['savefolder'] = "/tmp/test"
 options['verbosity'] = 2
-net.options = options
 
 
 ####################
 ## Start training ##
 ####################
 
+net = BayesNet(dim=dim, schedule=schedule, nodes=nodes, options=options)
 net.iterate()
 
-exit()
+# s.set_printoptions(precision=2, suppress=True)
+# print net.getExpectations()["Alpha"][0]['E']
+# print net.getExpectations()["Theta"][0]['E']
+# exit()
+# print net.getExpectations()["Alpha"][1]['E']
+# print net.getExpectations()["Alpha"][2]['E']
+# print net.getExpectations()["SW"][0]['ES'][:,]
 
 ##################
 ## Save results ##
@@ -269,5 +263,8 @@ print "\nSaving model..."
 sample_names = [ "sample_%d" % n for n in xrange(N)]
 feature_names = [[ "feature_%d" % n for n in xrange(D[m])] for m in xrange(M)]
 
+# print sample_names
+# print feature_names
+# exit()
 saveModel(net, outfile="/tmp/test/asd.hd5", view_names=view_names, 
 	sample_names=sample_names, feature_names=feature_names)

@@ -33,9 +33,8 @@ class BayesNet(object):
         #  dim: dictionary with the dimensions and its keynames, ex. {'N'=10, 'M'=3, ...}
         #  nodes: dictionary with all nodes where the keys are the name of the node and the values are instances of Variational_Node() or Multiview_Variational_Node() 
         #  schedule: tuple with the names of the nodes to be updated in the given order. Nodes not present in schedule will not be updated
-        # print schedule
-        # print nodes
-        assert len(schedule) == len(nodes), "Different number of nodes and schedules provided"
+        #  options:
+        #  trial: 
 
         self.dim = dim
         self.nodes = nodes
@@ -43,42 +42,9 @@ class BayesNet(object):
         self.options = options
         self.trial = trial
 
-        # If schedule not provided, set it to the provided order of the nodes (use OrderedDict to define an ordered dictionary of the nodes)
-        # if len(self.nodes) > 0 and len(self.schedule) == 0:
-            # self.schedule = self.nodes.keys()
-
         # Training flag
         self.trained = False
-        
-    # def addNodes(self, **kwargs):
-    #     # Method to add Nodes to the Bayesian network
-    #     # Inputs:
-    #     #   - **kwargs: instances of a descendent of the class Variational_Node()
-    #     # Output: dictionary with the mapping name-node(s).
-        
-    #     # Sanity checks
-    #     assert len(kwargs) > 0, "Nothing was passed as argument"
-    #     assert all( [isinstance(x, Node) for x in kwargs.values()] ), "The nodes have to be a Variational_Node class instances"
-    #     assert len(set(kwargs.keys()).intersection(set(self.nodes.keys()))) == 0, "Some of the nodes is already present"
-        
-    #     # Update the nodes
-    #     self.nodes.update(kwargs) 
 
-    #     pass
-
-    # def updateNodes(self, *kargs):
-    #     # Method to update a particular set of nodes in the given order
-    #     # Input:
-    #     # - *kargs: the key(s) associated with the node(s) to be updated
-    #     for name in kargs: 
-    #         self.nodes[name].update(self)
-
-    def setSchedule(self, schedule):
-        # Method to define the schedule of updates
-        # Input:
-        # - schedule: list of the names of the nodes as given in the 'nodes' attribute
-        assert set(schedule).issubset(self.nodes), "Adding schedule for nodes that are not defined"
-        self.schedule = schedule
 
     def removeInactiveFactors(self, by_norm=None, by_pvar=None, by_cor=None):
         # Method to remove inactive factors
@@ -136,15 +102,9 @@ class BayesNet(object):
 
         pass
 
-
     def iterate(self):
-        # Method to train the model
 
-        # Sanity checks 
-        assert self.dim["K"] < self.dim["N"], "The number of latent variables have to be smaller than the number of samples"
-        assert all(self.dim["D"] > self.dim["K"]), "The number of latent variables have to be smaller than the number of observed variables"
-
-        # Initialise variables to monitor training
+        # Define some variables to monitor training
         vb_nodes = self.getVariationalNodes().keys()
         elbo = pd.DataFrame(data = s.zeros( ((int(self.options['maxiter']/self.options['elbofreq'])-1), len(vb_nodes)+1 )),
                             index = xrange(1,(int(self.options['maxiter']/self.options['elbofreq']))),
@@ -183,14 +143,18 @@ class BayesNet(object):
                     if (delta_elbo < self.options['tolerance']) and (not self.options['forceiter']):
                         print "Converged!\n"
                         break
+
+                # Print first iteration
                 else:
                     print "Trial %d, Iteration 1: time=%.2f ELBO=%.2f, K=%d" % (self.trial, time()-t,elbo.iloc[i]["total"], self.dim["K"])
                     if self.options['verbosity'] == 2:
                         print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
+
+            # Do not calculate lower bound
             else:
                 if self.options['verbosity'] > 0: print "Iteration %d: time=%.2f, K=%d\n" % (iter,time()-t,self.dim["K"])
 
-            # Save the model
+            # Save temporary model
             if (self.options['savefreq'] is not s.nan) and (iter % self.options['savefreq'] == 0):
                 savefile = "%s/%d_model.pkl" % (self.options['savefolder'], iter)
                 if self.options['verbosity'] == 2: print "Saving the model in %s\n" % savefile 
@@ -199,8 +163,6 @@ class BayesNet(object):
         # Finish by collecting the training statistics
         self.train_stats = { 'activeK':activeK, 'elbo':elbo["total"].values, 'elbo_terms':elbo.drop("total",1) }
         self.trained = True
-
-        pass
 
     def getParameters(self, *nodes):
         # Method to collect all parameters of a given set of nodes (all by default)

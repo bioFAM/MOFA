@@ -3,6 +3,7 @@ import scipy as s
 from scipy.stats import bernoulli, norm, gamma, uniform, poisson, binom
 from random import sample
 import numpy.ma as ma
+import warnings
 
 from utils import sigmoid
 
@@ -109,13 +110,15 @@ class Simulate(object):
 
         # Sample observations using a gaussian likelihood
         if likelihood == "gaussian":
+            warnings.warn("Slow and Fast simulators do not match, why?")
             # Fast way (I THINK THERE IS A PROBLEM WITH IT, NOT SURE WHY)
-            # for m in xrange(self.M):
-                # Y[m] = s.dot(Z,W[m].T) + Mu[m] + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m])).T
             for m in xrange(self.M):
-                for n in xrange(self.N):
-                    for d in xrange(self.D[m]):
-                        Y[m][n,d] = s.dot(Z[n,:],W[m][d,:].T) + Mu[m][d] + norm.rvs(loc=0,scale=1/s.sqrt(Tau[m][d]))
+                Y[m] = s.dot(Z,W[m].T) + Mu[m] + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m])).T
+
+            # for m in xrange(self.M):
+            #     for n in xrange(self.N):
+            #         for d in xrange(self.D[m]):
+            #             Y[m][n,d] = s.dot(Z[n,:],W[m][d,:].T) + Mu[m][d] + norm.rvs(loc=0,scale=1/s.sqrt(Tau[m][d]))
 
         # Sample observations using a poisson likelihood
         elif likelihood == "poisson":

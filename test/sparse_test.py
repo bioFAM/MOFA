@@ -26,62 +26,68 @@ from utils import *
 # Define dimensionalities
 M = 1
 N = 100
-# D = s.asarray([100,100,100])
-D = s.asarray([10000])
+D = s.asarray([5000,])
 K = 6
 
 ## Simulate data  ##
 data = {}
-tmp = Simulate(M=M, N=N, D=D, K=K)
+# tmp = Simulate(M=M, N=N, D=D, K=K)
 
-data['Z'] = s.zeros((N,K))
-data['Z'][:,0] = s.sin(s.arange(1,N+1)/(N/20))
-data['Z'][:,1] = s.cos(s.arange(N)/(N/20))
-data['Z'][:,2] = 2*(s.arange(N)/N-0.5)
-data['Z'][:,3] = stats.norm.rvs(loc=0, scale=1, size=N)
-data['Z'][:,4] = stats.norm.rvs(loc=0, scale=1, size=N)
-data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
+# data['Z'] = s.zeros((N,K))
+# data['Z'][:,0] = s.sin(s.arange(1,N+1)/(N/20))
+# data['Z'][:,1] = s.cos(s.arange(N)/(N/20))
+# data['Z'][:,2] = 2*(s.arange(N)/N-0.5)
+# data['Z'][:,3] = stats.norm.rvs(loc=0, scale=1, size=N)
+# data['Z'][:,4] = stats.norm.rvs(loc=0, scale=1, size=N)
+# data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
 
 # Add a known covariate
-# data['Z'] = s.c_[ data['Z'], s.asarray([True,False]*(N/2), dtype=s.float32) ]
-# covariate = 6
+# data['Z'][:,5] = s.asarray([True,False]*int(N/2), dtype=s.float32)
 
-data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
-data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
+# data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
+# data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
 # data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
 # data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
-theta = [ s.ones(K)*0.5 for m in xrange(M) ]
-data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
+# theta = [ s.ones(K)*0.5 for m in xrange(M) ]
+# data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
 
-data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
+# data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 
 # data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
-data['tau']= [ s.ones(D[m])*2 for m in xrange(M) ]
+# data['tau']= [ s.ones(D[m])*2 for m in xrange(M) ]
 
 # Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-	# likelihood="gaussian", missingness=0.00)
+	# likelihood="gaussian", missingness=0.05)
 # Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
 	# likelihood="poisson", missingness=0.00)
-Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-	likelihood="bernoulli", missingness=0.00)
+# Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+	# likelihood="bernoulli", missingness=0.00)
 # Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
 	# likelihood="binomial", min_trials=10, max_trials=50, missingness=0.05)
 
 # data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 # data["Y"] = ( Y_bernoulli[0], Y_bernoulli[1], Y_bernoulli[2] )
 # data["Y"] = (Y_bernoulli[0],Y_bernoulli[1])
-# data["Y"] = (Y_gaussian[0],Y_gaussian[1])
+# data["Y"] = Y_gaussian
 # data["Y"] = Y_poisson
 # data["Y"] = Y_binomial
 # data["Y"] = (Y_gaussian[0],)
 # data["Y"] = (Y_poisson[0],)
-data["Y"] = (Y_bernoulli[0],)
+# data["Y"] = (Y_bernoulli[0],)
+
+tmp = pd.read_csv("/Users/ricard/git/britta/processed_data/joined/txt/expr_lincRNA.txt", delimiter="\t", header=0, index_col=0)
+tmp = (tmp - tmp.mean())
+N,D = tmp.shape[0],s.asarray([tmp.shape[1]])
+data["Y"] = (tmp, )
+s.random.seed(3)
 
 # likelihood = ["bernoulli","bernoulli","bernoulli"]
-likelihood = ["bernoulli"]
-# likelihood = ["gaussian","gaussian"]
-# view_names = ["foo","bar"]
+# likelihood = ["bernoulli"]
+likelihood = ["gaussian"]
+# likelihood = ["gaussian","gaussian","gaussian"]
+
+# view_names = ["foo","bar","baz"]
 view_names = likelihood
 
 #################################
@@ -107,22 +113,22 @@ Z_pvar = 1.
 Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K))
 Z_qvar = s.ones((N,K))
 Z = Z_Node(dim=(N,K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar)
-
 # Z with covariates (variational node)
 # Z_pmean = 0.
 # Z_pvar = 1.
 # Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K-1))
-# Z_qmean = s.c_[ Z_qmean, s.asarray([True,False]*(N/2), dtype=s.float32) ]
+# Z_qmean = s.c_[ Z_qmean, s.asarray([True,False]*int(N/2), dtype=s.float32) ]
 # Z_qvar = s.ones((N,K))
-# Z = Z_Node(dim=(N,K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar)
-# Z.setCovariates(idx=K-1)
+# Z = Z_Node(dim=(N,K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar, idx_covariates=K-1)
 
 # alpha (variational node)
 alpha_list = [None]*M
-alpha_pa = 1e-14
-alpha_pb = 1e-14
-alpha_qb = s.ones(K)
-alpha_qa = s.ones(K)
+alpha_pa = 1e-5
+alpha_pb = 1e-5
+# alpha_qb = s.ones(K)
+alpha_qb = s.nan
+# alpha_qa = s.ones(K)
+alpha_qa = s.nan
 alpha_qE = s.ones(K)*100
 for m in xrange(M):
 	alpha_list[m] = Alpha_Node(dim=(K,), pa=alpha_pa, pb=alpha_pb, qa=alpha_qa, qb=alpha_qb, qE=alpha_qE)
@@ -186,7 +192,7 @@ Y = Multiview_Mixed_Node(M, *Y_list)
 
 # Theta node
 Theta_list = [None] * M
-learn_theta = False
+learn_theta = True
 if learn_theta:
 	theta_pa = 1.
 	theta_pb = 1.
@@ -221,7 +227,7 @@ for m in xrange(M):
 Z.updateExpectations()
 Theta.updateExpectations()
 
-schedule = ["Y","SW","Z","Alpha","Tau","Theta"]
+schedule = ["SW","Z","Alpha","Tau","Theta"]
 nodes = { "Theta":Theta, "SW":SW, "Tau":Tau, "Z":Z, "Y":Y, "Alpha":Alpha }
 
 #############################
@@ -229,7 +235,7 @@ nodes = { "Theta":Theta, "SW":SW, "Tau":Tau, "Z":Z, "Y":Y, "Alpha":Alpha }
 #############################
 
 options = {}
-options['maxiter'] = 5
+options['maxiter'] = 200
 options['tolerance'] = 1E-2
 options['forceiter'] = True
 # options['elbofreq'] = options['maxiter']+1
@@ -245,15 +251,9 @@ options['verbosity'] = 2
 ####################
 
 net = BayesNet(dim=dim, schedule=schedule, nodes=nodes, options=options)
+
 net.iterate()
 
-# s.set_printoptions(precision=2, suppress=True)
-# print net.getExpectations()["Alpha"][0]['E']
-# print net.getExpectations()["Theta"][0]['E']
-# exit()
-# print net.getExpectations()["Alpha"][1]['E']
-# print net.getExpectations()["Alpha"][2]['E']
-# print net.getExpectations()["SW"][0]['ES'][:,]
 
 ##################
 ## Save results ##
@@ -263,8 +263,5 @@ print "\nSaving model..."
 sample_names = [ "sample_%d" % n for n in xrange(N)]
 feature_names = [[ "feature_%d" % n for n in xrange(D[m])] for m in xrange(M)]
 
-# print sample_names
-# print feature_names
-# exit()
 saveModel(net, outfile="/tmp/test/asd.hd5", view_names=view_names, 
 	sample_names=sample_names, feature_names=feature_names)

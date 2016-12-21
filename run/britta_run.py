@@ -42,10 +42,11 @@ def loadData(data_opts, verbose=True):
     Y = list()
     for m in xrange(len(data_opts['input_files'])):
         file = data_opts['input_files'][m]
-        print "Loading %s..." % file
 
         # Read file (with row and column names)
+
         tmp = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"])
+        print "Loaded %s with dim (%d,%d)..." % (file, tmp.shape[0], tmp.shape[1])
 
         # Center the data
         if data_opts['center'][m]: 
@@ -85,11 +86,12 @@ def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=Fal
 
     if verbose: print "Initialising nodes...\n"
 
-    init = init_scGFA(dim, data, model_opts["likelihood"])
+    init = init_scGFA(dim, data, model_opts["likelihood"], seed=seed)
 
     init.initZ(pmean=model_opts["priorZ"]["mean"], pvar=model_opts["priorZ"]["var"],
                qmean=model_opts["initZ"]["mean"], qvar=model_opts["initZ"]["var"], qE=model_opts["initZ"]["E"], qE2=model_opts["initZ"]["E2"],
                covariates=model_opts['covariates'])
+
 
     init.initSW(ptheta=model_opts["priorSW"]["Theta"], pmean_S0=model_opts["priorSW"]["mean_S0"], pvar_S0=model_opts["priorSW"]["var_S0"], pmean_S1=model_opts["priorSW"]["mean_S1"], pvar_S1=model_opts["priorSW"]["var_S1"],
                 qtheta=model_opts["initSW"]["Theta"], qmean_S0=model_opts["initSW"]["mean_S0"], qvar_S0=model_opts["initSW"]["var_S0"], qmean_S1=model_opts["initSW"]["mean_S1"], qvar_S1=model_opts["initSW"]["var_S1"],
@@ -97,6 +99,7 @@ def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=Fal
 
     init.initAlpha(pa=model_opts["priorAlpha"]['a'], pb=model_opts["priorAlpha"]['b'], 
                    qa=model_opts["initAlpha"]['a'], qb=model_opts["initAlpha"]['b'], qE=model_opts["initAlpha"]['E'])
+
 
     init.initTau(pa=model_opts["priorTau"]['a'], pb=model_opts["priorTau"]['b'], 
                  qa=model_opts["initTau"]['a'], qb=model_opts["initTau"]['b'], qE=model_opts["initTau"]['E'])
@@ -129,6 +132,8 @@ def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=Fal
     ## Start training ##
     ####################
 
+    print "Starting training...\n"
+
     net.iterate()
 
     #####################
@@ -138,7 +143,7 @@ def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=Fal
     return net
 
 # Function to run multiple trials of the model
-def runMultipleTrials(data_opts, model_opts, train_opts, cores, verbose=True):
+def runMultipleTrials(data_opts, model_opts, train_opts, cores, keep_best_run, verbose=True):
     
     # If it doesnt exist, create the output folder
     outdir = os.path.dirname(train_opts['outfile'])
@@ -153,24 +158,38 @@ def runMultipleTrials(data_opts, model_opts, train_opts, cores, verbose=True):
     #########################
     ## Run parallel trials ##
     ########################
+    seed = 3
+    trained_models = Parallel(n_jobs=cores, backend="threading")(
+        delayed(runSingleTrial)(data,model_opts,train_opts,seed,i,verbose) for i in xrange(1,train_opts['trials']+1))
 
-    trials = Parallel(n_jobs=cores, backend="threading")(
-        delayed(runSingleTrial)(data,model_opts,train_opts,None,i,verbose) for i in xrange(1,train_opts['trials']+1))
+    print "\n"
+    print "#"*43
+    print "## Training finished, processing results ##"
+    print "#"*43
+    print "\n"
 
     #####################
     ## Process results ##
     #####################
 
+
     # Select the trial with the best lower bound
-    lb = map(lambda x: x.getTrainingStats()["elbo"][-1], trials)
-    best_model = trials[s.argmax(lb)]
+    if keep_best_run:
+        lb = map(lambda x: x.getTrainingStats()["elbo"][-1], trained_models)
+        save_models = [ trials[s.argmax(lb)] ]
+        outfiles = [ train_opts['outfile'] ]
+    else:
+        save_models = trained_models
+        tmp = os.path.splitext(train_opts['outfile'])
+        outfiles = [ tmp[0]+str(t)+tmp[1]for t in xrange(train_opts['trials']) ]
 
     # Save the results
-    print "\nSaving model in %s..." % train_opts['outfile']
     sample_names = data[0].index.tolist()
     feature_names = [  data[m].columns.values.tolist() for m in xrange(len(data)) ]
-    saveModel(best_model, outfile=train_opts['outfile'], view_names=data_opts['view_names'], 
-        sample_names=sample_names, feature_names=feature_names)
+    for t in xrange(len(save_models)):
+        print "Saving model %d in %s...\n" % (t,outfiles[t])
+        saveModel(save_models[t], outfile=outfiles[t], view_names=data_opts['view_names'], 
+            sample_names=sample_names, feature_names=feature_names)
 
 
 
@@ -183,15 +202,22 @@ if __name__ == '__main__':
     data_opts = {}
 
     if 'Kvothe' in gethostname():
-        base_folder = "/Users/ricard/git/britta/processed_data/joined"
+        base_folder = "/Users/ricard/git/britta/processed_data/joined/txt"
     elif 'yoda' in gethostname():
-        base_folder = "/homes/ricard/CLL/processed_data/joined"
+        base_folder = "/homes/ricard/CLL/processed_data/joined/txt"
     else:
         print "Computer not recognised"
         exit()
 
-    # data_opts['view_names'] = ( "expr",  "met_3utr","met_5utr","met_cds_genebody","met_noncds_genebody","met_intergenic","met_prom2k",  "surv1","surv2","surv3","surv4","surv5" )
-    data_opts['view_names'] = ( "expr",)
+    # data_opts['view_names'] = ( 
+    #     "expr_mRNA", "expr_lincRNA", "expr_miRNA",  
+    #     "met_3utr","met_5utr","met_cds_genebody","met_noncds_genebody","met_intergenic","met_prom2k", 
+    #     "surv1","surv2","surv3","surv4","surv5")
+
+    # data_opts['view_names'] = ( "expr_mRNA", "expr_lincRNA", "expr_miRNA" )
+
+    data_opts['view_names'] = ( "expr_lincRNA", )
+
     data_opts['input_files'] = [ "%s/%s.txt" % (base_folder,m) for m in data_opts['view_names'] ]
     M = len(data_opts['input_files'])
     data_opts['center'] = [True]*M
@@ -207,9 +233,9 @@ if __name__ == '__main__':
     ##############################
 
     model_opts = {}
-    model_opts['likelihood'] = ["gaussian"]*M
-    model_opts['learnTheta'] = True
-    model_opts['k'] = 10+4
+    model_opts['likelihood'] = ["gaussian"]*M 
+    model_opts['learnTheta'] = False
+    model_opts['k'] = 10
     
 
     # Define priors
@@ -217,26 +243,27 @@ if __name__ == '__main__':
     model_opts["priorAlpha"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
     model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M }
     model_opts["priorTau"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
-    if model_opts['learnTheta']: model_opts["priorTheta"] = { 'a':[1.]*M, 'b':[1.]*M }
+    if model_opts['learnTheta']: 
+        model_opts["priorTheta"] = { 'a':[1.]*M, 'b':[1.]*M }
 
     # Define initialisation options
     model_opts["initZ"] = { 'mean':"random", 'var':1., 'E':None, 'E2':None }
     model_opts["initAlpha"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M }
     model_opts["initSW"] = { 'Theta':[0.5]*M, 
                               'mean_S0':[0.]*M, 'var_S0':model_opts["initAlpha"]['E'], 
-                              'mean_S1':[0.]*M, 'var_S1':[1.]*M,
+                              'mean_S1':["random"]*M, 'var_S1':[1.]*M,
                               'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M}
     # model_opts["initTau"] = { 'a':[1.,1.,None], 'b':[1.,1.,None], 'E':[100.,100.,None] }
-    model_opts["initTau"] = { 'a':[1.]*M, 'b':[1.]*M, 'E':[100.]*M }
+    model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M }
 
     if model_opts['learnTheta']: 
-        model_opts["initTheta"] = { 'a':[1.]*M, 'b':[1.]*M, 'E':[0.5]*M }
+        model_opts["initTheta"] = { 'a':[1.]*M, 'b':[1.]*M, 'E':[None]*M }
     else:
         model_opts["initTheta"] = { 'value':[0.5]*M }
 
 
     # Define schedule of updates
-    model_opts['schedule'] = ("Y","SW","Z","Alpha","Tau","Theta")
+    model_opts['schedule'] = ("SW","Z","Alpha","Tau","Theta")
 
     # pprint(model_opts)
     # print "\n"
@@ -246,12 +273,12 @@ if __name__ == '__main__':
     #################################
 
     train_opts = {}
-    train_opts['maxiter'] = 300
+    train_opts['maxiter'] = 500
     train_opts['elbofreq'] = 1
     if 'Kvothe' in gethostname():
-        train_opts['outfile'] = "/Users/ricard/git/britta/scGFA/model.hdf5" 
+        train_opts['outfile'] = "/Users/ricard/git/britta/scGFA/expr/model.hdf5" 
     elif 'yoda' in gethostname():
-        train_opts['outfile'] = "/homes/ricard/CLL/scGFA/model.hdf5"
+        train_opts['outfile'] = "/homes/ricard/CLL/scGFA/expr/model.hdf5"
     train_opts['savefreq'] = s.nan
     train_opts['savefolder'] = s.nan
     train_opts['verbosity'] = 2
@@ -262,11 +289,13 @@ if __name__ == '__main__':
     train_opts['forceiter'] = True
     train_opts['tolerance'] = 0.01
 
-    model_opts['covariates'] = pd.read_csv("%s/covariates.txt" % base_folder, delimiter="\t", header=0, index_col=0)
+    # model_opts['covariates'] = pd.read_csv("%s/covariates.txt" % base_folder, delimiter="\t", header=0, index_col=0)
+    model_opts['covariates'] = None
 
     # Define the number of trials and cores
     train_opts['trials'] = 1
     cores = 1
+    keep_best_run = False
 
     # pprint(data_opts)
     # print "\n"
@@ -275,4 +304,4 @@ if __name__ == '__main__':
     # print "\n"
 
     # Go!
-    runMultipleTrials(data_opts, model_opts, train_opts, cores)
+    runMultipleTrials(data_opts, model_opts, train_opts, cores, keep_best_run)

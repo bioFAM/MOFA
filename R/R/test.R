@@ -3,7 +3,8 @@ setwd("/Users/ricard/git/scGFA/R/R")
 
 
 source("loadModel.R")
-file = "/tmp/test/asd.hd5"
+# file = "/tmp/test/asd.hd5"
+file = "/Users/ricard/git/britta/scGFA/fullmodel300.hdf5"
 model <- loadModel(file)
 
 source("proportion_variance.R")

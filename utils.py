@@ -134,6 +134,7 @@ def saveTrainingStats(model, hdf5):
 
 def saveTrainingOpts(model, hdf5):
 	opts = model.getTrainingOpts()
+	print opts
 
 	# Remove dictionaries from the options
 	opts.pop('dropK')
@@ -170,6 +171,6 @@ def saveModel(model, outfile, view_names=None, sample_names=None, feature_names=
 	saveExpectations(model,hdf5,view_names)
 	saveParameters(model,hdf5,view_names)
 	saveTrainingStats(model,hdf5)
-	saveTrainingOpts(model,hdf5)
+	# saveTrainingOpts(model,hdf5)
 	saveTrainingData(model, hdf5, view_names, sample_names, feature_names)
 	hdf5.close()

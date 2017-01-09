@@ -179,7 +179,6 @@ class init_scGFA(initModel):
         self.Tau = Multiview_Mixed_Node(self.M,*tau_list)
         self.nodes["Tau"] = self.Tau
 
-
     def initY(self):
         # Method to initialise the observed data
         Y_list = [None]*self.M
@@ -194,7 +193,6 @@ class init_scGFA(initModel):
                 Y_list[m] = Binomial_PseudoY_Node(dim=(self.N,self.D[m]), tot=data["tot"][m], obs=data["obs"][m], E=None)
         self.Y = Multiview_Mixed_Node(self.M, *Y_list)
         self.nodes["Y"] = self.Y
-
 
     def initThetaLearn(self, pa, pb, qa, qb, qE):
         # Method to initialise the theta node

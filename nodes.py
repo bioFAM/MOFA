@@ -33,6 +33,9 @@ class Node(object):
         # General method to update the expectations of a node
         pass
 
+    def getDimensions(self):
+        return self.dim
+        
     def getExpectations(self):
         # General method to get the expectations of a node
         pass

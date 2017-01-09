@@ -197,28 +197,21 @@ if __name__ == '__main__':
     data_opts = {}
 
     if 'Kvothe' in gethostname():
-        base_folder = "/Users/ricard/data/CLL/processed_data/joined/txt"
+        base_folder = "/Users/ricard/git/gastrulation/expr/scGFA/expr/filt_data"
     elif 'yoda' in gethostname():
-        base_folder = "/hps/nobackup/stegle/users/ricard/CLL/processed_data/joined/txt"
+        base_folder = ""
     else:
         print "Computer not recognised"
         exit()
 
-    # data_opts['view_names'] = ( 
-    #     "expr_mRNA", "expr_lincRNA", "expr_miRNA",  
-    #     "met_3utr","met_5utr","met_cds_genebody","met_noncds_genebody","met_intergenic","met_prom2k", 
-    #     "surv1","surv2","surv3","surv4","surv5")
-
-    # data_opts['view_names'] = ( "expr_mRNA", "expr_lincRNA", "expr_miRNA" )
-    # data_opts['view_names'] = ( "surv1","surv2","surv3","surv4","surv5" )
-    data_opts['view_names'] = ( "expr_mRNA", "expr_lincRNA", "expr_miRNA", "surv1","surv2","surv3","surv4","surv5" )
+    data_opts['view_names'] = ( "all", )
 
     data_opts['input_files'] = [ "%s/%s.txt" % (base_folder,m) for m in data_opts['view_names'] ]
     M = len(data_opts['input_files'])
     data_opts['center'] = [True]*M
     data_opts['rownames'] = 0
     data_opts['colnames'] = 0
-    data_opts['delimiter'] = "\t"
+    data_opts['delimiter'] = " "
     
     # pprint(data_opts)
     # print "\n"
@@ -271,23 +264,22 @@ if __name__ == '__main__':
     train_opts['maxiter'] = 300
     train_opts['elbofreq'] = 1
     if 'Kvothe' in gethostname():
-        train_opts['outfile'] = "/Users/ricard/git/britta/scGFA/surv_expr/model.hdf5" 
+        train_opts['outfile'] = "/Users/ricard/git/gastrulation/expr/scGFA/expr/out/singleview.hdf5" 
     elif 'yoda' in gethostname():
-        exit()
-        train_opts['outfile'] = "/homes/ricard/CLL/scGFA/expr/model.hdf5"
+        train_opts['outfile'] = ""
     train_opts['savefreq'] = s.nan
     train_opts['savefolder'] = s.nan
     train_opts['verbosity'] = 2
     train_opts['dropK'] = { "by_norm":0.01, "by_pvar":None, "by_cor":0.80 }
-    train_opts['forceiter'] = False
+    train_opts['forceiter'] = True
     train_opts['tolerance'] = 0.01
 
     # model_opts['covariates'] = pd.read_csv("%s/covariates.txt" % base_folder, delimiter="\t", header=0, index_col=0)
     model_opts['covariates'] = None
 
     # Define the number of trials and cores
-    train_opts['trials'] = 2
-    cores = 2
+    train_opts['trials'] = 1
+    cores = 1
     keep_best_run = False
 
     # pprint(data_opts)

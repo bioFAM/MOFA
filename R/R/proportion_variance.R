@@ -26,49 +26,53 @@ CalculateProportionResidualVariance <- function(model, plot=F) {
   S <- lapply(model@Expectations$SW, function(w) w$ES)
   SW <- lapply(model@Expectations$SW, function(w) w$ESW)
   Z <- model@Expectations$Z$E
+  Zvar <- N*model@Parameters$Z$var
   Y <- lapply(model@Expectations$Y, function(y) y$E)
+  
+  # Collect dimensionalities
   M <- length(Y)
   K <- ncol(Z)
+  N <- nrow(Z)
+  D <- sapply(Y, ncol)
+  
+  obs_var <- sapply(names(Y), function(m) apply(Y[[m]],2,var,na.rm=T))
   
   ## Bayesian approach ##
-  tau <- model@Expectations$Tau
-  alpha <- model@Expectations$Alpha
-  residual_var <- sapply(names(Y), function(m) sum(apply(Y[[m]],2,var,na.rm=T) - 1/tau[[m]]$E))
-  # f_residual_var <- sapply(names(Y), function(m) sum(apply(Y[[m]],2,var) - 1/model@Expectations$Tau[[m]]$E) / sum(apply(Y[[m]],2,var)))
-  D <- sapply(Y, ncol)
-  prvar_mk <- sapply(names(Y), function(m) ((D[m]/alpha[[m]]$E)*apply(Z,2,var)/residual_var[m]))
-  
-  ## Non-Bayesian approach ##
-  
-  # # Calculate observed variance of each view
-  # obs_var <- lapply(Y, function(y) apply(y,2,var,na.rm=T) )
+  # tau <- model@Expectations$Tau
+  # alpha <- model@Expectations$Alpha
+  # residual_var <- sapply(names(Y), function(m) sum(apply(Y[[m]],2,var,na.rm=T) - 1/tau[[m]]$E))
+  # # f_residual_var <- sapply(names(Y), function(m) sum(apply(Y[[m]],2,var) - 1/model@Expectations$Tau[[m]]$E) / sum(obs_var[[m]]))
   # 
-  # # Calculate predicions using the model and the corresponding variance
-  # Ypred_m <- lapply(1:M, function(m) Z%*%t(SW[[m]]))
-  # pred_var <- lapply(Ypred_m, function(y) apply(y,2,var,na.rm=T) )
+  # m=1
+  # k=8
   # 
-  # # Calculate proportion of residual variance (prvar) of each view (m)
-  # prvar_m <- sapply(1:M, function(m) sum(pred_var[[m]])/sum(obs_var[[m]]) )
+  # var_Wdk_0 <- (1-S[[m]])*model@Parameters$SW[[m]]$var_S0
+  # var_Wdk_1 <- S[[m]]*model@Parameters$SW[[m]]$var_S1
+  # var_Sdk <- S[[m]]*(1-S[[m]])
   # 
-  # # Calculate fraction of residual variance explained by each factor in each view
-  # # DOESNT SUM UP TO ONE
-  # Ypred_mk <- lapply(1:M, function(m) lapply(1:K, function(k) Z[,k]%*%t(SW[[m]][,k]) ) )
-  # # prvar_mk <- sapply(1:M, function(m) sapply(1:K, function(k) sum(apply(Ypred_mk[[m]][[k]],2,var)) / sum(obs_var[[m]]) ) )
-  # prvar_mk <- sapply(1:M, function(m) sapply(1:K, function(k) sum(apply(Ypred_mk[[m]][[k]],2,var)) / sum(pred_var[[m]]) ) )
+  # var_SW_dk <- var_Wdk_0+var_Wdk_1+var_Sdk
   # 
+  # prvar_mk <- (sum(var_SW_dk[,k])+sum(Zvar[,k])) / residual_var[m]
+  # prvar_mk <- (sum(var_SW_dk[,k])+sum(Zvar[,k])) / sum(obs_var[[m]])
+  # 
+  # term1 <- sum(var_SW_dk[,k])*sum(Zvar[,k])
+  # term2 <- sum(var_SW_dk[,k])*sum(Z[,k]**2)
+  # term3 <- sum(Z[,k])*sum(var_SW_dk[,k]**2)
+  # prvar_mk <- (term1 + term3 + term3) / sum(obs_var[[m]])
+  # 
+  ## Non-Bayesian approach 1 ##
+  # V_expl_k = var(Ypred_k)/var(Y) = var((E[W_k]*E[S_k])*E[Z_k])/var(Y)
+  # According to Damien, this is not correct  because the variance might be just bullshit signal
   
-  # DOESNT SUM UP TO ONE IF I ONLY USE ACTIVE GENES
-  # rvar_mk <- sapply(1:M, function(m) sapply(1:K, function(k) {
-  #     active_genes <- S[[m]][,k] > active_genes_threshold
-  #     if (sum(active_genes) < min_genes) {
-  #       return(0)
-  #     } else {
-  #       sum(apply(Ypred_mk[[m]][[k]][,active_genes],2,var)) / sum(apply(Ypred_m[[m]][,active_genes],2,var)) 
-  #     }}))
-  # rvar_mk <- sapply(1:M, function(m) sapply(1:K, function(k) 
-    # sum(apply(Ypred_mk[[m]][[k]][,active_genes],2,var)) / sum(apply(Ypred_m[[m]][,active_genes],2,var)) ))
+
+  ## Non-Bayesian approach 2: coefficient of determination ##
+  Ypred_m <- lapply(1:M, function(m) Z%*%t(SW[[m]]))
+  Ypred_mk <- lapply(1:M, function(m) lapply(1:K, function(k) Z[,k]%*%t(SW[[m]][,k]) ) )
+  prvar_mk <- sapply(1:M, function(m) sapply(1:K, function(k) 1 - sum((Y[[m]]-Ypred_mk[[m]][[k]])**2) / sum((Y[[m]] - mean(unlist(Y[[m]])))**2) ) )
+
+  # TO-DO: USE ONLY ACTIVE GENES?
   
-  # maybe use alpha...
+  # Set matrix names
   colnames(prvar_mk) <- names(Y)
   rownames(prvar_mk) <- colnames(Z)
     

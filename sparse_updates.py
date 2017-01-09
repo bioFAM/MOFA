@@ -358,14 +358,13 @@ class Theta_Node(Beta_Unobserved_Variational_Node):
 
     def precompute(self):
         self.factors_axis = 0
+        self.Ppar = self.P.getParameters()
 
     def updateParameters(self, factors_selection=None):
 
         # Collect expectations from other nodes
         S = self.markov_blanket['SW'].getExpectations()["ES"]
 
-        # Collect parameters from the P and Q distributions of this node
-        P = self.P.getParameters()
 
         # Precompute terms
         if factors_selection is not None:
@@ -373,8 +372,8 @@ class Theta_Node(Beta_Unobserved_Variational_Node):
         tmp1 = S.sum(axis=0)
 
         # Perform updates
-        Qa = P['a'] + tmp1
-        Qb = P['b'] + S.shape[0]-tmp1
+        Qa = self.Ppar['a'] + tmp1
+        Qb = self.Ppar['b'] + S.shape[0]-tmp1
 
         # Save updated parameters of the Q distribution
         self.Q.setParameters(a=Qa, b=Qb)
@@ -382,18 +381,18 @@ class Theta_Node(Beta_Unobserved_Variational_Node):
     def calculateELBO(self):
 
         # Collect parameters and expectations
-        Ppar,Qpar,Qexp = self.P.getParameters(), self.Q.getParameters(), self.Q.getExpectations()
-        Pa, Pb, Qa, Qb = Ppar['a'], Ppar['b'], Qpar['a'], Qpar['b']
+        Qpar,Qexp = self.Q.getParameters(), self.Q.getExpectations()
+        Pa, Pb, Qa, Qb = self.Ppar['a'], self.Ppar['b'], Qpar['a'], Qpar['b']
         QE, QlnE, QlnEInv = Qexp['E'], Qexp['lnE'], Qexp['lnEInv']
 
+        # D = self.markov_blanket['SW'].getDimensions()[0]
+
         # minus cross entropy of Q and P
-        tmp1 = (Pa-1)*QlnE + (Pb-1)*QlnEInv
-        tmp1 -= special.betaln(Pa,Pb)
+        tmp1 = (Pa-1.)*QlnE + (Pb-1.)*QlnEInv - special.betaln(Pa,Pb)
         lb_p = tmp1.sum()
 
         # minus entropy of Q
-        tmp2 = (Qa-1)*QlnE + (Qb-1)*QlnEInv
-        tmp2 -= special.betaln(Qa, Qb)
+        tmp2 = (Qa-1.)*QlnE + (Qb-1.)*QlnEInv - special.betaln(Qa,Qb)
         lb_q = tmp2.sum()
 
         return lb_p - lb_q

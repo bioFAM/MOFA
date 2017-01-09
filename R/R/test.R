@@ -3,8 +3,7 @@ setwd("/Users/ricard/git/scGFA/R/R")
 
 
 source("loadModel.R")
-# file = "/tmp/test/asd.hd5"
-file = "/Users/ricard/git/britta/scGFA/fullmodel300.hdf5"
+file = "/Users/ricard/git/britta/scGFA/expr/model1.hdf5"
 model <- loadModel(file)
 
 source("proportion_variance.R")
@@ -16,6 +15,119 @@ PlotViewVsFactor(model, color=colorRampPalette(c("grey100", "grey0"))(100), titl
                  legend=T, treeheight_row=20, treeheight_col=20, fontsize_row=20, fontsize_col=20, cellheight=NA, cellwidth=NA, outfile=NA)
   
 
+# Boxplot of weights of gene sets in a given latent varaible and view
+abs_value = TRUE
+m=1
+k=1
+x=""
+gene_sets=list(c(1,2,3), c(4,5,6), c(7,8,9))
+xlabel <- ""
+ylabel <- ""
+
+
+if is.null(names(gene_sets))
+  names(gene_sets) <- str_c("GeneSet_",1:length(gene_sets))
+
+tmp <- list()
+for (gs in names(gene_sets)) {
+  
+  if (is.numeric(gene_sets[[gs]])) {
+    stopifnot(gene_sets[[gs]] %in% 1:D[m])
+  } else if (all(is.character(gene_sets[[gs]]))) {
+    stopifnot(all(gene_sets[[gs]] %in% getfeatureNames(model)[[m]]))
+  } else {
+    stop("Features have to be specified either as character or numeric vector")
+  }
+
+  tmp[[gs]] <- model@Expectations$SW[[m]]$E[gene_sets[[gs]],k] %>% as.data.frame %>% 
+    `colnames<-`(str_c("K=",k)) %>% `rownames<-`(features) %>% tibble::rownames_to_column("features") %>%
+    mutate(geneset=gs) %>% gather(k,value,-features,-geneset)
+}
+df <- do.call(rbind,tmp)  
+df <- data.table::rbindlist(tmp)
+  
+if (abs_value)
+  df$value <- abs(df$value)
+
+ggplot(df, aes(x=geneset, y=value, fill=geneset)) +
+  # ggtitle("") +
+  geom_boxplot() +
+  xlab(xlabel) + ylab(ylabel) +
+  theme(
+    axis.title.y = element_text(colour="black", size=16, vjust=1.5),
+    axis.title.x = element_text(colour="black", size=16, vjust=1.5),
+    axis.text.x = element_text(colour="black",size=rel(1.3)),
+    axis.text.y = element_text(colour="black",size=rel(1.3)),
+    axis.line = element_line(colour="black"),
+    axis.ticks.y = element_line(colour="black", size=rel(0.8)),
+    axis.ticks.x = element_blank(),
+    panel.background = element_blank(),
+    panel.grid = element_blank(),
+    panel.border = element_blank(),
+    legend.position="none"
+  )
+
+
+
+
+
+  
+# Plot top weights
+abs_value = TRUE
+m=1
+k=1
+xlabel <- ""
+ylabel <- ""
+n <- 30
+
+weights <-  model@Expectations$SW[[m]]$E[,k]
+# names(weights) <- getfeatureNames(model)[[m]]
+names(weights) <- str_c("feature",1:length(weights))
+
+if (abs_value==T)
+  weights <- abs(weights)
+
+df <- data.frame(value=sort(weights,decreasing=T)[1:n]) %>% tibble::rownames_to_column("feature") %>%
+  mutate(feature=factor(feature, levels=feature))
+
+ggplot(df, aes(x=feature, y=value, color=value)) +
+  geom_point(size=3) +
+  geom_segment(aes(xend=feature, yend=0)) +
+  scale_colour_gradient(low="grey", high="black") +
+  coord_flip() +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_text(size=rel(1.2), hjust=1, color='black', margin=margin(0,-8,0,0)),
+        axis.text.x = element_text(size=rel(1.5), color='black'),
+        axis.ticks.y=element_blank(),
+        axis.ticks.x=element_line(),
+        legend.position='none',
+        legend.text=element_text(size=rel(1.5),angle=90, hjust=1, color="black"),
+        legend.key=element_rect(fill='transparent'),
+        panel.background = element_blank(),
+        aspect.ratio = .7)
+
+# ggplot(df, aes(x=feature, y=value)) +
+#   ggtitle("") +
+#   geom_bar(stat='identity', position="dodge", width=0.5) +
+#   scale_colour_gradient(low="grey", high="black") +
+#   xlab("") + ylab("") +
+#   coord_flip() +
+#   guides(fill=F) +
+#   theme(
+#     axis.title.y = element_text(colour="black", size=16, vjust=1.5),
+#     axis.title.x = element_text(colour="black", size=16, vjust=1.5),
+#     axis.text.x = element_text(colour="black",size=rel(1.3)),
+#     axis.text.y = element_text(colour="black",size=rel(1.3)),
+#     axis.line = element_line(colour="black"),
+#     axis.ticks.x = element_line(colour="black", size=rel(0.8)),
+#     axis.ticks.y = element_blank(),
+#     panel.background = element_blank(),
+#     panel.grid = element_blank(),
+#     panel.border = element_blank()
+#   )
+
+
 # Training statistics
 source("training_statistics.R")
 elbo_trainCurve(model)
@@ -23,7 +135,8 @@ activeK_trainCurve(model)
 
 # Scatterplot
 source("scatterplot.R")
-scatterPlot(model, idx=1, idy=2)
+scatterPlot(model, idx=2, idy=4)
+
 
 # Corplot
 source("corPlot.R")

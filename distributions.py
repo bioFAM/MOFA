@@ -120,7 +120,7 @@ class MultivariateGaussian(Distribution):
         # If 'mean' is a scalar, broadcast it to all dimensions
         if isinstance(mean,(int,float)): mean = s.ones( (dim[0],dim[1]) ) * mean
         # If 'mean' has dim (D,) and we have N distributions, broadcast it to all N distributions
-        if len(mean.shape)==1 and mean.shape[0]==dim[0]: mean = s.repeat(mean,N,0)
+        if len(mean.shape)==1 and mean.shape[0]==dim[1]: mean = s.repeat(mean,dim[0],0)
         assert sum(mean.shape) > 2, "The mean has to be a matrix with shape (N,D) "
 
         # Initialise the covariance
@@ -145,7 +145,7 @@ class MultivariateGaussian(Distribution):
 
     def updateExpectations(self):
         # Update first and second moments using current parameters
-        E = self.mean
+        E = self.params['mean']
 
         # self.E2 = s.empty( (self.dim[0],self.dim[1],self.dim[1]) )
         # for i in xrange(self.dim[0]):
@@ -509,8 +509,8 @@ class Beta(Distribution):
         lnEInv = special.digamma(b) - special.digamma(a+b) # expectation of ln(1-X)
         self.expectations = { 'E':E, 'lnE':lnE, 'lnEInv':lnEInv }
 
-# if __name__ == "__main__":
-#     a = Beta(dim=(10,20), a=1, b=1, E=3)
-#     a.removeDimensions(s.asarray([1,2,3]),0)
-#     exit()
+if __name__ == "__main__":
+    a = Beta(dim=(10,20), a=1, b=1, E=3)
+    MultivariateGaussian(dim=(1,10), mean=stats.norm.rvs(loc=0, scale=1, size=(10,)), cov=s.eye(10,10), E=None)
+    exit()
 

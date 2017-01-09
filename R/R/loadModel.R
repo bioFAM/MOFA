@@ -30,7 +30,7 @@ loadModel <- function(file) {
   colnames(training_stats$elbo_terms) <- attr(h5read(file,"training_stats/elbo_terms", read.attributes=T),"colnames")
   
   # Load training options
-  training_opts <- as.list(h5read(file,"training_opts", read.attributes=T))
+  # training_opts <- as.list(h5read(file,"training_opts", read.attributes=T))
   
   # Load training data
   # training_data <- h5read(file,"training_data", read.attributes=T)
@@ -39,7 +39,7 @@ loadModel <- function(file) {
   #   rownames(training_data[[view]]) <- attr(tmp,"rownames")
   #   colnames(training_data[[view]]) <- attr(tmp,"colnames")
   # }
-  
+  # 
   # Load training data
   data <- h5read(file,"data")
   featuredata <- h5read(file,"features")
@@ -50,7 +50,8 @@ loadModel <- function(file) {
   }
   
   # Define GFATrainedModel
-  gfa <- new("GFATrainedModel", Data=data, TrainStats=training_stats, TrainOpts=training_opts, Expectations=expectations, Parameters=parameters)
+  # gfa <- new("GFATrainedModel", Data=data, TrainStats=training_stats, TrainOpts=training_opts, Expectations=expectations, Parameters=parameters)
+  gfa <- new("GFATrainedModel", Data=data, TrainStats=training_stats, Expectations=expectations, Parameters=parameters)
   
   return(gfa)
 }

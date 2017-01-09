@@ -24,71 +24,71 @@ from utils import *
 ###################
 
 # Define dimensionalities
-M = 1
+M = 3
 N = 100
-D = s.asarray([5000,])
+D = s.asarray([100,100,100])
 K = 6
 
 ## Simulate data  ##
 data = {}
-# tmp = Simulate(M=M, N=N, D=D, K=K)
+tmp = Simulate(M=M, N=N, D=D, K=K)
 
-# data['Z'] = s.zeros((N,K))
-# data['Z'][:,0] = s.sin(s.arange(1,N+1)/(N/20))
-# data['Z'][:,1] = s.cos(s.arange(N)/(N/20))
-# data['Z'][:,2] = 2*(s.arange(N)/N-0.5)
-# data['Z'][:,3] = stats.norm.rvs(loc=0, scale=1, size=N)
-# data['Z'][:,4] = stats.norm.rvs(loc=0, scale=1, size=N)
-# data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
+data['Z'] = s.zeros((N,K))
+data['Z'][:,0] = s.sin(s.arange(1,N+1)/(N/20))
+data['Z'][:,1] = s.cos(s.arange(N)/(N/20))
+data['Z'][:,2] = 2*(s.arange(N)/N-0.5)
+data['Z'][:,3] = stats.norm.rvs(loc=0, scale=1, size=N)
+data['Z'][:,4] = stats.norm.rvs(loc=0, scale=1, size=N)
+data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
 
 # Add a known covariate
 # data['Z'][:,5] = s.asarray([True,False]*int(N/2), dtype=s.float32)
 
-# data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
-# data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
-# data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
-# data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
+data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
+data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
+data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
+data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
-# theta = [ s.ones(K)*0.5 for m in xrange(M) ]
-# data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
+theta = [ s.ones(K)*0.5 for m in xrange(M) ]
+data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
 
-# data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
+data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 
-# data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
-# data['tau']= [ s.ones(D[m])*2 for m in xrange(M) ]
+data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
+data['tau']= [ s.ones(D[m])*2 for m in xrange(M) ]
 
-# Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-	# likelihood="gaussian", missingness=0.05)
-# Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
+	likelihood="gaussian", missingness=0.05)
+# Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	# likelihood="poisson", missingness=0.00)
-# Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+# Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	# likelihood="bernoulli", missingness=0.00)
-# Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+# Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	# likelihood="binomial", min_trials=10, max_trials=50, missingness=0.05)
 
 # data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 # data["Y"] = ( Y_bernoulli[0], Y_bernoulli[1], Y_bernoulli[2] )
 # data["Y"] = (Y_bernoulli[0],Y_bernoulli[1])
-# data["Y"] = Y_gaussian
+data["Y"] = Y_gaussian
 # data["Y"] = Y_poisson
 # data["Y"] = Y_binomial
 # data["Y"] = (Y_gaussian[0],)
 # data["Y"] = (Y_poisson[0],)
 # data["Y"] = (Y_bernoulli[0],)
 
-tmp = pd.read_csv("/Users/ricard/git/britta/processed_data/joined/txt/expr_lincRNA.txt", delimiter="\t", header=0, index_col=0)
-tmp = (tmp - tmp.mean())
-N,D = tmp.shape[0],s.asarray([tmp.shape[1]])
-data["Y"] = (tmp, )
+# tmp = pd.read_csv("/Users/ricard/git/britta/processed_data/joined/txt/expr_lincRNA.txt", delimiter="\t", header=0, index_col=0)
+# tmp = (tmp - tmp.mean())
+# N,D = tmp.shape[0],s.asarray([tmp.shape[1]])
+# data["Y"] = (tmp, )
 s.random.seed(3)
 
 # likelihood = ["bernoulli","bernoulli","bernoulli"]
 # likelihood = ["bernoulli"]
-likelihood = ["gaussian"]
-# likelihood = ["gaussian","gaussian","gaussian"]
+# likelihood = ["gaussian"]
+likelihood = ["gaussian","gaussian","gaussian"]
 
-# view_names = ["foo","bar","baz"]
-view_names = likelihood
+view_names = ["foo","bar","baz"]
+# view_names = likelihood
 
 #################################
 ## Initialise Bayesian Network ##
@@ -160,10 +160,10 @@ SW = Multiview_Variational_Node(M, *SW_list)
 tau_list = [None]*M
 for m in xrange(M):
 	if likelihood[m] == "poisson":
-		tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0) 
+		tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0)
 		tau_list[m] = Constant_Node(dim=(D[m],), value=tmp)
 	elif likelihood[m] == "bernoulli":
-		tmp = s.ones(D[m])*0.25 
+		tmp = s.ones(D[m])*0.25
 		tau_list[m] = Constant_Node(dim=(D[m],), value=tmp)
 	elif likelihood[m] == "binomial":
 		tmp = 0.25*s.amax(data["Y"]["tot"][m],axis=0)
@@ -263,5 +263,5 @@ print "\nSaving model..."
 sample_names = [ "sample_%d" % n for n in xrange(N)]
 feature_names = [[ "feature_%d" % n for n in xrange(D[m])] for m in xrange(M)]
 
-saveModel(net, outfile="/tmp/test/asd.hd5", view_names=view_names, 
+saveModel(net, outfile="/tmp/test/asd.hd5", view_names=view_names,
 	sample_names=sample_names, feature_names=feature_names)

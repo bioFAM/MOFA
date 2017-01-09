@@ -11,7 +11,7 @@ from variational_nodes import Unobserved_Variational_Node, Variational_Node
 from utils import corr
 
 """
-This module is used to define the class containing the entire Bayesian Network, 
+This module is used to define the class containing the entire Bayesian Network,
 and the corresponding attributes/methods to train the model, set algorithmic options, calculate lower bound, etc.
 
 A Bayesian network requires the following information:
@@ -31,10 +31,10 @@ class BayesNet(object):
     # def __init__(self, dim={}, nodes={}, schedule=(), options={}, trial=1):
     def __init__(self, dim, nodes, schedule, options, trial=1):
         #  dim: dictionary with the dimensions and its keynames, ex. {'N'=10, 'M'=3, ...}
-        #  nodes: dictionary with all nodes where the keys are the name of the node and the values are instances of Variational_Node() or Multiview_Variational_Node() 
+        #  nodes: dictionary with all nodes where the keys are the name of the node and the values are instances of Variational_Node() or Multiview_Variational_Node()
         #  schedule: tuple with the names of the nodes to be updated in the given order. Nodes not present in schedule will not be updated
         #  options:
-        #  trial: 
+        #  trial:
 
         self.dim = dim
         self.nodes = nodes
@@ -61,7 +61,7 @@ class BayesNet(object):
         # print s.absolute(Z)
         # print s.absolute(Z).mean(axis=0)
         # Option 2: proportion of residual variance explained by each factor
-        #   Good: it is the proper way of doing it, 
+        #   Good: it is the proper way of doing it,
         #   Bad: slow, does it work well with pseudodata?
         # if by_var is not None:
             # Z = self.nodes["Z"].getExpectation()
@@ -103,7 +103,6 @@ class BayesNet(object):
         pass
 
     def iterate(self):
-
         # Define some variables to monitor training
         vb_nodes = self.getVariationalNodes().keys()
         elbo = pd.DataFrame(data = s.zeros( ((int(self.options['maxiter']/self.options['elbofreq'])-1), len(vb_nodes)+1 )),
@@ -157,7 +156,7 @@ class BayesNet(object):
             # Save temporary model
             if (self.options['savefreq'] is not s.nan) and (iter % self.options['savefreq'] == 0):
                 savefile = "%s/%d_model.pkl" % (self.options['savefolder'], iter)
-                if self.options['verbosity'] == 2: print "Saving the model in %s\n" % savefile 
+                if self.options['verbosity'] == 2: print "Saving the model in %s\n" % savefile
                 pkl.dump(self, open(savefile,"wb"))
 
         # Finish by collecting the training statistics
@@ -216,6 +215,3 @@ class BayesNet(object):
             elbo[node] = float(self.nodes[node].calculateELBO())
             elbo["total"] += elbo[node]
         return elbo
-
-        
-        

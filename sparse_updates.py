@@ -220,13 +220,13 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
         P,Q = self.P.getParameters(), self.Q.getParameters()
         Pa, Pb = P['a'], P['b']
 
-        # ARD prior on ???
-        # Qa = Pa + 0.5*EWW.shape[0]
-        # Qb = Pb + 0.5*EWW.sum(axis=0)
+        # ARD prior on What 
+        Qa = Pa + 0.5*EWW.shape[0]
+        Qb = Pb + 0.5*EWW.sum(axis=0)
 
-        # ARD prior on ????
-        Qa = Pa + 0.5*ES.sum(axis=0)
-        Qb = Pb + 0.5*ESWW.sum(axis=0)
+        # ARD prior on W, possibly wrong
+	# Qa = Pa + 0.5*ES.sum(axis=0)
+        # Qb = Pb + 0.5*ESWW.sum(axis=0)
 
         # Save updated parameters of the Q distribution
         self.Q.setParameters(a=Qa, b=Qb)

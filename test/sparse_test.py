@@ -70,7 +70,7 @@ Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data
 # data["Y"] = ( Y_bernoulli[0], Y_bernoulli[1], Y_bernoulli[2] )
 # data["Y"] = (Y_bernoulli[0],Y_bernoulli[1])
 data["Y"] = Y_gaussian
-import pdb; pdb.set_trace()
+# import pdb; pdb.set_trace()
 # data["Y"] = Y_poisson
 # data["Y"] = Y_binomial
 # data["Y"] = (Y_gaussian[0],)

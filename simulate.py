@@ -54,6 +54,10 @@ class Simulate(object):
     # TODO: here is a quick hack for taking into account informative priors
     # need to work out how to do this better
     def initW_spikeslab(self, theta, alpha=None, annotation=False):
+        # checking there is no zero in alpha input
+        if alpha is not None:
+            assert not any([0 in toto for toto in alpha]), 'alpha cannot be zero'
+
         # Simulate bernoulli variable S
         S = [ s.zeros((self.D[m],self.K)) for m in xrange(self.M) ]
         if annotation:

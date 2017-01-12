@@ -161,8 +161,8 @@ for m in xrange(M):
 		tmp = 0.25*s.amax(data["Y"]["tot"][m],axis=0)
 		tau_list[m] = Constant_Node(dim=(D[m],), value=tmp)
 	elif likelihood[m] == "gaussian":
-		tau_pa = 1e-14
-		tau_pb = 1e-14
+		tau_pa = 1e-2
+		tau_pb = 1e-2
 		tau_qa = tau_pa + s.ones(D[m])*N/2
 		tau_qb = s.nan
 		tau_qE = s.zeros(D[m]) + 100

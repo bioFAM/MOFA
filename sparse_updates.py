@@ -282,46 +282,20 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         all_term1 = theta_lnE - theta_lnEInv
         # all_term1 = s.log(theta_E/(1.-theta_E))
 
-        K = self.dim[1]
-        for d in xrange(self.D):
-            for k in xrange( K):
-                term1 = all_term1[d,k]
-                term2 = 0.5*s.log(alpha[k]/tau[d])
-                term3 = 0.5*s.log(s.sum(ZZ[:,k]) + alpha[k]/tau[d])
-                foo = ma.dot(Y[:,d],Z[:,k]) - s.dot(SW[d,s.arange(K)!=k],(Z[:,k]*Z[:,s.arange(K)!=k].T).sum(axis=1))
-                bar = s.sum(ZZ[:,k]) + alpha[k]/tau[d]
-                term4 = 0.5*tau[d]*foo**2 / bar
+        for k in xrange(self.dim[1]):
 
                 # Update S
                 Qtheta[d,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
 
-                # Update W
-                Qmean_S1[d,k] = foo/bar
-                Qvar_S1[d,k] = 1/(tau[d]*bar)
+            # Update S
+            Qtheta[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
 
-                # Update expectations
-                SW[d,k] = Qtheta[d,k] * Qmean_S1[d,k]
+            # Update W
+            Qmean_S1[:,k] = s.divide(term41-term42,term43)
+            Qvar_S1[:,k] = s.divide(1,tau*term43)
 
-        # for k in xrange(self.dim[1]):
-
-        #     term1 = all_term1[:,k]
-        #     term2 = 0.5*s.log(s.divide(alpha[k],tau))
-        #     term3 = 0.5*s.log(s.sum(ZZ[:,k]) + s.divide(alpha[k],tau))
-        #     # term41 = ma.dot(Y.T,Z[:,k])
-        #     term41 = ma.dot(Y.T,Z[:,k]).data
-        #     term42 = s.dot( SW[:,s.arange(self.dim[1])!=k] , (Z[:,k]*Z[:,s.arange(self.dim[1])!=k].T).sum(axis=1) )
-        #     term43 = s.sum(ZZ[:,k]) + s.divide(alpha[k],tau)
-        #     term4 = 0.5*tau * s.divide((term41-term42)**2,term43)
-
-        #     # Update S
-        #     Qtheta[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
-
-        #     # Update W
-        #     Qmean_S1[:,k] = s.divide(term41-term42,term43)
-        #     Qvar_S1[:,k] = s.divide(1,tau*term43)
-
-        #     # Update Expectations for the next iteration
-        #     SW[:,k] = Qtheta[:,k] * Qmean_S1[:,k]
+            # Update Expectations for the next iteration
+            SW[:,k] = Qtheta[:,k] * Qmean_S1[:,k]
 
         # Save updated parameters of the Q distribution
         self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=s.repeat(1/alpha[None,:],self.D,0), 

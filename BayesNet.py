@@ -139,7 +139,7 @@ class BayesNet(object):
                         print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
 
                     # Assess convergence
-                    if (delta_elbo < self.options['tolerance']) and (not self.options['forceiter']):
+                    if (0 <= delta_elbo < self.options['tolerance']) and (not self.options['forceiter']):
                         print "Converged!\n"
                         break
 

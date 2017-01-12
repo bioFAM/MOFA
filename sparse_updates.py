@@ -6,6 +6,7 @@ import numpy.ma as ma
 from variational_nodes import *
 from utils import *
 from nodes import Constant_Node
+from mixed_nodes import Mixed_Theta_Nodes
 
 import scipy.special as special
 
@@ -171,7 +172,7 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         Pa, Pb = P['a'], P['b']
 
         # Calculate terms for the update
-        term1 = (Y**2).sum(axis=0).data 
+        term1 = (Y**2).sum(axis=0).data
         term2 = 2*(Y*s.dot(Z,SW.T)).sum(axis=0).data
         term3 = (ZZ.dot(SWW.T)).sum(axis=0)
         term4 = s.diag(s.dot( SW.dot(Z.T), Z.dot(SW.T) )) - s.dot(Z**2,(SW**2).T).sum(axis=0)
@@ -302,7 +303,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             SW[:,k] = Qtheta[:,k] * Qmean_S1[:,k]
 
         # Save updated parameters of the Q distribution
-        self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=s.repeat(1/alpha[None,:],self.D,0), 
+        self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=s.repeat(1/alpha[None,:],self.D,0),
                              mean_S1=Qmean_S1, var_S1=Qvar_S1, theta=Qtheta )
 
     def calculateELBO(self):
@@ -414,5 +415,3 @@ class Theta_Constant_Node(Constant_Variational_Node):
         self.value = s.delete(self.value, idx, axis)
         self.precompute()
         self.updateDim(axis=axis, new_dim=self.dim[axis]-len(idx))
-
-

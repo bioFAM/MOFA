@@ -19,6 +19,8 @@ from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_
 from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node, Theta_Node, Theta_Constant_Node
 from utils import *
 
+from mixed_nodes import Mixed_Theta_Nodes
+
 ###################
 ## Generate data ##
 ###################
@@ -187,6 +189,8 @@ for iter in range(1000):
 	# Theta node
 	Theta_list = [None] * M
 	learn_theta = False
+	use_annotations = True
+
 	if learn_theta:
 		theta_pa = 1.
 		theta_pb = 1.
@@ -201,6 +205,23 @@ for iter in range(1000):
 		for m in xrange(M):
 			Theta_list[m] = Theta_Constant_Node(dim=(K,),value=value)
 		Theta = Multiview_Constant_Node(M, *Theta_list)
+
+	# Theta node with annotations
+	if use_annotations:
+		theta_pa = 1.
+		theta_pb = 1.
+		theta_qb = 1.
+		theta_qa = 1.
+		theta_qE = None
+		annotation_theta1 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
+		annotations = annotation_theta1[:,None]
+		annotated_node = Theta_Constant_Node((D[0],1), annotations)
+		non_annotated_node = Theta_Node(dim=(K-1,), pa=theta_pa, pb=theta_pb, qa=theta_qa, qb=theta_qb, qE=theta_qE)
+		Theta_list[0] = Mixed_Theta_Nodes(annotated_node, non_annotated_node)
+		# Other two views, no annotation
+		for m in xrange(1, M):
+		    Theta_list[m] = Theta_Node(dim=(K,), pa=theta_pa, pb=theta_pb, qa=theta_qa, qb=theta_qb, qE=theta_qE)
+		Theta = Multiview_Variational_Node(M, *Theta_list)
 
 	############################
 	## Define Markov Blankets ##

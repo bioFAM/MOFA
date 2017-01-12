@@ -67,9 +67,10 @@ class Y_Node(Constant_Variational_Node):
         self.value = ma.masked_invalid(self.value)
 
     def calculateELBO(self):
-        tau_param = self.markov_blanket["Tau"].getParameters()
+        tauQ_param = self.markov_blanket["Tau"].getParameters("Q")
+        tauP_param = self.markov_blanket["Tau"].getParameters("P")
         tau_exp = self.markov_blanket["Tau"].getExpectations()
-        lik = self.likconst + 0.5*s.sum(self.N*(tau_exp["lnE"])) - s.dot(tau_exp["E"],tau_param["b"])
+        lik = self.likconst + 0.5*s.sum(self.N*(tau_exp["lnE"])) - s.dot(tau_exp["E"],tauQ_param["b"]-tauP_param["b"])
         return lik
 
 class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
@@ -85,11 +86,6 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         self.N = self.dim[0]
         self.covariates = np.zeros(self.dim[1], dtype=bool)
         self.factors_axis = 1
-
-    # def setCovariates(self, idx):
-        # Method to define which factors are unupdated covariates
-        #  - idx (int list): index of the columns of Z that are covariates
-        # self.covariates[idx] = True
 
     def updateParameters(self):
 
@@ -109,6 +105,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         Pmean, Pvar, Qmean = P['mean'], P['var'], Q['mean']
 
         # Variance
+        # POSSIBLE MISTAKE: THE PLUS ONE HERE? OR IS THIS RELATED TO PVAR?
         tmp = (tau*SWW.T).sum(axis=1)
         tmp = s.repeat(tmp[None,:],self.N,0)
         tmp += 1./Pvar  # adding the prior precision to the updated precision
@@ -139,7 +136,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         QE,QE2 = Qexp['E'],Qexp['E2']
 
         # compute term from the exponential in the Gaussian
-        tmp1 = 0.5*QE2 - Pmean * QE + 0.5*Pmean**2.0
+        tmp1 = 0.5*QE2 - Pmean*QE + 0.5*Pmean**2.0
         tmp1 = -(tmp1/Pvar).sum()
 
         # compute term from the precision factor in front of the Gaussian (TODO should be computed only once)
@@ -225,8 +222,10 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
         # Qb = Pb + 0.5*EWW.sum(axis=0)
 
         # ARD prior on ????
-        Qa = Pa + 0.5*ES.sum(axis=0)
-        Qb = Pb + 0.5*ESWW.sum(axis=0)
+        # Qa = Pa + 0.5*ES.sum(axis=0)
+        D = ES.shape[0]
+        Qa = Pa + 0.5*D
+        Qb = Pb + 0.5*EWW.sum(axis=0)
 
         # Save updated parameters of the Q distribution
         self.Q.setParameters(a=Qa, b=Qb)
@@ -283,26 +282,46 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         all_term1 = theta_lnE - theta_lnEInv
         # all_term1 = s.log(theta_E/(1.-theta_E))
 
-        for k in xrange(self.dim[1]):
+        K = self.dim[1]
+        for d in xrange(self.D):
+            for k in xrange( K):
+                term1 = all_term1[d,k]
+                term2 = 0.5*s.log(alpha[k]/tau[d])
+                term3 = 0.5*s.log(s.sum(ZZ[:,k]) + alpha[k]/tau[d])
+                foo = ma.dot(Y[:,d],Z[:,k]) - s.dot(SW[d,s.arange(K)!=k],(Z[:,k]*Z[:,s.arange(K)!=k].T).sum(axis=1))
+                bar = s.sum(ZZ[:,k]) + alpha[k]/tau[d]
+                term4 = 0.5*tau[d]*foo**2 / bar
 
-            term1 = all_term1[:,k]
-            term2 = 0.5*s.log(s.divide(alpha[k],tau))
-            term3 = 0.5*s.log(s.sum(ZZ[:,k]) + s.divide(alpha[k],tau))
-            # term41 = ma.dot(Y.T,Z[:,k])
-            term41 = ma.dot(Y.T,Z[:,k]).data
-            term42 = s.dot( SW[:,s.arange(self.dim[1])!=k] , (Z[:,k]*Z[:,s.arange(self.dim[1])!=k].T).sum(axis=1) )
-            term43 = s.sum(ZZ[:,k]) + s.divide(alpha[k],tau)
-            term4 = 0.5*tau * s.divide((term41-term42)**2,term43)
+                # Update S
+                Qtheta[d,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
 
-            # Update S
-            Qtheta[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
+                # Update W
+                Qmean_S1[d,k] = foo/bar
+                Qvar_S1[d,k] = 1/(tau[d]*bar)
 
-            # Update W
-            Qmean_S1[:,k] = s.divide(term41-term42,term43)
-            Qvar_S1[:,k] = s.divide(1,tau*term43)
+                # Update expectations
+                SW[d,k] = Qtheta[d,k] * Qmean_S1[d,k]
 
-            # Update Expectations for the next iteration
-            SW[:,k] = Qtheta[:,k] * Qmean_S1[:,k]
+        # for k in xrange(self.dim[1]):
+
+        #     term1 = all_term1[:,k]
+        #     term2 = 0.5*s.log(s.divide(alpha[k],tau))
+        #     term3 = 0.5*s.log(s.sum(ZZ[:,k]) + s.divide(alpha[k],tau))
+        #     # term41 = ma.dot(Y.T,Z[:,k])
+        #     term41 = ma.dot(Y.T,Z[:,k]).data
+        #     term42 = s.dot( SW[:,s.arange(self.dim[1])!=k] , (Z[:,k]*Z[:,s.arange(self.dim[1])!=k].T).sum(axis=1) )
+        #     term43 = s.sum(ZZ[:,k]) + s.divide(alpha[k],tau)
+        #     term4 = 0.5*tau * s.divide((term41-term42)**2,term43)
+
+        #     # Update S
+        #     Qtheta[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
+
+        #     # Update W
+        #     Qmean_S1[:,k] = s.divide(term41-term42,term43)
+        #     Qvar_S1[:,k] = s.divide(1,tau*term43)
+
+        #     # Update Expectations for the next iteration
+        #     SW[:,k] = Qtheta[:,k] * Qmean_S1[:,k]
 
         # Save updated parameters of the Q distribution
         self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=s.repeat(1/alpha[None,:],self.D,0), 

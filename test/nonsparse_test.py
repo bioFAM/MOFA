@@ -1,36 +1,33 @@
 
-"""
-Script to test the non-sparse updated with non-gaussian likelihoods
-"""
 
 from __future__ import division
 from time import time
 import cPickle as pkl
 import scipy as s
 import os
+from sys import path
 import scipy.special as special
 import scipy.stats as stats
 import numpy.linalg  as linalg
 
+
+path.insert(0,"../")
 from simulate import Simulate
 from BayesNet import BayesNet
-from utils import saveModel
-
-# Import manually defined updates
+from utils import *
 from multiview_nodes import *
 from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
-from local_nodes import Local_Node, Observed_Local_Node
+from nodes import Constant_Node
 from nonsparse_updates import Y_Node, Alpha_Node, W_Node, Tau_Node, Z_Node, Y_Node
-# from nonsparse_unvectorised_updates import Y_Node, Alpha_Node, W_Node, Tau_Node, Z_Node, Y_Node
 
 ###################
 ## Generate data ##
 ###################
 
 # Define dimensionalities
-M = 3
+M = 1
 N = 100
-D = s.asarray([100,100,100])
+D = s.asarray([100,])
 K = 6
 
 
@@ -48,8 +45,8 @@ data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
 
 data['alpha'] = s.zeros((M,K))
 data['alpha'][0,:] = [1,1,1e6,1,1e6,1e6]
-data['alpha'][1,:] = [1,1e6,1,1e6,1,1e6]
-data['alpha'][2,:] = [1e6,1,1,1e6,1e6,1]
+# data['alpha'][1,:] = [1,1e6,1,1e6,1,1e6]
+# data['alpha'][2,:] = [1e6,1,1,1e6,1e6,1]
 
 data['W'], _ = tmp.initW_ard(alpha=data['alpha'])
 data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
@@ -70,23 +67,24 @@ Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=dat
 # data["Y"] = Y_binomial
 data["Y"] = Y_gaussian
 
-likelihood = ["gaussian","gaussian","gaussian"]
-view_names = ["gaussian1","gaussian2","gaussian3"]
+# likelihood = ["gaussian","gaussian","gaussian"]
+likelihood = ["gaussian"]
+view_names = ["gaussian"]
+# view_names = ["gaussian1","gaussian2","gaussian3"]
 
 #################################
 ## Initialise Bayesian Network ##
 #################################
 
-net = BayesNet()
-
 # Define initial number of latent variables
 K = 10
 
 # Define model dimensionalities
-net.dim["M"] = M
-net.dim["N"] = N
-net.dim["D"] = D
-net.dim["K"] = K
+dim = {}
+dim["M"] = M
+dim["N"] = N
+dim["D"] = D
+dim["K"] = K
 
 ###############
 ## Add nodes ##
@@ -95,7 +93,8 @@ net.dim["K"] = K
 # Z without covariates (variational node)
 Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K))
 Z_qcov = s.repeat(s.eye(K)[None,:,:],N,0)
-Z = Z_Node(dim=(N,K), qmean=Z_qmean, qcov=Z_qcov)
+Z = Z_Node(dim=(N,K), pmean=s.nan, pcov=s.nan, qmean=Z_qmean, qcov=Z_qcov, qE=Z_qmean)
+
 Z.updateExpectations()
 
 # Z with covariates (variational node)
@@ -125,7 +124,7 @@ W_list = [None]*M
 for m in xrange(M):
 	W_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(D[m],K))
 	W_qcov = s.repeat(a=s.eye(K)[None,:,:], repeats=D[m] ,axis=0)
-	W_list[m] = W_Node(dim=(D[m],K), qmean=W_qmean, qcov=W_qcov, qE=W_qmean)
+	W_list[m] = W_Node(dim=(D[m],K), pmean=s.nan, pcov=s.nan, qmean=W_qmean, qcov=W_qcov, qE=W_qmean)
 W = Multiview_Variational_Node(M, *W_list)
 
 
@@ -180,49 +179,29 @@ for m in xrange(M):
 	else:
 		Y.nodes[m].addMarkovBlanket(Z=Z, W=W.nodes[m], kappa=tau.nodes[m])
 
-##################################
-## Add the nodes to the network ##
-##################################
-
-net.addNodes(W=W, tau=tau, Z=Z, Y=Y, alpha=alpha)
 
 # Define update schedule
 schedule = ["Y","W","Z","alpha","tau"]
-net.setSchedule(schedule)
+nodes = { "W":W, "tau":tau, "Z":Z, "Y":Y, "alpha":alpha }
 
 #############################
 ## Define training options ##
 #############################
 
 options = {}
-options['maxiter'] = 200
+options['maxiter'] = 500
 options['tolerance'] = 1E-2
-options['forceiter'] = True
-# options['elbofreq'] = options['maxiter']+1
+options['forceiter'] = False
 options['elbofreq'] = 1
-options['dropK'] = True
-options['dropK_threshold'] = 0.01
+options['dropK'] = { 'by_norm':None, 'by_pvar':None, 'by_cor':None }
 options['savefreq'] = options['maxiter']+1
 options['savefolder'] = "/tmp/test"
 options['verbosity'] = 2
-net.options = options
-
 
 ####################
 ## Start training ##
 ####################
 
-
+net = BayesNet(dim=dim, schedule=schedule, nodes=nodes, options=options)
 net.iterate()
-
-##################
-## Save results ##
-##################
-
-print "\nSaving model..."
-sample_names = [ "sample_%d" % n for n in xrange(N)]
-feature_names = [[ "feature_%d" % n for n in xrange(D[m])] for m in xrange(M)]
-
-saveModel(net, outfile="/tmp/test/asd.hd5", view_names=view_names, 
-	sample_names=sample_names, feature_names=feature_names)
 

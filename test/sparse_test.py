@@ -26,7 +26,7 @@ from utils import *
 # Define dimensionalities
 M = 1
 N = 100
-D = s.asarray([2000,])
+D = s.asarray([1000,])
 K = 6
 
 ## Simulate data  ##
@@ -229,7 +229,7 @@ nodes = { "Theta":Theta, "SW":SW, "Tau":Tau, "Z":Z, "Y":Y, "Alpha":Alpha }
 options = {}
 options['maxiter'] = 500
 options['tolerance'] = 1E-2
-options['forceiter'] = True
+options['forceiter'] = False
 # options['elbofreq'] = options['maxiter']+1
 options['elbofreq'] = 1
 options['dropK'] = { 'by_norm':None, 'by_pvar':None, 'by_cor':None }

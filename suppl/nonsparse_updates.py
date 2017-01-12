@@ -5,62 +5,35 @@ import numpy.ma as ma
 from variational_nodes import *
 from utils import *
 
-"""
-###########################################
-## Updates for the Group Factor Analysis ##
-###########################################
 
-Current nodes: 
-    Y_Node: observed data
-    W_Node: weights
-    Tau_Node: precision of the noise
-    Alpha_Node: ARD precision
-    Z_Node: latent variables
+class Y_Node(Constant_Variational_Node):
+    def __init__(self, dim, value):
+        Constant_Variational_Node.__init__(self, dim, value)
 
-Each node is a Variational_Node() class with the following main variables:
-    Important methods:
-    - precompute: precompute some terms to speed up the calculations
-    - calculateELBO: calculate evidence lower bound using current estimates of expectations/params
-    - getParameters: return current parameters
-    - getExpectations: return current expectations
-    - updateParameters: update parameters using current estimates of expectations
-    - updateExpectations: update expectations using current estimates of parameters
-    - removeFactors: remove a set of latent variables from the node
-
-     Important attributes:
-    - markov_blanket: dictionary that defines the set of nodes that are in the markov blanket of the current node
-    - Q: an instance of Distribution() which contains the specification of the variational distribution 
-    - P: an instance of Distribution() which contains the specification of the prior distribution 
-    - dim: dimensionality of the node
-"""
-
-class Y_Node(Observed_Variational_Node):
-    def __init__(self, dim, obs):
-        Observed_Variational_Node.__init__(self, dim, obs)
         # Create a boolean mask of the data to hidden missing values
-        if type(self.obs) != ma.MaskedArray: 
+        if type(self.value) != ma.MaskedArray:
             self.mask()
+
         # Precompute some terms
         self.precompute()
 
     def precompute(self):
         # Precompute some terms to speed up the calculations
         # self.N = self.dim[0]
-        self.N = self.dim[0] - ma.getmask(self.obs).sum(axis=0)
+        self.N = self.dim[0] - ma.getmask(self.value).sum(axis=0)
         self.D = self.dim[1]
         # self.likconst = -0.5*self.N*self.D*s.log(2*s.pi)
         self.likconst = -0.5*s.sum(self.N)*s.log(2*s.pi)
 
     def mask(self):
         # Mask the observations if they have missing values
-        self.obs = ma.masked_invalid(self.obs)
+        self.value = ma.masked_invalid(self.value)
 
     def calculateELBO(self):
-        tau_param = self.markov_blanket["tau"].getParameters()
-        tau_exp = self.markov_blanket["tau"].getExpectations()
-        # We make the assumption that the prior is so broad that is negligible
-        # lik = self.likconst + self.N*s.sum(tau_exp["lnE"])/2 - s.dot(tau_exp["E"],tau_param["b"])
-        lik = self.likconst + s.sum(self.N*(tau_exp["lnE"]))/2 - s.dot(tau_exp["E"],tau_param["b"])
+        tauQ_param = self.markov_blanket["Tau"].getParameters("Q")
+        tauP_param = self.markov_blanket["Tau"].getParameters("P")
+        tau_exp = self.markov_blanket["Tau"].getExpectations()
+        lik = self.likconst + 0.5*s.sum(self.N*(tau_exp["lnE"])) - s.dot(tau_exp["E"],tauQ_param["b"]-tauP_param["b"])
         return lik
 class W_Node(MultivariateGaussian_Unobserved_Variational_Node):
     def __init__(self, dim, qmean, qcov, qE=None, qE2=None):
@@ -69,7 +42,8 @@ class W_Node(MultivariateGaussian_Unobserved_Variational_Node):
 
     def precompute(self):
         self.D = self.dim[0]
-        self.K = self.dim[1]
+        # self.K = self.dim[1]
+        self.factors_axis = 1
 
     def updateParameters(self):
         Z = self.markov_blanket["Z"].getExpectation()
@@ -78,33 +52,26 @@ class W_Node(MultivariateGaussian_Unobserved_Variational_Node):
         tau = (self.markov_blanket["tau"].getExpectation())[:,None,None]
         Y = self.markov_blanket["Y"].getExpectation()
 
-        self.Q.cov = linalg.inv(tau*s.repeat(ZZ[None,:,:],self.D,0) + s.diag(alpha))
+        Qcov = linalg.inv(tau*s.repeat(ZZ[None,:,:],self.D,0) + s.diag(alpha))
         tmp1 = tau*self.Q.cov
         # tmp2 = Y.T.dot(Z)
         tmp2 = ma.dot(Y.T,Z).data
-        self.Q.mean = (tmp1[:,:,:]*tmp2[:,None,:]).sum(axis=2)
+        Qmean = (tmp1[:,:,:]*tmp2[:,None,:]).sum(axis=2)
 
+        # Save updated parameters of the Q distribution
+        self.Q.setParameters(mean=Qmean, cov=QCov)
 
     def calculateELBO(self):
+
+        # Collect parameters and expectations
         alpha = self.markov_blanket["alpha"].getExpectations()["E"]
         logalpha = self.markov_blanket["alpha"].getExpectations()["lnE"]
+        Qpar,Qexp = self.Q.getParameters(), self.Q.getExpectations()
 
-        lb_p = self.D*s.sum(logalpha) - s.sum(self.Q.E2 * s.diag(alpha)[None,:,:])
-        # lb_p = self.D*s.sum(logalpha)/2 - s.sum(self.Q.E2 * s.diag(alpha)[None,:,:])
-        lb_q = -self.D*self.K - logdet(self.Q.cov).sum()
+        lb_p = self.D*s.sum(logalpha) - s.sum(Qexp['E2'] * s.diag(alpha)[None,:,:])
+        lb_q = -self.D*self.K - logdet(Qpar['cov']).sum()
 
-        # return lb_p - lb_q/2
         return (lb_p - lb_q)/2
-
-    def removeFactors(self, *idx):
-        # Method to remove a set of (inactive) latent variables from the node
-        keep = s.setdiff1d(s.arange(self.K),idx)
-        self.Q.mean = self.Q.mean[:,keep]
-        self.Q.cov = self.Q.cov[:,:,keep][:,keep,:]
-        self.Q.E = self.Q.E[:,keep]
-        self.Q.E2 = self.Q.E2[:,:,keep][:,keep,:]
-        self.K = len(keep)
-        self.dim = (self.D,self.K)
 class Tau_Node(Gamma_Unobserved_Variational_Node):
     def __init__(self, dim, pa, pb, qa, qb, qE=None):
         Gamma_Unobserved_Variational_Node.__init__(self, dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
@@ -113,7 +80,7 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
     def precompute(self):
         # Precompute some terms to speed up the calculations
         self.D = self.dim[0]
-        self.lbconst = s.sum(self.D*(self.P.a*s.log(self.P.b) - special.gammaln(self.P.a)))
+        self.lbconst = s.sum(self.P.params['a']*s.log(self.P.params['b']) - special.gammaln(self.P.params['a']))
 
     def updateParameters(self):
         Z = self.markov_blanket["Z"].getExpectation()
@@ -122,71 +89,82 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         WW = self.markov_blanket["W"].getExpectations()["E2"]
         Y = self.markov_blanket["Y"].getExpectation()
 
-        self.Q.a = self.P.a + (Y.shape[0] - ma.getmask(Y).sum(axis=0))/2
+        # Collect parameters from the P and Q distributions of this node
+        P,Q = self.P.getParameters(), self.Q.getParameters()
+        Pa, Pb = P['a'], P['b']
+
+        Qa = Pa + (Y.shape[0] - ma.getmask(Y).sum(axis=0))/2
         # tmp = (Y**2).sum(axis=0) - 2*(Y*s.dot(Z,W.T)).sum(axis=0) + (WW*ZZ[None,:,:]).sum(axis=(1,2))
         tmp = (Y**2).sum(axis=0).data - 2*(Y*s.dot(Z,W.T)).sum(axis=0).data + (WW*ZZ[None,:,:]).sum(axis=(1,2))
-        self.Q.b = self.P.b + tmp/2
+        Qb = Pb + tmp/2
 
-        pass
+        # Save updated parameters of the Q distribution
+        self.Q.setParameters(a=Qa, b=Qb)
 
     def calculateELBO(self):
-        # Calculate Variational Evidence Lower Bound
-        p = self.P
-        q = self.Q
-        lb_p = self.lbconst + (p.a-1)*s.sum(q.lnE) - p.b*s.sum(q.E)
-        lb_q = s.sum(q.a*s.log(q.b)) + s.sum((q.a-1)*q.lnE) - s.sum(q.b*q.E) - s.sum(special.gammaln(q.a))
+        # Collect parameters and expectations
+        P,Q = self.P.getParameters(), self.Q.getParameters()
+        Pa, Pb, Qa, Qb = P['a'], P['b'], Q['a'], Q['b']
+        QE, QlnE = self.Q.expectations['E'], self.Q.expectations['lnE']
 
+        # Do the calculations
+        lb_p = self.lbconst + s.sum((Pa-1)*QlnE) - s.sum(Pb*QE)
+        lb_q = s.sum(Qa*s.log(Qb)) + s.sum((Qa-1)*QlnE) - s.sum(Qb*QE) - s.sum(special.gammaln(Qa))
         return lb_p - lb_q
 class Alpha_Node(Gamma_Unobserved_Variational_Node):
     def __init__(self, dim, pa, pb, qa, qb, qE=None):
-        Gamma_Unobserved_Variational_Node.__init__(self, dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+        # Gamma_Unobserved_Variational_Node.__init__(self, dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+        super(Alpha_Node,self).__init__(dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
         self.precompute()
 
     def precompute(self):
         # Precompute some terms to speed up the calculations
-        self.K = self.dim[0]
-        self.lbconst = self.K * ( self.P.a*s.log(self.P.b) - special.gammaln(self.P.a) )
+        # self.K = self.dim[0]
+        self.lbconst = s.sum( self.P.params['a']*s.log(self.P.params['b']) - special.gammaln(self.P.params['a']) )
+        self.factors_axis = 0
 
     def updateParameters(self):
+        # Collect expectations from other nodes
         WW = self.markov_blanket["W"].getExpectations()["E2"]
+        D = self.markov_blanket["W"].getExpectations()["E"].shape[0]
+
+        # Collect parameters from the P and Q distributions of this node
+        P,Q = self.P.getParameters(), self.Q.getParameters()
+        Pa, Pb = P['a'], P['b']
+
         # D = WW.shape[0]
         # self.Q.a[:] = self.P.a + D/2
-        self.Q.b = self.P.b + s.diag(WW.sum(axis=0))/2
+
+        Qa = Pa + 0.5*D
+        Qb = Pb + 0.5*s.diag(WW.sum(axis=0))
+
+        # Save updated parameters of the Q distribution
+        self.Q.setParameters(a=Qa, b=Qb)
 
     def calculateELBO(self):
-        # Calculate Variational Evidence Lower Bound
-        p = self.P
-        q = self.Q
+        # Collect parameters and expectations
+        P,Q = self.P.getParameters(), self.Q.getParameters()
+        Pa, Pb, Qa, Qb = P['a'], P['b'], Q['a'], Q['b']
+        QE, QlnE = self.Q.expectations['E'], self.Q.expectations['lnE']
 
-        lb_p = self.lbconst + (p.a-1)*s.sum(q.lnE) - p.b*s.sum(q.E)
-        lb_q = s.sum(q.a*s.log(q.b)) + s.sum((q.a-1)*q.lnE) - s.sum(q.b*q.E) - s.sum(special.gammaln(q.a))
+        # Do the calculations
+        lb_p = self.lbconst + s.sum((Pa-1)*QlnE) - s.sum(Pb*QE)
+        lb_q = s.sum(Qa*s.log(Qb)) + s.sum((Qa-1)*QlnE) - s.sum(Qb*QE) - s.sum(special.gammaln(Qa))
 
         return lb_p - lb_q
-
-    def removeFactors(self, *idx):
-        # Method to remove a set of (inactive) latent variables from the node
-        keep = s.setdiff1d(s.arange(self.K),idx)
-        self.Q.a = self.Q.a[keep]
-        self.Q.b = self.Q.b[keep]
-        self.Q.E = self.Q.E[keep]
-        self.Q.lnE = self.Q.lnE[keep]
-        self.K = len(keep)
-        self.dim = (self.K,1)
 class Z_Node(MultivariateGaussian_Unobserved_Variational_Node):
-    def __init__(self, dim, qmean, qcov, qE=None, qE2=None):
-        MultivariateGaussian_Unobserved_Variational_Node.__init__(self, dim=dim, qmean=qmean, qcov=qcov, qE=qE, qE2=qE2)
+    def __init__(self, dim, pmean, pcov, qmean, qcov, qE=None, idx_covariates=None):
+        MultivariateGaussian_Unobserved_Variational_Node.__init__(self, dim=dim, pmean=pmean, pcov=pcov, qmean=qmean, qcov=qcov, qE=qE)
+        # super(Z_Node,self).__init__(dim=dim, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE, qE2=qE2)
         self.precompute()
+
+        if idx_covariates is not None:
+            self.covariates[idx_covariates] = True
 
     def precompute(self):
         self.N = self.dim[0]
-        self.K = self.dim[1]
-        self.covariates = np.zeros(self.K, dtype=bool)
-
-    def setCovariates(self, idx):
-        # Method to define which factors are unupdated covariates
-        # Input:
-        #  idx (integer list): index of the columns of Z that are covariates
-        self.covariates[idx] = True
+        self.covariates = np.zeros(self.dim[1], dtype=bool)
+        self.factors_axis = 1
 
     def updateParameters(self):
         # Method to update the parameters of the Q distribution of the node Z
@@ -197,49 +175,43 @@ class Z_Node(MultivariateGaussian_Unobserved_Variational_Node):
         W = [ tmp[m]["E"]for m in xrange(M) ]
         WW = [ tmp[m]["E2"]for m in xrange(M) ]
 
+        # Collect parameters from the P and Q distributions of this node
+        P,Q = self.P.getParameters(), self.Q.getParameters()
+        Pmean, Qmean = P['mean'], Q['mean']
+
         # covariance
         cov = s.eye(self.K)
         for m in xrange(M):
             cov += (tau[m][:,None,None] * WW[m]).sum(axis=0)
         cov = linalg.inv(cov)
-        self.Q.cov = s.repeat(cov[None,:,:],self.N,axis=0)
+        Qcov = s.repeat(cov[None,:,:],self.N,axis=0)
 
         # mean
         if any(self.covariates): 
-            oldmean = self.Q.mean[:,self.covariates]
+            oldmean = Qmean[:,self.covariates]
             
         tmp = s.zeros(self.dim[::-1])
         for m in xrange(M):
             # tmp += W[m].T.dot(s.diag(tau[m])).dot(Y[m].T)
             # tmp += ma.dot(W[m].T.dot(s.diag(tau[m])), Y[m].T)
             tmp += ma.dot(tau[m]*W[m].T,Y[m].T)
-        self.Q.mean = cov.dot(tmp).T
+        Qmean = cov.dot(tmp).T
 
         # Do not update the latent variables associated with known covariates
         if any(self.covariates): 
-            self.Q.mean[:,self.covariates] = oldmean
+            Qmean[:,self.covariates] = oldmean
 
-        pass
+        # Save updated parameters of the Q distribution
+        self.Q.setParameters(mean=Qmean, cov=Qcov)
 
     def calculateELBO(self):
         # lb_p = -s.trace(self.Q.E2.sum(axis=0))/2
         # lb_q = -self.N*logdet(self.Q.cov[0,:,:]) - self.N*self.K/2
         # return lb_p - lb_q
-        lb_p = -s.trace(self.Q.E2.sum(axis=0))
-        lb_q = -self.N*logdet(self.Q.cov[0,:,:]) - self.N*self.K
+
+        Qpar, Qexp = self.Q.getParameters(), self.Q.getExpectations()
+        lb_p = -s.trace(Qexp['E2'].sum(axis=0))
+        lb_q = -self.N*logdet(Qpar['cov'][0,:,:]) - self.N*self.K
         return (lb_p - lb_q)/2
-
-    def removeFactors(self, *idx):
-        # Method to remove a set of (inactive) latent variables from the node
-        keep = s.setdiff1d(s.arange(self.K),idx)
-        self.Q.mean = self.Q.mean[:,keep]
-        self.Q.cov = self.Q.cov[:,:,keep][:,keep,:]
-        self.Q.E = self.Q.E[:,keep]
-        self.Q.E2 = self.Q.E2[:,:,keep][:,keep,:]
-        self.K = len(keep)
-        self.dim = (self.N,self.K)
-        self.covariates = self.covariates[keep]
-
-
 
 

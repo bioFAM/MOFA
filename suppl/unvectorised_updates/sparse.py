@@ -182,7 +182,6 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         # N = Y.shape[0]
         # K = Z.shape[1]
         # mask = ma.getmask(Y)
-        # a = 0
         # for d in xrange(self.D):
         #     tmp = 0
         #     for n in xrange(N):

@@ -24,9 +24,9 @@ from utils import *
 ###################
 
 # Define dimensionalities
-M = 1
-N = 100
-D = s.asarray([1000,])
+M = 3
+N = 200
+D = s.asarray([2000,2000,2000])
 K = 6
 
 ## Simulate data  ##
@@ -58,7 +58,7 @@ data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 data['tau']= [ s.ones(D[m])*2 for m in xrange(M) ]
 
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
-	likelihood="gaussian", missingness=0.05)
+	likelihood="gaussian", missingness=0.00)
 # Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
 	# likelihood="poisson", missingness=0.00)
 # Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
@@ -161,8 +161,8 @@ for m in xrange(M):
 		tmp = 0.25*s.amax(data["Y"]["tot"][m],axis=0)
 		tau_list[m] = Constant_Node(dim=(D[m],), value=tmp)
 	elif likelihood[m] == "gaussian":
-		tau_pa = 1e-2
-		tau_pb = 1e-2
+		tau_pa = 1e-3
+		tau_pb = 1e-3
 		tau_qa = tau_pa + s.ones(D[m])*N/2
 		tau_qb = s.nan
 		tau_qE = s.zeros(D[m]) + 100
@@ -244,6 +244,8 @@ options['verbosity'] = 2
 
 net = BayesNet(dim=dim, schedule=schedule, nodes=nodes, options=options)
 net.iterate()
+
+exit()
 
 ##################
 ## Save results ##

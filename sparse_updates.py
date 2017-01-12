@@ -223,8 +223,7 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
 
         # ARD prior on ????
         # Qa = Pa + 0.5*ES.sum(axis=0)
-        D = ES.shape[0]
-        Qa = Pa + 0.5*D
+        Qa = Pa + 0.5*ES.shape[0]
         Qb = Pb + 0.5*EWW.sum(axis=0)
 
         # Save updated parameters of the Q distribution
@@ -284,8 +283,13 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
 
         for k in xrange(self.dim[1]):
 
-                # Update S
-                Qtheta[d,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
+            term1 = all_term1[:,k]
+            term2 = 0.5*s.log(s.divide(alpha[k],tau))
+            term3 = 0.5*s.log(s.sum(ZZ[:,k]) + s.divide(alpha[k],tau))
+            term41 = ma.dot(Y.T,Z[:,k]).data
+            term42 = s.dot( SW[:,s.arange(self.dim[1])!=k] , (Z[:,k]*Z[:,s.arange(self.dim[1])!=k].T).sum(axis=1) )
+            term43 = s.sum(ZZ[:,k]) + s.divide(alpha[k],tau)
+            term4 = 0.5*tau * s.divide((term41-term42)**2,term43)
 
             # Update S
             Qtheta[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))

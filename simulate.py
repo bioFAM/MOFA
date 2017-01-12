@@ -110,11 +110,10 @@ class Simulate(object):
 
         # Sample observations using a gaussian likelihood
         if likelihood == "gaussian":
-            warnings.warn("Slow and Fast simulators do not match, why?")
-            # Fast way (I THINK THERE IS A PROBLEM WITH IT, NOT SURE WHY)
             for m in xrange(self.M):
-                Y[m] = s.dot(Z,W[m].T) + Mu[m] + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m])).T
+                Y[m] = s.dot(Z,W[m].T) + Mu[m] + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m]), size=[self.N, self.D[m]])
 
+            # Non-vectorised, slow
             # for m in xrange(self.M):
             #     for n in xrange(self.N):
             #         for d in xrange(self.D[m]):
@@ -185,7 +184,7 @@ class Simulate(object):
                 tmp[nas] = s.nan
                 Y[m] = tmp.reshape((self.N,self.D[m]))
 
-        # Create a mask 
+        # Create a mask
         for m in xrange(self.M):
             Y[m] = ma.masked_invalid(Y[m])
         return Y

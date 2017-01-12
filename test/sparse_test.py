@@ -22,7 +22,7 @@ from utils import *
 ###################
 ## Generate data ##
 ###################
-
+s.random.seed(1)
 # Define dimensionalities
 M = 3
 N = 200
@@ -46,8 +46,8 @@ data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
 
 data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
 data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
-# data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
-# data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
+data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
+data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
 theta = [ s.ones(K)*0.5 for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
@@ -57,19 +57,20 @@ data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 # data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 data['tau']= [ s.ones(D[m])*2 for m in xrange(M) ]
 
-Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="gaussian", missingness=0.00)
-# Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+# Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	# likelihood="poisson", missingness=0.00)
-# Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+# Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	# likelihood="bernoulli", missingness=0.00)
-# Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+# Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	# likelihood="binomial", min_trials=10, max_trials=50, missingness=0.05)
 
 # data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 # data["Y"] = ( Y_bernoulli[0], Y_bernoulli[1], Y_bernoulli[2] )
 # data["Y"] = (Y_bernoulli[0],Y_bernoulli[1])
 data["Y"] = Y_gaussian
+import pdb; pdb.set_trace()
 # data["Y"] = Y_poisson
 # data["Y"] = Y_binomial
 # data["Y"] = (Y_gaussian[0],)
@@ -152,10 +153,10 @@ SW = Multiview_Variational_Node(M, *SW_list)
 tau_list = [None]*M
 for m in xrange(M):
 	if likelihood[m] == "poisson":
-		tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0) 
+		tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0)
 		tau_list[m] = Constant_Node(dim=(D[m],), value=tmp)
 	elif likelihood[m] == "bernoulli":
-		tmp = s.ones(D[m])*0.25 
+		tmp = s.ones(D[m])*0.25
 		tau_list[m] = Constant_Node(dim=(D[m],), value=tmp)
 	elif likelihood[m] == "binomial":
 		tmp = 0.25*s.amax(data["Y"]["tot"][m],axis=0)
@@ -255,5 +256,5 @@ print "\nSaving model..."
 sample_names = [ "sample_%d" % n for n in xrange(N)]
 feature_names = [[ "feature_%d" % n for n in xrange(D[m])] for m in xrange(M)]
 
-saveModel(net, outfile="/tmp/test/asd.hd5", view_names=view_names, 
+saveModel(net, outfile="/tmp/test/asd.hd5", view_names=view_names,
 	sample_names=sample_names, feature_names=feature_names)

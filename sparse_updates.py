@@ -430,13 +430,14 @@ class Theta_Constant_Node(Constant_Variational_Node):
 # there should be a defalut when there is no clusters
 # TODO do updatdes, but before that implement test to check 'pipes' are ok
 class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
+    # TODO need to implement droping a latent variable
 
     """ """
     def __init__(self, pmean, pvar, qmean, qvar, clusters, n_Z, cluster_dic=None, qE=None, qE2=None):
         # compute dim from numbers of clusters (n_clusters * Z)
         self.clusters = clusters
-        n_clusters = len(np.unique(clusters))
-        dim = (n_clusters, n_Z)
+        self.n_clusters = len(np.unique(clusters))
+        dim = (self.n_clusters, n_Z)
         super(Cluster_Node_Gaussian, self).__init__(dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE, qE2=qE2)
 
 
@@ -449,10 +450,31 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
         return {'E': expanded_expectation , 'E2': expanded_variance}
 
     def updateParameters(self):
-        # update of the variance
+        
         Ppar = self.P.getParameters()
+        ZQPar = self.markov_blanket['Z'].Q.getParameters()
+        Qmean, Qvar = self.Q.getParameters()['mean'], self.Q.getParameters()['var']
+
+        ZTau = 1./ZQPar['var']
+        ZTauMean = ZQPar['mean']/ZQPar['var']
+
+        # update of the variance
+        for c in range(self.n_clusters):
+            mask = (self.clusters == c)
+            tmp = (ZTau[mask, :]).sum(axis=0)
+            Qvar[c,:] = tmp
+        Qvar += 1./Ppar['var']
+        Qvar = 1./Qvar
+
         # update of the mean
-        pass
+        for c in range(self.n_clusters):
+            mask = (self.clusters == c)
+            tmp = (ZTauMean[mask, :]).sum(axis=0)
+            Qmean[c,:] = tmp
+        Qmean = Qmean + Ppar['mean']/Ppar['var']
+        Qmean *= Qvar
+
+        self.Q.setParameters(mean=Qmean, var=Qvar)
 
     def calculateELBO(self):
         return 0

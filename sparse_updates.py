@@ -479,6 +479,7 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
         self.Q.setParameters(mean=Qmean, var=Qvar)
 
     def calculateELBO(self):
+        import pdb; pdb.set_trace()
         PParam = self.P.getParameters()
         PVar, Pmean = PParam['var'], PParam['mean']
 

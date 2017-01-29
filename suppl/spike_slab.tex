@@ -354,6 +354,17 @@ where $\mu_{k, c}$ is given a normal prior:
   \mu_{\mu_{k, c}} = \sigma^2_{\mu_{k, c}}\times \left( \sum_{n \in c} \frac{\la z_{n,k} \ra}{\sigma^2_{z_{n,k}}} + \frac{\mu_0}{\sigma^2_0} \right)
 \end{equation*}
 
+\subsection{ELBO term for $\mu$}
+Cross entropy term
+\begin{equation*}
+  \mathbb{E}\left[ \log(P(\mu_{k, c}))\right] = \sum_c\sum_k \log\left(\frac{1}{\sigma_0 (2\pi)^{1/2}}\right) - \frac{1}{2\sigma^2_0}\left( \la \mu_{k,c}^2\ra -2\la\mu_{k,c}\ra\mu_0 + \mu_0^2 \right)
+\end{equation*}
+
+Entropy of Q:
+\begin{equation*}
+  -\mathbb{E}\left[ \log(Q(\mu_{k, c}))\right] =\sum_c\sum_k 1/2\log(2\sigma^2_{\mu_{k, c}} \pi e)
+\end{equation*}
+
 
 
 

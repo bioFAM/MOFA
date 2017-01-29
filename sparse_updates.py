@@ -452,16 +452,7 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
         # do we need to expand the variance as well ?
         return {'E': expanded_expectation , 'E2': expanded_E2}
 
-    def removeFactors(self, idx, axis=0):
-        # Ideally we want this node to use the removeFactors defined in Node()
-        # but the problem is that we also need to update the "expectations", so i need
-        # to call precompute()
-        self.value = s.delete(self.value, idx, axis)
-        self.precompute()
-        self.updateDim(axis=axis, new_dim=self.dim[axis]-len(idx))
-
     def updateParameters(self):
-
         Ppar = self.P.getParameters()
         ZQPar = self.markov_blanket['Z'].Q.getParameters()
         Qmean, Qvar = self.Q.getParameters()['mean'], self.Q.getParameters()['var']

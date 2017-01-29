@@ -100,8 +100,6 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
 
         ClustPrior = self.markov_blanket['Cluster']
         Pmean = ClustPrior.getExpectations()['E']
-        # check whether this is what's needed
-        PE2 = ClustPrior.getExpectations()['E2']
 
         M = len(Y)
         Y = ma.concatenate([Y[m] for m in xrange(M)],axis=1)
@@ -110,16 +108,16 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         tau = s.concatenate([tau[m] for m in xrange(M)],axis=0)
 
         # Collect parameters from the P and Q distributions of this node
-        # P,Q = self.P.getParameters(), self.Q.getParameters()
+        P,Q = self.P.getParameters(), self.Q.getParameters()
         Q = self.Q.getParameters()
-        # Pmean, Pvar, Qmean = P['mean'], P['var'], Q['mean']
+        Pvar, Qmean = P['var'], Q['mean']
         Qmean =  Q['mean']
 
         # Variance
         # POSSIBLE MISTAKE: THE PLUS ONE HERE? OR IS THIS RELATED TO PVAR?
         tmp = (tau*SWW.T).sum(axis=1)
         tmp = s.repeat(tmp[None,:],self.N,0)
-        tmp += 1./PE2  # adding the prior precision to the updated precision
+        tmp += 1./Pvar  # adding the prior precision to the updated precision
         Qvar = 1./tmp
 
         # Mean
@@ -130,7 +128,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
             tmp1 = SW[:,k]*tau
             tmp2 = Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )
             tmp3 = ma.dot(tmp2,tmp1)
-            tmp3 += 1./PE2[:,k] * Pmean[:,k]
+            tmp3 += 1./Pvar[:,k] * Pmean[:,k]
             Qmean[:,k] = Qvar[:,k] * tmp3
 
         # Do not update the latent variables associated with known covariates
@@ -455,7 +453,7 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
         pass
 
     def calculateELBO(self):
-        return 0 
+        return 0
 
 
 class Cluster_Node_Constant(UnivariateGaussian_Unobserved_Variational_Node):

@@ -440,6 +440,7 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
         self.clusters = clusters
         self.n_clusters = len(np.unique(clusters))
         dim = (self.n_clusters, n_Z)
+        self.factors_axis = 1
         super(Cluster_Node_Gaussian, self).__init__(dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE, qE2=qE2)
 
 
@@ -450,6 +451,14 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
         expanded_E2 = QExp['E2'][self.clusters, :]
         # do we need to expand the variance as well ?
         return {'E': expanded_expectation , 'E2': expanded_E2}
+
+    def removeFactors(self, idx, axis=0):
+        # Ideally we want this node to use the removeFactors defined in Node()
+        # but the problem is that we also need to update the "expectations", so i need
+        # to call precompute()
+        self.value = s.delete(self.value, idx, axis)
+        self.precompute()
+        self.updateDim(axis=axis, new_dim=self.dim[axis]-len(idx))
 
     def updateParameters(self):
 

@@ -1,6 +1,7 @@
 from __future__ import division
 import numpy.linalg  as linalg
 import numpy.ma as ma
+import numpy as np
 
 # Import manually defined functions
 from variational_nodes import *
@@ -74,6 +75,7 @@ class Y_Node(Constant_Variational_Node):
         lik = self.likconst + 0.5*s.sum(self.N*(tau_exp["lnE"])) - s.dot(tau_exp["E"],tauQ_param["b"]-tauP_param["b"])
         return lik
 
+
 class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
     def __init__(self, dim, pmean, pvar, qmean, qvar, qE=None, qE2=None, idx_covariates=None):
         # UnivariateGaussian_Unobserved_Variational_Node.__init__(self, dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE)
@@ -89,12 +91,18 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         self.factors_axis = 1
 
     def updateParameters(self):
-
+        # TODO check what is needed from the new node (exp or param) and how
         # Collect expectations from other nodes
         # TO DO: MAKE THIS FASTER
         Y = self.markov_blanket["Y"].getExpectation()
         SWtmp = self.markov_blanket["SW"].getExpectations()
         tau = self.markov_blanket["Tau"].getExpectation()
+
+        ClustPrior = self.markov_blanket['Cluster']
+        Pmean = ClustPrior.getExpectations()['E']
+        # check whether this is what's needed
+        PE2 = ClustPrior.getExpectations()['E2']
+
         M = len(Y)
         Y = ma.concatenate([Y[m] for m in xrange(M)],axis=1)
         SW = s.concatenate([SWtmp[m]["ESW"]for m in xrange(M)],axis=0)
@@ -102,14 +110,16 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         tau = s.concatenate([tau[m] for m in xrange(M)],axis=0)
 
         # Collect parameters from the P and Q distributions of this node
-        P,Q = self.P.getParameters(), self.Q.getParameters()
-        Pmean, Pvar, Qmean = P['mean'], P['var'], Q['mean']
+        # P,Q = self.P.getParameters(), self.Q.getParameters()
+        Q = self.Q.getParameters()
+        # Pmean, Pvar, Qmean = P['mean'], P['var'], Q['mean']
+        Qmean =  Q['mean']
 
         # Variance
         # POSSIBLE MISTAKE: THE PLUS ONE HERE? OR IS THIS RELATED TO PVAR?
         tmp = (tau*SWW.T).sum(axis=1)
         tmp = s.repeat(tmp[None,:],self.N,0)
-        tmp += 1./Pvar  # adding the prior precision to the updated precision
+        tmp += 1./PE2  # adding the prior precision to the updated precision
         Qvar = 1./tmp
 
         # Mean
@@ -120,7 +130,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
             tmp1 = SW[:,k]*tau
             tmp2 = Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )
             tmp3 = ma.dot(tmp2,tmp1)
-            tmp3 += 1./Pvar[:,k] * Pmean[:,k]
+            tmp3 += 1./PE2[:,k] * Pmean[:,k]
             Qmean[:,k] = Qvar[:,k] * tmp3
 
         # Do not update the latent variables associated with known covariates
@@ -131,6 +141,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         self.Q.setParameters(mean=Qmean, var=Qvar)
 
     def calculateELBO(self):
+        # TODO see what's left in the ELBO here and what should be moved to the new node
         # Collect parameters and expectations
         Ppar,Qpar,Qexp = self.P.getParameters(), self.Q.getParameters(), self.Q.getExpectations()
         Pmean, Pvar, Qmean, Qvar = Ppar['mean'], Ppar['var'], Qpar['mean'], Qpar['var']
@@ -415,3 +426,46 @@ class Theta_Constant_Node(Constant_Variational_Node):
         self.value = s.delete(self.value, idx, axis)
         self.precompute()
         self.updateDim(axis=axis, new_dim=self.dim[axis]-len(idx))
+
+# we need a list of list of index to define the clusters (dictionary ? could also
+# be a vector of length N_samples with cluster index)
+# there should be a defalut when there is no clusters
+# TODO do updatdes, but before that implement test to check 'pipes' are ok
+class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
+
+    """ """
+    def __init__(self, pmean, pvar, qmean, qvar, clusters, n_Z, cluster_dic=None, qE=None, qE2=None):
+        # compute dim from numbers of clusters (n_clusters * Z)
+        self.clusters = clusters
+        n_clusters = len(np.unique(clusters))
+        dim = (n_clusters, n_Z)
+        super(Cluster_Node_Gaussian, self).__init__(dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE, qE2=qE2)
+
+
+    def getExpectations(self):
+        # reshape the values to N_samples * N_factors and return
+        QExp = self.Q.getExpectations()
+        expanded_expectation = QExp['E'][self.clusters, :]
+        expanded_variance = QExp['E2'][self.clusters, :]
+        # do we need to expand the variance as well ?
+        return {'E': expanded_expectation , 'E2': expanded_variance}
+
+    def updateParameters(self):
+        # this should be done in dimension n_clusters * n_Z
+        pass
+
+    def calculateELBO(self):
+        return 0 
+
+
+class Cluster_Node_Constant(UnivariateGaussian_Unobserved_Variational_Node):
+    """ """
+    def __init__(self,  dim, pmean, pvar, qmean, qvar, qE=None, qE2=None):
+        super(Cluster_Node, self).__init__(dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE, qE2=qE2)
+
+
+    def updateParameters(self):
+        pass
+
+    def calculateELBO(self):
+        return 0

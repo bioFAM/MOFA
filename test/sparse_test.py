@@ -16,7 +16,7 @@ from BayesNet import BayesNet
 from multiview_nodes import *
 from nodes import Constant_Node
 from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
-from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node, Theta_Node, Theta_Constant_Node
+from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node, Theta_Node, Theta_Constant_Node, Cluster_Node_Gaussian
 from utils import *
 
 from mixed_nodes import Mixed_Theta_Nodes
@@ -110,6 +110,15 @@ for iter in range(1000):
 	Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K))
 	Z_qvar = s.ones((N,K))
 	Z = Z_Node(dim=(N,K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar)
+
+	# Samples clusters (two clusters)
+	clusters = np.random.choice([0,1], N)
+	cluster_q_var =1
+	cluster_q_mean =0
+	cluster_p_var =1
+	cluster_p_mean =0
+	Cluster_Node = Cluster_Node_Gaussian(cluster_p_mean, cluster_p_var, cluster_q_mean,
+						  cluster_q_var, clusters, K)
 
 	# Z with covariates (variational node)
 	# Z_pmean = 0.
@@ -227,7 +236,8 @@ for iter in range(1000):
 	## Define Markov Blankets ##
 	############################
 
-	Z.addMarkovBlanket(SW=SW, Tau=Tau, Y=Y)
+	Z.addMarkovBlanket(SW=SW, Tau=Tau, Y=Y, Cluster=Cluster_Node)
+	Cluster_Node.addMarkovBlanket(Z=Z)
 	for m in xrange(M):
 		Theta.nodes[m].addMarkovBlanket(SW=SW.nodes[m])
 		Alpha.nodes[m].addMarkovBlanket(SW=SW.nodes[m])
@@ -242,8 +252,9 @@ for iter in range(1000):
 	Z.updateExpectations()
 	Theta.updateExpectations()
 
-	schedule = ["SW","Z","Alpha","Tau","Theta"]
-	nodes = { "Theta":Theta, "SW":SW, "Tau":Tau, "Z":Z, "Y":Y, "Alpha":Alpha }
+	schedule = ["SW","Z","Alpha","Tau","Theta","Cluster"]
+	nodes = { "Theta":Theta, "SW":SW, "Tau":Tau, "Z":Z, "Y":Y, "Alpha":Alpha,
+	 		  "Cluster": Cluster_Node}
 
 	#############################
 	## Define training options ##

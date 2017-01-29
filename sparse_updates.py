@@ -99,7 +99,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         tau = self.markov_blanket["Tau"].getExpectation()
 
         ClustPrior = self.markov_blanket['Cluster']
-        Pmean = ClustPrior.getExpectations()['E']
+        Mu = ClustPrior.getExpectations()['E']
 
         M = len(Y)
         Y = ma.concatenate([Y[m] for m in xrange(M)],axis=1)
@@ -128,7 +128,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
             tmp1 = SW[:,k]*tau
             tmp2 = Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )
             tmp3 = ma.dot(tmp2,tmp1)
-            tmp3 += 1./Pvar[:,k] * Pmean[:,k]
+            tmp3 += 1./Pvar[:,k] * Mu[:,k]
             Qmean[:,k] = Qvar[:,k] * tmp3
 
         # Do not update the latent variables associated with known covariates
@@ -449,7 +449,9 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
         return {'E': expanded_expectation , 'E2': expanded_variance}
 
     def updateParameters(self):
-        # this should be done in dimension n_clusters * n_Z
+        # update of the variance
+        Ppar = self.P.getParameters()
+        # update of the mean
         pass
 
     def calculateELBO(self):
@@ -463,6 +465,7 @@ class Cluster_Node_Constant(UnivariateGaussian_Unobserved_Variational_Node):
 
 
     def updateParameters(self):
+
         pass
 
     def calculateELBO(self):

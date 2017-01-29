@@ -498,6 +498,10 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
 
         return tmp + tmp2 + tmp3
 
+
+# TODO update other node to use this prior instead of their own
+# TODO update sparse_test for this
+# TODO implement ELBO
 class Cluster_Node_Gamma(Gamma_Unobserved_Variational_Node):
     """ """
     def __init__(self, clusters, n_z, pa, pb, qa, qb, qE=None):
@@ -528,6 +532,7 @@ class Cluster_Node_Gamma(Gamma_Unobserved_Variational_Node):
         Qb, Qa =  self.Q.getParameters()['b'], self.Q.getParameters()['a']
 
         # update of beta
+        # TODO merge two for loops when clean ?
         for c in range(self.n_clusters):
             mask = (self.clusters == c)
             tmp = (ZE2[mask, :]).sum(axis=0)

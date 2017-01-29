@@ -143,7 +143,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         # Collect parameters and expectations
         Ppar,Qpar,Qexp = self.P.getParameters(), self.Q.getParameters(), self.Q.getExpectations()
         Pvar, Qmean, Qvar = Ppar['var'], Qpar['mean'], Qpar['var']
-        PE, PE2 = self.markov_blanket['Cluster'].Q.getExpectations()['E'], self.markov_blanket['Cluster'].Q.getExpectations()['E2']
+        PE, PE2 = self.markov_blanket['Cluster'].getExpectations()['E'], self.markov_blanket['Cluster'].getExpectations()['E2']
 
         QE,QE2 = Qexp['E'],Qexp['E2']
 
@@ -479,7 +479,24 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
         self.Q.setParameters(mean=Qmean, var=Qvar)
 
     def calculateELBO(self):
-        return 0
+        PParam = self.P.getParameters()
+        PVar, Pmean = PParam['var'], PParam['mean']
+
+        QExp = self.Q.getExpectations()
+        QE2, QE = QExp['E2'], QExp['E']
+
+        Qvar = self.Q.getParameters()['var']
+
+        # minus cross entropy
+        tmp = -(0.5 * s.log(PVar)).sum()
+        tmp2 = - ((0.5/PVar) * (QE2 - 2.*QE*Pmean + Pmean**2.)).sum()
+
+        # entropy of Q
+        tmp3 = 0.5 * (s.log(Qvar)).sum()
+        tmp3 += 0.5 * self.dim[0] * self.dim[1]
+
+        return tmp + tmp2 + tmp3
+
 
 # TODO do we need this ?
 class Cluster_Node_Constant(Constant_Variational_Node):

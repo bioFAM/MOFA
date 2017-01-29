@@ -142,11 +142,13 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         # TODO see what's left in the ELBO here and what should be moved to the new node
         # Collect parameters and expectations
         Ppar,Qpar,Qexp = self.P.getParameters(), self.Q.getParameters(), self.Q.getExpectations()
-        Pmean, Pvar, Qmean, Qvar = Ppar['mean'], Ppar['var'], Qpar['mean'], Qpar['var']
+        Pvar, Qmean, Qvar = Ppar['var'], Qpar['mean'], Qpar['var']
+        PE, PE2 = self.markov_blanket['Cluster'].Q.getExpectations()['E'], self.markov_blanket['Cluster'].Q.getExpectations()['E2']
+
         QE,QE2 = Qexp['E'],Qexp['E2']
 
         # compute term from the exponential in the Gaussian
-        tmp1 = 0.5*QE2 - Pmean*QE + 0.5*Pmean**2.0
+        tmp1 = 0.5*QE2 - PE*QE + 0.5*PE2
         tmp1 = -(tmp1/Pvar).sum()
 
         # compute term from the precision factor in front of the Gaussian (TODO should be computed only once)
@@ -445,12 +447,12 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
         # reshape the values to N_samples * N_factors and return
         QExp = self.Q.getExpectations()
         expanded_expectation = QExp['E'][self.clusters, :]
-        expanded_variance = QExp['E2'][self.clusters, :]
+        expanded_E2 = QExp['E2'][self.clusters, :]
         # do we need to expand the variance as well ?
-        return {'E': expanded_expectation , 'E2': expanded_variance}
+        return {'E': expanded_expectation , 'E2': expanded_E2}
 
     def updateParameters(self):
-        
+
         Ppar = self.P.getParameters()
         ZQPar = self.markov_blanket['Z'].Q.getParameters()
         Qmean, Qvar = self.Q.getParameters()['mean'], self.Q.getParameters()['var']
@@ -479,8 +481,8 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
     def calculateELBO(self):
         return 0
 
-
-class Cluster_Node_Constant(UnivariateGaussian_Unobserved_Variational_Node):
+# TODO do we need this ?
+class Cluster_Node_Constant(Constant_Variational_Node):
     """ """
     def __init__(self,  dim, pmean, pvar, qmean, qvar, qE=None, qE2=None):
         super(Cluster_Node, self).__init__(dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE, qE2=qE2)

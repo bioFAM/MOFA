@@ -460,6 +460,7 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
         ZTau = 1./ZQPar['var']
         ZTauMean = ZQPar['mean']/ZQPar['var']
 
+        # TODO merge two for loops to save time when 100% sure it's clean
         # update of the variance
         for c in range(self.n_clusters):
             mask = (self.clusters == c)
@@ -496,6 +497,58 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
         tmp3 += 0.5 * self.dim[0] * self.dim[1]
 
         return tmp + tmp2 + tmp3
+
+class Cluster_Node_Gamma(Gamma_Unobserved_Variational_Node):
+    """ """
+    def __init__(self, clusters, n_z, pa, pb, qa, qb, qE=None):
+        self.clusters = clusters
+        self.n_clusters = len(np.unique(clusters))
+        dim = (self.n_clusters, n_Z)
+        self.factors_axis = 1
+        super(Cluster_Node_Gamma, self).__init__(dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+
+    def getExpectations(self):
+        # reshape the values to N_samples * N_factors and return
+        QExp = self.Q.getExpectations()
+        expanded_expectation = QExp['E'][self.clusters, :]
+        expanded_E2 = QExp['E2'][self.clusters, :]
+        return {'E': expanded_expectation , 'E2': expanded_E2}
+
+    def updateParameters(self):
+        # Collect expectations from other nodes
+        Ztmp = self.markov_blanket["Z"].getExpectation()
+        ZE, ZE2  = Ztmp['E'], Ztmp['E2']
+
+        Mutmp = self.markov_blanket['Cluster'].Q.getExpectations()
+        MuE, MuE2 = Mutmp['E'], Mutmp['E2']
+
+        # Collect parameters from the P and Q distributions of this node
+        P = self.P.getParameters()
+        Pa, Pb = P['a'], P['b']
+        Qb, Qa =  self.Q.getParameters()['b'], self.Q.getParameters()['a']
+
+        # update of beta
+        for c in range(self.n_clusters):
+            mask = (self.clusters == c)
+            tmp = (ZE2[mask, :]).sum(axis=0)
+            tmp2 = (ZE[mask, :]).sum(axis=0) * MuE[c, :]
+            Qb[c,:] = tmp - 2 * tmp2
+
+        Qb += MuE2
+        Qb = 0.5 * Qb + Pb
+
+        # update of alpha TODO should be precomputed
+        for c in range(self.n_clusters):
+            mask = (self.clusters == c)
+            N = sum(mask)
+            Qa[c,:] = N/2
+        Qa += Pa
+
+        self.Q.setParameters(a=Qa, b=Qb)
+
+    def calculateELBO(self):
+        pass
+
 
 
 # TODO do we need this ?

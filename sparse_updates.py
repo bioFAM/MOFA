@@ -460,7 +460,7 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
         ZTau = 1./ZQPar['var']
         ZTauMean = ZQPar['mean']/ZQPar['var']
 
-        # TODO merge two for loops to save time when 100% sure it's clean
+        # TODO merge two loops when sure it's clean 
         # update of the variance
         for c in range(self.n_clusters):
             mask = (self.clusters == c)

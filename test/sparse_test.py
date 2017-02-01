@@ -26,7 +26,8 @@ from mixed_nodes import Mixed_Theta_Nodes
 ###################
 # s.random.seed(1)
 # Define dimensionalities
-for iter in range(1000):
+# for iter in range(1000):
+def run_test():
 	M = 2
 	N = 100
 	D = s.asarray([1000,1000])
@@ -48,9 +49,12 @@ for iter in range(1000):
 	# affected by clusters
 	tmp_Z_1 = stats.norm.rvs(loc=1, scale=1, size=N)
 	tmp_Z_2 = stats.norm.rvs(loc=-1, scale=1, size=N)
-	import pdb; pdb.set_trace()
 	data['Z'][:,3] = tmp_Z_1 * generative_clusters + tmp_Z_2 *(1-generative_clusters)
-	data['Z'][:,4] = stats.norm.rvs(loc=0, scale=1, size=N)
+
+	tmp_Z_3 = stats.norm.rvs(loc=4, scale=1, size=N)
+	tmp_Z_4 = stats.norm.rvs(loc=-3, scale=1, size=N)
+	data['Z'][:,4] = tmp_Z_3 * generative_clusters + tmp_Z_4 *(1-generative_clusters)
+
 	data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
 
 	# Add a known covariate
@@ -287,6 +291,8 @@ for iter in range(1000):
 
 	net = BayesNet(dim=dim, schedule=schedule, nodes=nodes, options=options)
 	net.iterate()
+
+	return Z, Cluster_Node
 
 	# exit()
 

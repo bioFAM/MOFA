@@ -21,16 +21,17 @@ from utils import *
 
 from mixed_nodes import Mixed_Theta_Nodes
 
+learn_theta = False
 ###################
 ## Generate data ##
 ###################
 # s.random.seed(1)
 # Define dimensionalities
 # for iter in range(1000):
-def run_test():
-	M = 2
-	N = 100
-	D = s.asarray([1000,1000])
+def run_test(annotations_bool = False):
+	M = 1
+	N = 2000
+	D = s.asarray([3000])
 	K = 6
 
 	# testing clustering results
@@ -42,10 +43,14 @@ def run_test():
 
 	data['Z'] = s.zeros((N,K))
 	# unaffected by clusters
-	data['Z'][:,0] = s.sin(s.arange(1,N+1)/(N/20))
-	data['Z'][:,1] = s.cos(s.arange(N)/(N/20))
-	data['Z'][:,2] = 2*(s.arange(N)/N-0.5)
+	# data['Z'][:,0] = s.sin(s.arange(1,N+1)/(N/20))
+	# data['Z'][:,1] = s.cos(s.arange(N)/(N/20))
+	# data['Z'][:,2] = 2*(s.arange(N)/N-0.5)
+	data['Z'][:,0] = stats.norm.rvs(loc=0, scale=1, size=N)
+	data['Z'][:,1] = stats.norm.rvs(loc=0, scale=1, size=N)
+	data['Z'][:,2] = stats.norm.rvs(loc=0, scale=1, size=N)
 
+	cluster_values = s.array([[0,0,0,-1,-3,0], [0,0,0,1,4,0]])
 	# affected by clusters
 	tmp_Z_1 = stats.norm.rvs(loc=1, scale=1, size=N)
 	tmp_Z_2 = stats.norm.rvs(loc=-1, scale=1, size=N)
@@ -62,10 +67,26 @@ def run_test():
 
 	data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
 	data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
-	data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
+	# data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
 	# data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
-	theta = [ s.ones(K)*0.5 for m in xrange(M) ]
+
+	if annotations_bool:
+		annotation_theta1 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
+		annotation_theta2 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
+		annotation_theta3 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
+		annotation_theta4 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
+		annotation_theta5 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
+		annotation_theta6 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
+
+		theta_view_1 = s.concatenate((annotation_theta1[:,None], annotation_theta2[:, None],
+									  annotation_theta3[:,None], annotation_theta4[:,None],
+									  annotation_theta5[:,None], annotation_theta6[:,None]), axis=1)
+		theta = theta_view_1
+
+	else:
+		theta = [ s.ones(K)*0.5 for m in xrange(M) ]
+
 	data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
 
 	data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
@@ -105,7 +126,7 @@ def run_test():
 	#################################
 
 	# Define initial number of latent variables
-	K = 10
+	K = 6
 
 	dim = {}
 	dim["M"] = M
@@ -128,7 +149,7 @@ def run_test():
 	clusters = generative_clusters
 	cluster_q_var =1
 	cluster_q_mean =0
-	cluster_p_var =1
+	cluster_p_var =5
 	cluster_p_mean =0
 	Cluster_Node = Cluster_Node_Gaussian(cluster_p_mean, cluster_p_var, cluster_q_mean,
 						  cluster_q_var, clusters, K)
@@ -208,25 +229,36 @@ def run_test():
 			Y_list[m] = Binomial_PseudoY_Node(dim=(N,D[m]), tot=data['Y']["tot"][m], obs=data['Y']["obs"][m], Zeta=None, E=None)
 	Y = Multiview_Mixed_Node(M, *Y_list)
 
-	# Theta node
-	Theta_list = [None] * M
-	learn_theta = False
-	use_annotations = True
+	# Theta node with annotations
+	if annotations_bool:
+		Theta_list = [None]
+		annotations = theta
+		annotated_node = Theta_Constant_Node((D[0],6), annotations)
+		Theta_list[0] = annotated_node
+		# Theta_list[0] = Mixed_Theta_Nodes(annotated_node, non_annotated_node)
+		# Other two views, no annotation
 
-	if learn_theta:
-		theta_pa = 1.
-		theta_pb = 1.
-		theta_qb = 1.
-		theta_qa = 1.
-		theta_qE = None
-		for m in xrange(M):
-			Theta_list[m] = Theta_Node(dim=(K,), pa=theta_pa, pb=theta_pb, qa=theta_qa, qb=theta_qb, qE=theta_qE)
+		# for m in xrange(1, M):
+		# 	dim = (K,)
+		# 	Theta_list[m] = Theta_Node_No_Annotation(dim)
 		Theta = Multiview_Variational_Node(M, *Theta_list)
 	else:
-		value = 0.5
-		for m in xrange(M):
-			Theta_list[m] = Theta_Constant_Node(dim=(K,),value=value)
-		Theta = Multiview_Constant_Node(M, *Theta_list)
+		# Theta node without annotations
+		if learn_theta:
+			theta_pa = 1.
+			theta_pb = 1.
+			theta_qb = 1.
+			theta_qa = 1.
+			theta_qE = None
+			for m in xrange(M):
+				Theta_list[m] = Theta_Node(dim=(K,), pa=theta_pa, pb=theta_pb, qa=theta_qa, qb=theta_qb, qE=theta_qE)
+			Theta = Multiview_Variational_Node(M, *Theta_list)
+		else:
+			value = 0.5
+			Theta_list = [None for i in range(M)]
+			for m in xrange(M):
+				Theta_list[m] = Theta_Constant_Node(dim=(K,),value=value)
+			Theta = Multiview_Constant_Node(M, *Theta_list)
 
 	# Theta node with annotations
 	if use_annotations:
@@ -292,7 +324,7 @@ def run_test():
 	net = BayesNet(dim=dim, schedule=schedule, nodes=nodes, options=options)
 	net.iterate()
 
-	return Z, Cluster_Node
+	return {'Z': Z, 'Cluster': Cluster_Node, 'W': SW,'data_W': data['W'], 'data_clusters': cluster_values, 'data_Z':data['Z']}
 
 	# exit()
 

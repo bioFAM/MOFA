@@ -22,13 +22,15 @@ from utils import *
 from mixed_nodes import Mixed_Theta_Nodes
 
 learn_theta = False
+# learn_theta = False
+use_annotations = True
 ###################
 ## Generate data ##
 ###################
 # s.random.seed(1)
 # Define dimensionalities
 # for iter in range(1000):
-def run_test(annotations_bool = False):
+def run_test():
 	M = 1
 	N = 2000
 	D = s.asarray([3000])
@@ -71,7 +73,7 @@ def run_test(annotations_bool = False):
 	# data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
 
-	if annotations_bool:
+	if use_annotations:
 		annotation_theta1 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
 		annotation_theta2 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
 		annotation_theta3 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
@@ -229,38 +231,23 @@ def run_test(annotations_bool = False):
 			Y_list[m] = Binomial_PseudoY_Node(dim=(N,D[m]), tot=data['Y']["tot"][m], obs=data['Y']["obs"][m], Zeta=None, E=None)
 	Y = Multiview_Mixed_Node(M, *Y_list)
 
-	# Theta node with annotations
-	if annotations_bool:
-		Theta_list = [None]
-		annotations = theta
-		annotated_node = Theta_Constant_Node((D[0],6), annotations)
-		Theta_list[0] = annotated_node
-		# Theta_list[0] = Mixed_Theta_Nodes(annotated_node, non_annotated_node)
-		# Other two views, no annotation
-
-		# for m in xrange(1, M):
-		# 	dim = (K,)
-		# 	Theta_list[m] = Theta_Node_No_Annotation(dim)
+	# Theta
+	if learn_theta:
+		theta_pa = 1.
+		theta_pb = 1.
+		theta_qb = 1.
+		theta_qa = 1.
+		theta_qE = None
+		for m in xrange(M):
+			Theta_list[m] = Theta_Node(dim=(K,), pa=theta_pa, pb=theta_pb, qa=theta_qa, qb=theta_qb, qE=theta_qE)
 		Theta = Multiview_Variational_Node(M, *Theta_list)
 	else:
-		# Theta node without annotations
-		if learn_theta:
-			theta_pa = 1.
-			theta_pb = 1.
-			theta_qb = 1.
-			theta_qa = 1.
-			theta_qE = None
-			for m in xrange(M):
-				Theta_list[m] = Theta_Node(dim=(K,), pa=theta_pa, pb=theta_pb, qa=theta_qa, qb=theta_qb, qE=theta_qE)
-			Theta = Multiview_Variational_Node(M, *Theta_list)
-		else:
-			value = 0.5
-			Theta_list = [None for i in range(M)]
-			for m in xrange(M):
-				Theta_list[m] = Theta_Constant_Node(dim=(K,),value=value)
-			Theta = Multiview_Constant_Node(M, *Theta_list)
+		value = 0.5
+		Theta_list = [None for i in range(M)]
+		for m in xrange(M):
+			Theta_list[m] = Theta_Constant_Node(dim=(K,),value=value)
+		Theta = Multiview_Constant_Node(M, *Theta_list)
 
-	# Theta node with annotations
 	if use_annotations:
 		theta_pa = 1.
 		theta_pb = 1.

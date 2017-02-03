@@ -27,9 +27,9 @@ from mixed_nodes import Mixed_Theta_Nodes
 # s.random.seed(1)
 # Define dimensionalities
 for iter in range(1000):
-	M = 2
+	M = 4
 	N = 100
-	D = s.asarray([1000,1000])
+	D = s.asarray([1000,1000, 2000, 3000])
 	K = 6
 
 	## Simulate data  ##
@@ -50,7 +50,8 @@ for iter in range(1000):
 	data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
 	data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
 	data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
-	# data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
+	data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
+	data['alpha'][3] = [1e6,1,1,1e6,1e6,1]
 
 	theta = [ s.ones(K)*0.5 for m in xrange(M) ]
 	data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
@@ -82,7 +83,7 @@ for iter in range(1000):
 
 	# likelihood = ["bernoulli","bernoulli","bernoulli"]
 	# likelihood = ["bernoulli"]
-	likelihood = ["gaussian","gaussian","gaussian"]
+	likelihood = ["gaussian","gaussian","gaussian", 'gaussian']
 
 	view_names = ["foo","bar","baz"]
 	# view_names = likelihood
@@ -120,7 +121,7 @@ for iter in range(1000):
 	# Z = Z_Node(dim=(N,K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar, idx_covariates=K-1)
 
 	# alpha (variational node)
-	alpha_list = [None]*M
+	alpha_list = [None for i in range(M)]
 	alpha_pa = 1e-14
 	alpha_pb = 1e-14
 	alpha_qb = s.ones(K)
@@ -134,7 +135,7 @@ for iter in range(1000):
 
 
 	# SW (variational node)
-	SW_list = [None]*M
+	SW_list = [None for i in range(M)]
 	P_theta = s.nan
 	P_mean_S1 = s.nan
 	P_mean_S0 = s.nan
@@ -153,7 +154,7 @@ for iter in range(1000):
 	SW = Multiview_Variational_Node(M, *SW_list)
 
 	# tau/kappa (mixed node)
-	tau_list = [None]*M
+	tau_list = [None for i in range(M)]
 	for m in xrange(M):
 		if likelihood[m] == "poisson":
 			tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0)
@@ -174,7 +175,7 @@ for iter in range(1000):
 	Tau = Multiview_Mixed_Node(M,*tau_list)
 
 	# Y/Yhat (mixed node)
-	Y_list = [None]*M
+	Y_list = [None for i in range(M)]
 	for m in xrange(M):
 		if likelihood[m] == "gaussian":
 			Y_list[m] = Y_Node(dim=(N,D[m]), value=data['Y'][m])
@@ -187,7 +188,7 @@ for iter in range(1000):
 	Y = Multiview_Mixed_Node(M, *Y_list)
 
 	# Theta node
-	Theta_list = [None] * M
+	Theta_list = [None for i in range(M)]
 	learn_theta = False
 	use_annotations = True
 
@@ -259,7 +260,6 @@ for iter in range(1000):
 	options['savefreq'] = options['maxiter']+1
 	options['savefolder'] = "/tmp/test"
 	options['verbosity'] = 1
-
 
 	####################
 	## Start training ##

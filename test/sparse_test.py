@@ -23,7 +23,8 @@ from mixed_nodes import Mixed_Theta_Nodes
 
 learn_theta = False
 # learn_theta = False
-use_annotations = True
+use_annotations = False
+all_annotated = True
 ###################
 ## Generate data ##
 ###################
@@ -32,9 +33,9 @@ use_annotations = True
 # for iter in range(1000):
 def run_test():
 	M = 1
-	N = 2000
-	D = s.asarray([3000])
-	K = 6
+	N = 20
+	D = s.asarray([20])
+	K = 3
 
 	# testing clustering results
 	generative_clusters = np.random.choice([0,1], N)
@@ -48,48 +49,60 @@ def run_test():
 	# data['Z'][:,0] = s.sin(s.arange(1,N+1)/(N/20))
 	# data['Z'][:,1] = s.cos(s.arange(N)/(N/20))
 	# data['Z'][:,2] = 2*(s.arange(N)/N-0.5)
-	data['Z'][:,0] = stats.norm.rvs(loc=0, scale=1, size=N)
-	data['Z'][:,1] = stats.norm.rvs(loc=0, scale=1, size=N)
-	data['Z'][:,2] = stats.norm.rvs(loc=0, scale=1, size=N)
+	# data['Z'][:,0] = stats.norm.rvs(loc=0, scale=1, size=N)
+	# data['Z'][:,1] = stats.norm.rvs(loc=0, scale=1, size=N)
+	# data['Z'][:,2] = stats.norm.rvs(loc=0, scale=1, size=N)
 
-	cluster_values = s.array([[0,0,0,-1,-3,0], [0,0,0,1,4,0]])
+	cluster_values = s.array([[0,2,2], [0,-2,0]])
+	# cluster_values = None
 	# affected by clusters
-	tmp_Z_1 = stats.norm.rvs(loc=1, scale=1, size=N)
-	tmp_Z_2 = stats.norm.rvs(loc=-1, scale=1, size=N)
-	data['Z'][:,3] = tmp_Z_1 * generative_clusters + tmp_Z_2 *(1-generative_clusters)
+	tmp_Z_1 = stats.norm.rvs(loc=0, scale=1, size=N)
+	tmp_Z_2 = stats.norm.rvs(loc=0, scale=1, size=N)
+	data['Z'][:,0] = tmp_Z_1 * generative_clusters + tmp_Z_2 *(1-generative_clusters)
+	#
+	tmp_Z_3 = stats.norm.rvs(loc=-2, scale=1, size=N)
+	tmp_Z_4 = stats.norm.rvs(loc=2, scale=1, size=N)
+	data['Z'][:,1] = tmp_Z_3 * generative_clusters + tmp_Z_4 *(1-generative_clusters)
 
-	tmp_Z_3 = stats.norm.rvs(loc=4, scale=1, size=N)
-	tmp_Z_4 = stats.norm.rvs(loc=-3, scale=1, size=N)
-	data['Z'][:,4] = tmp_Z_3 * generative_clusters + tmp_Z_4 *(1-generative_clusters)
-
-	data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
+	tmp_Z_5 = stats.norm.rvs(loc=0, scale=1, size=N)
+	tmp_Z_6 = stats.norm.rvs(loc=2, scale=1, size=N)
+	data['Z'][:,2] = tmp_Z_5 * generative_clusters + tmp_Z_6 *(1-generative_clusters)
+	#
+	# data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
 
 	# Add a known covariate
 	# data['Z'][:,5] = s.asarray([True,False]*int(N/2), dtype=s.float32)
 
 	data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
-	data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
+	data['alpha'][0] = [2,2,2]
+	# data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
 	# data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
 	# data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
 
-	if use_annotations:
-		annotation_theta1 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
-		annotation_theta2 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
-		annotation_theta3 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
-		annotation_theta4 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
-		annotation_theta5 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
-		annotation_theta6 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
+	if all_annotated:
+		annotation_strength = 5e-1
+		annotation_theta1 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.9, 0.1], size = D[0])
+		annotation_theta2 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.9, 0.1], size = D[0])
+		annotation_theta3 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.9, 0.1], size = D[0])
+		# annotation_theta4 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
+		# annotation_theta5 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
+		# annotation_theta6 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
 
+		# theta_view_1 = s.concatenate((annotation_theta1[:,None], annotation_theta2[:, None],
+									#   annotation_theta3[:,None], annotation_theta4[:,None],
+									#   annotation_theta5[:,None], annotation_theta6[:,None]), axis=1)
 		theta_view_1 = s.concatenate((annotation_theta1[:,None], annotation_theta2[:, None],
-									  annotation_theta3[:,None], annotation_theta4[:,None],
-									  annotation_theta5[:,None], annotation_theta6[:,None]), axis=1)
-		theta = theta_view_1
+											  annotation_theta3[:,None]), axis=1)
+
+		theta = [theta_view_1]
 
 	else:
 		theta = [ s.ones(K)*0.5 for m in xrange(M) ]
 
-	data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
+	# data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'], annotation=all_annotated)
+	thetabis = [ s.ones(K)*0.5 for m in xrange(M) ]
+	data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=thetabis, alpha=data['alpha'], annotation=False)
 
 	data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 
@@ -128,7 +141,7 @@ def run_test():
 	#################################
 
 	# Define initial number of latent variables
-	K = 6
+	K = 3
 
 	dim = {}
 	dim["M"] = M
@@ -241,12 +254,12 @@ def run_test():
 		for m in xrange(M):
 			Theta_list[m] = Theta_Node(dim=(K,), pa=theta_pa, pb=theta_pb, qa=theta_qa, qb=theta_qb, qE=theta_qE)
 		Theta = Multiview_Variational_Node(M, *Theta_list)
-	else:
-		value = 0.5
-		Theta_list = [None for i in range(M)]
-		for m in xrange(M):
-			Theta_list[m] = Theta_Constant_Node(dim=(K,),value=value)
-		Theta = Multiview_Constant_Node(M, *Theta_list)
+	# else:
+	# 	value = 0.5
+	# 	Theta_list = [None for i in range(M)]
+	# 	for m in xrange(M):
+	# 		Theta_list[m] = Theta_Constant_Node(dim=(K,),value=value)
+	# 	Theta = Multiview_Constant_Node(M, *Theta_list)
 
 	if use_annotations:
 		theta_pa = 1.
@@ -263,6 +276,14 @@ def run_test():
 		for m in xrange(1, M):
 		    Theta_list[m] = Theta_Node(dim=(K,), pa=theta_pa, pb=theta_pb, qa=theta_qa, qb=theta_qb, qE=theta_qE)
 		Theta = Multiview_Variational_Node(M, *Theta_list)
+
+	if all_annotated:
+		annotated_node = Theta_Constant_Node((D[0],K), theta[0])
+		Theta_list = [None]
+		Theta_list[0] = annotated_node
+		Theta = Multiview_Variational_Node(M, *Theta_list)
+
+
 
 	############################
 	## Define Markov Blankets ##
@@ -284,7 +305,7 @@ def run_test():
 	Z.updateExpectations()
 	Theta.updateExpectations()
 
-	schedule = ["SW","Z","Alpha","Tau","Theta","Cluster"]
+	schedule = ["Z", "SW","Alpha","Tau","Theta","Cluster"]
 	nodes = { "Theta":Theta, "SW":SW, "Tau":Tau, "Z":Z, "Y":Y, "Alpha":Alpha,
 	 		  "Cluster": Cluster_Node}
 
@@ -301,7 +322,7 @@ def run_test():
 	options['dropK'] = { 'by_norm':None, 'by_pvar':None, 'by_cor':None }
 	options['savefreq'] = options['maxiter']+1
 	options['savefolder'] = "/tmp/test"
-	options['verbosity'] = 1
+	options['verbosity'] = 0
 
 
 	####################

@@ -110,7 +110,9 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         # Collect parameters from the P and Q distributions of this node
         P,Q = self.P.getParameters(), self.Q.getParameters()
         Q = self.Q.getParameters()
-        Pvar, Qmean = P['var'], Q['mean']
+        # NOTE
+        # Pvar, Qmean = P['var'], Q['mean']
+        Pvar, Qmean = np.copy(P['var']), np.copy(Q['mean'])
         Qmean =  Q['mean']
 
         # Variance
@@ -124,6 +126,8 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         if any(self.covariates):
             covariates = Qmean[:,self.covariates]
 
+        # NOTE
+        # for k in reversed(xrange(self.dim[1])):
         for k in xrange(self.dim[1]):
             tmp1 = SW[:,k]*tau
             tmp2 = Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )
@@ -281,7 +285,9 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         # Collect parameters and expectations from P and Q distributions of this node
         SW = self.Q.getExpectations()["ESW"]
         Q = self.Q.getParameters()
-        Qmean_S1, Qvar_S1, Qtheta = Q['mean_S1'], Q['var_S1'], Q['theta']
+        # NOTE added copy for test
+        Qmean_S1, Qvar_S1, Qtheta = np.copy(Q['mean_S1']), np.copy(Q['var_S1']), np.copy(Q['theta'])
+        # Qmean_S1, Qvar_S1, Qtheta = Q['mean_S1'], Q['var_S1'], Q['theta']
 
         # check dimensions of theta and expand if necessary
         # I THINK THIS SHOULD NOT BE HERE...
@@ -293,6 +299,8 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         all_term1 = theta_lnE - theta_lnEInv
         # all_term1 = s.log(theta_E/(1.-theta_E))
 
+        # NOTE
+        # for k in reversed(xrange(self.dim[1])):
         for k in xrange(self.dim[1]):
 
             term1 = all_term1[:,k]
@@ -460,7 +468,7 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
         ZTau = 1./ZQPar['var']
         ZTauMean = ZQPar['mean']/ZQPar['var']
 
-        # TODO merge two loops when sure it's clean 
+        # TODO merge two loops when sure it's clean
         # update of the variance
         for c in range(self.n_clusters):
             mask = (self.clusters == c)

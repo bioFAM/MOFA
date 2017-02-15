@@ -111,9 +111,10 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         P,Q = self.P.getParameters(), self.Q.getParameters()
         Q = self.Q.getParameters()
         # NOTE
-        # Pvar, Qmean = P['var'], Q['mean']
-        Pvar, Qmean = np.copy(P['var']), np.copy(Q['mean'])
-        Qmean =  Q['mean']
+        Pvar, Qmean = P['var'], Q['mean']
+        # make sure that results are not updated 'inline'
+        Qmean_res = np.copy(Qmean)
+        # Qmean_res = Qmean
 
         # Variance
         # POSSIBLE MISTAKE: THE PLUS ONE HERE? OR IS THIS RELATED TO PVAR?
@@ -133,14 +134,14 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
             tmp2 = Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )
             tmp3 = ma.dot(tmp2,tmp1)
             tmp3 += 1./Pvar[:,k] * Mu[:,k]
-            Qmean[:,k] = Qvar[:,k] * tmp3
+            Qmean_res[:,k] = Qvar[:,k] * tmp3
 
         # Do not update the latent variables associated with known covariates
         if any(self.covariates):
-            Qmean[:,self.covariates] = covariates
+            Qmean_res[:,self.covariates] = covariates
 
         # Save updated parameters of the Q distribution
-        self.Q.setParameters(mean=Qmean, var=Qvar)
+        self.Q.setParameters(mean=Qmean_res, var=Qvar)
 
     def calculateELBO(self):
         # TODO see what's left in the ELBO here and what should be moved to the new node
@@ -285,9 +286,19 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         # Collect parameters and expectations from P and Q distributions of this node
         SW = self.Q.getExpectations()["ESW"]
         Q = self.Q.getParameters()
-        # NOTE added copy for test
-        Qmean_S1, Qvar_S1, Qtheta = np.copy(Q['mean_S1']), np.copy(Q['var_S1']), np.copy(Q['theta'])
-        # Qmean_S1, Qvar_S1, Qtheta = Q['mean_S1'], Q['var_S1'], Q['theta']
+        Qmean_S1, Qvar_S1, Qtheta = Q['mean_S1'], Q['var_S1'], Q['theta']
+
+        # deep copy to avoid inline update
+        # Qtheta_res = np.copy(Qtheta)
+        # Qmean_S1_res = np.copy(Qmean_S1)
+        # Qvar_S1_res = np.copy(Qvar_S1)
+        # SW_res = np.copy(SW)
+
+        Qtheta_res = Qtheta
+        Qmean_S1_res = Qmean_S1
+        Qvar_S1_res = Qvar_S1
+        SW_res = SW
+
 
         # check dimensions of theta and expand if necessary
         # I THINK THIS SHOULD NOT BE HERE...
@@ -296,6 +307,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         if theta_lnEInv.shape != Qmean_S1.shape:
             theta_lnEInv = s.repeat(theta_lnEInv[None,:],Qmean_S1.shape[0],0)
 
+        # the prior term has to be multiplied by the number of cells for constant theta
         all_term1 = theta_lnE - theta_lnEInv
         # all_term1 = s.log(theta_E/(1.-theta_E))
 
@@ -312,18 +324,18 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             term4 = 0.5*tau * s.divide((term41-term42)**2,term43)
 
             # Update S
-            Qtheta[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
+            Qtheta_res[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
 
             # Update W
-            Qmean_S1[:,k] = s.divide(term41-term42,term43)
-            Qvar_S1[:,k] = s.divide(1,tau*term43)
+            Qmean_S1_res[:,k] = s.divide(term41-term42,term43)
+            Qvar_S1_res[:,k] = s.divide(1,tau*term43)
 
             # Update Expectations for the next iteration
-            SW[:,k] = Qtheta[:,k] * Qmean_S1[:,k]
+            SW_res[:,k] = Qtheta_res[:,k] * Qmean_S1_res[:,k]
 
         # Save updated parameters of the Q distribution
         self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=s.repeat(1/alpha[None,:],self.D,0),
-                             mean_S1=Qmean_S1, var_S1=Qvar_S1, theta=Qtheta )
+                             mean_S1=Qmean_S1_res, var_S1=Qvar_S1_res, theta=Qtheta_res )
 
     def calculateELBO(self):
 
@@ -415,14 +427,15 @@ class Theta_Node(Beta_Unobserved_Variational_Node):
         return lb_p - lb_q
 
 class Theta_Constant_Node(Constant_Variational_Node):
-    def __init__(self, dim, value):
+    def __init__(self, dim, value, N_cells):
         super(Theta_Constant_Node, self).__init__(dim, value)
+        self.N_cells = N_cells
         self.precompute()
 
     def precompute(self):
         self.E = self.value
-        self.lnE = s.log(self.value)
-        self.lnEInv = s.log(1-self.value)
+        self.lnE = self.N_cells * s.log(self.value)
+        self.lnEInv = self.N_cells * s.log(1-self.value)
 
     def getExpectations(self):
         return { 'E':self.E, 'lnE':self.lnE, 'lnEInv':self.lnEInv }

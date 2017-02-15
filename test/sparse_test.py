@@ -25,8 +25,8 @@ from utils import *
 
 # Define dimensionalities
 M = 3
-N = 200
-D = s.asarray([2000,2000,2000])
+N = 50
+D = s.asarray([100,100,100])
 K = 6
 
 ## Simulate data  ##
@@ -46,8 +46,8 @@ data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
 
 data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
 data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
-# data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
-# data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
+data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
+data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
 theta = [ s.ones(K)*0.5 for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
@@ -220,7 +220,7 @@ Z.updateExpectations()
 Theta.updateExpectations()
 
 schedule = ["SW","Z","Alpha","Tau","Theta"]
-nodes = { "Theta":Theta, "SW":SW, "Tau":Tau, "Z":Z, "Y":Y, "Alpha":Alpha }
+nodes = { "SW":SW, "Z":Z, "Y":Y, "Alpha":Alpha, "Tau":Tau, "Theta":Theta, }
 
 #############################
 ## Define training options ##

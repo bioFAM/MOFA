@@ -10,9 +10,8 @@ from joblib import Parallel, delayed
 from socket import gethostname
 
 # Import manual functions
-path.insert(0,"../")
 from init_nodes import *
-from BayesNet import BayesNet
+from scGFA.core.BayesNet import BayesNet
 
 
 def pprint(d, indent=0):
@@ -42,7 +41,7 @@ def loadData(data_opts, verbose=True):
         print "Loaded %s with dim (%d,%d)..." % (file, tmp.shape[0], tmp.shape[1])
 
         # Center the data
-        if data_opts['center'][m]: 
+        if data_opts['center'][m]:
             tmp = (tmp - tmp.mean())
 
         Y.append(tmp)
@@ -90,11 +89,11 @@ def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=Fal
                 qtheta=model_opts["initSW"]["Theta"], qmean_S0=model_opts["initSW"]["mean_S0"], qvar_S0=model_opts["initSW"]["var_S0"], qmean_S1=model_opts["initSW"]["mean_S1"], qvar_S1=model_opts["initSW"]["var_S1"],
                 qEW_S0=model_opts["initSW"]["EW_S0"], qEW_S1=model_opts["initSW"]["EW_S1"], qES=model_opts["initSW"]["ES"])
 
-    init.initAlpha(pa=model_opts["priorAlpha"]['a'], pb=model_opts["priorAlpha"]['b'], 
+    init.initAlpha(pa=model_opts["priorAlpha"]['a'], pb=model_opts["priorAlpha"]['b'],
                    qa=model_opts["initAlpha"]['a'], qb=model_opts["initAlpha"]['b'], qE=model_opts["initAlpha"]['E'])
 
 
-    init.initTau(pa=model_opts["priorTau"]['a'], pb=model_opts["priorTau"]['b'], 
+    init.initTau(pa=model_opts["priorTau"]['a'], pb=model_opts["priorTau"]['b'],
                  qa=model_opts["initTau"]['a'], qb=model_opts["initTau"]['b'], qE=model_opts["initTau"]['E'])
 
     if model_opts['learnTheta']:
@@ -137,7 +136,7 @@ def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=Fal
 
 # Function to run multiple trials of the model
 def runMultipleTrials(data_opts, model_opts, train_opts, cores, keep_best_run, verbose=True):
-    
+
     # If it doesnt exist, create the output folder
     outdir = os.path.dirname(train_opts['outfile'])
     if not os.path.exists(outdir): os.makedirs(outdir)
@@ -183,7 +182,7 @@ def runMultipleTrials(data_opts, model_opts, train_opts, cores, keep_best_run, v
     feature_names = [  data[m].columns.values.tolist() for m in xrange(len(data)) ]
     for t in xrange(len(save_models)):
         print "Saving model %d in %s...\n" % (t,outfiles[t])
-        saveModel(save_models[t], outfile=outfiles[t], view_names=data_opts['view_names'], 
+        saveModel(save_models[t], outfile=outfiles[t], view_names=data_opts['view_names'],
             sample_names=sample_names, feature_names=feature_names)
 
 
@@ -212,7 +211,7 @@ if __name__ == '__main__':
     data_opts['rownames'] = 0
     data_opts['colnames'] = 0
     data_opts['delimiter'] = " "
-    
+
     # pprint(data_opts)
     # print "\n"
 
@@ -221,30 +220,30 @@ if __name__ == '__main__':
     ##############################
 
     model_opts = {}
-    model_opts['likelihood'] = ["gaussian"]*M 
+    model_opts['likelihood'] = ["gaussian"]*M
     model_opts['learnTheta'] = False
     model_opts['k'] = 10
-    
+
 
     # Define priors
     model_opts["priorZ"] = { 'mean':0., 'var':1. }
     model_opts["priorAlpha"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
     model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M }
     model_opts["priorTau"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
-    if model_opts['learnTheta']: 
+    if model_opts['learnTheta']:
         model_opts["priorTheta"] = { 'a':[1.]*M, 'b':[1.]*M }
 
     # Define initialisation options
     model_opts["initZ"] = { 'mean':"random", 'var':1., 'E':None, 'E2':None }
     model_opts["initAlpha"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M }
-    model_opts["initSW"] = { 'Theta':[0.5]*M, 
-                              'mean_S0':[0.]*M, 'var_S0':model_opts["initAlpha"]['E'], 
+    model_opts["initSW"] = { 'Theta':[0.5]*M,
+                              'mean_S0':[0.]*M, 'var_S0':model_opts["initAlpha"]['E'],
                               'mean_S1':["random"]*M, 'var_S1':[1.]*M,
                               'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M}
     # model_opts["initTau"] = { 'a':[1.,1.,None], 'b':[1.,1.,None], 'E':[100.,100.,None] }
     model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M }
 
-    if model_opts['learnTheta']: 
+    if model_opts['learnTheta']:
         model_opts["initTheta"] = { 'a':[1.]*M, 'b':[1.]*M, 'E':[None]*M }
     else:
         model_opts["initTheta"] = { 'value':[0.5]*M }
@@ -264,7 +263,7 @@ if __name__ == '__main__':
     train_opts['maxiter'] = 300
     train_opts['elbofreq'] = 1
     if 'Kvothe' in gethostname():
-        train_opts['outfile'] = "/Users/ricard/git/gastrulation/expr/scGFA/expr/out/singleview.hdf5" 
+        train_opts['outfile'] = "/Users/ricard/git/gastrulation/expr/scGFA/expr/out/singleview.hdf5"
     elif 'yoda' in gethostname():
         train_opts['outfile'] = ""
     train_opts['savefreq'] = s.nan

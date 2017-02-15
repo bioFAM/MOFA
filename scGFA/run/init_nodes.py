@@ -12,11 +12,10 @@ import scipy.stats as stats
 from sys import path
 import sklearn.decomposition
 
-path.insert(0,"../")
-from nodes import *
-from multiview_nodes import *
-from seeger_nodes import *
-from sparse_updates import *
+from scGFA.core.nodes import *
+from scGFA.core.multiview_nodes import *
+from scGFA.core.seeger_nodes import *
+from scGFA.core.sparse_updates import *
 
 
 # General class to initialise a Group Factor Analysis model
@@ -47,7 +46,7 @@ class initModel(object):
 class init_scGFA(initModel):
     def __init__(self, *args, **kwargs):
         super(init_scGFA, self).__init__(*args, **kwargs)
-    
+
     # def __init__(self, dim, data, lik, seed=None):
         # initModel.__init__(self, dim, data, lik, seed)
 
@@ -87,13 +86,13 @@ class init_scGFA(initModel):
             # idx_covariates = s.arange(covariates.shape[1]) + self.K
         else:
             idx_covariates = None
-            
+
         # Initialise the node
-        self.Z = Z_Node(dim=(self.N,self.K), 
-                        pmean=s.ones((self.N,self.K))*pmean, 
-                        pvar=s.ones((self.N,self.K))*pvar, 
-                        qmean=s.ones((self.N,self.K))*qmean, 
-                        qvar=s.ones((self.N,self.K))*qvar, 
+        self.Z = Z_Node(dim=(self.N,self.K),
+                        pmean=s.ones((self.N,self.K))*pmean,
+                        pvar=s.ones((self.N,self.K))*pvar,
+                        qmean=s.ones((self.N,self.K))*qmean,
+                        qvar=s.ones((self.N,self.K))*qvar,
                         qE=qE, qE2=qE2,
                         idx_covariates=idx_covariates)
         self.nodes["Z"] = self.Z
@@ -166,10 +165,10 @@ class init_scGFA(initModel):
         tau_list = [None]*self.M
         for m in xrange(self.M):
             if self.lik[m] == "poisson":
-                tmp = 0.25 + 0.17*s.amax(self.data[m],axis=0) 
+                tmp = 0.25 + 0.17*s.amax(self.data[m],axis=0)
                 tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
             elif self.lik[m] == "bernoulli":
-                tmp = s.ones(self.D[m])*0.25 
+                tmp = s.ones(self.D[m])*0.25
                 tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
             elif self.lik[m] == "binomial":
                 tmp = 0.25*s.amax(self.data["tot"][m],axis=0)

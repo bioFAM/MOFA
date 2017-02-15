@@ -10,16 +10,15 @@ import pandas as pd
 
 
 # Import manually defined functions
-path.insert(0,"../")
-from simulate import Simulate
-from BayesNet import BayesNet
-from multiview_nodes import *
-from nodes import Constant_Node
-from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
-from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node, Theta_Node, Theta_Constant_Node, Cluster_Node_Gaussian
-from utils import *
+from scGFA.core.simulate import Simulate
+from scGFA.core.BayesNet import BayesNet
+from scGFA.core.multiview_nodes import *
+from scGFA.core.nodes import Constant_Node
+from scGFA.core.seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
+from scGFA.core.sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node, Theta_Node, Theta_Constant_Node, Cluster_Node_Gaussian
+from scGFA.core.utils import *
 
-from mixed_nodes import Mixed_Theta_Nodes
+from scGFA.core.mixed_nodes import Mixed_Theta_Nodes
 
 learn_theta = False
 # learn_theta = False

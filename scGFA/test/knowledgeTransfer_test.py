@@ -12,21 +12,21 @@ import scipy.stats as stats
 import numpy.linalg  as linalg
 
 # Import manually defined functions
-from simulate import Simulate
-from BayesNet import BayesNet
-from multiview_nodes import *
-from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
-from local_nodes import Local_Node, Observed_Local_Node
-from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node, Theta_Node_No_Annotation, Theta_Constant_Node
-from utils import *
+from scGFA.core.simulate import Simulate
+from scGFA.core.BayesNet import BayesNet
+from scGFA.core.multiview_nodes import *
+from scGFA.core.seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
+from scGFA.core.local_nodes import Local_Node, Observed_Local_Node
+from scGFA.core.sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node, Theta_Node_No_Annotation, Theta_Constant_Node
+from scGFA.core.utils import *
 
 import numpy as np
 
 from joblib import Parallel, delayed
 import pdb
 
-from constant_nodes import Constant_Node
-from mixed_nodes import Mixed_Theta_Nodes
+from scGFA.core.constant_nodes import Constant_Node
+from scGFA.core.mixed_nodes import Mixed_Theta_Nodes
 
 
 """

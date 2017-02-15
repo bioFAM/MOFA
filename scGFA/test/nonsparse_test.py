@@ -11,14 +11,13 @@ import scipy.stats as stats
 import numpy.linalg  as linalg
 
 
-path.insert(0,"../")
-from simulate import Simulate
-from BayesNet import BayesNet
-from utils import *
-from multiview_nodes import *
-from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
-from nodes import Constant_Node
-from nonsparse_updates import Y_Node, Alpha_Node, W_Node, Tau_Node, Z_Node, Y_Node
+from scGFA.core.simulate import Simulate
+from scGFA.core.BayesNet import BayesNet
+from scGFA.core.utils import *
+from scGFA.core.multiview_nodes import *
+from scGFA.core.seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
+from scGFA.core.nodes import Constant_Node
+from scGFA.core.nonsparse_updates import Y_Node, Alpha_Node, W_Node, Tau_Node, Z_Node, Y_Node
 
 ###################
 ## Generate data ##

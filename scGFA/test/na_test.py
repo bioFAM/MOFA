@@ -13,12 +13,12 @@ import numpy.linalg  as linalg
 
 # Import manually defined functions
 from scGFA.core.simulate import Simulate
-from BayesNet import BayesNet
-from multiview_nodes import *
-from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node, Zeta_Node
-from local_nodes import Local_Node, Observed_Local_Node
-from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node
-from utils import *
+from scGFA.core.BayesNet import BayesNet
+from scGFA.core.multiview_nodes import *
+from scGFA.core.seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node, Zeta_Node
+from scGFA.core.local_nodes import Local_Node, Observed_Local_Node
+from scGFA.core.sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node
+from scGFA.core.utils import *
 
 ###################
 ## Generate data ##

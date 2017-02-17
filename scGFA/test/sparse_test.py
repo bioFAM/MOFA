@@ -32,9 +32,9 @@ all_annotated = True
 # for iter in range(1000):
 def run_test():
 	M = 1
-	N = 200
-	D = s.asarray([400])
-	K = 3
+	N = 100
+	D = s.asarray([300])
+	K = 2
 
 	# testing clustering results
 	generative_clusters = np.random.choice([0,1], N)
@@ -52,20 +52,20 @@ def run_test():
 	# data['Z'][:,1] = stats.norm.rvs(loc=0, scale=1, size=N)
 	# data['Z'][:,2] = stats.norm.rvs(loc=0, scale=1, size=N)
 
-	cluster_values = s.array([[4,2,], [-4,0,0]])
+	cluster_values = s.array([[4,0], [-4,0]])
 	# cluster_values = None
 	# affected by clusters
-	tmp_Z_1 = stats.norm.rvs(loc=-4, scale=1, size=N)
-	tmp_Z_2 = stats.norm.rvs(loc=4, scale=1, size=N)
+	tmp_Z_1 = stats.norm.rvs(loc=-4, scale=0.01, size=N)
+	tmp_Z_2 = stats.norm.rvs(loc=4, scale=0.01, size=N)
 	data['Z'][:,0] = tmp_Z_1 * generative_clusters + tmp_Z_2 *(1-generative_clusters)
 	#
-	tmp_Z_3 = stats.norm.rvs(loc=0, scale=1, size=N)
-	tmp_Z_4 = stats.norm.rvs(loc=2, scale=1, size=N)
+	tmp_Z_3 = stats.norm.rvs(loc=0, scale=0.01, size=N)
+	tmp_Z_4 = stats.norm.rvs(loc=0, scale=0.01, size=N)
 	data['Z'][:,1] = tmp_Z_3 * generative_clusters + tmp_Z_4 *(1-generative_clusters)
-
-	tmp_Z_5 = stats.norm.rvs(loc=0, scale=1, size=N)
-	tmp_Z_6 = stats.norm.rvs(loc=0, scale=1, size=N)
-	data['Z'][:,2] = tmp_Z_5 * generative_clusters + tmp_Z_6 *(1-generative_clusters)
+	#
+	# tmp_Z_5 = stats.norm.rvs(loc=0, scale=0.01, size=N)
+	# tmp_Z_6 = stats.norm.rvs(loc=0, scale=0.01, size=N)
+	# data['Z'][:,2] = tmp_Z_5 * generative_clusters + tmp_Z_6 *(1-generative_clusters)
 	#
 	# data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
 
@@ -73,17 +73,17 @@ def run_test():
 	# data['Z'][:,5] = s.asarray([True,False]*int(N/2), dtype=s.float32)
 
 	data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
-	data['alpha'][0] = [1,1,1]
+	data['alpha'][0] = [1,1]
 	# data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
 	# data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
 	# data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
 
 	if all_annotated:
-		annotation_strength = 1e-2
+		annotation_strength = 1e-7
 		annotation_theta1 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.8, 0.2], size = D[0])
 		annotation_theta2 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.8, 0.2], size = D[0])
-		annotation_theta3 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.8, 0.2], size = D[0])
+		# annotation_theta3 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.8, 0.2], size = D[0])
 		# annotation_theta4 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
 		# annotation_theta5 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
 		# annotation_theta6 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
@@ -91,8 +91,9 @@ def run_test():
 		# theta_view_1 = s.concatenate((annotation_theta1[:,None], annotation_theta2[:, None],
 									#   annotation_theta3[:,None], annotation_theta4[:,None],
 									#   annotation_theta5[:,None], annotation_theta6[:,None]), axis=1)
-		theta_view_1 = s.concatenate((annotation_theta1[:,None], annotation_theta2[:, None],
-											  annotation_theta3[:,None]), axis=1)
+		# theta_view_1 = s.concatenate((annotation_theta1[:,None], annotation_theta2[:, None],
+											#   annotation_theta3[:,None]), axis=1)
+		theta_view_1 = s.concatenate((annotation_theta1[:,None], annotation_theta2[:, None]), axis=1)
 
 		theta = [theta_view_1]
 
@@ -100,8 +101,8 @@ def run_test():
 		theta = [ s.ones(K)*0.5 for m in xrange(M) ]
 
 	# data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'], annotation=all_annotated)
-	thetabis = [ s.ones(K)*0.5 for m in xrange(M) ]
-	data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=thetabis, alpha=data['alpha'], annotation=False)
+	# thetabis = [ s.ones(K)*0.5 for m in xrange(M) ]
+	data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'], annotation=True)
 
 	data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 
@@ -140,7 +141,7 @@ def run_test():
 	#################################
 
 	# Define initial number of latent variables
-	K = 3
+	K = 2
 
 	dim = {}
 	dim["M"] = M
@@ -154,7 +155,7 @@ def run_test():
 
 	# Z without covariates (variational node)
 	Z_pmean = 0.
-	Z_pvar = 1.
+	Z_pvar = .1
 	Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K))
 	Z_qvar = s.ones((N,K))
 	Z = Z_Node(dim=(N,K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar)
@@ -163,7 +164,7 @@ def run_test():
 	clusters = generative_clusters
 	cluster_q_var =1
 	cluster_q_mean =0
-	cluster_p_var =5
+	cluster_p_var =1
 	cluster_p_mean =0
 	Cluster_Node = Cluster_Node_Gaussian(cluster_p_mean, cluster_p_var, cluster_q_mean,
 						  cluster_q_var, clusters, K)
@@ -320,7 +321,7 @@ def run_test():
 	options['dropK'] = { 'by_norm':None, 'by_pvar':None, 'by_cor':None }
 	options['savefreq'] = options['maxiter']+1
 	options['savefolder'] = "/tmp/test"
-	options['verbosity'] = 0
+	options['verbosity'] = -1
 
 
 	####################

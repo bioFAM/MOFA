@@ -10,51 +10,114 @@ import pandas as pd
 
 
 # Import manually defined functions
-path.insert(0,"../")
-from simulate import Simulate
-from BayesNet import BayesNet
-from multiview_nodes import *
-from nodes import Constant_Node
-from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
-from sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node, Theta_Node, Theta_Constant_Node
-from utils import *
+from scGFA.core.simulate import Simulate
+from scGFA.core.BayesNet import BayesNet
+from scGFA.core.multiview_nodes import *
+from scGFA.core.nodes import Constant_Node
+from scGFA.core.seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
+from scGFA.core.sparse_updates import Y_Node, Alpha_Node, SW_Node, Tau_Node, Z_Node, Theta_Node, Theta_Constant_Node, Cluster_Node_Gaussian
+from scGFA.core.utils import *
 
-from mixed_nodes import Mixed_Theta_Nodes
+from scGFA.core.mixed_nodes import Mixed_Theta_Nodes
 
+learn_theta = False
+# learn_theta = False
+use_annotations = False
+all_annotated = True
 ###################
 ## Generate data ##
 ###################
 # s.random.seed(1)
 # Define dimensionalities
+<<<<<<< HEAD:test/sparse_test.py
 for iter in range(1000):
 	M = 4
 	N = 100
 	D = s.asarray([1000,1000, 2000, 3000])
 	K = 6
+=======
+# for iter in range(1000):
+def run_test():
+	M = 1
+	N = 100
+	D = s.asarray([300])
+	K = 2
+
+	# testing clustering results
+	generative_clusters = np.random.choice([0,1], N)
+>>>>>>> cluster_prior:scGFA/test/sparse_test.py
 
 	## Simulate data  ##
 	data = {}
 	tmp = Simulate(M=M, N=N, D=D, K=K)
 
 	data['Z'] = s.zeros((N,K))
-	data['Z'][:,0] = s.sin(s.arange(1,N+1)/(N/20))
-	data['Z'][:,1] = s.cos(s.arange(N)/(N/20))
-	data['Z'][:,2] = 2*(s.arange(N)/N-0.5)
-	data['Z'][:,3] = stats.norm.rvs(loc=0, scale=1, size=N)
-	data['Z'][:,4] = stats.norm.rvs(loc=0, scale=1, size=N)
-	data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
+	# unaffected by clusters
+	# data['Z'][:,0] = s.sin(s.arange(1,N+1)/(N/20))
+	# data['Z'][:,1] = s.cos(s.arange(N)/(N/20))
+	# data['Z'][:,2] = 2*(s.arange(N)/N-0.5)
+	# data['Z'][:,0] = stats.norm.rvs(loc=0, scale=1, size=N)
+	# data['Z'][:,1] = stats.norm.rvs(loc=0, scale=1, size=N)
+	# data['Z'][:,2] = stats.norm.rvs(loc=0, scale=1, size=N)
+
+	cluster_values = s.array([[4,0], [-4,0]])
+	# cluster_values = None
+	# affected by clusters
+	tmp_Z_1 = stats.norm.rvs(loc=-4, scale=0.01, size=N)
+	tmp_Z_2 = stats.norm.rvs(loc=4, scale=0.01, size=N)
+	data['Z'][:,0] = tmp_Z_1 * generative_clusters + tmp_Z_2 *(1-generative_clusters)
+	#
+	tmp_Z_3 = stats.norm.rvs(loc=0, scale=0.01, size=N)
+	tmp_Z_4 = stats.norm.rvs(loc=0, scale=0.01, size=N)
+	data['Z'][:,1] = tmp_Z_3 * generative_clusters + tmp_Z_4 *(1-generative_clusters)
+	#
+	# tmp_Z_5 = stats.norm.rvs(loc=0, scale=0.01, size=N)
+	# tmp_Z_6 = stats.norm.rvs(loc=0, scale=0.01, size=N)
+	# data['Z'][:,2] = tmp_Z_5 * generative_clusters + tmp_Z_6 *(1-generative_clusters)
+	#
+	# data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
 
 	# Add a known covariate
 	# data['Z'][:,5] = s.asarray([True,False]*int(N/2), dtype=s.float32)
 
 	data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
+<<<<<<< HEAD:test/sparse_test.py
 	data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
 	data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
 	data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 	data['alpha'][3] = [1e6,1,1,1e6,1e6,1]
+=======
+	data['alpha'][0] = [1,1]
+	# data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
+	# data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
+	# data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
+>>>>>>> cluster_prior:scGFA/test/sparse_test.py
 
-	theta = [ s.ones(K)*0.5 for m in xrange(M) ]
-	data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
+
+	if all_annotated:
+		annotation_strength = 1e-7
+		annotation_theta1 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.8, 0.2], size = D[0])
+		annotation_theta2 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.8, 0.2], size = D[0])
+		# annotation_theta3 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.8, 0.2], size = D[0])
+		# annotation_theta4 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
+		# annotation_theta5 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
+		# annotation_theta6 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
+
+		# theta_view_1 = s.concatenate((annotation_theta1[:,None], annotation_theta2[:, None],
+									#   annotation_theta3[:,None], annotation_theta4[:,None],
+									#   annotation_theta5[:,None], annotation_theta6[:,None]), axis=1)
+		# theta_view_1 = s.concatenate((annotation_theta1[:,None], annotation_theta2[:, None],
+											#   annotation_theta3[:,None]), axis=1)
+		theta_view_1 = s.concatenate((annotation_theta1[:,None], annotation_theta2[:, None]), axis=1)
+
+		theta = [theta_view_1]
+
+	else:
+		theta = [ s.ones(K)*0.5 for m in xrange(M) ]
+
+	# data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'], annotation=all_annotated)
+	# thetabis = [ s.ones(K)*0.5 for m in xrange(M) ]
+	data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'], annotation=True)
 
 	data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 
@@ -93,7 +156,7 @@ for iter in range(1000):
 	#################################
 
 	# Define initial number of latent variables
-	K = 10
+	K = 2
 
 	dim = {}
 	dim["M"] = M
@@ -107,10 +170,19 @@ for iter in range(1000):
 
 	# Z without covariates (variational node)
 	Z_pmean = 0.
-	Z_pvar = 1.
+	Z_pvar = .1
 	Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K))
 	Z_qvar = s.ones((N,K))
 	Z = Z_Node(dim=(N,K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar)
+
+	# Samples clusters (two clusters)
+	clusters = generative_clusters
+	cluster_q_var =1
+	cluster_q_mean =0
+	cluster_p_var =1
+	cluster_p_mean =0
+	Cluster_Node = Cluster_Node_Gaussian(cluster_p_mean, cluster_p_var, cluster_q_mean,
+						  cluster_q_var, clusters, K)
 
 	# Z with covariates (variational node)
 	# Z_pmean = 0.
@@ -187,11 +259,16 @@ for iter in range(1000):
 			Y_list[m] = Binomial_PseudoY_Node(dim=(N,D[m]), tot=data['Y']["tot"][m], obs=data['Y']["obs"][m], Zeta=None, E=None)
 	Y = Multiview_Mixed_Node(M, *Y_list)
 
+<<<<<<< HEAD:test/sparse_test.py
 	# Theta node
 	Theta_list = [None for i in range(M)]
 	learn_theta = False
 	use_annotations = True
 
+=======
+	# Theta
+	Theta_list = [None]
+>>>>>>> cluster_prior:scGFA/test/sparse_test.py
 	if learn_theta:
 		theta_pa = 1.
 		theta_pb = 1.
@@ -201,13 +278,13 @@ for iter in range(1000):
 		for m in xrange(M):
 			Theta_list[m] = Theta_Node(dim=(K,), pa=theta_pa, pb=theta_pb, qa=theta_qa, qb=theta_qb, qE=theta_qE)
 		Theta = Multiview_Variational_Node(M, *Theta_list)
-	else:
-		value = 0.5
-		for m in xrange(M):
-			Theta_list[m] = Theta_Constant_Node(dim=(K,),value=value)
-		Theta = Multiview_Constant_Node(M, *Theta_list)
+	# else:
+	# 	value = 0.5
+	# 	Theta_list = [None for i in range(M)]
+	# 	for m in xrange(M):
+	# 		Theta_list[m] = Theta_Constant_Node(dim=(K,),value=value)
+	# 	Theta = Multiview_Constant_Node(M, *Theta_list)
 
-	# Theta node with annotations
 	if use_annotations:
 		theta_pa = 1.
 		theta_pb = 1.
@@ -216,7 +293,7 @@ for iter in range(1000):
 		theta_qE = None
 		annotation_theta1 = s.random.choice([0.01, 0.99], p=[0.7, 0.3], size = D[0])
 		annotations = annotation_theta1[:,None]
-		annotated_node = Theta_Constant_Node((D[0],1), annotations)
+		annotated_node = Theta_Constant_Node((D[0],1), annotations, N)
 		non_annotated_node = Theta_Node(dim=(K-1,), pa=theta_pa, pb=theta_pb, qa=theta_qa, qb=theta_qb, qE=theta_qE)
 		Theta_list[0] = Mixed_Theta_Nodes(annotated_node, non_annotated_node)
 		# Other two views, no annotation
@@ -224,11 +301,18 @@ for iter in range(1000):
 		    Theta_list[m] = Theta_Node(dim=(K,), pa=theta_pa, pb=theta_pb, qa=theta_qa, qb=theta_qb, qE=theta_qE)
 		Theta = Multiview_Variational_Node(M, *Theta_list)
 
+	if all_annotated:
+		annotated_node = Theta_Constant_Node((D[0],K), theta[0], N)
+		Theta_list[0] = annotated_node
+		Theta = Multiview_Variational_Node(M, *Theta_list)
+
+
 	############################
 	## Define Markov Blankets ##
 	############################
 
-	Z.addMarkovBlanket(SW=SW, Tau=Tau, Y=Y)
+	Z.addMarkovBlanket(SW=SW, Tau=Tau, Y=Y, Cluster=Cluster_Node)
+	Cluster_Node.addMarkovBlanket(Z=Z)
 	for m in xrange(M):
 		Theta.nodes[m].addMarkovBlanket(SW=SW.nodes[m])
 		Alpha.nodes[m].addMarkovBlanket(SW=SW.nodes[m])
@@ -243,8 +327,9 @@ for iter in range(1000):
 	Z.updateExpectations()
 	Theta.updateExpectations()
 
-	schedule = ["SW","Z","Alpha","Tau","Theta"]
-	nodes = { "Theta":Theta, "SW":SW, "Tau":Tau, "Z":Z, "Y":Y, "Alpha":Alpha }
+	schedule = ["Z", "SW","Alpha","Tau","Theta","Cluster"]
+	nodes = { "Theta":Theta, "SW":SW, "Tau":Tau, "Z":Z, "Y":Y, "Alpha":Alpha,
+	 		  "Cluster": Cluster_Node}
 
 	#############################
 	## Define training options ##
@@ -259,7 +344,7 @@ for iter in range(1000):
 	options['dropK'] = { 'by_norm':None, 'by_pvar':None, 'by_cor':None }
 	options['savefreq'] = options['maxiter']+1
 	options['savefolder'] = "/tmp/test"
-	options['verbosity'] = 1
+	options['verbosity'] = -1
 
 	####################
 	## Start training ##
@@ -267,6 +352,8 @@ for iter in range(1000):
 
 	net = BayesNet(dim=dim, schedule=schedule, nodes=nodes, options=options)
 	net.iterate()
+
+	return {'Z': Z, 'Cluster': Cluster_Node, 'W': SW,'data_W': data['W'], 'data_clusters': cluster_values, 'data_Z':data['Z']}
 
 	# exit()
 

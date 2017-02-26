@@ -11,7 +11,6 @@ import pdb
 #      all nodes is done inside and not outside to provide the same interface as
 #      a normal node
 
-# when NOT-constant, might not be same dimensions -> to expand somewhere
 class Mixed_Theta_Nodes(Variational_Node, Constant_Node):
     """
     Class for a mixture of annotated Theta and non annotated Theta

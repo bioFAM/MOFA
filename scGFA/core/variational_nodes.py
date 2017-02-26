@@ -28,7 +28,7 @@ Variational nodes have the following main variables:
 
 
 """
-to-do: 
+to-do:
 - improve bernoulli gaussian
 """
 
@@ -180,7 +180,7 @@ class BernoulliGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node)
     are joint gaussian-bernoulli distributions (see paper  Spike and Slab Variational Inference for
     Multi-Task and Multiple Kernel Learning by Titsias and Gredilla)
     """
-    def __init__(self, dim, 
+    def __init__(self, dim,
         pmean_S0, pmean_S1, pvar_S0, pvar_S1, ptheta,
         qmean_S0, qmean_S1, qvar_S0, qvar_S1, qtheta, qEW_S0=None, qEW_S1=None, qES=None):
 	    # dim (2d tuple): dimensionality of the node
@@ -213,4 +213,3 @@ class Beta_Unobserved_Variational_Node(Unobserved_Variational_Node):
         # Initialise P and Q distributions
         self.P = Beta(dim, pa, pb)
         self.Q = Beta(dim, qa, qb, qE)
-

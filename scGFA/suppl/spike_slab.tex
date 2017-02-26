@@ -321,5 +321,51 @@ The expectations are calculated as follows:
 &(y_{nd}^m)^2 - 2y_{nd}^m \sum_k^{K} \la w_{dk}^m s_{dk}^m \ra \la z_{nk} \ra + \sum_k^{K} \la (w_{dk}^m s_{dk}^m)^2 \ra \la z_{nk}^2 \ra + 2\sum_{j > k}^{K} \la w_{dk}^m s_{dk}^m \ra \la w_{dj}^m s_{dj}^m \ra \la z_{nk} \ra \la z_{nj} \ra
 \end{align*}
 
+\section{Add cluster specific prior on the latent variables}
+
+The samples are divided into $C$ clusters. The index $c$ refers to one of these clusters, $c \in [[ 1, C]]$. When a sample $n$ belongs to cluster $c$ we write $n\in c$ (meaning that the notation $c$ is used both to designate the cluster and its index)
+
+\subsection{Prior architecture on $Z$}
+A cluster specific prior is used for every latent variable:
+\begin{equation}
+  z_{n, k} \sim \mathcal{N} (\mu_{k, c}, \sigma_{k, c}), \forall n\in c,
+\end{equation}
+
+where $\mu_{k, c}$ is given a normal prior:
+\begin{equation}
+  \mu_{k, c} \sim \mathcal{N} (\mu_0, \sigma_0), \forall k, c
+\end{equation}
+
+\subsection{New update for $Z$}
+\begin{equation*}
+\sigma_{z_{nk}}^2 = \Big( \sum_{m=1}^{M} \sum_{d=1}^{D_m} \tau_d^m \la (s_{dk}^m\hat{w}_{dk}^m)^2 \ra + 1 \Big)^{-1}
+\end{equation*}
+\begin{equation*}
+\mu_{z_{nk}} | n \in c = \sigma_{z_{nk}}^2 \left[ \frac{\la \mu_{k,c} \ra}{1} + \sum_{m=1}^{M} \sum_{d=1}^{D_m} \la\tau_d^m\ra \la s_{dk}^m\hat{w}_{dk}^m \ra \Big( y_{nd}^m - \sum_{j \neq k} \la s_{dj}^m \hat{w}_{dj}^m \ra \la z_{nj} \ra \Big)\right]
+\end{equation*}
+
+
+\subsection{Update for $\mu_{k, c}$}
+\begin{equation*}
+  \sigma^2_{\mu_{k, c}} = \left(\sum_{n\in c} \frac{1}{\sigma^2_{z_{n,k}}} + \frac{1}{\sigma_0^2}\right)^{-1}
+\end{equation*}
+
+\begin{equation*}
+  \mu_{\mu_{k, c}} = \sigma^2_{\mu_{k, c}}\times \left( \sum_{n \in c} \frac{\la z_{n,k} \ra}{\sigma^2_{z_{n,k}}} + \frac{\mu_0}{\sigma^2_0} \right)
+\end{equation*}
+
+\subsection{ELBO term for $\mu$}
+Cross entropy term
+\begin{equation*}
+  \mathbb{E}\left[ \log(P(\mu_{k, c}))\right] = \sum_c\sum_k \log\left(\frac{1}{\sigma_0 (2\pi)^{1/2}}\right) - \frac{1}{2\sigma^2_0}\left( \la \mu_{k,c}^2\ra -2\la\mu_{k,c}\ra\mu_0 + \mu_0^2 \right)
+\end{equation*}
+
+Entropy of Q:
+\begin{equation*}
+  -\mathbb{E}\left[ \log(Q(\mu_{k, c}))\right] =\sum_c\sum_k 1/2\log(2\sigma^2_{\mu_{k, c}} \pi e)
+\end{equation*}
+
+
+
 
 \end{document}

@@ -65,7 +65,9 @@ class Simulate(object):
             # are M * K * D[m], so theta[m][k] is already of length D
             for m in xrange(self.M):
                 for k in xrange(self.K):
-                    S[m][:,k] = bernoulli.rvs(p=theta[m][:, k])
+                    # S[m][:,k] = bernoulli.rvs(p=theta[m][:, k])
+                    S[m][:,k] = (theta[m][:, k] > .7) *1.
+
         else:
             for m in xrange(self.M):
                 for k in xrange(self.K):

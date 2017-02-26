@@ -26,7 +26,7 @@ def run_test(use_annotations, seed=None, swap_factor=False):
     define dimensions
     """
     M = 2
-    N = 300
+    N = 100
     D = s.asarray([150, 200])
     K = 2
 
@@ -45,19 +45,23 @@ def run_test(use_annotations, seed=None, swap_factor=False):
     define Zs
     """
     # cluster parameters
-    means = [4., -4.]
-    sigmas = [1.3, 1.3]
-    z_score = (means[0] - means[1])/s.sqrt(sigmas[0]**2. + sigmas[1]**2.)
+    cluster_means = [0., 1.]
+    cluster_sigmas = [1., 1.]
+
+    means0 = stats.norm.rvs(loc=cluster_means[0], scale=cluster_sigmas[0], size=N)
+    means1 = stats.norm.rvs(loc=cluster_means[1], scale=cluster_sigmas[1], size=N)
+
+
+    z_score = (cluster_means[0] - cluster_means[1])/s.sqrt(cluster_sigmas[0]**2. + cluster_sigmas[1]**2.)
 
     data['Z'] = s.zeros((N,K))
 
-    cluster_values = s.array([[4,0], [-4,0]])
-    tmp_Z_1 = stats.norm.rvs(loc=means[0], scale=sigmas[0], size=N)
-    tmp_Z_2 = stats.norm.rvs(loc=means[1], scale=sigmas[1], size=N)
+    tmp_Z_1 = stats.norm.rvs(loc=means0, scale=1., size=N)
+    tmp_Z_2 = stats.norm.rvs(loc=means1, scale=1., size=N)
     data['Z'][:,0] = tmp_Z_1 * generative_clusters + tmp_Z_2 *(1-generative_clusters)
     #
-    tmp_Z_3 = stats.norm.rvs(loc=0, scale=0.3, size=N)
-    tmp_Z_4 = stats.norm.rvs(loc=0, scale=0.3, size=N)
+    tmp_Z_3 = stats.norm.rvs(loc=0, scale=1., size=N)
+    tmp_Z_4 = stats.norm.rvs(loc=0, scale=1., size=N)
     data['Z'][:,1] = tmp_Z_3 * generative_clusters + tmp_Z_4 *(1-generative_clusters)
 
 
@@ -66,29 +70,31 @@ def run_test(use_annotations, seed=None, swap_factor=False):
     define alphas
     """
     data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
-    data['alpha'][0] = [1,1]
-    data['alpha'][1] = [10,10]
+    data['alpha'][0] = [1.,1.]
+    data['alpha'][1] = [1.,1.]
 
 
     """
     define annotations
     """
-    # factor annotated
-    annotation_strength = 1e-3
-    annotation_theta1 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.8, 0.2], size = D[0])
-    annotation_theta2 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.8, 0.2], size = D[0])
-    theta_view_1 = s.concatenate((annotation_theta1[:,None], annotation_theta2[:, None]), axis=1)
-
-    annotation_theta1_2 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.8, 0.2], size = D[1])
-    annotation_theta2_2 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.8, 0.2], size = D[1])
-    theta_view_2 = s.concatenate((annotation_theta1_2[:,None], annotation_theta2_2[:, None]), axis=1)
-
-    theta = [theta_view_1, theta_view_2]
+    # # factor annotated
+    # annotation_strength = 1e-3
+    # annotation_theta1 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.8, 0.2], size = D[0])
+    # annotation_theta2 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.8, 0.2], size = D[0])
+    # theta_view_1 = s.concatenate((annotation_theta1[:,None], annotation_theta2[:, None]), axis=1)
+    #
+    # annotation_theta1_2 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.8, 0.2], size = D[1])
+    # annotation_theta2_2 = s.random.choice([annotation_strength, 1.-annotation_strength], p=[0.8, 0.2], size = D[1])
+    # theta_view_2 = s.concatenate((annotation_theta1_2[:,None], annotation_theta2_2[:, None]), axis=1)
+    #
+    # theta = [theta_view_1, theta_view_2]
 
     """
     generate data
     """
-    data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'], annotation=True)
+    # data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'], annotation=True)
+    theta_non_annotated = [ s.ones(K)*0.5 for m in xrange(M) ]
+    data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta_non_annotated, alpha=data['alpha'], annotation=False)
     data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 
     # data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
@@ -141,8 +147,9 @@ def run_test(use_annotations, seed=None, swap_factor=False):
 
     # alpha (variational node)
     alpha_list = [None]*M
-    alpha_pa = 1e-14
-    alpha_pb = 1e-14
+    # NOTE to change back to 1e14
+    alpha_pa = 1.
+    alpha_pb = 1.
     alpha_qb = s.ones(K)
     alpha_qa = s.ones(K)
     alpha_qE = s.ones(K)*100

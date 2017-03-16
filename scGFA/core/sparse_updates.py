@@ -45,6 +45,9 @@ Each node is a Variational_Node() class with the following main variables:
 
 """
 
+# NOTE : in the current implementation, the cluster prior on the mean of Z makes it
+# NOTE impossible to initialise latent variables with PCA for example. Would be good to allow this too
+
 class Y_Node(Constant_Variational_Node):
     def __init__(self, dim, value):
         Constant_Variational_Node.__init__(self, dim, value)

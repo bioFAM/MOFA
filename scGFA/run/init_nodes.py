@@ -209,6 +209,9 @@ class init_scGFA(initModel):
         self.Theta = Multiview_Mixed_Node(self.M, *Theta_list)
         self.nodes["Theta"] = self.Theta
 
+    # def initClusters():
+        # pass
+
     def initExpectations(self, *nodes):
         # Method to initialise the expectations of some nodes
         for node in nodes:

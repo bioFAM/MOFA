@@ -99,6 +99,10 @@ def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=Fal
     init.initTau(pa=model_opts["priorTau"]['a'], pb=model_opts["priorTau"]['b'],
                  qa=model_opts["initTau"]['a'], qb=model_opts["initTau"]['b'], qE=model_opts["initTau"]['E'])
 
+    # needs to init cluster nodes too
+    init.initClusters()
+
+
     if model_opts['learnTheta']:
         init.initThetaLearn(pa=model_opts["priorTheta"]['a'], pb=model_opts["priorTheta"]['b'],
                             qa=model_opts["initTheta"]['a'],  qb=model_opts["initTheta"]['b'], qE=model_opts["initTheta"]['E'])
@@ -156,8 +160,10 @@ def runMultipleTrials(data_opts, model_opts, train_opts, cores, keep_best_run, v
 
     seed = None
 
-    trained_models = Parallel(n_jobs=cores, backend="threading")(
-        delayed(runSingleTrial)(data,model_opts,train_opts,seed,i,verbose) for i in xrange(1,train_opts['trials']+1))
+    for i in range(train_opts['trials']):
+        runSingleTrial(data,model_opts,train_opts,seed,i+1,verbose)
+    # trained_models = Parallel(n_jobs=cores, backend="threading")(
+    #     delayed(runSingleTrial)(data,model_opts,train_opts,seed,i,verbose) for i in xrange(1,train_opts['trials']+1))
 
     print "\n"
     print "#"*43
@@ -268,10 +274,11 @@ if __name__ == '__main__':
     train_opts = {}
     train_opts['maxiter'] = 300
     train_opts['elbofreq'] = 1
-    if 'Kvothe' in gethostname():
-        train_opts['outfile'] = "/Users/ricard/git/gastrulation/expr/scGFA/expr/out/singleview.hdf5"
-    elif 'yoda' in gethostname():
-        train_opts['outfile'] = ""
+    # if 'Kvothe' in gethostname():
+    #     train_opts['outfile'] = "/Users/ricard/git/gastrulation/expr/scGFA/expr/out/singleview.hdf5"
+    # elif 'yoda' in gethostname():
+    #     train_opts['outfile'] = ""
+    train_opts['outfile'] = '/Users/damienarnol1/Documents/local/pro/PhD/perturb_seq/output/res.h5'
     train_opts['savefreq'] = s.nan
     train_opts['savefolder'] = s.nan
     train_opts['verbosity'] = 2

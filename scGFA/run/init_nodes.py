@@ -205,12 +205,16 @@ class init_scGFA(initModel):
         # Method to initialise the theta node
         Theta_list = [None] * self.M
         for m in xrange(self.M):
-            Theta_list[m] = Theta_Constant_Node(dim=(self.K,), value=value[m])
+            Theta_list[m] = Theta_Constant_Node(dim=(self.K,), value=value[m], N_cells=self.N)
         self.Theta = Multiview_Mixed_Node(self.M, *Theta_list)
         self.nodes["Theta"] = self.Theta
 
-    # def initClusters():
-        # pass
+    def initClusters(self, clusters=None, pmean=0, pvar=1, qmean=0, qvar=1):
+        if clusters is None:
+            clusters = s.zeros(self.N, int)
+        self.Clusters = Cluster_Node_Gaussian(pmean, pvar, qmean,
+        					  qvar, clusters, self.K)
+        self.nodes['Clusters'] = self.Clusters
 
     def initExpectations(self, *nodes):
         # Method to initialise the expectations of some nodes
@@ -219,7 +223,8 @@ class init_scGFA(initModel):
 
     def MarkovBlanket(self):
         # Method to define the markov blanket
-        self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y)
+        self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y, Cluster=self.Clusters)
+        self.Clusters.addMarkovBlanket(Z=self.Z)
         for m in xrange(self.M):
             self.Theta.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m])
             self.Alpha.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m])

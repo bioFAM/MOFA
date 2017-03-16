@@ -99,7 +99,7 @@ def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=Fal
     init.initTau(pa=model_opts["priorTau"]['a'], pb=model_opts["priorTau"]['b'],
                  qa=model_opts["initTau"]['a'], qb=model_opts["initTau"]['b'], qE=model_opts["initTau"]['E'])
 
-    # needs to init cluster nodes too
+    # needs to init cluster nodes too even when there is no kown clusters
     init.initClusters()
 
 
@@ -160,8 +160,9 @@ def runMultipleTrials(data_opts, model_opts, train_opts, cores, keep_best_run, v
 
     seed = None
 
+    trained_models = []
     for i in range(train_opts['trials']):
-        runSingleTrial(data,model_opts,train_opts,seed,i+1,verbose)
+        trained_models.append(runSingleTrial(data,model_opts,train_opts,seed,i+1,verbose))
     # trained_models = Parallel(n_jobs=cores, backend="threading")(
     #     delayed(runSingleTrial)(data,model_opts,train_opts,seed,i,verbose) for i in xrange(1,train_opts['trials']+1))
 
@@ -211,7 +212,7 @@ if __name__ == '__main__':
     # else:
     #     print "Computer not recognised"
     #     exit()
-    base_folder = '/Users/damienarnol1/Resilio_Sync/perturbseq/bmdc/concatenated/'
+    base_folder = '/homes/arnol/multi_view_FA/perturb_seq/data/concatenated_bmdc/'
 
     data_opts['view_names'] = ( "gene_expression", "guide")
 

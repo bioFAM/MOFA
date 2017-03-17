@@ -275,7 +275,6 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         self.factors_axis = 1
 
     def updateParameters(self):
-
         # Collect expectations from other nodes
         Ztmp = self.markov_blanket["Z"].getExpectations()
         Z,ZZ = Ztmp["E"],Ztmp["E2"]
@@ -310,7 +309,6 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         if theta_lnEInv.shape != Qmean_S1.shape:
             theta_lnEInv = s.repeat(theta_lnEInv[None,:],Qmean_S1.shape[0],0)
 
-        # the prior term has to be multiplied by the number of cells for constant theta
         all_term1 = theta_lnE - theta_lnEInv
         # all_term1 = s.log(theta_E/(1.-theta_E))
 
@@ -430,6 +428,9 @@ class Theta_Node(Beta_Unobserved_Variational_Node):
         return lb_p - lb_q
 
 class Theta_Constant_Node(Constant_Variational_Node):
+    """
+    Dimensions of Theta_Constant_Node should be (D[m], K)
+    """
     def __init__(self, dim, value, N_cells):
         super(Theta_Constant_Node, self).__init__(dim, value)
         self.N_cells = N_cells
@@ -443,7 +444,7 @@ class Theta_Constant_Node(Constant_Variational_Node):
     def getExpectations(self):
         return { 'E':self.E, 'lnE':self.lnE, 'lnEInv':self.lnEInv }
 
-    def removeFactors(self, idx, axis=0):
+    def removeFactors(self, idx, axis=1):
         # Ideally we want this node to use the removeFactors defined in Node()
         # but the problem is that we also need to update the "expectations", so i need
         # to call precompute()

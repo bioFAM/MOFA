@@ -205,7 +205,7 @@ class init_scGFA(initModel):
         # Method to initialise the theta node
         Theta_list = [None] * self.M
         for m in xrange(self.M):
-            Theta_list[m] = Theta_Constant_Node(dim=(self.K,), value=value[m], N_cells=self.N)
+            Theta_list[m] = Theta_Constant_Node(dim=(self.D[m], self.K), value=value[m], N_cells=self.N)
         self.Theta = Multiview_Mixed_Node(self.M, *Theta_list)
         self.nodes["Theta"] = self.Theta
 

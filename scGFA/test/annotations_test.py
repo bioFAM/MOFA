@@ -295,6 +295,15 @@ def run_test(use_annotations, seed=None, swap_factor=False):
     # return {'Z': Z, 'W': SW,'data_W': data['W'], 'data_Z':data['Z']}
     return all_weights
 
+
+if __name__ == '__main__':
+    print 'running without annotations '
+    run_test(False, seed=None, swap_factor=False)
+
+    print 'running with annotations '
+    run_test(True, seed=None, swap_factor=False)
+
+
     # exit()
 
     ##################

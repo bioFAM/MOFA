@@ -6,7 +6,7 @@ from time import time
 import pandas as pd
 import scipy as s
 from sys import path
-from joblib import Parallel, delayed
+# from joblib import Parallel, delayed
 from socket import gethostname
 
 # Import manual functions
@@ -49,6 +49,12 @@ def loadData(data_opts, verbose=True):
 
         Y.append(tmp)
     return Y
+
+def buildAnnotations(annotation_file, p0=.01, p1=.99):
+    tmp = pd.read_table(annotation_file, sep=' ')
+    tmp *= p1
+    tmp[tmp==0] = p0
+    return tmp
 
 # Function to run a single trial of the model
 def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=False):
@@ -212,12 +218,16 @@ if __name__ == '__main__':
     # else:
     #     print "Computer not recognised"
     #     exit()
-    base_folder = '/homes/arnol/multi_view_FA/perturb_seq/data/concatenated_bmdc/'
+    # base_folder = '/homes/arnol/multi_view_FA/perturb_seq/data/concatenated_bmdc/'
+    base_folder = '/Users/damienarnol1/Documents/local/pro/PhD/perturb_seq/shared_data/concatenated/'
 
     data_opts['view_names'] = ( "gene_expression", "guide")
 
-    data_opts['input_files'] = [base_folder+'/dc_both_filt_fix_tp10k.txt',
-                                base_folder+'/all_guides.txt']
+    data_opts['input_files'] = [base_folder+'/expression_short.txt',
+                                base_folder+'/guides_short.txt']
+
+    annotation_file = base_folder + '/TF_guide_map.txt'
+
     M = len(data_opts['input_files'])
     data_opts['center'] = [True]*M
     # data_opts['rownames'] = 0
@@ -235,7 +245,7 @@ if __name__ == '__main__':
     model_opts = {}
     model_opts['likelihood'] = ["gaussian"]*M
     model_opts['learnTheta'] = False
-    model_opts['k'] = 10
+    model_opts['k'] = 26
 
 
     # Define priors
@@ -259,7 +269,10 @@ if __name__ == '__main__':
     if model_opts['learnTheta']:
         model_opts["initTheta"] = { 'a':[1.]*M, 'b':[1.]*M, 'E':[None]*M }
     else:
-        model_opts["initTheta"] = { 'value':[0.5]*M }
+        # load annotations for the second view
+        annot_mat = buildAnnotations(annotation_file)
+        all_annotations = [0.5, annot_mat.transpose().values]
+        model_opts["initTheta"] = { 'value':all_annotations}
 
 
     # Define schedule of updates

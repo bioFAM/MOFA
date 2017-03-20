@@ -296,7 +296,7 @@ if __name__ == '__main__':
     train_opts['savefreq'] = s.nan
     train_opts['savefolder'] = s.nan
     train_opts['verbosity'] = 2
-    train_opts['dropK'] = { "by_norm":0.01, "by_pvar":None, "by_cor":0.80 }
+    train_opts['dropK'] = { "by_norm":None, "by_pvar":None, "by_cor":None}
     train_opts['forceiter'] = True
     train_opts['tolerance'] = 0.01
 

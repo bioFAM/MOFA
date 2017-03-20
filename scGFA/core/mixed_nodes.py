@@ -1,5 +1,5 @@
 from variational_nodes import Variational_Node
-from constant_nodes import Constant_Node
+from nodes import Constant_Node
 import scipy as s
 
 import pdb
@@ -11,7 +11,6 @@ import pdb
 #      all nodes is done inside and not outside to provide the same interface as
 #      a normal node
 
-# when NOT-constant, might not be same dimensions -> to expand somewhere
 class Mixed_Theta_Nodes(Variational_Node, Constant_Node):
     """
     Class for a mixture of annotated Theta and non annotated Theta
@@ -47,8 +46,7 @@ class Mixed_Theta_Nodes(Variational_Node, Constant_Node):
 
         # deal with different dimensions TODO handle other cases here ?
         # TODO this does not handle learnign some theta and not others for
-        # example (wrong dimensions for constant) could be useful for having
-        # mixed sparsity levels
+
         exp = s.repeat(exp[None, :], values_annotated.shape[0], 0)
         lnExp = s.repeat(lnExp[None, :], values_annotated.shape[0], 0)
         lnExpInv = s.repeat(lnExpInv[None, :], values_annotated.shape[0], 0)

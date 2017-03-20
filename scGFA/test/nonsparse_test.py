@@ -11,14 +11,13 @@ import scipy.stats as stats
 import numpy.linalg  as linalg
 
 
-path.insert(0,"../")
-from simulate import Simulate
-from BayesNet import BayesNet
-from utils import *
-from multiview_nodes import *
-from seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
-from nodes import Constant_Node
-from nonsparse_updates import Y_Node, Alpha_Node, W_Node, Tau_Node, Z_Node, Y_Node
+from scGFA.core.simulate import Simulate
+from scGFA.core.BayesNet import BayesNet
+from scGFA.core.utils import *
+from scGFA.core.multiview_nodes import *
+from scGFA.core.seeger_nodes import Binomial_PseudoY_Node, Poisson_PseudoY_Node, Bernoulli_PseudoY_Node
+from scGFA.core.nodes import Constant_Node
+from scGFA.core.nonsparse_updates import Y_Node, Alpha_Node, W_Node, Tau_Node, Z_Node, Y_Node
 
 ###################
 ## Generate data ##
@@ -52,13 +51,13 @@ data['W'], _ = tmp.initW_ard(alpha=data['alpha'])
 data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 # data['tau']= [ s.ones(D[m])*1000 for m in xrange(M) ]
 data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
-Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="gaussian", missingness=0.00)
-Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="poisson", missingness=0.00)
-Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="bernoulli", missingness=0.0)
-# Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'], 
+# Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	# likelihood="binomial", missingness=0.0, min_trials=10, max_trials=50)
 
 # data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
@@ -132,10 +131,10 @@ W = Multiview_Variational_Node(M, *W_list)
 tau_list = [None]*M
 for m in xrange(M):
 	if likelihood[m] == "poisson":
-		tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0) 
+		tmp = 0.25 + 0.17*s.amax(data["Y"][m],axis=0)
 		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
 	elif likelihood[m] == "bernoulli":
-		tmp = s.ones(D[m])*0.25 
+		tmp = s.ones(D[m])*0.25
 		tau_list[m] = Observed_Local_Node(dim=(D[m],), value=tmp)
 	elif likelihood[m] == "binomial":
 		tmp = 0.25*s.amax(data["Y"]["tot"][m],axis=0)
@@ -204,4 +203,3 @@ options['verbosity'] = 2
 
 net = BayesNet(dim=dim, schedule=schedule, nodes=nodes, options=options)
 net.iterate()
-

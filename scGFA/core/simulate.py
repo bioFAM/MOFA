@@ -54,6 +54,10 @@ class Simulate(object):
     # TODO: here is a quick hack for taking into account informative priors
     # need to work out how to do this better
     def initW_spikeslab(self, theta, alpha=None, annotation=False):
+        # checking there is no zero in alpha input
+        if alpha is not None:
+            assert not any([0 in toto for toto in alpha]), 'alpha cannot be zero'
+
         # Simulate bernoulli variable S
         S = [ s.zeros((self.D[m],self.K)) for m in xrange(self.M) ]
         if annotation:
@@ -61,7 +65,9 @@ class Simulate(object):
             # are M * K * D[m], so theta[m][k] is already of length D
             for m in xrange(self.M):
                 for k in xrange(self.K):
-                    S[m][:,k] = bernoulli.rvs(p=theta[m][:, k])
+                    # S[m][:,k] = bernoulli.rvs(p=theta[m][:, k])
+                    S[m][:,k] = (theta[m][:, k] > .7) *1.
+
         else:
             for m in xrange(self.M):
                 for k in xrange(self.K):
@@ -110,11 +116,10 @@ class Simulate(object):
 
         # Sample observations using a gaussian likelihood
         if likelihood == "gaussian":
-            warnings.warn("Slow and Fast simulators do not match, why?")
-            # Fast way (I THINK THERE IS A PROBLEM WITH IT, NOT SURE WHY)
             for m in xrange(self.M):
-                Y[m] = s.dot(Z,W[m].T) + Mu[m] + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m])).T
+                Y[m] = s.dot(Z,W[m].T) + Mu[m] + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m]), size=[self.N, self.D[m]])
 
+            # Non-vectorised, slow
             # for m in xrange(self.M):
             #     for n in xrange(self.N):
             #         for d in xrange(self.D[m]):
@@ -185,7 +190,7 @@ class Simulate(object):
                 tmp[nas] = s.nan
                 Y[m] = tmp.reshape((self.N,self.D[m]))
 
-        # Create a mask 
+        # Create a mask
         for m in xrange(self.M):
             Y[m] = ma.masked_invalid(Y[m])
         return Y

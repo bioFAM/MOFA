@@ -132,6 +132,11 @@ class BayesNet(object):
                     # Check convergence using the ELBO
                     delta_elbo = elbo.iloc[i]["total"]-elbo.iloc[i-1]["total"]
 
+                    debug_mode=False
+                    if delta_elbo < 0 and debug_mode:
+                        print 'delta_elbo is ', delta_elbo
+                        import pdb; pdb.set_trace()
+
                     # Print ELBO monitoring
                     if self.options['verbosity'] > 0:
                         print "Trial %d, Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, K=%d" % (self.trial, iter,time()-t,elbo.iloc[i]["total"], delta_elbo, self.dim["K"])
@@ -139,13 +144,15 @@ class BayesNet(object):
                         print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
 
                     # Assess convergence
-                    if (delta_elbo < self.options['tolerance']) and (not self.options['forceiter']):
-                        print "Converged!\n"
+                    if (0 <= delta_elbo < self.options['tolerance']) and (not self.options['forceiter']):
+                        if self.options['verbosity']>=0:
+                            print "Converged!\n"
                         break
 
                 # Print first iteration
                 else:
-                    print "Trial %d, Iteration 1: time=%.2f ELBO=%.2f, K=%d" % (self.trial, time()-t,elbo.iloc[i]["total"], self.dim["K"])
+                    if self.options['verbosity'] >=0:
+                        print "Trial %d, Iteration 1: time=%.2f ELBO=%.2f, K=%d" % (self.trial, time()-t,elbo.iloc[i]["total"], self.dim["K"])
                     if self.options['verbosity'] == 2:
                         print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
 

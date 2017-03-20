@@ -3,8 +3,8 @@
 \docType{methods}
 \name{sampleNames}
 \alias{sampleNames}
-\alias{sampleNames,MOFAmodel-method}
 \alias{sampleNames<-}
+\alias{sampleNames,MOFAmodel-method}
 \alias{sampleNames<-,MOFAmodel,vector-method}
 \title{sampleNames: set and retrieve sample names}
 \usage{
@@ -27,4 +27,3 @@ character vector with the sample names
 \author{
 Ricard Argelaguet
 }
-

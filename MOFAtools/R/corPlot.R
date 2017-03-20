@@ -11,6 +11,9 @@
 #' @import corrplot
 #' @export
 FactorsCorPlot <- function(object, method="pearson", ...) {
+  if (class(object) != "MOFAmodel")
+    stop("'object' has to be an instance of MOFAmodel")
+  
   Z <- model@Expectations$Z$E
   h <- cor(x=Z, y=Z, method=method)
   p <- corrplot::corrplot(h, ...)
@@ -26,7 +29,7 @@ FactorsCorPlot <- function(object, method="pearson", ...) {
 #' @param title fill this
 #' @details asd
 #' @return fill this
-#' @import ggplot2, dplyr
+#' @import ggplot2 dplyr
 #' @export
 FactorsScatterPlot <- function(object, z_order=NULL, title="") {
   

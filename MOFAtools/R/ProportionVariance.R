@@ -57,7 +57,7 @@ CalculateProportionVariance <- function(object, plot=F) {
   # Bar plot with the residual variance for each view
   if (plot==T) {
     df <- data.frame(view=viewNames(object), fvar=fvar_m)
-    p <- ggplot(df, aes(x=view,y=fvar)) +
+    p <- ggplot2::ggplot(df, aes(x=view,y=fvar)) +
       geom_bar(stat="identity", fill="blue") +
       ylab("Coefficient of determination") +
       ylim(c(0,1)) + 

@@ -3,8 +3,8 @@
 \docType{methods}
 \name{featureNames}
 \alias{featureNames}
-\alias{featureNames,MOFAmodel-method}
 \alias{featureNames<-}
+\alias{featureNames,MOFAmodel-method}
 \alias{featureNames<-,MOFAmodel,list-method}
 \title{featureNames: set and retrieve feature names}
 \usage{
@@ -27,4 +27,3 @@ list of character vectors with the feature names for each view
 \author{
 Ricard Argelaguet
 }
-

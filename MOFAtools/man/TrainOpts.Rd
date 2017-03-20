@@ -19,4 +19,3 @@ list of training options
 \author{
 Ricard Argelaguet
 }
-

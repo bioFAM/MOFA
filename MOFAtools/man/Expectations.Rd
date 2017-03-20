@@ -19,4 +19,3 @@ list of expectations
 \author{
 Ricard Argelaguet
 }
-

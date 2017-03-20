@@ -16,4 +16,3 @@ getParameters(object, variable, parameter)
 \description{
 to-fill
 }
-

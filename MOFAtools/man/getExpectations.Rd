@@ -16,4 +16,3 @@ getExpectations(object, variable, expectation)
 \description{
 to-fill
 }
-

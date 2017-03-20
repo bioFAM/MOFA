@@ -3,8 +3,8 @@
 \docType{methods}
 \name{viewNames}
 \alias{viewNames}
-\alias{viewNames,MOFAmodel-method}
 \alias{viewNames<-}
+\alias{viewNames,MOFAmodel-method}
 \alias{viewNames<-,MOFAmodel,character-method}
 \title{viewNames: set and retrieve view names}
 \usage{
@@ -27,4 +27,3 @@ character vector with the names for each view
 \author{
 Ricard Argelaguet
 }
-

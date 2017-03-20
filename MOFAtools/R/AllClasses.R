@@ -1,7 +1,7 @@
 
-###########################################################
+##########################################################
 ## Define a general class to store a MOFA trained model ##
-###########################################################
+##########################################################
 
 #' @title Class to store a MultiOmics Factor Analysis (MOFA) model
 #' @description
@@ -39,5 +39,5 @@ setMethod("show", "MOFAmodel", function(object) {
   if(!.hasSlot(object,"Dimensions"))
     stop("Error: Dimensions not defined")
   cat(sprintf("MOFA trained model with the following characteristics: \n views: %d \n number of features: %s \n Number of samples: %d \n Number of latent variables: %d ",
-              object@Dimensions[["M"]], paste(as.character(object@Dimensions[["D"]]),sep=","), object@Dimensions[["N"]], object@Dimensions[["K"]]))
+              object@Dimensions[["M"]], paste(as.character(object@Dimensions[["D"]]),collapse=" "), object@Dimensions[["N"]], object@Dimensions[["K"]]))
 })

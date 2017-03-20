@@ -19,4 +19,3 @@ Models have to be trained and saved using the corresponding Python package.
 \details{
 fill this
 }
-

@@ -19,4 +19,3 @@ value list of Parameters
 \author{
 Ricard Argelaguet
 }
-

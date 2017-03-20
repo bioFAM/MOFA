@@ -29,4 +29,3 @@ Therefore, better compute a goodness of fit such as the coefficient of determina
 \details{
 fill this
 }
-

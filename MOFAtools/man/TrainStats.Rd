@@ -19,4 +19,3 @@ list of training statistics
 \author{
 Ricard Argelaguet
 }
-

@@ -1,4 +1,41 @@
 
+#' @title Visualize correlation matrix between the features
+#' @name FeaturesCorPlot
+#' @description fill this
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @details asd
+#' @return fill this
+#' @reference fill this
+#' @import pheatmap
+#' @export
+FeaturesCorPlot <- function(object, view, method="pearson", regress_factors=NULL, top=500, ...) {
+  if (class(object) != "MOFAmodel")
+    stop("'object' has to be an instance of MOFAmodel")
+  
+  # Select 'top' most variable features
+  data <- model@TrainData[[view]]
+  top_features <- names(tail(sort(apply(data,2,var)),n=top))
+  data <- data[,top_features]
+  
+  # Regress out latent variables
+  if (!is.null(regress_factors)) {
+    if (regress_factors=="all")
+      regress_factors <- 1:model@Dimensions$K
+    SW <- getExpectations(model,"SW","E")[[view]]; rownames(SW) <- colnames(model@TrainData[[view]])
+    Z <- getExpectations(model,"Z","E")
+    data <- data - t(SW[top_features,] %*% t(Z[,regress_factors]))
+  }
+  
+  # Compute correlation
+  r <- cor(data, method=method)
+  
+  # Draw heatmap
+  p <- pheatmap::pheatmap(r, cluster_cols=F, cluster_rows=F, show_colnames=F, show_rownames=F, ...)
+  
+  return(p)
+}
+
+
 #' @title Visualize correlation matrix between the latent variables
 #' @name FactorsCorPlot
 #' @description fill this

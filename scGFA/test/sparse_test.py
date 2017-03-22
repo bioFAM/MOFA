@@ -173,9 +173,10 @@ def run_test():
 	Z_pmean = 0.
 	Z_pvar = 1.
 	Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K-1))
-	Z_qmean = s.c_[ Z_qmean, s.asarray([True,False]*int(N/2), dtype=s.float32) ]
+	Z_qmean = s.c_[ s.asarray([True,False]*int(N/2), dtype=s.float32), Z_qmean ]
 	Z_qvar = s.ones((N,K))
-	Z = Z_Node(dim=(N,K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar, idx_covariates=K-1)
+	Z_qvar[:,0] = 0.
+	Z = Z_Node(dim=(N,K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar, idx_covariates=[0,1])
 
 	# alpha (variational node)
 	alpha_list = [None for i in range(M)]

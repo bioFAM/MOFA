@@ -85,6 +85,7 @@ class init_scGFA(initModel):
             idx_covariates = s.array(range(covariates.shape[1]))
 
             qmean[:,idx_covariates] = covariates
+            qvar[:, idx_covariates] = 0.
             # qmean = s.c_[ qmean, covariates ]
             # idx_covariates = s.arange(covariates.shape[1]) + self.K
         else:

@@ -136,7 +136,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         if any(self.covariates):
             latent_variables = np.delete(latent_variables, latent_variables[self.covariates])
 
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
 
         for k in latent_variables:
             tmp1 = SW[:,k]*tau

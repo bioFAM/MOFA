@@ -80,7 +80,10 @@ class init_scGFA(initModel):
 
         # Add covariates
         if covariates is not None:
-            idx_covariates = s.arange(self.K)[-covariates.shape[1]:]
+            # idx_covariates = s.arange(self.K)[-covariates.shape[1]:]
+            # putting the covariates first instead
+            idx_covariates = s.array(range(covariates.shape[1]))
+
             qmean[:,idx_covariates] = covariates
             # qmean = s.c_[ qmean, covariates ]
             # idx_covariates = s.arange(covariates.shape[1]) + self.K

@@ -23,7 +23,7 @@ from scGFA.core.mixed_nodes import Mixed_Theta_Nodes
 learn_theta = False
 # learn_theta = False
 use_annotations = False
-all_annotated = True
+all_annotated = False
 ###################
 ## Generate data ##
 ###################
@@ -102,7 +102,7 @@ def run_test():
 
 	# data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'], annotation=all_annotated)
 	# thetabis = [ s.ones(K)*0.5 for m in xrange(M) ]
-	data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'], annotation=True)
+	data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'], annotation=use_annotations)
 
 	data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 
@@ -141,7 +141,7 @@ def run_test():
 	#################################
 
 	# Define initial number of latent variables
-	K = 2
+	K = 5
 
 	dim = {}
 	dim["M"] = M
@@ -154,11 +154,11 @@ def run_test():
 	###############
 
 	# Z without covariates (variational node)
-	Z_pmean = 0.
-	Z_pvar = .1
-	Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K))
-	Z_qvar = s.ones((N,K))
-	Z = Z_Node(dim=(N,K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar)
+	# Z_pmean = 0.
+	# Z_pvar = .1
+	# Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K))
+	# Z_qvar = s.ones((N,K))
+	# Z = Z_Node(dim=(N,K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar)
 
 	# Samples clusters (two clusters)
 	clusters = generative_clusters
@@ -170,12 +170,12 @@ def run_test():
 						  cluster_q_var, clusters, K)
 
 	# Z with covariates (variational node)
-	# Z_pmean = 0.
-	# Z_pvar = 1.
-	# Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K-1))
-	# Z_qmean = s.c_[ Z_qmean, s.asarray([True,False]*int(N/2), dtype=s.float32) ]
-	# Z_qvar = s.ones((N,K))
-	# Z = Z_Node(dim=(N,K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar, idx_covariates=K-1)
+	Z_pmean = 0.
+	Z_pvar = 1.
+	Z_qmean = s.stats.norm.rvs(loc=0, scale=1, size=(N,K-1))
+	Z_qmean = s.c_[ Z_qmean, s.asarray([True,False]*int(N/2), dtype=s.float32) ]
+	Z_qvar = s.ones((N,K))
+	Z = Z_Node(dim=(N,K), pmean=Z_pmean, pvar=Z_pvar, qmean=Z_qmean, qvar=Z_qvar, idx_covariates=K-1)
 
 	# alpha (variational node)
 	alpha_list = [None for i in range(M)]
@@ -276,13 +276,20 @@ def run_test():
 		Theta_list[0] = Mixed_Theta_Nodes(annotated_node, non_annotated_node)
 		# Other two views, no annotation
 		for m in xrange(1, M):
-		    Theta_list[m] = Theta_Node(dim=(K,), pa=theta_pa, pb=theta_pb, qa=theta_qa, qb=theta_qb, qE=theta_qE)
+		    Theta_list[m] = Theta_Node(dim=(D[m],K), pa=theta_pa, pb=theta_pb, qa=theta_qa, qb=theta_qb, qE=theta_qE)
 		Theta = Multiview_Variational_Node(M, *Theta_list)
 
-	if all_annotated:
+	elif all_annotated:
 		annotated_node = Theta_Constant_Node((D[0],K), theta[0], N)
 		Theta_list[0] = annotated_node
 		Theta = Multiview_Variational_Node(M, *Theta_list)
+
+	else:
+		value = 0.5
+		Theta_list = [None for i in range(M)]
+		for m in xrange(M):
+			Theta_list[m] = Theta_Constant_Node((D[m], K), value, N)
+		Theta = Multiview_Constant_Node(M, *Theta_list)
 
 
 	############################
@@ -332,6 +339,9 @@ def run_test():
 	net.iterate()
 
 	return {'Z': Z, 'Cluster': Cluster_Node, 'W': SW,'data_W': data['W'], 'data_clusters': cluster_values, 'data_Z':data['Z']}
+
+if __name__ == '__main__':
+	run_test()
 
 	# exit()
 

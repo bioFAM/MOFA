@@ -94,9 +94,8 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         self.factors_axis = 1
 
     def updateParameters(self):
-        # TODO check what is needed from the new node (exp or param) and how
-        # Collect expectations from other nodes
-        # TO DO: MAKE THIS FASTER
+        # TODO: MAKE THIS FASTER
+        # TODO covariate issue to fix. Cant have var =0 for covariates as the log is computed in SW
         Y = self.markov_blanket["Y"].getExpectation()
         SWtmp = self.markov_blanket["SW"].getExpectations()
         tau = self.markov_blanket["Tau"].getExpectation()
@@ -115,36 +114,39 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         Q = self.Q.getParameters()
         # NOTE
         Pvar, Qmean = P['var'], Q['mean']
-        # make sure that results are not updated 'inline'
-        Qmean_res = np.copy(Qmean)
-        # Qmean_res = Qmean
+        Qvar = Q['var']
 
         # Variance
-        # POSSIBLE MISTAKE: THE PLUS ONE HERE? OR IS THIS RELATED TO PVAR?
+        Qvar_copy = Qvar.copy()  # copying old variance
+
         tmp = (tau*SWW.T).sum(axis=1)
         tmp = s.repeat(tmp[None,:],self.N,0)
         tmp += 1./Pvar  # adding the prior precision to the updated precision
         Qvar = 1./tmp
 
-        # Mean
+        # restoring values of the variance for the covariates
         if any(self.covariates):
-            covariates = Qmean[:,self.covariates]
+            Qvar[:, self.covariates] = Qvar_copy[:, self.covariates]
 
-        # NOTE
-        # for k in reversed(xrange(self.dim[1])):
-        for k in xrange(self.dim[1]):
+        # TODO make sure second moment is constant
+        # TODO in elbo, dont use covariates at all ?
+
+        # Mean, excluding covariates from the list of latent variables
+        latent_variables = np.array(range(self.dim[1]))
+        if any(self.covariates):
+            latent_variables = np.delete(latent_variables, latent_variables[self.covariates])
+
+        import pdb; pdb.set_trace()
+
+        for k in latent_variables:
             tmp1 = SW[:,k]*tau
             tmp2 = Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )
             tmp3 = ma.dot(tmp2,tmp1)
             tmp3 += 1./Pvar[:,k] * Mu[:,k]
-            Qmean_res[:,k] = Qvar[:,k] * tmp3
-
-        # Do not update the latent variables associated with known covariates
-        if any(self.covariates):
-            Qmean_res[:,self.covariates] = covariates
+            Qmean[:,k] = Qvar[:,k] * tmp3
 
         # Save updated parameters of the Q distribution
-        self.Q.setParameters(mean=Qmean_res, var=Qvar)
+        self.Q.setParameters(mean=Qmean, var=Qvar)
 
     def calculateELBO(self):
         # TODO see what's left in the ELBO here and what should be moved to the new node

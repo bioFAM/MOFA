@@ -196,22 +196,27 @@ if __name__ == '__main__':
     data_opts = {}
 
     if 'Kvothe' in gethostname():
-        base_folder = "/Users/ricard/git/gastrulation/expr/scGFA/expr/filt_data"
+        base_folder = "/Users/ricard/data/gastrulation/joined/txt"
     elif 'yoda' in gethostname():
         base_folder = ""
     else:
         print "Computer not recognised"
         exit()
 
-    data_opts['view_names'] = ( "all", )
+    data_opts['view_names'] = ("prom2k", "genebody")
 
     data_opts['input_files'] = [ "%s/%s.txt" % (base_folder,m) for m in data_opts['view_names'] ]
     M = len(data_opts['input_files'])
     data_opts['center'] = [True]*M
     data_opts['rownames'] = 0
     data_opts['colnames'] = 0
+<<<<<<< HEAD:run/gastrulation_run.py
+    data_opts['delimiter'] = "\t"
+    
+=======
     data_opts['delimiter'] = " "
 
+>>>>>>> 247f67a253895c3f3db0d57437ffac1dbad51cfa:scGFA/run/gastrulation_run.py
     # pprint(data_opts)
     # print "\n"
 
@@ -220,10 +225,17 @@ if __name__ == '__main__':
     ##############################
 
     model_opts = {}
+<<<<<<< HEAD:run/gastrulation_run.py
+    model_opts['likelihood'] = ["gaussian"]*M 
+    model_opts['learnTheta'] = True
+    model_opts['k'] = 5
+    
+=======
     model_opts['likelihood'] = ["gaussian"]*M
     model_opts['learnTheta'] = False
     model_opts['k'] = 10
 
+>>>>>>> 247f67a253895c3f3db0d57437ffac1dbad51cfa:scGFA/run/gastrulation_run.py
 
     # Define priors
     model_opts["priorZ"] = { 'mean':0., 'var':1. }
@@ -260,17 +272,22 @@ if __name__ == '__main__':
     #################################
 
     train_opts = {}
-    train_opts['maxiter'] = 300
+    train_opts['maxiter'] = 10
     train_opts['elbofreq'] = 1
     if 'Kvothe' in gethostname():
+<<<<<<< HEAD:run/gastrulation_run.py
+        train_opts['outfile'] = "/Users/ricard/git/gastrulation/join/MOFA/out/model.hdf5" 
+=======
         train_opts['outfile'] = "/Users/ricard/git/gastrulation/expr/scGFA/expr/out/singleview.hdf5"
+>>>>>>> 247f67a253895c3f3db0d57437ffac1dbad51cfa:scGFA/run/gastrulation_run.py
     elif 'yoda' in gethostname():
+        exit()
         train_opts['outfile'] = ""
     train_opts['savefreq'] = s.nan
     train_opts['savefolder'] = s.nan
     train_opts['verbosity'] = 2
     train_opts['dropK'] = { "by_norm":0.01, "by_pvar":None, "by_cor":0.80 }
-    train_opts['forceiter'] = True
+    train_opts['forceiter'] = False
     train_opts['tolerance'] = 0.01
 
     # model_opts['covariates'] = pd.read_csv("%s/covariates.txt" % base_folder, delimiter="\t", header=0, index_col=0)

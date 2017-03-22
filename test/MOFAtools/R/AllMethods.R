@@ -4,18 +4,18 @@
 ###################################
 
 
-#' @param object a \code{\link{GFATrainedModel}} object.
+#' @param object a \code{\link{MODAmodel}} object.
 #' @rdname sampleNames
-#' @aliases sampleNames,GFATrainedModel-method
+#' @aliases sampleNames,MODAmodel-method
 #' @author Ricard Argelaguet
 #' @return character vector with the sample names
 #' @export
-setMethod("sampleNames", signature(object="GFATrainedModel"), function(object) { rownames(object@TrainData[[1]]) } )
+setMethod("sampleNames", signature(object="MODAmodel"), function(object) { rownames(object@TrainData[[1]]) } )
 
 #' @param value a character vector of sample names
 #' @rdname sampleNames
 #' @export
-setReplaceMethod("sampleNames", signature(object="GFATrainedModel", value="vector"), 
+setReplaceMethod("sampleNames", signature(object="MODAmodel", value="vector"), 
                  function(object,value) {
                    if (!.hasSlot(object,"TrainData"))
                      stop("Before assigning sample names you have to assign the training data")
@@ -32,18 +32,18 @@ setReplaceMethod("sampleNames", signature(object="GFATrainedModel", value="vecto
 ## Set and retrieve feature names ##
 ####################################
 
-#' @param object a \code{\link{GFATrainedModel}} object.
+#' @param object a \code{\link{MODAmodel}} object.
 #' @rdname featureNames
-#' @aliases featureNames,GFATrainedModel-method
+#' @aliases featureNames,MODAmodel-method
 #' @author Ricard Argelaguet
 #' @return list of character vectors with the feature names for each view
 #' @export
-setMethod("featureNames", signature(object="GFATrainedModel"), function(object) { sapply(object@TrainData,colnames) } )
+setMethod("featureNames", signature(object="MODAmodel"), function(object) { sapply(object@TrainData,colnames) } )
 
 #' @rdname featureNames
 #' @param value list of character vectors with the feature names for each view
 #' @export
-setReplaceMethod("featureNames", signature(object="GFATrainedModel", value="list"), 
+setReplaceMethod("featureNames", signature(object="MODAmodel", value="list"), 
           function(object,value) {
             if (!.hasSlot(object,"TrainData"))
               stop("Before assigning feature names you have to assign the training data")
@@ -60,19 +60,19 @@ setReplaceMethod("featureNames", signature(object="GFATrainedModel", value="list
 ## Set and retrieve view names ##
 #################################
 
-#' @param object a \code{\link{GFATrainedModel}} object.
+#' @param object a \code{\link{MODAmodel}} object.
 #' @rdname viewNames
 #' @return character vector with the names for each view
 #' @author Ricard Argelaguet
 #' @rdname viewNames
 #' @export
-setMethod("viewNames", signature(object="GFATrainedModel"), function(object) { names(object@TrainData) } )
+setMethod("viewNames", signature(object="MODAmodel"), function(object) { names(object@TrainData) } )
 
 
 #' @param value character vector with the names for each view
 #' @rdname viewNames
 #' @export
-setMethod("viewNames<-", signature(object="GFATrainedModel", value="list"), 
+setMethod("viewNames<-", signature(object="MODAmodel", value="list"), 
           function(object,value) {
             if (!.hasSlot(object,"TrainData"))
               stop("Before assigning view names you have to assign the training data")
@@ -89,18 +89,18 @@ setMethod("viewNames<-", signature(object="GFATrainedModel", value="list"),
 ## Set and retrieve training data ##
 ####################################
 
-#' @param object a \code{\link{GFATrainedModel}} object.
+#' @param object a \code{\link{MODAmodel}} object.
 #' @rdname TrainData
 #' @return list of numeric matrices that contain the training data
 #' @author Ricard Argelaguet
 #' @rdname TrainData
 #' @export
-setMethod("TrainData", signature(object="GFATrainedModel"), function(object) { object@TrainData } )
+setMethod("TrainData", signature(object="MODAmodel"), function(object) { object@TrainData } )
 
 #' @rdname TrainData
 #' @param value list of numeric matrices that contain the training data
 #' @export
-setMethod("TrainData<-", signature(object="GFATrainedModel", value="list"),
+setMethod("TrainData<-", signature(object="MODAmodel", value="list"),
           function(object,value) {
             N <- unique(sapply(value,nrow))
             if (length(N) > 1) 
@@ -120,18 +120,18 @@ setMethod("TrainData<-", signature(object="GFATrainedModel", value="list"),
 ## Set and retrieve training options ##
 #######################################
 
-#' @param object a \code{\link{GFATrainedModel}} object.
+#' @param object a \code{\link{MODAmodel}} object.
 #' @rdname TrainOpts
 #' @return list of training options
 #' @author Ricard Argelaguet
 #' @rdname TrainOpts
 #' @export
-setMethod("TrainOpts", "GFATrainedModel", function(object) { object@TrainOpts } )
+setMethod("TrainOpts", "MODAmodel", function(object) { object@TrainOpts } )
 
 #' @rdname TrainOpts
 #' @param value list of training options
 #' @export
-setMethod("TrainOpts<-", signature(object="GFATrainedModel", value="list"),
+setMethod("TrainOpts<-", signature(object="MODAmodel", value="list"),
           function(object,value) {
             object@TrainOpts <- value
             object
@@ -141,13 +141,13 @@ setMethod("TrainOpts<-", signature(object="GFATrainedModel", value="list"),
 ## Set and retrieve training statistics ##
 ##########################################
 
-#' @param object a \code{\link{GFATrainedModel}} object.
+#' @param object a \code{\link{MODAmodel}} object.
 #' @rdname TrainStats
 #' @return list of training statistics
 #' @author Ricard Argelaguet
 #' @rdname TrainStats
 #' @export
-setMethod("TrainStats<-", signature(object="GFATrainedModel", value="list"),
+setMethod("TrainStats<-", signature(object="MODAmodel", value="list"),
           function(object,value) {
             object@TrainStats <- value
             object
@@ -156,24 +156,24 @@ setMethod("TrainStats<-", signature(object="GFATrainedModel", value="list"),
 #' @rdname TrainStats
 #' @param value list of training statistics
 #' @export
-setMethod("TrainStats", "GFATrainedModel", function(object) { object@TrainStats } )
+setMethod("TrainStats", "MODAmodel", function(object) { object@TrainStats } )
 
 ###################################
 ## Set and retrieve expectations ##
 ###################################
 
-#' @param object an \code{\link{GFATrainedModel}} object.
+#' @param object a \code{\link{MODAmodel}} object.
 #' @rdname Expectations
 #' @return list of expectations
 #' @author Ricard Argelaguet
 #' @rdname Expectations
 #' @export
-setMethod("Expectations", "GFATrainedModel", function(object) { object@Expectations } )
+setMethod("Expectations", "MODAmodel", function(object) { object@Expectations } )
 
 #' @rdname Expectations
 #' @param value list of expectations
 #' @export
-setMethod("Expectations<-", signature(object="GFATrainedModel", value="list"),
+setMethod("Expectations<-", signature(object="MODAmodel", value="list"),
           function(object,value) {
             object@Expectations <- value
             object
@@ -183,18 +183,18 @@ setMethod("Expectations<-", signature(object="GFATrainedModel", value="list"),
 ## Set and retrieve parameters ##
 #################################
 
-#' @param object an \code{\link{GFATrainedModel}} object.
+#' @param object a \code{\link{MODAmodel}} object.
 #' @rdname Parameters
 #' @return value list of Parameters
 #' @author Ricard Argelaguet
 #' @rdname Parameters
 #' @export
-setMethod("Parameters", "GFATrainedModel", function(object) { object@Parameters } )
+setMethod("Parameters", "MODAmodel", function(object) { object@Parameters } )
 
 #' @rdname Parameters
 #' @param value list of Parameters
 #' @export
-setMethod("Parameters<-", signature(object="GFATrainedModel", value="list"),
+setMethod("Parameters<-", signature(object="MODAmodel", value="list"),
           function(object,value) {
             object@Parameters <- value
             object

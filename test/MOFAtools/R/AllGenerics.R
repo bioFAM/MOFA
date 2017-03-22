@@ -89,8 +89,6 @@ setGeneric("TrainStats", function(object) {standardGeneric("TrainStats")})
 #' @export
 setGeneric("TrainStats<-", function(object, value) {standardGeneric("TrainStats<-")})
 
-
-
 ##################
 ## Expectations ##
 ##################
@@ -106,7 +104,6 @@ setGeneric("Expectations", function(object) {standardGeneric("Expectations")})
 #' @export
 setGeneric("Expectations<-", function(object, value) {standardGeneric("Expectations<-")})
 
-
 ################
 ## Parameters ##
 ################
@@ -121,4 +118,3 @@ setGeneric("Parameters", function(object) {standardGeneric("Parameters")})
 #' @rdname Parameters
 #' @export
 setGeneric("Parameters<-", function(object, value) {standardGeneric("Parameters<-")})
-

@@ -16,6 +16,3 @@ TrainStats(object)
 \value{
 list of training statistics
 }
-\author{
-Ricard Argelaguet
-}

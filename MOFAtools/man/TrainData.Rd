@@ -16,6 +16,3 @@ TrainData(object)
 \value{
 list of numeric matrices that contain the training data
 }
-\author{
-Ricard Argelaguet
-}

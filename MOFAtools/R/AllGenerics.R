@@ -1,5 +1,21 @@
 
 ##################
+## Factor Names ##
+##################
+
+#' @title factorNames: set and retrieve factor names
+#' @name factorNames
+#' @rdname factorNames
+#' @export
+setGeneric("factorNames", function(object) {standardGeneric("factorNames")})
+
+#' @name factorNames<-
+#' @rdname factorNames
+#' @export
+setGeneric("factorNames<-", function(object, value) {standardGeneric("factorNames<-")})
+
+
+##################
 ## Sample Names ##
 ##################
 

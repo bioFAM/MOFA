@@ -24,6 +24,3 @@ featureNames(object) <- value
 \value{
 list of character vectors with the feature names for each view
 }
-\author{
-Ricard Argelaguet
-}

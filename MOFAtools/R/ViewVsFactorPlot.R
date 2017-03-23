@@ -10,7 +10,7 @@
 #' @export
 ViewFactorPlot <- function(model, ...) {
   # Calculate proportion of residual variation explained by each factor in each view
-  prvar_mk <- CalculateProportionVariance(model, plot=F)
+  prvar_mk <- CalculateVariance_Views(model)
   
   # Generate plot
   color <- colorRampPalette(c("grey100", "grey0"))(100)

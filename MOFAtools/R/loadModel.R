@@ -9,7 +9,7 @@
 #' @import rhdf5
 #' @export
 
-loadModel <- function(file) {
+loadModel <- function(file, view_names=NULL, sample_names=NULL, factor_names=NULL, feature_names=NULL) {
   
   # Load expectations and parameters
   expectations <- rhdf5::h5read(file,"expectations")
@@ -39,17 +39,41 @@ loadModel <- function(file) {
   dim=list("M"=M, "N"=N, "D"=D, "K"=K)
   
   
-  # Create object
-  # mofa <- new("MOFAmodel", 
-  #            TrainData=data, TrainStats=training_stats, 
-  #            Expectations=expectations, Parameters=parameters,
-  #            Dimensions=dim)
-  mofa <- new("MOFAmodel", Dimensions=dim)
+  # Create object: important first define dimensionalities and then the other slots
+  mofa <- new("MOFAmodel", TrainData=data, TrainStats=training_stats, Expectations=expectations, Parameters=parameters, Dimensions=dim)
+  # mofa <- new("MOFAmodel", Dimensions=dim)
+  # .Expectations(mofa) <- expectations
+  # .Parameters(mofa) <- parameters
+  # .TrainStats(mofa) <- training_stats
+  # .TrainData(mofa) <- data
   
-  .Expectations(mofa) <- expectations
-  .Parameters(mofa) <- parameters
-  .TrainStats(mofa) <- training_stats
-  .TrainData(mofa) <- data
+  # If provided, define view names
+  if (!is.null(view_names)) {
+    viewNames(mofa) <- view_names
+  } else {
+    viewNames(mofa) <- as.character(1:dim[["M"]])
+  }
+  
+  # If provided, define sample names
+  if (!is.null(sample_names)) {
+    sampleNames(mofa) <- sample_names
+  } else {
+    sampleNames(mofa) <- as.character(1:dim[["N"]])
+  }
+  
+  # If provided, define feature names
+  if (!is.null(feature_names)) {
+    featureNames(mofa) <- feature_names
+  } else {
+    featureNames(mofa) <- lapply(dim[["D"]], function(d) as.character(1:d))
+  }
+  
+  # If provided, define factor names
+  if (!is.null(factor_names)) {
+    factorNames(mofa) <- factor_names
+  } else {
+    factorNames(mofa) <- as.character(1:dim[["K"]])
+  }
   
   return(mofa)
 }

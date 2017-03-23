@@ -16,6 +16,3 @@ Parameters(object)
 \value{
 value list of Parameters
 }
-\author{
-Ricard Argelaguet
-}

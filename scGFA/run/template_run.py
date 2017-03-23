@@ -70,7 +70,8 @@ def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=Fal
     M = len(data)
     N = data[0].shape[0]
     D = s.asarray([ data[m].shape[1] for m in xrange(M) ])
-    K = model_opts["k"]
+    n_covariates = model_opts['covariates'].shape[1]
+    K = model_opts["k"] + n_covariates
 
     dim = {'M':M, 'N':N, 'D':D, 'K':K }
 
@@ -188,35 +189,35 @@ def runMultipleTrials(data_opts, model_opts, train_opts, cores, keep_best_run, v
 
 
 if __name__ == '__main__':
+    data_opts = {}
+    train_opts = {}
+
+    ##################################################################
+    # TO SPECIFY
+    ##################################################################
+    base_folder = ''  # folder containing the data for the different views
+    data_opts['view_names'] = ('view1','view2') # name of the views, corresponding files are base_folder/view1-2.txt
+
+    train_opts['outfile'] = "/Users/ricard/git/gastrulation/join/MOFA/out/model.hdf5"
+    ##################################################################
+
+
+    ##################################################################
+    # OTHER OPTIONS
+    ##################################################################
+
 
     #############################
     ## Define the data options ##
     #############################
 
-    data_opts = {}
-
-    if 'Kvothe' in gethostname():
-        base_folder = "/Users/ricard/data/gastrulation/joined/txt"
-    elif 'yoda' in gethostname():
-        base_folder = ""
-    else:
-        print "Computer not recognised"
-        exit()
-
-    data_opts['view_names'] = ("prom2k", "genebody")
-
     data_opts['input_files'] = [ "%s/%s.txt" % (base_folder,m) for m in data_opts['view_names'] ]
     M = len(data_opts['input_files'])
+
     data_opts['center'] = [True]*M
     data_opts['rownames'] = 0
     data_opts['colnames'] = 0
-<<<<<<< HEAD:run/gastrulation_run.py
-    data_opts['delimiter'] = "\t"
-
-=======
     data_opts['delimiter'] = " "
-
->>>>>>> 247f67a253895c3f3db0d57437ffac1dbad51cfa:scGFA/run/gastrulation_run.py
     # pprint(data_opts)
     # print "\n"
 
@@ -225,17 +226,10 @@ if __name__ == '__main__':
     ##############################
 
     model_opts = {}
-<<<<<<< HEAD:run/gastrulation_run.py
-    model_opts['likelihood'] = ["gaussian"]*M
-    model_opts['learnTheta'] = True
-    model_opts['k'] = 5
 
-=======
     model_opts['likelihood'] = ["gaussian"]*M
     model_opts['learnTheta'] = False
     model_opts['k'] = 10
-
->>>>>>> 247f67a253895c3f3db0d57437ffac1dbad51cfa:scGFA/run/gastrulation_run.py
 
     # Define priors
     model_opts["priorZ"] = { 'mean':0., 'var':1. }
@@ -271,18 +265,9 @@ if __name__ == '__main__':
     ## Define the training options ##
     #################################
 
-    train_opts = {}
+
     train_opts['maxiter'] = 10
     train_opts['elbofreq'] = 1
-    if 'Kvothe' in gethostname():
-<<<<<<< HEAD:run/gastrulation_run.py
-        train_opts['outfile'] = "/Users/ricard/git/gastrulation/join/MOFA/out/model.hdf5"
-=======
-        train_opts['outfile'] = "/Users/ricard/git/gastrulation/expr/scGFA/expr/out/singleview.hdf5"
->>>>>>> 247f67a253895c3f3db0d57437ffac1dbad51cfa:scGFA/run/gastrulation_run.py
-    elif 'yoda' in gethostname():
-        exit()
-        train_opts['outfile'] = ""
     train_opts['savefreq'] = s.nan
     train_opts['savefolder'] = s.nan
     train_opts['verbosity'] = 2

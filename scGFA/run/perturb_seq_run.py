@@ -6,7 +6,7 @@ from time import time
 import pandas as pd
 import scipy as s
 from sys import path
-from joblib import Parallel, delayed
+# from joblib import Parallel, delayed
 from socket import gethostname
 
 # Import manual functions
@@ -49,6 +49,12 @@ def loadData(data_opts, verbose=True):
 
         Y.append(tmp)
     return Y
+
+def buildAnnotations(annotation_file, p0=.01, p1=.99):
+    tmp = pd.read_table(annotation_file, sep=' ')
+    tmp *= p1
+    tmp[tmp==0] = p0
+    return tmp
 
 # Function to run a single trial of the model
 def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=False):
@@ -98,6 +104,10 @@ def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=Fal
 
     init.initTau(pa=model_opts["priorTau"]['a'], pb=model_opts["priorTau"]['b'],
                  qa=model_opts["initTau"]['a'], qb=model_opts["initTau"]['b'], qE=model_opts["initTau"]['E'])
+
+    # needs to init cluster nodes too even when there is no kown clusters
+    init.initClusters()
+
 
     if model_opts['learnTheta']:
         init.initThetaLearn(pa=model_opts["priorTheta"]['a'], pb=model_opts["priorTheta"]['b'],
@@ -156,8 +166,11 @@ def runMultipleTrials(data_opts, model_opts, train_opts, cores, keep_best_run, v
 
     seed = None
 
-    trained_models = Parallel(n_jobs=cores, backend="threading")(
-        delayed(runSingleTrial)(data,model_opts,train_opts,seed,i,verbose) for i in xrange(1,train_opts['trials']+1))
+    trained_models = []
+    for i in range(train_opts['trials']):
+        trained_models.append(runSingleTrial(data,model_opts,train_opts,seed,i+1,verbose))
+    # trained_models = Parallel(n_jobs=cores, backend="threading")(
+    #     delayed(runSingleTrial)(data,model_opts,train_opts,seed,i,verbose) for i in xrange(1,train_opts['trials']+1))
 
     print "\n"
     print "#"*43
@@ -205,12 +218,16 @@ if __name__ == '__main__':
     # else:
     #     print "Computer not recognised"
     #     exit()
-    base_folder = '/Users/damienarnol1/Resilio_Sync/perturbseq/bmdc/concatenated/'
+    # base_folder = '/homes/arnol/multi_view_FA/perturb_seq/data/concatenated_bmdc/'
+    base_folder = '/Users/damienarnol1/Documents/local/pro/PhD/perturb_seq/shared_data/concatenated/'
 
     data_opts['view_names'] = ( "gene_expression", "guide")
 
-    data_opts['input_files'] = [base_folder+'/dc_both_filt_fix_tp10k.txt',
-                                base_folder+'/all_guides.txt']
+    data_opts['input_files'] = [base_folder+'/expression_short.txt',
+                                base_folder+'/guides_short.txt']
+
+    annotation_file = base_folder + '/TF_guide_map.txt'
+
     M = len(data_opts['input_files'])
     data_opts['center'] = [True]*M
     # data_opts['rownames'] = 0
@@ -228,7 +245,7 @@ if __name__ == '__main__':
     model_opts = {}
     model_opts['likelihood'] = ["gaussian"]*M
     model_opts['learnTheta'] = False
-    model_opts['k'] = 10
+    model_opts['k'] = 26
 
 
     # Define priors
@@ -252,7 +269,10 @@ if __name__ == '__main__':
     if model_opts['learnTheta']:
         model_opts["initTheta"] = { 'a':[1.]*M, 'b':[1.]*M, 'E':[None]*M }
     else:
-        model_opts["initTheta"] = { 'value':[0.5]*M }
+        # load annotations for the second view
+        annot_mat = buildAnnotations(annotation_file)
+        all_annotations = [0.5, annot_mat.transpose().values]
+        model_opts["initTheta"] = { 'value':all_annotations}
 
 
     # Define schedule of updates
@@ -268,14 +288,15 @@ if __name__ == '__main__':
     train_opts = {}
     train_opts['maxiter'] = 300
     train_opts['elbofreq'] = 1
-    if 'Kvothe' in gethostname():
-        train_opts['outfile'] = "/Users/ricard/git/gastrulation/expr/scGFA/expr/out/singleview.hdf5"
-    elif 'yoda' in gethostname():
-        train_opts['outfile'] = ""
+    # if 'Kvothe' in gethostname():
+    #     train_opts['outfile'] = "/Users/ricard/git/gastrulation/expr/scGFA/expr/out/singleview.hdf5"
+    # elif 'yoda' in gethostname():
+    #     train_opts['outfile'] = ""
+    train_opts['outfile'] = '/Users/damienarnol1/Documents/local/pro/PhD/perturb_seq/output/res.h5'
     train_opts['savefreq'] = s.nan
     train_opts['savefolder'] = s.nan
     train_opts['verbosity'] = 2
-    train_opts['dropK'] = { "by_norm":0.01, "by_pvar":None, "by_cor":0.80 }
+    train_opts['dropK'] = { "by_norm":None, "by_pvar":None, "by_cor":None}
     train_opts['forceiter'] = True
     train_opts['tolerance'] = 0.01
 

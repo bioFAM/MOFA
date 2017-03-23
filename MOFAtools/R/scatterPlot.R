@@ -1,4 +1,3 @@
-# Scatterplot of the latent variables
 
 #' @title Visualize scatterplot of two latent variables
 #' @name scatterPlot
@@ -14,6 +13,7 @@
 scatterPlot <- function(object, idx, idy, title="", titlesize=16, xlabel="", ylabel="", 
                         xlim_down=NA, xlim_up=NA, ylim_down=NA, ylim_up=NA,
                         dotsize=2.5, colour_by=NULL, shape_by=NULL) {
+  
   if (class(object) != "MOFAmodel")
     stop("'object' has to be an instance of MOFAmodel")
   

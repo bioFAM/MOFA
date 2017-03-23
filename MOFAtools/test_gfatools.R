@@ -2,9 +2,9 @@
 library(MOFAtools)
 
 # file = "/Users/ricard/git/britta/scGFA/surv_expr/model0.hdf5"
-file = "/Users/ricard/data/CLL/out/expr_nocovariates.hdf5"
+file = "/Users/ricard/data/CLL/out/old/expr_nocovariates.hdf5"
 model <- loadModel(file)
-model
+sampleNames(model) <- 
 
 # require(gridExtra)
 # p1 <- FeaturesCorPlot(model, view=1, regress_factors=NULL, legend=TRUE)
@@ -13,7 +13,8 @@ model
 # arrangeGrob(qp,hm, layout_matrix=lm)
 
 FactorsCorPlot(model)
-CalculateProportionVariance(model,plot=T)
+p <- CalculateVariance_Views(model, views="all", factors="all")
+
 ViewFactorPlot(model)
 
 
@@ -64,9 +65,9 @@ cor(mut, getExpectations(model,"Z","E"), use="complete.obs") %>% View
 
 
 b <- readRDS("/Users/ricard/data/reactome/v59/homo_sapiens/out/human_reactome.rds")
-view <- "expr_mRNA"
+view <- "1"
 factor.indexes="all"
-gene.sets=b_filt
+gene.sets=b
 local.statistic="loading"
 transformation="abs.value"
 global.statistic="mean.diff"

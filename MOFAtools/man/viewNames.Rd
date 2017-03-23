@@ -24,6 +24,3 @@ viewNames(object) <- value
 \value{
 character vector with the names for each view
 }
-\author{
-Ricard Argelaguet
-}

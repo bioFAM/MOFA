@@ -16,6 +16,3 @@ TrainOpts(object)
 \value{
 list of training options
 }
-\author{
-Ricard Argelaguet
-}

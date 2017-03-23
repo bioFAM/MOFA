@@ -16,6 +16,3 @@ Expectations(object)
 \value{
 list of expectations
 }
-\author{
-Ricard Argelaguet
-}

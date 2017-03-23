@@ -113,8 +113,9 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         # NOTE
         Pvar, Qmean = P['var'], Q['mean']
         # make sure that results are not updated 'inline'
-        Qmean_res = np.copy(Qmean)
-        # Qmean_res = Qmean
+        # print "swithced"
+        # Qmean_res = np.copy(Qmean)
+        Qmean_res = Qmean
 
         # Variance
         # POSSIBLE MISTAKE: THE PLUS ONE HERE? OR IS THIS RELATED TO PVAR?

@@ -2,7 +2,7 @@
 library(MOFAtools)
 
 # file = "/Users/ricard/git/britta/scGFA/surv_expr/model0.hdf5"
-file = "/Users/ricard/data/CLL/out/test.hdf5"
+file = "/Users/ricard/data/CLL/out/expr_nocovariates.hdf5"
 model <- loadModel(file)
 model
 
@@ -18,18 +18,28 @@ ViewFactorPlot(model)
 
 
 N <- model@Dimensions[["N"]]
-colour_by <- c(rep(T,N/2),rep(F,N/2),FALSE)
-shape_by <- c(rep(T,N/2),rep(F,N/2),FALSE)
-scatterPlot(model, 1, 2, title="", titlesize=16, xlabel="Latent variable 1", ylabel="Latent variable 2",
-dotsize=2.5, colour_by=colour_by, shape_by=shape_by, xlim_down=NULL, xlim_up=NULL, ylim_down=NULL, ylim_up=NULL)
 
+## training curves ##
 trainCurve(model, statistic="activeK", xlabel=" ", ylabel="")
 trainCurve(model, statistic="elbo", xlabel=" ", ylabel="")
 
 
 
 
+## test mutation ##
 
+# asd < /Users/ricard/data/CLL/Pre-Analysis/views/assembled/model_EDMGI/Covariates.txt
+load("/Users/ricard/data/CLL/Pre-Analysis/views/assembled/CLLOmicsList.RData")
+
+samples <- sampleNames(model)
+metadata <- OmicsList$metadata_view[samples,]
+cor(metadata$IGHV, getExpectations(model,"Z","E"), use="complete.obs")
+
+scatterPlot(model, 2, 3, colour_by=metadata$IGHV)
+            
+mut <- OmicsList$mutation_view[samples,]
+
+cor(mut, getExpectations(model,"Z","E"), use="complete.obs") %>% View
 ## Test GSEA ##
 
 # # Simulate a test data set
@@ -55,9 +65,9 @@ trainCurve(model, statistic="elbo", xlabel=" ", ylabel="")
 
 b <- readRDS("/Users/ricard/data/reactome/v59/homo_sapiens/out/human_reactome.rds")
 view <- "expr_mRNA"
-factor.indexes=c(1,2)
+factor.indexes="all"
 gene.sets=b_filt
-local.statistic="z"
+local.statistic="loading"
 transformation="abs.value"
 global.statistic="mean.diff"
 statistical.test="cor.adj.parametric"
@@ -65,4 +75,3 @@ nperm=10
 
 p <- GSEA(model, view, factor.indexes, gene.sets=b, local.statistic=local.statistic, transformation=transformation, 
           global.statistic=global.statistic, statistical.test=statistical.test, nperm=nperm, min_size=15)
-View(p$p.values)

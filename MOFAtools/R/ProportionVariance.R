@@ -1,6 +1,6 @@
 
 #' @title Calculate proportion of variance explained by each latent variable
-#' @name CalculateProportionVariance
+#' @name CalculateVariance_Views
 #' @description Method to calculate the proportion of variance explained by each latent variable. \cr
 #' There are several ways to do this:
 #' Bayesian approach: we use the variance estimates from the variational distributions of the variables.
@@ -15,11 +15,12 @@
 #' @param plot generate a barplot
 #' @details fill this
 #' @return a matrix with dim (M,K) with the proportion of residual variance explained by each factor. Barplot with the proportion of variance explained by the model for each view
-#' @import ggplot2
+#' @import ggplot2 tidyr
 #' @export
 
-
-CalculateProportionVariance <- function(object, plot=F) {
+CalculateVariance_Views <- function(object, views="all", factors="all", method=NULL) {
+  
+  # TO-DO: VIEWS, FACTORS, METHOD
   
   # Collect dimensionalities
   N <- object@Dimensions[["N"]]
@@ -55,31 +56,97 @@ CalculateProportionVariance <- function(object, plot=F) {
   rownames(fvar_mk) <- colnames(Z)
   
   # Bar plot with the residual variance for each view
-  if (plot==T) {
-    df <- data.frame(view=viewNames(object), fvar=fvar_m)
-    p <- ggplot2::ggplot(df, aes(x=view,y=fvar)) +
-      geom_bar(stat="identity", fill="blue") +
-      ylab("Coefficient of determination") +
-      ylim(c(0,1)) + 
-      theme(
-        plot.margin=margin(10,10,10,10),
-        axis.text.x=element_text(size=rel(1.4), color='black', margin=margin(7,0,0,0)),
-        axis.text.y=element_text(size=rel(1.3), color='black'),
-        axis.title.y=element_text(size=rel(1.7), margin=margin(0,15,0,0)),
-        axis.title.x=element_blank(),
-        axis.line = element_line(colour="black", size=0.8),
-        axis.ticks.y = element_line(colour="black", size=0.5),
-        axis.ticks.x = element_blank(),
-        legend.position='right',
-        legend.title=element_text(size=rel(1.1)),
-        legend.text=element_text(size=rel(1.0)),
-        legend.key=element_rect(fill='transparent'),
-        panel.border=element_blank(),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.background = element_blank()
-      )
-    print(p)
+  tmp <- as.data.frame(fvar_mk)
+  tmp$K <- as.factor(1:K)
+  tmp <- tidyr::gather(tmp, key="view", value="fvar", -K)
+  
+  p <- ggplot2::ggplot(tmp, ggplot2::aes(x=view,y=fvar,fill=K)) +
+    geom_bar(stat="identity", position="stack") +
+    ylab("Variance explained") + xlab("") +
+    # ylim(c(0,0.5)) + 
+    coord_flip() +
+    theme(
+      # plot.margin=margin(10,10,10,10),
+      axis.text.x=element_text(size=rel(1.4), color='black', margin=margin(7,0,0,0)),
+      # axis.text.y=element_text(size=rel(1.3), color='black'),
+      axis.text.y=element_text(size=rel(1.3), color='black'),
+      axis.title.x=element_text(size=rel(1.3), margin=margin(10,0,0,0)),
+      axis.title.y=element_blank(),
+      # axis.line = element_line(colour="black", size=0.8),
+      axis.ticks.x = element_line(colour="black", size=0.5),
+      axis.ticks.y = element_blank(),
+      legend.position='right',
+      legend.title=element_text(size=rel(1.1)),
+      legend.text=element_text(size=rel(1.0)),
+      legend.key=element_rect(fill='transparent'),
+      panel.border=element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank()
+    )
+  return(list(plot=p, values=fvar_mk))
+}
+
+
+
+
+
+CalculateVarianceFeatures <- function(object, view, features, factors="all") {
+  
+  features <- c("ENSG00000003147","ENSG00000005189","ENSG00000005812")
+  view <- "expr_mRNA"
+  factors <- "all"
+  
+  if (factors=="all") {
+    factors <- factorNames(object)  
   }
-  return(fvar_mk)
+  
+  # Saniy checks
+  stopifnot(all(features) %in% featureNames(object)[[view]])
+  stopifnot(view %in% viewNames(object))
+  stopifnot(length(view)==1)
+  stopifnot(length(features)<=20)
+  stopifnot(all(factors %in% factorNames(object)))
+  
+  # Collect data and expectations
+  Y <- object@TrainData[[view]]
+  W <- getExpectations(object,"SW","E")[[view]]; rownames(W) <- colnames(Y)
+  Z <- getExpectations(object,"Z","E"); rownames(Z) <- rownames(Y)
+  
+  
+  # Calcualte fraction of variance explained by each factor in each feature
+  fvar <- sapply(1:K, function(k) apply(as.matrix(Z[,k]) %*% t(as.matrix(W[features,k])), 2, var) / apply(Y[,features],2,var))
+  
+  # Prepare data for plotting
+  tmp <- as.data.frame(fvar)
+  tmp$gene <- rownames(tmp)
+  tmp <- tidyr::gather(tmp, key="K", value="fvar", -gene)
+  
+  p <- ggplot2::ggplot(tmp, ggplot2::aes(x=gene,y=fvar,fill=K)) +
+    geom_bar(stat="identity", position="stack") +
+    ylab("Variance explained") + xlab("") +
+    # ylim(c(0,0.5)) + 
+    coord_flip() +
+    theme(
+      # plot.margin=margin(10,10,10,10),
+      axis.text.x=element_text(size=rel(1.4), color='black', margin=margin(7,0,0,0)),
+      # axis.text.y=element_text(size=rel(1.3), color='black'),
+      axis.text.y=element_text(size=rel(1.3), color='black'),
+      axis.title.x=element_text(size=rel(1.3), margin=margin(10,0,0,0)),
+      axis.title.y=element_blank(),
+      axis.line = element_line(colour="black", size=0.8),
+      axis.ticks.x = element_line(colour="black", size=0.5),
+      axis.ticks.y = element_blank(),
+      legend.position='right',
+      legend.title=element_text(size=rel(1.1)),
+      legend.text=element_text(size=rel(1.0)),
+      legend.key=element_rect(fill='transparent'),
+      panel.border=element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank()
+    )
+  print(p)
+  
+  return(list(plot=p, values=fvar))
 }

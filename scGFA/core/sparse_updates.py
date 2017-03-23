@@ -156,7 +156,6 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
 
         # NOTE this ELBO term contains only cross entropy between Q and P,and entropy of Q. So the covariates should not intervene at all
         # filter to remove the covariates
-        # import pdb; pdb.set_trace()
         latent_variables = self.getLvIndex()
         Pvar, Qmean, Qvar = Pvar[:, latent_variables], Qmean[:, latent_variables], Qvar[:, latent_variables]
         PE, PE2 = PE[:, latent_variables], PE2[:, latent_variables]
@@ -258,6 +257,7 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
         self.Q.setParameters(a=Qa, b=Qb)
 
     def calculateELBO(self):
+        # import pdb; pdb.set_trace()
         # Collect parameters and expectations
         P,Q = self.P.getParameters(), self.Q.getParameters()
         Pa, Pb, Qa, Qb = P['a'], P['b'], Q['a'], Q['b']
@@ -289,7 +289,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         tau = self.markov_blanket["Tau"].getExpectation()
         Y = self.markov_blanket["Y"].getExpectation()
         alpha = self.markov_blanket["Alpha"].getExpectation()
-        thetatmp = self.markov_blanket['Theta'].getExpectations() # TODO make general in mixed node
+        thetatmp = self.markov_blanket['Theta'].getExpectations() # TODO make general in mixed nodw
         theta_lnE, theta_lnEInv  = thetatmp['lnE'], thetatmp['lnEInv']
         # theta_E = thetatmp['E']
 
@@ -309,7 +309,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         Qvar_S1_res = Qvar_S1
         SW_res = SW
 
-
+        # import pdb; pdb.set_trace()
         # check dimensions of theta and expand if necessary
         # I THINK THIS SHOULD NOT BE HERE...
         if theta_lnE.shape != Qmean_S1.shape:
@@ -398,11 +398,10 @@ class Theta_Node(Beta_Unobserved_Variational_Node):
         self.factors_axis = 0
         self.Ppar = self.P.getParameters()
 
+    # factor selection is not None when some of the factors are annotated and therefore not learnt
     def updateParameters(self, factors_selection=None):
-
         # Collect expectations from other nodes
         S = self.markov_blanket['SW'].getExpectations()["ES"]
-
 
         # Precompute terms
         if factors_selection is not None:
@@ -417,6 +416,7 @@ class Theta_Node(Beta_Unobserved_Variational_Node):
         self.Q.setParameters(a=Qa, b=Qb)
 
     def calculateELBO(self):
+        # import pdb; pdb.set_trace()
 
         # Collect parameters and expectations
         Qpar,Qexp = self.Q.getParameters(), self.Q.getExpectations()
@@ -531,7 +531,6 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
         # entropy of Q
         tmp3 = 0.5 * (s.log(Qvar)).sum()
         tmp3 += 0.5 * self.dim[0] * len(latent_variables)
-        print tmp + tmp2 + tmp3
         return tmp + tmp2 + tmp3
 
 

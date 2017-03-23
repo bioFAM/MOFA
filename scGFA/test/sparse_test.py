@@ -341,9 +341,6 @@ def run_test():
 
 	return {'Z': Z, 'Cluster': Cluster_Node, 'W': SW,'data_W': data['W'], 'data_clusters': cluster_values, 'data_Z':data['Z']}
 
-if __name__ == '__main__':
-	run_test()
-
 	# exit()
 
 	##################
@@ -356,3 +353,7 @@ if __name__ == '__main__':
 	#
 	# saveModel(net, outfile="/tmp/test/asd.hd5", view_names=view_names,
 	# 	sample_names=sample_names, feature_names=feature_names)
+
+
+if __name__ == '__main__':
+	run_test()

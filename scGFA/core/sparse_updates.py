@@ -124,7 +124,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         Qvar = Q['var']
 
         # Variance
-        Qvar_copy = Qvar.copy()  # copying old variance
+	Qvar_copy = Qvar.copy()  # copying old variance
 
         tmp = (tau*SWW.T).sum(axis=1)
         tmp = s.repeat(tmp[None,:],self.N,0)

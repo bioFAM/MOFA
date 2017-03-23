@@ -82,9 +82,11 @@ class init_scGFA(initModel):
         if covariates is not None:
             # idx_covariates = s.arange(self.K)[-covariates.shape[1]:]
             # putting the covariates first instead
+            # import pdb; pdb.set_trace()
             idx_covariates = s.array(range(covariates.shape[1]))
 
             qmean[:,idx_covariates] = covariates
+            qvar = s.ones((self.N,self.K))*qvar
             qvar[:, idx_covariates] = 0.
             # qmean = s.c_[ qmean, covariates ]
             # idx_covariates = s.arange(covariates.shape[1]) + self.K

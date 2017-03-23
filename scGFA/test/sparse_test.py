@@ -330,7 +330,7 @@ def run_test():
 	options['dropK'] = { 'by_norm':None, 'by_pvar':None, 'by_cor':None }
 	options['savefreq'] = options['maxiter']+1
 	options['savefolder'] = "/tmp/test"
-	options['verbosity'] = -1
+	options['verbosity'] = 2
 
 	####################
 	## Start training ##

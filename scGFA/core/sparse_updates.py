@@ -93,6 +93,14 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         self.covariates = np.zeros(self.dim[1], dtype=bool)
         self.factors_axis = 1
 
+    # return the index of the latent variables (without covariates)
+    # TODO: could be precomputed, will require handling the factor dropping
+    def getLvIndex(self):
+        latent_variables = np.array(range(self.dim[1]))
+        if any(self.covariates):
+            latent_variables = np.delete(latent_variables, latent_variables[self.covariates])
+        return latent_variables
+
     def updateParameters(self):
         # TODO: MAKE THIS FASTER
         # TODO covariate issue to fix. Cant have var =0 for covariates as the log is computed in SW
@@ -111,7 +119,6 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
 
         # Collect parameters from the P and Q distributions of this node
         P,Q = self.P.getParameters(), self.Q.getParameters()
-        Q = self.Q.getParameters()
         # NOTE
         Pvar, Qmean = P['var'], Q['mean']
         Qvar = Q['var']
@@ -128,15 +135,8 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         if any(self.covariates):
             Qvar[:, self.covariates] = Qvar_copy[:, self.covariates]
 
-        # TODO make sure second moment is constant
-        # TODO in elbo, dont use covariates at all ?
-
         # Mean, excluding covariates from the list of latent variables
-        latent_variables = np.array(range(self.dim[1]))
-        if any(self.covariates):
-            latent_variables = np.delete(latent_variables, latent_variables[self.covariates])
-
-        # import pdb; pdb.set_trace()
+        latent_variables = self.getLvIndex()
 
         for k in latent_variables:
             tmp1 = SW[:,k]*tau
@@ -149,19 +149,25 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         self.Q.setParameters(mean=Qmean, var=Qvar)
 
     def calculateELBO(self):
-        # TODO see what's left in the ELBO here and what should be moved to the new node
-        # Collect parameters and expectations
         Ppar,Qpar,Qexp = self.P.getParameters(), self.Q.getParameters(), self.Q.getExpectations()
         Pvar, Qmean, Qvar = Ppar['var'], Qpar['mean'], Qpar['var']
         PE, PE2 = self.markov_blanket['Cluster'].getExpectations()['E'], self.markov_blanket['Cluster'].getExpectations()['E2']
-
         QE,QE2 = Qexp['E'],Qexp['E2']
+
+        # NOTE this ELBO term contains only cross entropy between Q and P,and entropy of Q. So the covariates should not intervene at all
+        # filter to remove the covariates
+        # import pdb; pdb.set_trace()
+        latent_variables = self.getLvIndex()
+        Pvar, Qmean, Qvar = Pvar[:, latent_variables], Qmean[:, latent_variables], Qvar[:, latent_variables]
+        PE, PE2 = PE[:, latent_variables], PE2[:, latent_variables]
+        QE, QE2 = QE[:, latent_variables],QE2[:, latent_variables]
 
         # compute term from the exponential in the Gaussian
         tmp1 = 0.5*QE2 - PE*QE + 0.5*PE2
         tmp1 = -(tmp1/Pvar).sum()
 
-        # compute term from the precision factor in front of the Gaussian (TODO should be computed only once)
+        # compute term from the precision factor in front of the Gaussian
+        # (TODO should be computed only once-> but recomputed when dropping factors)
         tmp2 = - (s.log(Pvar)/2.).sum()
 
         lb_p = tmp1 + tmp2
@@ -454,13 +460,8 @@ class Theta_Constant_Node(Constant_Variational_Node):
         self.precompute()
         self.updateDim(axis=axis, new_dim=self.dim[axis]-len(idx))
 
-# we need a list of list of index to define the clusters (dictionary ? could also
-# be a vector of length N_samples with cluster index)
-# there should be a defalut when there is no clusters
-# TODO do updatdes, but before that implement test to check 'pipes' are ok
-class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
-    # TODO need to implement droping a latent variable
 
+class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
     """ """
     def __init__(self, pmean, pvar, qmean, qvar, clusters, n_Z, cluster_dic=None, qE=None, qE2=None):
         # compute dim from numbers of clusters (n_clusters * Z)
@@ -476,7 +477,7 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
         QExp = self.Q.getExpectations()
         expanded_expectation = QExp['E'][self.clusters, :]
         expanded_E2 = QExp['E2'][self.clusters, :]
-        # do we need to expand the variance as well ?
+        # do we need to expand the variance as well -> not used I think
         return {'E': expanded_expectation , 'E2': expanded_E2}
 
     def updateParameters(self):
@@ -515,14 +516,22 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
 
         Qvar = self.Q.getParameters()['var']
 
+        # Cluster terms corersponding to covariates should not intervene
+        # filtering the covariates out
+        latent_variables = self.markov_blanket['Z'].getLvIndex()
+        PVar, Pmean = PVar[:, latent_variables], Pmean[:, latent_variables]
+        QE2, QE = QE2[:, latent_variables], QE[:, latent_variables]
+        Qvar = Qvar[:, latent_variables]
+
+
         # minus cross entropy
         tmp = -(0.5 * s.log(PVar)).sum()
         tmp2 = - ((0.5/PVar) * (QE2 - 2.*QE*Pmean + Pmean**2.)).sum()
 
         # entropy of Q
         tmp3 = 0.5 * (s.log(Qvar)).sum()
-        tmp3 += 0.5 * self.dim[0] * self.dim[1]
-
+        tmp3 += 0.5 * self.dim[0] * len(latent_variables)
+        print tmp + tmp2 + tmp3
         return tmp + tmp2 + tmp3
 
 

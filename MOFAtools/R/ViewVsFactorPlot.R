@@ -14,7 +14,5 @@ ViewFactorPlot <- function(model, ...) {
   
   # Generate plot
   color <- colorRampPalette(c("grey100", "grey0"))(100)
-  p <- pheatmap::pheatmap(prvar_mk, color=color)
-  
-  print(p)
+  pheatmap::pheatmap(prvar_mk, color=color)
 }

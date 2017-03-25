@@ -132,10 +132,10 @@ class BayesNet(object):
                     # Check convergence using the ELBO
                     delta_elbo = elbo.iloc[i]["total"]-elbo.iloc[i-1]["total"]
 
-                    debug_mode=True
-                    if delta_elbo < 0 and debug_mode:
-                        print 'delta_elbo is ', delta_elbo
-                        import pdb; pdb.set_trace()
+                    # debug_mode=True
+                    # if delta_elbo < 0 and debug_mode:
+                    #     print 'delta_elbo is ', delta_elbo
+                    #     import pdb; pdb.set_trace()
 
                     # Print ELBO monitoring
                     if self.options['verbosity'] > 0:

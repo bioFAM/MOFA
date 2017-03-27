@@ -2,9 +2,9 @@
 library(MOFAtools)
 
 # file = "/Users/ricard/git/britta/scGFA/surv_expr/model0.hdf5"
-file = "/Users/ricard/data/CLL/out/old/expr_nocovariates.hdf5"
+file = "/Users/ricard/data/CLL/out/full_model0.hdf5"
 model <- loadModel(file)
-sampleNames(model) <- 
+
 
 # require(gridExtra)
 # p1 <- FeaturesCorPlot(model, view=1, regress_factors=NULL, legend=TRUE)
@@ -12,7 +12,7 @@ sampleNames(model) <-
 # grid.arrange(p1, p2, ncol=2)
 # arrangeGrob(qp,hm, layout_matrix=lm)
 
-FactorsCorPlot(model)
+# FactorsCorPlot(model)
 p <- CalculateVariance_Views(model, views="all", factors="all")
 
 ViewFactorPlot(model)
@@ -41,6 +41,7 @@ scatterPlot(model, 2, 3, colour_by=metadata$IGHV)
 mut <- OmicsList$mutation_view[samples,]
 
 cor(mut, getExpectations(model,"Z","E"), use="complete.obs") %>% View
+
 ## Test GSEA ##
 
 # # Simulate a test data set
@@ -65,14 +66,14 @@ cor(mut, getExpectations(model,"Z","E"), use="complete.obs") %>% View
 
 
 b <- readRDS("/Users/ricard/data/reactome/v59/homo_sapiens/out/human_reactome.rds")
-view <- "1"
+view <- "mRNA"
 factor.indexes="all"
 gene.sets=b
-local.statistic="loading"
+local.statistic="z"
 transformation="abs.value"
 global.statistic="mean.diff"
-statistical.test="cor.adj.parametric"
-nperm=10
+statistical.test="permutation"
+nperm=3
 
 p <- GSEA(model, view, factor.indexes, gene.sets=b, local.statistic=local.statistic, transformation=transformation, 
           global.statistic=global.statistic, statistical.test=statistical.test, nperm=nperm, min_size=15)

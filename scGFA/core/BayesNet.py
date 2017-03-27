@@ -5,6 +5,7 @@ import os
 import scipy as s
 import cPickle as pkl
 import pandas as pd
+import sys
 
 from nodes import Node
 from variational_nodes import Unobserved_Variational_Node, Variational_Node
@@ -166,6 +167,10 @@ class BayesNet(object):
                 if self.options['verbosity'] == 2: print "Saving the model in %s\n" % savefile
                 pkl.dump(self, open(savefile,"wb"))
 
+
+            # Flush 
+            sys.stdout.flush()
+            
         # Finish by collecting the training statistics
         self.train_stats = { 'activeK':activeK, 'elbo':elbo["total"].values, 'elbo_terms':elbo.drop("total",1) }
         self.trained = True

@@ -1,5 +1,6 @@
 from __future__ import division
 import numpy.linalg  as linalg
+from numpy_sugar.linalg import dotd
 import numpy.ma as ma
 import numpy as np
 
@@ -198,7 +199,9 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         term1 = (Y**2).sum(axis=0).data
         term2 = 2*(Y*s.dot(Z,SW.T)).sum(axis=0).data
         term3 = (ZZ.dot(SWW.T)).sum(axis=0)
-        term4 = s.diag(s.dot( SW.dot(Z.T), Z.dot(SW.T) )) - s.dot(Z**2,(SW**2).T).sum(axis=0)
+        # term4 = s.diag(s.dot( SW.dot(Z.T), Z.dot(SW.T) )) - s.dot(Z**2,(SW**2).T).sum(axis=0)
+        SWZ = SW.dot(Z.T)
+        term4 = dotd(SWZ, SWZ.T) - s.dot(Z**2,(SW**2).T).sum(axis=0)
         tmp = term1 - term2 + term3 + term4
 
         # Perform updates of the Q distribution

@@ -1,0 +1,183 @@
+
+import scipy as s
+from sys import path
+from time import time
+import pandas as pd
+
+
+from init_nodes import *
+from scGFA.run.init_nodes import *
+from scGFA.core.BayesNet import BayesNet
+
+# def pprint(d, indent=0):
+#     for key, value in d.iteritems():
+#         print '\t' * indent + str(key)
+#         if isinstance(value, dict):
+#             pprint(value, indent+1)
+#         else:
+#             print '\t' * (indent+1) + str(value)
+
+# Function to load the data
+# def loadData(data_opts, verbose=True):
+
+#     print "\n"
+#     print "#"*18
+#     print "## Loading data ##"
+#     print "#"*18
+#     print "\n"
+
+#     Y = list()
+#     for m in xrange(len(data_opts['input_files'])):
+#         file = data_opts['input_files'][m]
+
+#         # Read file (with row and column names)
+
+#         tmp = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"])
+#         print "Loaded %s with dim (%d,%d)..." % (file, tmp.shape[0], tmp.shape[1])
+
+#         # Center the data
+#         if data_opts['center'][m]:
+#             tmp = (tmp - tmp.mean())
+
+#         Y.append(tmp)
+#     return Y
+
+# Function to run a single trial of the model
+def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=False):
+
+    # set the seed
+    if seed is None:
+        seed = int(round(time()*1000)%1e6)
+    # s.random.seed(seed)
+
+    print "\n"
+    print "#"*45
+    print "## Running trial number %d with seed %d ##" % (trial,seed)
+    print "#"*45
+    print "\n"
+
+
+    ######################
+    ## Define the model ##
+    ######################
+
+    # Define dimensionalities
+    M = len(data)
+    N = data[0].shape[0]
+    D = s.asarray([ data[m].shape[1] for m in xrange(M) ])
+    K = model_opts["k"]
+
+    dim = {'M':M, 'N':N, 'D':D, 'K':K }
+
+    ## Define and initialise the nodes ##
+
+    if verbose: print "Initialising nodes...\n"
+
+    init = init_scGFA(dim, data, model_opts["likelihood"], seed=seed)
+
+    init.initZ(pmean=model_opts["priorZ"]["mean"], pvar=model_opts["priorZ"]["var"],
+               qmean=model_opts["initZ"]["mean"], qvar=model_opts["initZ"]["var"], qE=model_opts["initZ"]["E"], qE2=model_opts["initZ"]["E2"],
+               covariates=model_opts['covariates'])
+
+
+    init.initSW(ptheta=model_opts["priorSW"]["Theta"], pmean_S0=model_opts["priorSW"]["mean_S0"], pvar_S0=model_opts["priorSW"]["var_S0"], pmean_S1=model_opts["priorSW"]["mean_S1"], pvar_S1=model_opts["priorSW"]["var_S1"],
+                qtheta=model_opts["initSW"]["Theta"], qmean_S0=model_opts["initSW"]["mean_S0"], qvar_S0=model_opts["initSW"]["var_S0"], qmean_S1=model_opts["initSW"]["mean_S1"], qvar_S1=model_opts["initSW"]["var_S1"],
+                qEW_S0=model_opts["initSW"]["EW_S0"], qEW_S1=model_opts["initSW"]["EW_S1"], qES=model_opts["initSW"]["ES"])
+
+    init.initAlpha(pa=model_opts["priorAlpha"]['a'], pb=model_opts["priorAlpha"]['b'],
+                   qa=model_opts["initAlpha"]['a'], qb=model_opts["initAlpha"]['b'], qE=model_opts["initAlpha"]['E'])
+
+
+    init.initTau(pa=model_opts["priorTau"]['a'], pb=model_opts["priorTau"]['b'],
+                 qa=model_opts["initTau"]['a'], qb=model_opts["initTau"]['b'], qE=model_opts["initTau"]['E'])
+
+    init.initClusters()
+
+    if model_opts['learnTheta']:
+        init.initThetaLearn(pa=model_opts["priorTheta"]['a'], pb=model_opts["priorTheta"]['b'],
+                            qa=model_opts["initTheta"]['a'],  qb=model_opts["initTheta"]['b'], qE=model_opts["initTheta"]['E'])
+    else:
+        init.initThetaConst(value=model_opts["initTheta"]['value'])
+
+    init.initY()
+
+    # Define the markov blanket of each node
+    print "Defining Markov Blankets...\n"
+    init.MarkovBlanket()
+
+    # Initialise expectations of the required nodes
+    # TO-DO we have to do something with this.....
+    init.initExpectations("Theta")
+
+    ##################################
+    ## Add the nodes to the network ##
+    ##################################
+
+    # Initialise Bayesian Network
+    print "Initialising Bayesian network...\n"
+    net = BayesNet(dim=dim, trial=trial, schedule=model_opts["schedule"], nodes=init.getNodes(), options=train_opts)
+
+    ####################
+    ## Start training ##
+    ####################
+
+    print "Starting training...\n"
+
+    net.iterate()
+
+    #####################
+    ## Finish training ##
+    #####################
+
+    return net
+
+# Function to run multiple trials of the model
+def runMultipleTrials(data_opts, model_opts, train_opts, cores, keep_best_run, verbose=True):
+
+    # If it doesnt exist, create the output folder
+    outdir = os.path.dirname(train_opts['outfile'])
+    if not os.path.exists(outdir): os.makedirs(outdir)
+
+    ###################
+    ## Load the data ##
+    ###################
+
+    data = loadData(data_opts, verbose)
+
+    #########################
+    ## Run parallel trials ##
+    ########################
+
+    seed = None
+
+    trained_models = Parallel(n_jobs=cores, backend="threading")(
+        delayed(runSingleTrial)(data,model_opts,train_opts,seed,i,verbose) for i in xrange(1,train_opts['trials']+1))
+
+    print "\n"
+    print "#"*43
+    print "## Training finished, processing results ##"
+    print "#"*43
+    print "\n"
+
+    #####################
+    ## Process results ##
+    #####################
+
+
+    # Select the trial with the best lower bound or keep all models
+    if keep_best_run:
+        lb = map(lambda x: x.getTrainingStats()["elbo"][-1], trained_models)
+        save_models = [ trials[s.argmax(lb)] ]
+        outfiles = [ train_opts['outfile'] ]
+    else:
+        save_models = trained_models
+        tmp = os.path.splitext(train_opts['outfile'])
+        outfiles = [ tmp[0]+str(t)+tmp[1]for t in xrange(train_opts['trials']) ]
+
+    # Save the results
+    sample_names = data[0].index.tolist()
+    feature_names = [  data[m].columns.values.tolist() for m in xrange(len(data)) ]
+    for t in xrange(len(save_models)):
+        print "Saving model %d in %s...\n" % (t,outfiles[t])
+        saveModel(save_models[t], outfile=outfiles[t], view_names=data_opts['view_names'],
+            sample_names=sample_names, feature_names=feature_names)

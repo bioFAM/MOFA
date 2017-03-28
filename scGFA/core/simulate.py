@@ -185,7 +185,7 @@ class Simulate(object):
         # DOESNT WORK FOR BINOMIAL RIGHT NOW
         if missingness > 0.0:
             for m in xrange(self.M):
-                nas = s.random.randint(0, self.N*self.D[m], missingness*self.N*self.D[m])
+                nas = s.random.randint(0, self.N*self.D[m], int(missingness*self.N*self.D[m]))
                 tmp = Y[m].flatten()
                 tmp[nas] = s.nan
                 Y[m] = tmp.reshape((self.N,self.D[m]))

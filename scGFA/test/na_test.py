@@ -26,10 +26,12 @@ from scGFA.run.run_utils import *
 ## Generate data ##
 ###################
 
+# import numpy; numpy.random.seed(4)
+
 # Define dimensionalities
 M = 3
-N = 100
-D = s.asarray([100,100,100])
+N = 300
+D = s.asarray([1000,1000,1000])
 K = 6
 
 
@@ -56,7 +58,7 @@ data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=
 data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 
-missingness = 0.0
+missingness = 0.00
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="gaussian", missingness=missingness)
 Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -95,8 +97,8 @@ dim["K"] = K
 ##############################
 
 model_opts = {}
-model_opts['likelihood'] = ['gaussian']* M 
-model_opts['learnTheta'] = False
+model_opts['likelihood'] = ['gaussian']* M
+model_opts['learnTheta'] = True
 model_opts['k'] = 10
 
 
@@ -129,7 +131,7 @@ model_opts['covariates'] = None
 
 # Define schedule of updates
 # model_opts['schedule'] = ("SW","Z","Alpha","Tau","Theta","Y")
-model_opts['schedule'] = ("SW","Z","Alpha","Tau")
+model_opts['schedule'] = ("SW","Z","Alpha","Tau", 'Theta')
 
 
 #############################
@@ -138,7 +140,7 @@ model_opts['schedule'] = ("SW","Z","Alpha","Tau")
 
 train_opts = {}
 train_opts['elbofreq'] = 1
-train_opts['maxiter'] = 500
+train_opts['maxiter'] = 1000
 train_opts['tolerance'] = 1E-2
 train_opts['forceiter'] = True
 train_opts['dropK'] = { "by_norm":0.05, "by_pvar":None, "by_cor":None }

@@ -140,7 +140,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
 
         for k in latent_variables:
             Qmean[:,k] = Qvar[:,k] * ma.dot(
-                Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T ), 
+                Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T ),
                 SW[:,k]*tau) + 1./Pvar[:,k] * Mu[:,k]
 
         # Save updated parameters of the Q distribution
@@ -332,6 +332,8 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             term4 = 0.5*tau * s.divide((term41-term42)**2,term43)
 
             # Update S
+            # import pdb; pdb.set_trace()
+            # NOTE there could be some precision issues in S --> loads of 1s in result
             Qtheta[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
 
             # Update W
@@ -361,13 +363,16 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         lb_w = lb_pw - lb_qw
 
         # Calculate ELBO for S
-        # Slower = 0.00001
-        # Supper = 0.99999
+        # Slower = 0.001
+        # Supper = 0.999
         # S[S<Slower] = Slower
         # S[S>Supper] = Supper
 
         lb_ps = s.sum( S*theta['lnE'] + (1.-S)*theta['lnEInv'])
         lb_qs_tmp = S*s.log(S) + (1.-S)*s.log(1.-S)
+
+        # if (s.isnan(lb_qs_tmp)).sum() > 0:
+        #     import pdb; pdb.set_trace()
         print (s.isnan(lb_qs_tmp)).sum()
         lb_qs_tmp[s.isnan(lb_qs_tmp)] = 0.
 

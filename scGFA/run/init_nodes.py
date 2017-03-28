@@ -1,10 +1,6 @@
 
 """
 Module to initalise the nodes
-
-TO-DO:
-- add covariates
-
 """
 
 import scipy as s
@@ -235,7 +231,7 @@ class init_scGFA(initModel):
             self.Theta.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m])
             self.Alpha.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m])
             self.SW.nodes[m].addMarkovBlanket(Z=self.Z, Tau=self.Tau.nodes[m], Alpha=self.Alpha.nodes[m], Y=self.Y.nodes[m], Theta=self.Theta.nodes[m])
-            if self.lik[m] is "gaussian":
+            if self.lik[m]=="gaussian":
                 self.Y.nodes[m].addMarkovBlanket(Z=self.Z, SW=self.SW.nodes[m], Tau=self.Tau.nodes[m])
                 self.Tau.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m], Z=self.Z, Y=self.Y.nodes[m])
             else:

@@ -1,5 +1,6 @@
 from __future__ import division
 import numpy.linalg  as linalg
+from numpy_sugar.linalg import dotd
 import numpy.ma as ma
 import numpy as np
 
@@ -78,7 +79,6 @@ class Y_Node(Constant_Variational_Node):
         lik = self.likconst + 0.5*s.sum(self.N*(tau_exp["lnE"])) - s.dot(tau_exp["E"],tauQ_param["b"]-tauP_param["b"])
         return lik
 
-
 class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
     def __init__(self, dim, pmean, pvar, qmean, qvar, qE=None, qE2=None, idx_covariates=None):
         # UnivariateGaussian_Unobserved_Variational_Node.__init__(self, dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE)
@@ -139,11 +139,9 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         latent_variables = self.getLvIndex()
 
         for k in latent_variables:
-            tmp1 = SW[:,k]*tau
-            tmp2 = Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )
-            tmp3 = ma.dot(tmp2,tmp1)
-            tmp3 += 1./Pvar[:,k] * Mu[:,k]
-            Qmean[:,k] = Qvar[:,k] * tmp3
+            Qmean[:,k] = Qvar[:,k] * ma.dot(
+                Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T ), 
+                SW[:,k]*tau) + 1./Pvar[:,k] * Mu[:,k]
 
         # Save updated parameters of the Q distribution
         self.Q.setParameters(mean=Qmean, var=Qvar)
@@ -201,7 +199,9 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         term1 = (Y**2).sum(axis=0).data
         term2 = 2*(Y*s.dot(Z,SW.T)).sum(axis=0).data
         term3 = (ZZ.dot(SWW.T)).sum(axis=0)
-        term4 = s.diag(s.dot( SW.dot(Z.T), Z.dot(SW.T) )) - s.dot(Z**2,(SW**2).T).sum(axis=0)
+        # term4 = s.diag(s.dot( SW.dot(Z.T), Z.dot(SW.T) )) - s.dot(Z**2,(SW**2).T).sum(axis=0)
+        SWZ = SW.dot(Z.T)
+        term4 = dotd(SWZ, SWZ.T) - s.dot(Z**2,(SW**2).T).sum(axis=0)
         tmp = term1 - term2 + term3 + term4
 
         # Perform updates of the Q distribution
@@ -460,6 +460,8 @@ class Theta_Constant_Node(Constant_Variational_Node):
         self.value = s.delete(self.value, idx, axis)
         self.precompute()
         self.updateDim(axis=axis, new_dim=self.dim[axis]-len(idx))
+
+
 
 
 class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):

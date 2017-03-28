@@ -124,7 +124,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         Qvar = Q['var']
 
         # Variance
-	Qvar_copy = Qvar.copy()  # copying old variance
+        Qvar_copy = Qvar.copy()  # copying old variance
 
         tmp = (tau*SWW.T).sum(axis=1)
         tmp = s.repeat(tmp[None,:],self.N,0)
@@ -304,7 +304,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         # Qvar_S1_res = np.copy(Qvar_S1)
         # SW_res = np.copy(SW)
 
-        Qtheta_res = Qtheta
+        # Qtheta_res = Qtheta
         Qmean_S1_res = Qmean_S1
         Qvar_S1_res = Qvar_S1
         SW_res = SW
@@ -318,7 +318,6 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             theta_lnEInv = s.repeat(theta_lnEInv[None,:],Qmean_S1.shape[0],0)
 
         all_term1 = theta_lnE - theta_lnEInv
-        # all_term1 = s.log(theta_E/(1.-theta_E))
 
         # NOTE
         # for k in reversed(xrange(self.dim[1])):
@@ -333,18 +332,18 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             term4 = 0.5*tau * s.divide((term41-term42)**2,term43)
 
             # Update S
-            Qtheta_res[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
+            Qtheta[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
 
             # Update W
             Qmean_S1_res[:,k] = s.divide(term41-term42,term43)
             Qvar_S1_res[:,k] = s.divide(1,tau*term43)
 
             # Update Expectations for the next iteration
-            SW_res[:,k] = Qtheta_res[:,k] * Qmean_S1_res[:,k]
+            SW_res[:,k] = Qtheta[:,k] * Qmean_S1_res[:,k]
 
         # Save updated parameters of the Q distribution
         self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=s.repeat(1/alpha[None,:],self.D,0),
-                             mean_S1=Qmean_S1_res, var_S1=Qvar_S1_res, theta=Qtheta_res )
+                             mean_S1=Qmean_S1_res, var_S1=Qvar_S1_res, theta=Qtheta )
 
     def calculateELBO(self):
 
@@ -367,10 +366,10 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         # S[S<Slower] = Slower
         # S[S>Supper] = Supper
 
-        lb_ps = s.sum( S*theta['lnE'] + (1-S)*theta['lnEInv'])
-
-        lb_qs_tmp = S*s.log(S) + (1-S)*s.log(1-S)
-        lb_qs_tmp[s.isnan(lb_qs_tmp)] = 0
+        lb_ps = s.sum( S*theta['lnE'] + (1.-S)*theta['lnEInv'])
+        lb_qs_tmp = S*s.log(S) + (1.-S)*s.log(1.-S)
+        print (s.isnan(lb_qs_tmp)).sum()
+        lb_qs_tmp[s.isnan(lb_qs_tmp)] = 0.
 
         lb_qs = s.sum(lb_qs_tmp)
         lb_s = lb_ps - lb_qs
@@ -400,10 +399,12 @@ class Theta_Node(Beta_Unobserved_Variational_Node):
 
     # factor selection is not None when some of the factors are annotated and therefore not learnt
     def updateParameters(self, factors_selection=None):
+        # import pdb; pdb.set_trace()
         # Collect expectations from other nodes
         S = self.markov_blanket['SW'].getExpectations()["ES"]
 
         # Precompute terms
+        # TODO check that it is ok with dimensions of S !! (because S is a pointer, so might be messed up)
         if factors_selection is not None:
             S = S[:,factors_selection]
         tmp1 = S.sum(axis=0)

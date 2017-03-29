@@ -136,7 +136,7 @@ class MultivariateGaussian_Unobserved_Variational_Node(Unobserved_Variational_No
         # qcov (nd array): the covariance parameter of the Q distribution
         # qE (nd array): the initial first moment of the Q distribution
         Unobserved_Variational_Node.__init__(self, dim)
-
+        
         # Initialise the P and Q distributions
         self.P = MultivariateGaussian(dim=dim, mean=pmean, cov=pcov)
         self.Q = MultivariateGaussian(dim=dim, mean=qmean, cov=qcov, E=qE)

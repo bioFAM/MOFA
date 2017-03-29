@@ -98,7 +98,7 @@ dim["K"] = K
 
 model_opts = {}
 model_opts['likelihood'] = ['gaussian']* M
-model_opts['learnTheta'] = False
+model_opts['learnTheta'] = True
 model_opts['k'] = K
 
 
@@ -123,7 +123,7 @@ model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M }
 if model_opts['learnTheta']:
     model_opts["initTheta"] = { 'a':[1.]*M, 'b':[1.]*M, 'E':[None]*M }
 else:
-    model_opts["initTheta"] = { 'value':[.5]*M }
+    model_opts["initTheta"] = { 'value':[1.]*M }
 
 
 # Define covariates

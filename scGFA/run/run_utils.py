@@ -73,7 +73,7 @@ def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=Fal
 
     if verbose: print "Initialising nodes...\n"
 
-    init = init_scGFA(dim, data, model_opts["likelihood"], seed=seed)
+    init =  init_sparse(dim, data, model_opts["likelihood"], seed=seed)
 
     init.initZ(pmean=model_opts["priorZ"]["mean"], pvar=model_opts["priorZ"]["var"],
                qmean=model_opts["initZ"]["mean"], qvar=model_opts["initZ"]["var"], qE=model_opts["initZ"]["E"], qE2=model_opts["initZ"]["E2"],

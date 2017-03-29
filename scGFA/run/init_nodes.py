@@ -11,8 +11,8 @@ import sklearn.decomposition
 from scGFA.core.nodes import *
 from scGFA.core.multiview_nodes import *
 from scGFA.core.seeger_nodes import *
-# from scGFA.core.sparse_updates import *
-from scGFA.core.nonsparse_updates import *
+from scGFA.core.sparse_updates import *
+# from scGFA.core.nonsparse_updates import *
 
 
 # General class to initialise a MOFA model

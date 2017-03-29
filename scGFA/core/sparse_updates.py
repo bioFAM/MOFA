@@ -139,9 +139,9 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         latent_variables = self.getLvIndex()
 
         for k in latent_variables:
-            Qmean[:,k] = Qvar[:,k] * ma.dot(
+            Qmean[:,k] = Qvar[:,k] * (  1./Pvar[:,k] * Mu[:,k] +  ma.dot(
                 Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T ),
-                SW[:,k]*tau) + 1./Pvar[:,k] * Mu[:,k]
+                SW[:,k]*tau)  )
 
         # Save updated parameters of the Q distribution
         self.Q.setParameters(mean=Qmean, var=Qvar)
@@ -257,7 +257,6 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
         self.Q.setParameters(a=Qa, b=Qb)
 
     def calculateELBO(self):
-        # import pdb; pdb.set_trace()
         # Collect parameters and expectations
         P,Q = self.P.getParameters(), self.Q.getParameters()
         Pa, Pb, Qa, Qb = P['a'], P['b'], Q['a'], Q['b']
@@ -305,11 +304,10 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         # SW_res = np.copy(SW)
 
         # Qtheta_res = Qtheta
-        Qmean_S1_res = Qmean_S1
-        Qvar_S1_res = Qvar_S1
-        SW_res = SW
+        # Qmean_S1_res = Qmean_S1
+        # Qvar_S1_res = Qvar_S1
+        # SW_res = SW
 
-        # import pdb; pdb.set_trace()
         # check dimensions of theta and expand if necessary
         # I THINK THIS SHOULD NOT BE HERE...
         if theta_lnE.shape != Qmean_S1.shape:
@@ -332,20 +330,19 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             term4 = 0.5*tau * s.divide((term41-term42)**2,term43)
 
             # Update S
-            # import pdb; pdb.set_trace()
             # NOTE there could be some precision issues in S --> loads of 1s in result
             Qtheta[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
 
             # Update W
-            Qmean_S1_res[:,k] = s.divide(term41-term42,term43)
-            Qvar_S1_res[:,k] = s.divide(1,tau*term43)
+            Qmean_S1[:,k] = s.divide(term41-term42,term43)
+            Qvar_S1[:,k] = s.divide(1,tau*term43)
 
             # Update Expectations for the next iteration
-            SW_res[:,k] = Qtheta[:,k] * Qmean_S1_res[:,k]
+            SW[:,k] = Qtheta[:,k] * Qmean_S1[:,k]
 
         # Save updated parameters of the Q distribution
         self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=s.repeat(1/alpha[None,:],self.D,0),
-                             mean_S1=Qmean_S1_res, var_S1=Qvar_S1_res, theta=Qtheta )
+                             mean_S1=Qmean_S1, var_S1=Qvar_S1, theta=Qtheta )
 
     def calculateELBO(self):
 
@@ -367,15 +364,16 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         # Supper = 0.999
         # S[S<Slower] = Slower
         # S[S>Supper] = Supper
-
-        lb_ps = s.sum( S*theta['lnE'] + (1.-S)*theta['lnEInv'])
+        lb_ps_tmp = S*theta['lnE'] + (1.-S)*theta['lnEInv']
         lb_qs_tmp = S*s.log(S) + (1.-S)*s.log(1.-S)
 
         # if (s.isnan(lb_qs_tmp)).sum() > 0:
         #     import pdb; pdb.set_trace()
-        print (s.isnan(lb_qs_tmp)).sum()
+        # print (s.isnan(lb_qs_tmp)).sum()
+        lb_ps_tmp[s.isnan(lb_ps_tmp)] = 0.
         lb_qs_tmp[s.isnan(lb_qs_tmp)] = 0.
 
+        lb_ps = s.sum(lb_ps_tmp)
         lb_qs = s.sum(lb_qs_tmp)
         lb_s = lb_ps - lb_qs
 
@@ -404,7 +402,6 @@ class Theta_Node(Beta_Unobserved_Variational_Node):
 
     # factor selection is not None when some of the factors are annotated and therefore not learnt
     def updateParameters(self, factors_selection=None):
-        # import pdb; pdb.set_trace()
         # Collect expectations from other nodes
         S = self.markov_blanket['SW'].getExpectations()["ES"]
 
@@ -422,7 +419,6 @@ class Theta_Node(Beta_Unobserved_Variational_Node):
         self.Q.setParameters(a=Qa, b=Qb)
 
     def calculateELBO(self):
-        # import pdb; pdb.set_trace()
 
         # Collect parameters and expectations
         Qpar,Qexp = self.Q.getParameters(), self.Q.getExpectations()
@@ -453,7 +449,7 @@ class Theta_Constant_Node(Constant_Variational_Node):
     def precompute(self):
         self.E = self.value
         self.lnE = self.N_cells * s.log(self.value)
-        self.lnEInv = self.N_cells * s.log(1-self.value)
+        self.lnEInv = self.N_cells * s.log(1.-self.value)
 
     def getExpectations(self):
         return { 'E':self.E, 'lnE':self.lnE, 'lnEInv':self.lnEInv }

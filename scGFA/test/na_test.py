@@ -31,7 +31,7 @@ from scGFA.run.run_utils import *
 # Define dimensionalities
 M = 3
 N = 300
-D = s.asarray([1000,1000,1000])
+D = s.asarray([500,500,500])
 K = 6
 
 
@@ -58,7 +58,7 @@ data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=
 data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 
-missingness = 0.00
+missingness = 0.0
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="gaussian", missingness=missingness)
 Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -82,7 +82,7 @@ data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
 #################################
 
 # Define initial number of latent variables
-K = 10
+K = 30
 
 # Define model dimensionalities
 dim = {}
@@ -98,8 +98,8 @@ dim["K"] = K
 
 model_opts = {}
 model_opts['likelihood'] = ['gaussian']* M
-model_opts['learnTheta'] = True
-model_opts['k'] = 10
+model_opts['learnTheta'] = False
+model_opts['k'] = K
 
 
 # Define priors
@@ -123,7 +123,7 @@ model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M }
 if model_opts['learnTheta']:
     model_opts["initTheta"] = { 'a':[1.]*M, 'b':[1.]*M, 'E':[None]*M }
 else:
-    model_opts["initTheta"] = { 'value':[0.5]*M }
+    model_opts["initTheta"] = { 'value':[.5]*M }
 
 
 # Define covariates
@@ -131,7 +131,7 @@ model_opts['covariates'] = None
 
 # Define schedule of updates
 # model_opts['schedule'] = ("SW","Z","Alpha","Tau","Theta","Y")
-model_opts['schedule'] = ("SW","Z","Alpha","Tau", 'Theta')
+model_opts['schedule'] = ("SW", "Z", "Alpha","Tau", 'Theta')
 
 
 #############################

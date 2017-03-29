@@ -26,10 +26,12 @@ from scGFA.run.run_utils import *
 ## Generate data ##
 ###################
 
+# import numpy; numpy.random.seed(4)
+
 # Define dimensionalities
 M = 3
-N = 100
-D = s.asarray([100,100,100])
+N = 300
+D = s.asarray([500,500,500])
 K = 6
 
 
@@ -80,7 +82,7 @@ data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
 #################################
 
 # Define initial number of latent variables
-K = 10
+K = 30
 
 # Define model dimensionalities
 dim = {}
@@ -95,9 +97,9 @@ dim["K"] = K
 ##############################
 
 model_opts = {}
-model_opts['likelihood'] = ['gaussian']* M 
-model_opts['learnTheta'] = False
-model_opts['k'] = 10
+model_opts['likelihood'] = ['gaussian']* M
+model_opts['learnTheta'] = True
+model_opts['k'] = K
 
 
 # Define priors
@@ -121,7 +123,7 @@ model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M }
 if model_opts['learnTheta']:
     model_opts["initTheta"] = { 'a':[1.]*M, 'b':[1.]*M, 'E':[None]*M }
 else:
-    model_opts["initTheta"] = { 'value':[0.5]*M }
+    model_opts["initTheta"] = { 'value':[1.]*M }
 
 
 # Define covariates
@@ -129,7 +131,7 @@ model_opts['covariates'] = None
 
 # Define schedule of updates
 # model_opts['schedule'] = ("SW","Z","Alpha","Tau","Theta","Y")
-model_opts['schedule'] = ("SW","Z","Alpha","Tau")
+model_opts['schedule'] = ("SW", "Z", "Alpha","Tau", 'Theta')
 
 
 #############################
@@ -138,7 +140,7 @@ model_opts['schedule'] = ("SW","Z","Alpha","Tau")
 
 train_opts = {}
 train_opts['elbofreq'] = 1
-train_opts['maxiter'] = 500
+train_opts['maxiter'] = 1000
 train_opts['tolerance'] = 1E-2
 train_opts['forceiter'] = True
 train_opts['dropK'] = { "by_norm":0.05, "by_pvar":None, "by_cor":None }

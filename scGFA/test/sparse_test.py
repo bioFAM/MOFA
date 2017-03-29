@@ -110,7 +110,7 @@ def run_test():
 	data['tau']= [ s.ones(D[m])*2 for m in xrange(M) ]
 
 	Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
-		likelihood="gaussian", missingness=0.00)
+		likelihood="gaussian", missingness=0.1)
 	# Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 		# likelihood="poisson", missingness=0.00)
 	# Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],

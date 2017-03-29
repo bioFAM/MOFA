@@ -11,8 +11,8 @@ import sklearn.decomposition
 from scGFA.core.nodes import *
 from scGFA.core.multiview_nodes import *
 from scGFA.core.seeger_nodes import *
-# from scGFA.core.sparse_updates import *
-from scGFA.core.nonsparse_updates import *
+from scGFA.core.sparse_updates import *
+# from scGFA.core.nonsparse_updates import *
 
 
 # General class to initialise a MOFA model
@@ -235,6 +235,8 @@ class init_sparse(initModel):
             else:
                 self.Y.nodes[m].addMarkovBlanket(Z=self.Z, W=self.SW.nodes[m], kappa=self.Tau.nodes[m])
 
+# Class to iniailise the traditional GFA model
+# Main differences: no element-wise sparsity and latent variables do not fully factorise
 class init_nonsparse(initModel):
     def __init__(self, *args, **kwargs):
         super(init_nonsparse, self).__init__(*args, **kwargs)

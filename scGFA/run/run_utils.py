@@ -3,7 +3,7 @@ import scipy as s
 from sys import path
 from time import time
 import pandas as pd
-
+from joblib import Parallel, delayed
 
 from init_nodes import *
 from scGFA.run.init_nodes import *
@@ -18,29 +18,29 @@ from scGFA.core.BayesNet import BayesNet
 #             print '\t' * (indent+1) + str(value)
 
 # Function to load the data
-# def loadData(data_opts, verbose=True):
 
-#     print "\n"
-#     print "#"*18
-#     print "## Loading data ##"
-#     print "#"*18
-#     print "\n"
+def loadData(data_opts, verbose=True):
 
-#     Y = list()
-#     for m in xrange(len(data_opts['input_files'])):
-#         file = data_opts['input_files'][m]
+    print "\n"
+    print "#"*18
+    print "## Loading data ##"
+    print "#"*18
+    print "\n"
 
-#         # Read file (with row and column names)
+    Y = list()
+    for m in xrange(len(data_opts['input_files'])):
+        file = data_opts['input_files'][m]
 
-#         tmp = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"])
-#         print "Loaded %s with dim (%d,%d)..." % (file, tmp.shape[0], tmp.shape[1])
+        # Read file (with row and column names)
+        tmp = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"])
+        print "Loaded %s with dim (%d,%d)..." % (file, tmp.shape[0], tmp.shape[1])
 
-#         # Center the data
-#         if data_opts['center'][m]:
-#             tmp = (tmp - tmp.mean())
+        # Center the data
+        if data_opts['center'][m]:
+            tmp = (tmp - tmp.mean())
 
-#         Y.append(tmp)
-#     return Y
+        Y.append(tmp)
+    return Y
 
 # Function to run a single trial of the model
 def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=False):
@@ -71,9 +71,9 @@ def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=Fal
 
     ## Define and initialise the nodes ##
 
-    if verbose: print "Initialising nodes...\n"
+    # if verbose: print "Initialising nodes...\n"
 
-    init = init_scGFA(dim, data, model_opts["likelihood"], seed=seed)
+    init = init_sparse(dim, data, model_opts["likelihood"], seed=seed)
 
     init.initZ(pmean=model_opts["priorZ"]["mean"], pvar=model_opts["priorZ"]["var"],
                qmean=model_opts["initZ"]["mean"], qvar=model_opts["initZ"]["var"], qE=model_opts["initZ"]["E"], qE2=model_opts["initZ"]["E2"],
@@ -102,7 +102,7 @@ def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=Fal
     init.initY()
 
     # Define the markov blanket of each node
-    print "Defining Markov Blankets...\n"
+    # print "Defining Markov Blankets...\n"
     init.MarkovBlanket()
 
     # Initialise expectations of the required nodes
@@ -114,14 +114,14 @@ def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=Fal
     ##################################
 
     # Initialise Bayesian Network
-    print "Initialising Bayesian network...\n"
+    # print "Initialising Bayesian network...\n"
     net = BayesNet(dim=dim, trial=trial, schedule=model_opts["schedule"], nodes=init.getNodes(), options=train_opts)
 
     ####################
     ## Start training ##
     ####################
 
-    print "Starting training...\n"
+    # print "Starting training...\n"
 
     net.iterate()
 
@@ -132,10 +132,10 @@ def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=Fal
     return net
 
 # Function to run multiple trials of the model
-def runMultipleTrials(data_opts, model_opts, train_opts, cores, keep_best_run, verbose=True):
+def runMultipleTrials(data_opts, model_opts, train_opts, keep_best_run, verbose=True):
 
     # If it doesnt exist, create the output folder
-    outdir = os.path.dirname(train_opts['outfile'])
+    outdir = os.path.dirname(data_opts['outfile'])
     if not os.path.exists(outdir): os.makedirs(outdir)
 
     ###################
@@ -146,12 +146,10 @@ def runMultipleTrials(data_opts, model_opts, train_opts, cores, keep_best_run, v
 
     #########################
     ## Run parallel trials ##
-    ########################
+    #########################
 
-    seed = None
-
-    trained_models = Parallel(n_jobs=cores, backend="threading")(
-        delayed(runSingleTrial)(data,model_opts,train_opts,seed,i,verbose) for i in xrange(1,train_opts['trials']+1))
+    trained_models = Parallel(n_jobs=train_opts['cores'], backend="threading")(
+        delayed(runSingleTrial)(data,model_opts,train_opts,None,i) for i in xrange(1,train_opts['trials']+1))
 
     print "\n"
     print "#"*43
@@ -165,14 +163,18 @@ def runMultipleTrials(data_opts, model_opts, train_opts, cores, keep_best_run, v
 
 
     # Select the trial with the best lower bound or keep all models
-    if keep_best_run:
-        lb = map(lambda x: x.getTrainingStats()["elbo"][-1], trained_models)
-        save_models = [ trials[s.argmax(lb)] ]
-        outfiles = [ train_opts['outfile'] ]
+    if train_opts['trials'] > 1:
+        if keep_best_run:
+            lb = map(lambda x: x.getTrainingStats()["elbo"][-1], trained_models)
+            save_models = [ trials[s.argmax(lb)] ]
+            outfiles = [ data_opts['outfile'] ]
+        else:
+            save_models = trained_models
+            tmp = os.path.splitext(data_opts['outfile'])
+            outfiles = [ tmp[0]+str(t)+tmp[1]for t in xrange(train_opts['trials']) ]
     else:
-        save_models = trained_models
-        tmp = os.path.splitext(train_opts['outfile'])
-        outfiles = [ tmp[0]+str(t)+tmp[1]for t in xrange(train_opts['trials']) ]
+            save_models = trained_models
+            outfiles = [ data_opts['outfile'] ]
 
     # Save the results
     sample_names = data[0].index.tolist()

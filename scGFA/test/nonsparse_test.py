@@ -27,8 +27,8 @@ from scGFA.run.init_nodes import *
 
 # Define dimensionalities
 M = 3
-N = 100
-D = s.asarray([1000,1000,1000])
+N = 50
+D = s.asarray([300,300,300])
 K = 6
 
 
@@ -54,7 +54,7 @@ data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 # data['tau']= [ s.ones(D[m])*1000 for m in xrange(M) ]
 data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 
-missingness = 0.0
+missingness = 0.3
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="gaussian", missingness=missingness)
 Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -115,7 +115,7 @@ model_opts['schedule'] = ("W","Z","Alpha","Tau","Y")
 
 train_opts = {}
 train_opts['elbofreq'] = 1
-train_opts['maxiter'] = 200
+train_opts['maxiter'] = 500
 train_opts['tolerance'] = 1E-2
 train_opts['forceiter'] = True
 # train_opts['dropK'] = { "by_norm":0.05, "by_pvar":None, "by_cor":None } # IT IS NOT WORKING

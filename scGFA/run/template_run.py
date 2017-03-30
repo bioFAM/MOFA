@@ -26,6 +26,7 @@ p.add_argument( '--covariatesFile',    type=str,                                
 p.add_argument( '--schedule',          type=str, nargs="+", required=True,                  help='Update schedule' )
 p.add_argument( '--learnTheta',        action='store_true',                                 help='learn the sparsity parameter from the spike and slab?' )
 p.add_argument( '--initTheta',         type=float, default=0.5 ,                            help='hyperparameter theta in case that learnTheta is set to False')
+p.add_argument( '--maskAtRandom',  	   type=float,nargs="+", default=None,                  help='Fraction of data to mask per view')
 p.add_argument( '--nostop',            action='store_true',                                 help='Do not stop even when convergence criterion is met?' )
 p.add_argument( '-n', '--ntrials',     type=int, default=1,                                 help='Number of trials' )
 p.add_argument( '-c', '--ncores',      type=int, default=1,                                 help='Number of cores' )
@@ -49,8 +50,17 @@ data_opts['rownames'] = 0
 data_opts['colnames'] = 0
 data_opts['delimiter'] = " "
 
+M = len(data_opts['input_files'])
+
+if args.maskAtRandom is not None:
+	data_opts['maskAtRandom'] = args.maskAtRandom
+else:
+	data_opts['maskAtRandom'] = [0]*M	
+print data_opts['maskAtRandom']
+
 # Sanity checks
-assert len(data_opts['input_files']) == len(data_opts['view_names']), "Length of view names and input files does not match"
+assert M == len(data_opts['view_names']), "Length of view names and input files does not match"
+assert M == len(data_opts['maskAtRandom']), "Length of MaskAtRandom and input files does not match"
 
 # pprint(data_opts)
 # print "\n"
@@ -61,7 +71,6 @@ assert len(data_opts['input_files']) == len(data_opts['view_names']), "Length of
 
 
 model_opts = {}
-M = len(data_opts['input_files'])
 
 # Define likelihoods
 model_opts['likelihood'] = args.likelihoods

@@ -3,6 +3,7 @@ import scipy as s
 from sys import path
 from time import time
 import pandas as pd
+import numpy as np
 from joblib import Parallel, delayed
 
 from init_nodes import *
@@ -35,6 +36,16 @@ def loadData(data_opts, verbose=True):
         tmp = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"])
         print "Loaded %s with dim (%d,%d)..." % (file, tmp.shape[0], tmp.shape[1])
 
+        #Mask values at random
+        Dtmp = tmp.shape[1]
+        Ntmp = tmp.shape[0]
+        p2Mask = data_opts['maskAtRandom'][m]
+        idxMask = np.zeros(Ntmp*Dtmp)
+        idxMask[:int(round(Ntmp*Dtmp*p2Mask))]  = 1
+        np.random.shuffle(idxMask)
+        idxMask=np.reshape(idxMask, [Ntmp, Dtmp])
+        tmp = tmp.mask(idxMask==1)
+        
         # Center the data
         if data_opts['center'][m]:
             tmp = (tmp - tmp.mean())

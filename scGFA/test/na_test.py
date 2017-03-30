@@ -19,7 +19,6 @@ from scGFA.core.seeger_nodes import *
 from scGFA.core.nodes import *
 from scGFA.core.sparse_updates import *
 from scGFA.core.utils import *
-
 from scGFA.run.run_utils import *
 
 ###################
@@ -30,8 +29,8 @@ from scGFA.run.run_utils import *
 
 # Define dimensionalities
 M = 3
-N = 300
-D = s.asarray([500,500,500])
+N = 100
+D = s.asarray([1000,1000,1000])
 K = 6
 
 
@@ -56,9 +55,10 @@ theta = [ s.ones(K)*0.5 for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
 
 data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
-data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
+# data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
+data['tau']= [ stats.uniform.rvs(loc=0.1,scale=1,size=D[m]) for m in xrange(M) ]
 
-missingness = 0.0
+missingness = 0.2
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="gaussian", missingness=missingness)
 Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -82,7 +82,7 @@ data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
 #################################
 
 # Define initial number of latent variables
-K = 30
+K = 15
 
 # Define model dimensionalities
 dim = {}
@@ -104,9 +104,9 @@ model_opts['k'] = K
 
 # Define priors
 model_opts["priorZ"] = { 'mean':0., 'var':1. }
-model_opts["priorAlpha"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
+model_opts["priorAlpha"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
 model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M }
-model_opts["priorTau"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
+model_opts["priorTau"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
 if model_opts['learnTheta']:
 	model_opts["priorTheta"] = { 'a':[1.]*M, 'b':[1.]*M }
 
@@ -115,7 +115,7 @@ model_opts["initZ"] = { 'mean':"random", 'var':1., 'E':None, 'E2':None }
 model_opts["initAlpha"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M }
 model_opts["initSW"] = { 'Theta':[0.5]*M,
                           'mean_S0':[0.]*M, 'var_S0':model_opts["initAlpha"]['E'],
-                          'mean_S1':["random"]*M, 'var_S1':[1.]*M,
+                          'mean_S1':[0]*M, 'var_S1':[1.]*M,
                           'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M}
 # model_opts["initTau"] = { 'a':[1.,1.,None], 'b':[1.,1.,None], 'E':[100.,100.,None] }
 model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M }
@@ -123,7 +123,7 @@ model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M }
 if model_opts['learnTheta']:
     model_opts["initTheta"] = { 'a':[1.]*M, 'b':[1.]*M, 'E':[None]*M }
 else:
-    model_opts["initTheta"] = { 'value':[1.]*M }
+    model_opts["initTheta"] = { 'value':[.5]*M }
 
 
 # Define covariates
@@ -131,7 +131,7 @@ model_opts['covariates'] = None
 
 # Define schedule of updates
 # model_opts['schedule'] = ("SW","Z","Alpha","Tau","Theta","Y")
-model_opts['schedule'] = ("SW", "Z", "Alpha","Tau", 'Theta')
+model_opts['schedule'] = ("SW", "Z", "Clusters", "Theta", "Alpha", "Tau")
 
 
 #############################
@@ -140,10 +140,11 @@ model_opts['schedule'] = ("SW", "Z", "Alpha","Tau", 'Theta')
 
 train_opts = {}
 train_opts['elbofreq'] = 1
-train_opts['maxiter'] = 1000
+train_opts['maxiter'] = 2000
 train_opts['tolerance'] = 1E-2
 train_opts['forceiter'] = True
-train_opts['dropK'] = { "by_norm":0.05, "by_pvar":None, "by_cor":None }
+# train_opts['dropK'] = { "by_norm":0.01, "by_pvar":None, "by_cor":None, "by_r2":0.01 }
+train_opts['dropK'] = { "by_norm":None, "by_pvar":None, "by_cor":0.75, "by_r2":0.01 }
 train_opts['savefreq'] = s.nan
 train_opts['savefolder'] = s.nan
 train_opts['verbosity'] = 2
@@ -159,3 +160,6 @@ train_opts['verbosity'] = 2
 
 # runMultipleTrials(data_opts, model_opts, train_opts, cores, keep_best_run)
 runSingleTrial(data["Y"], model_opts, train_opts)
+
+SW = net.getNodes()["SW"].getExpectation()
+print s.absolute(SW).mean(axis=0)

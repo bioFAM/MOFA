@@ -26,12 +26,6 @@ Variational nodes have the following main variables:
     - dim: dimensionality of the node
 """
 
-
-"""
-to-do:
-- improve bernoulli gaussian
-"""
-
 ###########################################
 ## General classes for variational nodes ##
 ###########################################

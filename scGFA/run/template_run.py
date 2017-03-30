@@ -5,6 +5,8 @@ TO-DO:
 - Some variables are init as s.nan, that depend on the schedule
 - properly handle differnet trials...
 - Save training options does notw ork because of dict in dropK
+- Warning if negative lower bound
+- Multiple trials really decreasing elbo
 """
 
 # Import required modules
@@ -132,7 +134,7 @@ train_opts['savefolder'] = s.nan
 train_opts['verbosity'] = 2
 
 # Criteria to drop latent variables while training
-train_opts['dropK'] = { "by_norm":0.01, "by_pvar":None, "by_cor":None }
+train_opts['dropK'] = { "by_norm":None, "by_pvar":None, "by_cor":None }
 
 # Tolerance level for convergence
 train_opts['tolerance'] = 0.5

@@ -25,6 +25,7 @@ A Bayesian network requires the following information:
 To-do:
 - More sanity checks (algorithmic options)
 - assert nodes and options and so on is dic
+- start dropping factors after N iterations
 """
 
 class BayesNet(object):
@@ -47,7 +48,7 @@ class BayesNet(object):
         self.trained = False
 
 
-    def removeInactiveFactors(self, by_norm=None, by_pvar=None, by_cor=None):
+    def removeInactiveFactors(self, by_norm=None, by_pvar=None, by_cor=None, by_r2=None):
         # Method to remove inactive factors
 
         drop_dic = {}
@@ -59,24 +60,43 @@ class BayesNet(object):
             Z = self.nodes["Z"].getExpectation()
             drop_dic["by_norm"] = s.where( s.absolute(Z).mean(axis=0) < by_norm )[0]
 
-        # print s.absolute(Z)
-        # print s.absolute(Z).mean(axis=0)
+        # .......
+        if by_r2 is not None:
+            Z = self.nodes['Z'].getExpectation()
+            Y = self.nodes["Y"].getExpectation()
+            W = self.nodes["SW"].getExpectation()
+
+            # compute r2 for every factor and every view
+            all_r2 = s.zeros([self.dim['M'], self.dim['K']])
+            for m in range(self.dim['M']):
+                Y_m = Y[m]
+                W_m = W[m]
+                for k in range(self.dim['K']):
+                    # predict with latent variable k only
+                    predictions = s.outer(Z[:,k], W_m[:, k])
+
+                    # compute r2
+                    Res = ((Y_m - predictions)**2.).sum()
+                    Var = ((Y_m - Y_m.mean())**2.).sum()
+                    all_r2[m,k] = 1. - Res/Var
+            drop_dic["by_r2"] = s.where( (all_r2>by_r2).sum(axis=0) == 0)[0]
+
         # Option 2: proportion of residual variance explained by each factor
         #   Good: it is the proper way of doing it,
         #   Bad: slow, does it work well with pseudodata?
-        # if by_var is not None:
-            # Z = self.nodes["Z"].getExpectation()
-            # Y = self.nodes["Y"].getExpectation()
-            # tau = self.nodes["tau"].getExpectation()
-            # alpha = self.nodes["alpha"].getExpectation()
+        if by_pvar is not None:
+            Z = self.nodes["Z"].getExpectation()
+            Y = self.nodes["Y"].getExpectation()
+            tau = self.nodes["Tau"].getExpectation()
+            alpha = self.nodes["Alpha"].getExpectation()
 
-            # factor_pvar = s.zeros((self.dim['M'],self.dim['K']))
-            # for m in xrange(self.dim['M']):
-            #     residual_var = (s.var(Y[m],axis=0) - 1/tau[m]).sum()
-            #     for k in xrange(self.dim["K"]):
-            #         factor_var = (self.dim["D"][m]/alpha[m][k])# * s.var(Z[:,k])
-            #         factor_pvar[m,k] = factor_var / residual_var
-            # drop = s.where( (factor_pvar>by_pvar).sum(axis=0) == 0)[0]
+            factor_pvar = s.zeros((self.dim['M'],self.dim['K']))
+            for m in xrange(self.dim['M']):
+                residual_var = (s.var(Y[m],axis=0) - 1/tau[m]).sum()
+                for k in xrange(self.dim["K"]):
+                    factor_var = (self.dim["D"][m]/alpha[m][k])# * s.var(Z[:,k])
+                    factor_pvar[m,k] = factor_var / residual_var
+            drop_dic['by_pvar'] = s.where( (factor_pvar>by_pvar).sum(axis=0) == 0)[0]
 
         # Option 3: highly correlated factors
         # (Q) Which of the two factors should we remove? Maybe the one that explains less variation
@@ -116,9 +136,10 @@ class BayesNet(object):
             t = time();
 
             # Remove inactive latent variables
-            if any(self.options['dropK'].values()):
-                self.removeInactiveFactors(**self.options['dropK'])
-            activeK[iter-1] = self.dim["K"]
+            if iter > 10:
+                if any(self.options['dropK'].values()):
+                    self.removeInactiveFactors(**self.options['dropK'])
+                activeK[iter-1] = self.dim["K"]
 
             # Update node by node, with E and M step merged
             for node in self.schedule:
@@ -133,10 +154,10 @@ class BayesNet(object):
                     # Check convergence using the ELBO
                     delta_elbo = elbo.iloc[i]["total"]-elbo.iloc[i-1]["total"]
 
-                    debug_mode=True
-                    if delta_elbo < 0 and debug_mode:
-                        print 'delta_elbo is ', delta_elbo
-                        import pdb; pdb.set_trace()
+                    # debug_mode=True
+                    # if delta_elbo < 0 and debug_mode:
+                    #     print 'delta_elbo is ', delta_elbo
+                    #     import pdb; pdb.set_trace()
 
                     # Print ELBO monitoring
                     if self.options['verbosity'] > 0:

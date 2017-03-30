@@ -115,7 +115,7 @@ class init_sparse(initModel):
             elif isinstance(qmean_S1[m],s.ndarray):
                 assert qmean_S1[m].shape == (self.D[m],self.K), "Wrong dimensionality"
             elif isinstance(qmean_S1[m],(int,float)):
-                qmean_S1[m] = s.ones((self.N,self.K)) * qmean_S1[m]
+                qmean_S1[m] = s.ones((self.D[m],self.K)) * qmean_S1[m]
             else:
                 print "Wrong initialisation for SW"
                 exit()

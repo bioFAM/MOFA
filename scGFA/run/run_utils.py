@@ -40,12 +40,20 @@ def loadData(data_opts, verbose=True):
         Dtmp = tmp.shape[1]
         Ntmp = tmp.shape[0]
         p2Mask = data_opts['maskAtRandom'][m]
-        idxMask = np.zeros(Ntmp*Dtmp)
-        idxMask[:int(round(Ntmp*Dtmp*p2Mask))]  = 1
-        np.random.shuffle(idxMask)
-        idxMask=np.reshape(idxMask, [Ntmp, Dtmp])
-        tmp = tmp.mask(idxMask==1)
-        
+        if p2Mask != 0:
+            idxMask = np.zeros(Ntmp*Dtmp)
+            idxMask[:int(round(Ntmp*Dtmp*p2Mask))]  = 1
+            np.random.shuffle(idxMask)
+            idxMask=np.reshape(idxMask, [Ntmp, Dtmp])
+            tmp = tmp.mask(idxMask==1)
+
+        #Mask samples in a complete view
+        Nsamples2Mask = data_opts['maskNSamples'][m]
+        if Nsamples2Mask != 0:
+            print Nsamples2Mask
+            idxMask = np.random.choice(Ntmp, size=Nsamples2Mask, replace = False)
+            tmp.ix[idxMask, :] = pd.np.nan
+
         # Center the data
         if data_opts['center'][m]:
             tmp = (tmp - tmp.mean())

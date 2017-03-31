@@ -30,6 +30,7 @@ p.add_argument( '--learnTheta',        action='store_true',                     
 p.add_argument( '--initTheta',         type=float, default=0.5 ,                            help='hyperparameter theta in case that learnTheta is set to False')
 p.add_argument( '--tolerance',         type=float, default=0.1 ,                            help='tolerance for convergence (deltaELBO)')
 p.add_argument( '--maskAtRandom',  	   type=float,nargs="+", default=None,                  help='Fraction of data to mask per view')
+p.add_argument( '--maskNSamples',      type=int,nargs="+", default=None,                    help='Number of patients to mask per view')
 p.add_argument( '--nostop',            action='store_true',                                 help='Do not stop even when convergence criterion is met?' )
 p.add_argument( '-n', '--ntrials',     type=int, default=1,                                 help='Number of trials' )
 p.add_argument( '-c', '--ncores',      type=int, default=1,                                 help='Number of cores' )
@@ -59,11 +60,16 @@ if args.maskAtRandom is not None:
 	data_opts['maskAtRandom'] = args.maskAtRandom
 else:
 	data_opts['maskAtRandom'] = [0]*M	
-print data_opts['maskAtRandom']
+
+if args.maskAtRandom is not None:
+  data_opts['maskNSamples'] = args.maskNSamples
+else:
+  data_opts['maskNSamples'] = [0]*M 
 
 # Sanity checks
 assert M == len(data_opts['view_names']), "Length of view names and input files does not match"
 assert M == len(data_opts['maskAtRandom']), "Length of MaskAtRandom and input files does not match"
+assert M == len(data_opts['maskNSamples']), "Length of MaskAtRandom and input files does not match"
 
 # pprint(data_opts)
 # print "\n"

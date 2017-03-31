@@ -21,10 +21,6 @@ class Node(object):
         self.markov_blanket = kwargs
 
     def update(self):
-        # General method to update a node
-        pass
-
-    def update(self):
         # General method to update both parameters and expectations
         self.updateParameters()
         self.updateExpectations()

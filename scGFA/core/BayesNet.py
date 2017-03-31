@@ -84,6 +84,7 @@ class BayesNet(object):
                     Res = ((Y_m - predictions)**2.).sum()
                     Var = ((Y_m - Y_m.mean())**2.).sum()
                     all_r2[m,k] = 1. - Res/Var
+
             drop_dic["by_r2"] = s.where( (all_r2>by_r2).sum(axis=0) == 0)[0]
 
         # Option 2: proportion of residual variance explained by each factor

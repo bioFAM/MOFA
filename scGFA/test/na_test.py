@@ -30,7 +30,7 @@ from scGFA.run.run_utils import *
 # Define dimensionalities
 M = 3
 N = 100
-D = s.asarray([1000,1000,1000])
+D = s.asarray([5000,5000,5000])
 K = 6
 
 
@@ -58,7 +58,7 @@ data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 # data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 data['tau']= [ stats.uniform.rvs(loc=0.1,scale=1,size=D[m]) for m in xrange(M) ]
 
-missingness = 0.2
+missingness = 0.05
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="gaussian", missingness=missingness)
 Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -68,13 +68,7 @@ Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=dat
 # Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	# likelihood="binomial", min_trials=10, max_trials=50, missingness=0.05)
 
-# data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
-
-# Replace all observations of some samples with missing values
-# missing = ([1,2,3],[4,5,6],[7,8,9])
-# for m in xrange(M):
-	# data["Y"][m][missing[m],:] = s.ma.masked
 
 
 #################################
@@ -140,17 +134,20 @@ model_opts['schedule'] = ("SW", "Z", "Clusters", "Theta", "Alpha", "Tau")
 
 train_opts = {}
 train_opts['elbofreq'] = 1
-train_opts['maxiter'] = 2000
-train_opts['tolerance'] = 1E-2
-train_opts['forceiter'] = True
+train_opts['maxiter'] = 100
+# train_opts['tolerance'] = 1E-2
+train_opts['tolerance'] = 0.01
+train_opts['forceiter'] = False
 # train_opts['dropK'] = { "by_norm":0.01, "by_pvar":None, "by_cor":None, "by_r2":0.01 }
-train_opts['dropK'] = { "by_norm":None, "by_pvar":None, "by_cor":0.75, "by_r2":0.01 }
+train_opts['drop'] = { "by_norm":None, "by_pvar":None, "by_cor":None, "by_r2":None }
+train_opts['startdrop'] = 5
+train_opts['freqdrop'] = 1
 train_opts['savefreq'] = s.nan
 train_opts['savefolder'] = s.nan
 train_opts['verbosity'] = 2
-# train_opts['trials'] = 1
-# cores = 1
-# keep_best_run = False
+train_opts['trials'] = 3
+train_opts['cores'] = 3
+keep_best_run = False
 
 
 
@@ -158,8 +155,10 @@ train_opts['verbosity'] = 2
 ## Start training ##
 ####################
 
-# runMultipleTrials(data_opts, model_opts, train_opts, cores, keep_best_run)
-runSingleTrial(data["Y"], model_opts, train_opts)
+data_opts = {}
+data_opts["outfile"] = "/Users/ricard/test.hdf5"
+data_opts['view_names'] = ["a","b","c"]
 
-SW = net.getNodes()["SW"].getExpectation()
-print s.absolute(SW).mean(axis=0)
+runMultipleTrials(data["Y"], data_opts, model_opts, train_opts, keep_best_run)
+# runSingleTrial(data["Y"], model_opts, train_opts)
+

@@ -13,21 +13,21 @@
 #' @export
 trainCurve <- function(object, statistic, title="", titlesize=16, xlabel="Time", ylabel="",
                                linesize=1.2, xlim_down=NA, xlim_up=NA, ylim_down=NA, ylim_up=NA) {
-  if (class(object) != "MOFAmodel")
-    stop("'object' has to be an instance of MOFAmodel")
+  if (class(object) != "MOFAmodel") { stop("'object' has to be an instance of MOFAmodel") }
+  if (!statistic %in% c("activeK","elbo")) { stop("'statistic' have to be either 'activeK' or 'elbo'") }
+  if (statistic=="activeK" & ylabel=="") { ylabel <- "Number of active latent varaibles" }
+  if (statistic=="elbo" & ylabel=="") { ylabel <- "Evidence lower bound (log)" }
   
-  if (!statistic %in% c("activeK","elbo")) {
-    stop("'statistic' have to be either 'activeK' or 'elbo'")
+  if (statistic=="activeK") { 
+    idx = seq(1+object@TrainOpts$startdrop,length(object@TrainStats[[statistic]]),object@TrainOpts$freqdrop)
+    stat = object@TrainStats$activeK[idx] 
   }
+  if (statistic=="elbo") { 
+    idx = seq(1+object@TrainOpts$startdrop,length(object@TrainStats[[statistic]]),object@TrainOpts$elbofreq)
+    stat = -log(object@TrainStats$activeK[idx] )
+  }  
   
-  if (statistic=="activeK" & ylabel=="") {
-    ylabel <- "Number of active latent varaibles"
-  }
-  if (statistic=="elbo" & ylabel=="") {
-    ylabel <- "Evidence lower bound"
-  }
-  
-  data <- data.frame(time=1:length(model@TrainStats[[statistic]]), value=model@TrainStats[[statistic]])
+  data <- data.frame(time=idx, value=stat)
   p <- ggplot2::ggplot(data, aes(x=time, y=value)) +
     geom_line(size=linesize) +
     ggtitle(title) + xlab(xlabel) + ylab(ylabel) +
@@ -56,10 +56,10 @@ trainCurve <- function(object, statistic, title="", titlesize=16, xlabel="Time",
       panel.background = element_blank()
     )
   
-  if (statistic=="elbo") {
-    scientific_10 <- function(x) { parse(text=gsub("e", " %*% 10^", scales::scientific_format()(x))) }
-    p <- p + scale_y_continuous(limits=c(ylim_down,ylim_up),labels=scientific_10)
-  }
+  # if (statistic=="elbo") {
+  #   scientific_10 <- function(x) { parse(text=gsub("e", " %*% 10^", scales::scientific_format()(x))) }
+  #   p <- p + scale_y_continuous(limits=c(ylim_down,ylim_up),labels=scientific_10)
+  # }
 
   return(p)
 }

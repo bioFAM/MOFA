@@ -28,6 +28,7 @@ p.add_argument( '--covariatesFile',    type=str,                                
 p.add_argument( '--schedule',          type=str, nargs="+", required=True,                  help='Update schedule' )
 p.add_argument( '--learnTheta',        action='store_true',                                 help='learn the sparsity parameter from the spike and slab?' )
 p.add_argument( '--initTheta',         type=float, default=0.5 ,                            help='hyperparameter theta in case that learnTheta is set to False')
+p.add_argument( '--tolerance',         type=float, default=0.1 ,                            help='tolerance for convergence (deltaELBO)')
 p.add_argument( '--maskAtRandom',  	   type=float,nargs="+", default=None,                  help='Fraction of data to mask per view')
 p.add_argument( '--nostop',            action='store_true',                                 help='Do not stop even when convergence criterion is met?' )
 p.add_argument( '-n', '--ntrials',     type=int, default=1,                                 help='Number of trials' )
@@ -137,7 +138,7 @@ train_opts['verbosity'] = 2
 train_opts['dropK'] = { "by_norm":None, "by_pvar":None, "by_cor":None }
 
 # Tolerance level for convergence
-train_opts['tolerance'] = 0.5
+train_opts['tolerance'] = args.tolerance
 
 # Do no stop even when convergence criteria is met?
 train_opts['forceiter'] = args.nostop

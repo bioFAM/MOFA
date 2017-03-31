@@ -25,11 +25,11 @@ A Bayesian network requires the following information:
 To-do:
 - More sanity checks (algorithmic options)
 - assert nodes and options and so on is dic
-- start dropping factors after N iterations
 - improve convergence criterion
 - Test whether dropping factors work well with non-gaussian data
 - Define verbosity levels
 - Test again non-gaussian data
+- Avoid numpy warnings?
 """
 
 class BayesNet(object):

@@ -14,7 +14,7 @@ getExpectations <- function(object, variable, expectation) {
   if (variable=="Z") {
     object@Expectations$Z[[expectation]]
   } else {
-    sapply(object@Expectations[[variable]], function(x) x[[expectation]])
+    lapply(object@Expectations[[variable]], function(x) x[[expectation]])
   }
 }
 
@@ -33,7 +33,7 @@ getParameters <- function(object, variable, parameter) {
   if (variable=="Z") {
     object@Parameters$Z[[parameter]]
   } else {
-    sapply(object@Parameters[[variable]], function(x) x[[parameter]])
+    lapply(object@Parameters[[variable]], function(x) x[[parameter]])
   }
 }
 

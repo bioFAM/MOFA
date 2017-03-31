@@ -35,7 +35,8 @@ loadModel <- function(file) {
   M=length(data)
   N=nrow(data[[1]])
   D=sapply(data,ncol)
-  K=tail(training_stats$activeK,n=1)
+  # K=tail(training_stats$activeK,n=1)
+  K=tail(training_stats$activeK[training_stats$activeK!=0],n=1)
   dim=list("M"=M, "N"=N, "D"=D, "K"=K)
   
   

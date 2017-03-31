@@ -34,6 +34,10 @@ scatterPlot <- function(object, idx, idy, title="", titlesize=16, xlabel="", yla
     shape_by <- rep(TRUE,N)
   }
   
+  if (xlabel=="") xlabel <- idx
+  if (ylabel=="") xlabel <- idx
+  
+  
   df = data.frame(x=Z[,idx], y=Z[,idy], shape=shape_by, colour=colour_by)
   p <- ggplot(df,aes(x, y, color=colour_by, shape=shape_by)) + 
     geom_point(size=dotsize) +

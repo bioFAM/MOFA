@@ -7,6 +7,11 @@ import h5py
 Module to define some useful util functions
 """
 
+def nans(shape, dtype=float):
+    a = np.empty(shape, dtype)
+    a.fill(np.nan)
+    return a
+
 def corr(A,B):
 	# Rowwise mean of input arrays & subtract from input arrays themeselves
 	A_mA = A - A.mean(1)[:,None]
@@ -138,23 +143,15 @@ def saveTrainingStats(model, hdf5):
 
 def saveTrainingOpts(model, hdf5):
 	opts = model.getTrainingOpts()
-	print opts
 
 	# Remove dictionaries from the options
-	opts.pop('dropK')
-	hdf5.create_dataset("training_opts", data=opts.values())
+	for k,v in opts.copy().iteritems():
+		if type(v)==dict:
+			for k1,v1 in v.iteritems():
+				opts[str(k)+"_"+str(k1)] = v1
+			opts.pop(k)
+	hdf5.create_dataset("training_opts", data=np.array(opts.values(), dtype=np.float))
 	hdf5['training_opts'].attrs['names'] = opts.keys()
-
-# def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_names=None):
-#     data = model.getTrainingData()
-#     data_grp = hdf5.create_group("training_data")
-#     for m in xrange(len(data)):
-#     	view = view_names[m] if view_names is not None else str(m)
-#     	data_grp.create_dataset(view, data=data[m].data.T)
-#     	if feature_names is not None:
-#     		data_grp[view].attrs['colnames'] = feature_names[m]
-#     	if sample_names is not None:
-#     		data_grp[view].attrs['rownames'] = sample_names
 
 def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_names=None):
 	data = model.getTrainingData()
@@ -171,11 +168,11 @@ def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_na
 def saveModel(model, outfile, view_names=None, sample_names=None, feature_names=None):
 	assert model.trained == True, "Model is not trained yet"
 	assert len(np.unique(view_names)) == len(view_names), 'View names must be unique'
-
+	assert len(np.unique(sample_names)) == len(sample_names), 'Sample names must be unique'
 	hdf5 = h5py.File(outfile,'w')
 	saveExpectations(model,hdf5,view_names)
 	saveParameters(model,hdf5,view_names)
 	saveTrainingStats(model,hdf5)
-	# saveTrainingOpts(model,hdf5)
+	saveTrainingOpts(model,hdf5)
 	saveTrainingData(model, hdf5, view_names, sample_names, feature_names)
 	hdf5.close()

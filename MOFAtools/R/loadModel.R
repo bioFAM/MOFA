@@ -20,7 +20,7 @@ loadModel <- function(file) {
   colnames(training_stats$elbo_terms) <- attr(rhdf5::h5read(file,"training_stats/elbo_terms", read.attributes=T),"colnames")
   
   # Load training options
-  # training_opts <- as.list(rhdf5::h5read(file,"training_opts", read.attributes=T))
+  training_opts <- as.list(rhdf5::h5read(file,"training_opts", read.attributes=T))
   
   # Load training data
   data <- rhdf5::h5read(file,"data")
@@ -35,12 +35,11 @@ loadModel <- function(file) {
   M=length(data)
   N=nrow(data[[1]])
   D=sapply(data,ncol)
-  # K=tail(training_stats$activeK,n=1)
-  K=tail(training_stats$activeK[training_stats$activeK!=0],n=1)
+  K=tail(training_stats$activeK[!is.nan(training_stats$activeK)],n=1)
   dim=list("M"=M, "N"=N, "D"=D, "K"=K)
   
   
-  mofa <- new("MOFAmodel", TrainData=data, TrainStats=training_stats, Expectations=expectations, Parameters=parameters, Dimensions=dim)
+  mofa <- new("MOFAmodel", TrainData=data, TrainStats=training_stats, TrainOpts=training_opts, Expectations=expectations, Parameters=parameters, Dimensions=dim)
   # Create object: important first define dimensionalities and then the other slots
   # mofa <- new("MOFAmodel", Dimensions=dim)
   # .Expectations(mofa) <- expectations

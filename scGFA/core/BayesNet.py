@@ -9,7 +9,7 @@ import sys
 
 from nodes import Node
 from variational_nodes import Unobserved_Variational_Node, Variational_Node
-from utils import corr
+from utils import corr, nans
 
 """
 This module is used to define the class containing the entire Bayesian Network,
@@ -26,6 +26,10 @@ To-do:
 - More sanity checks (algorithmic options)
 - assert nodes and options and so on is dic
 - start dropping factors after N iterations
+- improve convergence criterion
+- Test whether dropping factors work well with non-gaussian data
+- Define verbosity levels
+- Test again non-gaussian data
 """
 
 class BayesNet(object):
@@ -47,7 +51,6 @@ class BayesNet(object):
         # Training flag
         self.trained = False
 
-
     def removeInactiveFactors(self, by_norm=None, by_pvar=None, by_cor=None, by_r2=None):
         # Method to remove inactive factors
 
@@ -60,7 +63,9 @@ class BayesNet(object):
             Z = self.nodes["Z"].getExpectation()
             drop_dic["by_norm"] = s.where( s.absolute(Z).mean(axis=0) < by_norm )[0]
 
-        # .......
+        # Option 2: coefficient of determination
+        # Good: is based on how well the model fits the data
+        # Bad: slow, does it work with non-gaussian data?
         if by_r2 is not None:
             Z = self.nodes['Z'].getExpectation()
             Y = self.nodes["Y"].getExpectation()
@@ -83,7 +88,7 @@ class BayesNet(object):
 
         # Option 2: proportion of residual variance explained by each factor
         #   Good: it is the proper way of doing it,
-        #   Bad: slow, does it work well with pseudodata?
+        #   Bad: slow, does it work with non-gaussian data?
         if by_pvar is not None:
             Z = self.nodes["Z"].getExpectation()
             Y = self.nodes["Y"].getExpectation()
@@ -126,33 +131,42 @@ class BayesNet(object):
     def iterate(self):
         # Define some variables to monitor training
         vb_nodes = self.getVariationalNodes().keys()
-        elbo = pd.DataFrame(data = s.zeros( ((int(self.options['maxiter']/self.options['elbofreq'])-1), len(vb_nodes)+1 )),
-                            index = xrange(1,(int(self.options['maxiter']/self.options['elbofreq']))),
+        elbo = pd.DataFrame(data = nans((self.options['maxiter'], len(vb_nodes)+1 )),
                             columns = vb_nodes+["total"] )
-        activeK = s.zeros(self.options['maxiter']-1)
+        activeK = nans((self.options['maxiter']))
 
         # Start training
-        for iter in xrange(1,self.options['maxiter']):
+        for i in xrange(self.options['maxiter']):
             t = time();
 
             # Remove inactive latent variables
-            if iter > 10:
-                if any(self.options['dropK'].values()):
-                    self.removeInactiveFactors(**self.options['dropK'])
-                activeK[iter-1] = self.dim["K"]
+            if (i >= self.options["startdrop"]) and (i % self.options['freqdrop']) == 0:
+                if any(self.options['drop'].values()):
+                    self.removeInactiveFactors(**self.options['drop'])
+                activeK[i] = self.dim["K"]
 
             # Update node by node, with E and M step merged
             for node in self.schedule:
+                # print node
+                # start = time()
                 self.nodes[node].update()
+                # end = time()
+                # print (end - start)
 
             # Calculate Evidence Lower Bound
-            if iter % self.options['elbofreq'] == 0:
-                i = int(iter/self.options['elbofreq']) - 1
+            if i % self.options['elbofreq'] == 0:
                 elbo.iloc[i] = self.calculateELBO(*vb_nodes)
 
-                if i > 0:
+                # Print first iteration
+                if i==0:
+                    if self.options['verbosity'] >=0:
+                        print "Trial %d, Iteration 1: time=%.2f ELBO=%.2f, K=%d" % (self.trial, time()-t,elbo.iloc[i]["total"], self.dim["K"])
+                    if self.options['verbosity'] == 2:
+                        print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
+
+                else:
                     # Check convergence using the ELBO
-                    delta_elbo = elbo.iloc[i]["total"]-elbo.iloc[i-1]["total"]
+                    delta_elbo = elbo.iloc[i]["total"]-elbo.iloc[i-self.options['elbofreq']]["total"]
 
                     # debug_mode=True
                     # if delta_elbo < 0 and debug_mode:
@@ -161,7 +175,7 @@ class BayesNet(object):
 
                     # Print ELBO monitoring
                     if self.options['verbosity'] > 0:
-                        print "Trial %d, Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, K=%d" % (self.trial, iter,time()-t,elbo.iloc[i]["total"], delta_elbo, self.dim["K"])
+                        print "Trial %d, Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, K=%d" % (self.trial, i+1, time()-t, elbo.iloc[i]["total"], delta_elbo, self.dim["K"])
                     if self.options['verbosity'] == 2:
                         print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
 
@@ -171,25 +185,18 @@ class BayesNet(object):
                             print "Converged!\n"
                         break
 
-                # Print first iteration
-                else:
-                    if self.options['verbosity'] >=0:
-                        print "Trial %d, Iteration 1: time=%.2f ELBO=%.2f, K=%d" % (self.trial, time()-t,elbo.iloc[i]["total"], self.dim["K"])
-                    if self.options['verbosity'] == 2:
-                        print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
-
             # Do not calculate lower bound
             else:
-                if self.options['verbosity'] > 0: print "Iteration %d: time=%.2f, K=%d\n" % (iter,time()-t,self.dim["K"])
+                if self.options['verbosity'] > 0: print "Iteration %d: time=%.2f, K=%d\n" % (i+1,time()-t,self.dim["K"])
 
             # Save temporary model
-            if (self.options['savefreq'] is not s.nan) and (iter % self.options['savefreq'] == 0):
-                savefile = "%s/%d_model.pkl" % (self.options['savefolder'], iter)
+            if (self.options['savefreq'] is not s.nan) and (i % self.options['savefreq'] == 0):
+                savefile = "%s/%d_model.pkl" % (self.options['savefolder'], i)
                 if self.options['verbosity'] == 2: print "Saving the model in %s\n" % savefile
                 pkl.dump(self, open(savefile,"wb"))
 
 
-            # Flush
+            # Flush (we need this to print when running on the cluster)
             sys.stdout.flush()
 
         # Finish by collecting the training statistics

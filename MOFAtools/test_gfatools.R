@@ -1,8 +1,9 @@
 
 library(MOFAtools)
 
-# file = "/Users/ricard/git/britta/scGFA/surv_expr/model0.hdf5"
-file = "/Users/ricard/data/CLL/out/full_model0.hdf5"
+# file = "/Users/ricard/data/CLL/out/robustness/trained_model_batch2_1.hdf5"
+# file = "/Users/ricard/data/CLL/out/imputation/model_0.05.hdf5"
+file = "/Users/ricard/test.hdf5"
 model <- loadModel(file)
 
 

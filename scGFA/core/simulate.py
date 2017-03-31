@@ -1,5 +1,6 @@
 from __future__ import division
 import scipy as s
+import pandas as pd
 from scipy.stats import bernoulli, norm, gamma, uniform, poisson, binom
 from random import sample
 import numpy.ma as ma
@@ -191,6 +192,9 @@ class Simulate(object):
                 Y[m] = tmp.reshape((self.N,self.D[m]))
 
         # Create a mask
+        # for m in xrange(self.M):
+            # Y[m] = ma.masked_invalid(Y[m])
+        # Convert data to pandas data frame
         for m in xrange(self.M):
-            Y[m] = ma.masked_invalid(Y[m])
+            Y[m] = pd.DataFrame(data=Y[m])
         return Y

@@ -151,7 +151,7 @@ def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=Fal
     return net
 
 # Function to run multiple trials of the model
-def runMultipleTrials(data_opts, model_opts, train_opts, keep_best_run, verbose=True):
+def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, verbose=True):
 
     # If it doesnt exist, create the output folder
     outdir = os.path.dirname(data_opts['outfile'])
@@ -161,13 +161,13 @@ def runMultipleTrials(data_opts, model_opts, train_opts, keep_best_run, verbose=
     ## Load the data ##
     ###################
 
-    data = loadData(data_opts, verbose)
+    # data = loadData(data_opts, verbose)
 
     #########################
     ## Run parallel trials ##
     #########################
 
-    trained_models = Parallel(n_jobs=train_opts['cores'], backend="threading")(
+    trained_models = Parallel(n_jobs=train_opts['cores'])(
         delayed(runSingleTrial)(data,model_opts,train_opts,None,i) for i in xrange(1,train_opts['trials']+1))
 
     print "\n"
@@ -192,8 +192,8 @@ def runMultipleTrials(data_opts, model_opts, train_opts, keep_best_run, verbose=
             tmp = os.path.splitext(data_opts['outfile'])
             outfiles = [ tmp[0]+str(t)+tmp[1]for t in xrange(train_opts['trials']) ]
     else:
-            save_models = trained_models
-            outfiles = [ data_opts['outfile'] ]
+        save_models = trained_models
+        outfiles = [ data_opts['outfile'] ]
 
     # Save the results
     sample_names = data[0].index.tolist()

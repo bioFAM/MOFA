@@ -28,6 +28,9 @@ p.add_argument( '--covariatesFile',    type=str,                                
 p.add_argument( '--schedule',          type=str, nargs="+", required=True,                  help='Update schedule' )
 p.add_argument( '--learnTheta',        action='store_true',                                 help='learn the sparsity parameter from the spike and slab?' )
 p.add_argument( '--initTheta',         type=float, default=0.5 ,                            help='hyperparameter theta in case that learnTheta is set to False')
+p.add_argument( '--tolerance',         type=float, default=0.1 ,                            help='tolerance for convergence (deltaELBO)')
+p.add_argument( '--startDrop',         type=int, default=5 ,                                help='First iteration to start dropping factors')
+p.add_argument( '--freqDrop',         type=int, default=1 ,                                 help='Frequency for dropping factors')
 p.add_argument( '--maskAtRandom',  	   type=float,nargs="+", default=None,                  help='Fraction of data to mask per view')
 p.add_argument( '--maskNSamples',      type=int,nargs="+", default=None,                    help='Number of patients to mask per view')
 p.add_argument( '--nostop',            action='store_true',                                 help='Do not stop even when convergence criterion is met?' )
@@ -72,6 +75,9 @@ assert M == len(data_opts['maskNSamples']), "Length of MaskAtRandom and input fi
 
 # pprint(data_opts)
 # print "\n"
+
+# Load data
+data = loadData(data_opts)
 
 ##############################
 ## Define the model options ##
@@ -140,10 +146,12 @@ train_opts['savefolder'] = s.nan
 train_opts['verbosity'] = 2
 
 # Criteria to drop latent variables while training
-train_opts['dropK'] = { "by_norm":None, "by_pvar":None, "by_cor":None }
+train_opts['drop'] = { "by_norm":None, "by_pvar":None, "by_cor":None, "by_r2":None }
+train_opts['startdrop'] = args.startDrop
+train_opts['freqdrop'] = args.freqDrop
 
 # Tolerance level for convergence
-train_opts['tolerance'] = 0.5
+train_opts['tolerance'] = args.tolerance
 
 # Do no stop even when convergence criteria is met?
 train_opts['forceiter'] = args.nostop
@@ -167,5 +175,5 @@ keep_best_run = False
 # print "\n"
 
 # Go!
-runMultipleTrials(data_opts, model_opts, train_opts, keep_best_run)
+runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run)
 

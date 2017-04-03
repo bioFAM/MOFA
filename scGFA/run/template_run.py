@@ -63,7 +63,7 @@ if args.maskAtRandom is not None:
 else:
 	data_opts['maskAtRandom'] = [0]*M	
 
-if args.maskAtRandom is not None:
+if args.maskNSamples is not None:
   data_opts['maskNSamples'] = args.maskNSamples
 else:
   data_opts['maskNSamples'] = [0]*M 

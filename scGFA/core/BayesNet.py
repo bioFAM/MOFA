@@ -28,8 +28,9 @@ To-do:
 - improve convergence criterion
 - Test whether dropping factors work well with non-gaussian data
 - Define verbosity levels
-- Test again non-gaussian data
 - Avoid numpy warnings?
+- Save only main expectations
+- add _ to trials
 """
 
 class BayesNet(object):

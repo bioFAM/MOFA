@@ -59,9 +59,10 @@ scatterPlot<-function (object, idx, idy, title = "", titlesize = 16, xlabel = NU
                 panel.grid.major = element_blank(),
                 panel.grid.minor = element_blank(), 
                 panel.background = element_blank(),
-                legend.key = element_rect(fill = "white")) + 
-         guides(color=guide_legend(title=name_colour), shape=guide_legend(title=name_shape)) +
-         coord_fixed()
+                legend.key = element_rect(fill = "white"),
+                legend.text = element_text(size = titlesize),
+                legend.title = element_text(size =titlesize)) + 
+         guides(color=guide_legend(title=name_colour), shape=guide_legend(title=name_shape))
     if(!colorLegend) p <- p + guides(color = FALSE)
     if(!shapeLegend) p <- p + guides(shape = FALSE)
     return(p)

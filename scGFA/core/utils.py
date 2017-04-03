@@ -93,7 +93,7 @@ def saveParameters(model, hdf5, view_names=None):
 				node_subgrp.create_dataset("%s" % (param_name), data=parameters[param_name].T)
 	pass
 
-def saveExpectations(model, hdf5, view_names=None):
+def saveExpectations(model, hdf5, view_names=None, only_first_moments=True):
 
 	# Get nodes from the model
 	nodes = model.getNodes()
@@ -123,13 +123,14 @@ def saveExpectations(model, hdf5, view_names=None):
 				view_subgrp = node_subgrp.create_group(tmp)
 
 				# Loop through the expectations
+				if only_first_moments: expectations[m] = {'E':expectations[m]["E"]}
 				if expectations[m] is not None:
 					for exp_name in expectations[m].keys():
 						view_subgrp.create_dataset(exp_name, data=expectations[m][exp_name].T)
 
 		# Single-view nodes
 		else:
-
+			if only_first_moments: expectations = {'E':expectations["E"]}
 			for exp_name in expectations.keys():
 				node_subgrp.create_dataset("%s" % (exp_name), data=expectations[exp_name].T)
 

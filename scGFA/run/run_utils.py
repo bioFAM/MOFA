@@ -20,6 +20,31 @@ from scGFA.core.BayesNet import BayesNet
 
 # Function to load the data
 
+def maskData(data, data_opts):
+
+    print "Masking data..."
+    
+    for m in xrange(len(data)):
+
+        # Mask values at random
+        D = data[m].shape[1]
+        N = data[m].shape[0]
+        p2Mask = data_opts['maskAtRandom'][m]
+        if p2Mask != 0:
+            idxMask = np.zeros(N*D)
+            idxMask[:int(round(N*D*p2Mask))]  = 1
+            np.random.shuffle(idxMask)
+            idxMask=np.reshape(idxMask, [N, D])
+            data[m] = data[m].mask(idxMask==1)
+
+        # Mask samples in a complete view
+        Nsamples2Mask = data_opts['maskNSamples'][m]
+        if Nsamples2Mask != 0:
+            print Nsamples2Mask
+            idxMask = np.random.choice(N, size=Nsamples2Mask, replace = False)
+            data[m].ix[idxMask, :] = pd.np.nan
+    return data
+
 def loadData(data_opts, verbose=True):
 
     print "\n"
@@ -33,36 +58,16 @@ def loadData(data_opts, verbose=True):
         file = data_opts['input_files'][m]
 
         # Read file (with row and column names)
-        tmp = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"])
-        print "Loaded %s with dim (%d,%d)..." % (file, tmp.shape[0], tmp.shape[1])
-
-        #Mask values at random
-        Dtmp = tmp.shape[1]
-        Ntmp = tmp.shape[0]
-        p2Mask = data_opts['maskAtRandom'][m]
-        if p2Mask != 0:
-            idxMask = np.zeros(Ntmp*Dtmp)
-            idxMask[:int(round(Ntmp*Dtmp*p2Mask))]  = 1
-            np.random.shuffle(idxMask)
-            idxMask=np.reshape(idxMask, [Ntmp, Dtmp])
-            tmp = tmp.mask(idxMask==1)
-
-        #Mask samples in a complete view
-        Nsamples2Mask = data_opts['maskNSamples'][m]
-        if Nsamples2Mask != 0:
-            print Nsamples2Mask
-            idxMask = np.random.choice(Ntmp, size=Nsamples2Mask, replace = False)
-            tmp.ix[idxMask, :] = pd.np.nan
+        Y.append( pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"]) )
+        print "Loaded %s with dim (%d,%d)..." % (file, Y[m].shape[0], Y[m].shape[1])
 
         # Center the data
         if data_opts['center'][m]:
-            tmp = (tmp - tmp.mean())
-
-        Y.append(tmp)
+            Y[m] = (Y[m] - Y[m].mean())
     return Y
 
 # Function to run a single trial of the model
-def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=False):
+def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, verbose=False):
 
     # set the seed
     if seed is None:
@@ -75,6 +80,12 @@ def runSingleTrial(data, model_opts, train_opts, seed=None, trial=1, verbose=Fal
     print "#"*45
     print "\n"
 
+    ####################
+    ## Parse the data ##
+    ####################
+
+    # Mask
+    data = maskData(data, data_opts)
 
     ######################
     ## Define the model ##
@@ -168,7 +179,7 @@ def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, ve
     #########################
 
     trained_models = Parallel(n_jobs=train_opts['cores'])(
-        delayed(runSingleTrial)(data,model_opts,train_opts,None,i) for i in xrange(1,train_opts['trials']+1))
+        delayed(runSingleTrial)(data,data_opts,model_opts,train_opts,None,i) for i in xrange(1,train_opts['trials']+1))
 
     print "\n"
     print "#"*43
@@ -190,7 +201,7 @@ def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, ve
         else:
             save_models = trained_models
             tmp = os.path.splitext(data_opts['outfile'])
-            outfiles = [ tmp[0]+str(t)+tmp[1]for t in xrange(train_opts['trials']) ]
+            outfiles = [ tmp[0]+"_"+str(t)+tmp[1]for t in xrange(train_opts['trials']) ]
     else:
         save_models = trained_models
         outfiles = [ data_opts['outfile'] ]

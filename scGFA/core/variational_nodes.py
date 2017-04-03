@@ -95,6 +95,7 @@ class Unobserved_Variational_Node(Variational_Node):
             self.P.removeDimensions(axis=axis, idx=idx)
             self.Q.removeDimensions(axis=axis, idx=idx)
             self.updateDim(axis=axis, new_dim=self.dim[axis]-len(idx))
+
 #######################################################
 ## Specific classes for unobserved variational nodes ##
 #######################################################

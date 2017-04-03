@@ -25,11 +25,11 @@ A Bayesian network requires the following information:
 To-do:
 - More sanity checks (algorithmic options)
 - assert nodes and options and so on is dic
-- start dropping factors after N iterations
 - improve convergence criterion
 - Test whether dropping factors work well with non-gaussian data
 - Define verbosity levels
 - Test again non-gaussian data
+- Avoid numpy warnings?
 """
 
 class BayesNet(object):
@@ -84,6 +84,7 @@ class BayesNet(object):
                     Res = ((Y_m - predictions)**2.).sum()
                     Var = ((Y_m - Y_m.mean())**2.).sum()
                     all_r2[m,k] = 1. - Res/Var
+
             drop_dic["by_r2"] = s.where( (all_r2>by_r2).sum(axis=0) == 0)[0]
 
         # Option 2: proportion of residual variance explained by each factor

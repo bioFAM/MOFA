@@ -30,7 +30,7 @@ class PseudoY(Unobserved_Variational_Node):
         #  E (ndarray): initial expected value of pseudodata
         Unobserved_Variational_Node.__init__(self, dim)
 
-        # Initialise observed data 
+        # Initialise observed data
         assert obs.shape == dim, "Problems with the dimensionalities"
         self.obs = obs
 
@@ -38,7 +38,7 @@ class PseudoY(Unobserved_Variational_Node):
         self.Zeta = Zeta
 
         # Create a boolean mask of the data to hidden missing values
-        if type(self.obs) != ma.MaskedArray: 
+        if type(self.obs) != ma.MaskedArray:
             self.mask()
 
         # Precompute some terms
@@ -87,11 +87,12 @@ class PseudoY(Unobserved_Variational_Node):
 
     def getParameters(self):
         return { 'zeta':self.Zeta }
-        
+
     # def getExpectations(self):
         # return { 'obs':self.getObservations() }
 
     def calculateELBO(self):
+        # TODO is it ever used ??
         # Compute Lower Bound using the Gaussian likelihood with pseudodata
         Z = self.markov_blanket["Z"].getExpectation()
         W = self.markov_blanket["W"].getExpectation()
@@ -145,7 +146,7 @@ class Poisson_PseudoY_Node(PseudoY):
     def updateExpectations(self):
         # Update the pseudodata
         kappa = self.markov_blanket["kappa"].getValue()
-        self.E = self.Zeta - sigmoid(self.Zeta)*(1-self.obs/self.ratefn(self.Zeta))/kappa
+        self.E = self.Zeta - sigmoid(self.Zeta)*(1-self.obs/self.ratefn(self.Zeta))/kappa[None,:]
 
     def calculateELBO(self):
         # Compute Lower Bound using the Poisson likelihood with observed data
@@ -159,7 +160,7 @@ class Bernoulli_PseudoY_Node(PseudoY):
     Class for a Bernoulli (0,1 data) pseudodata node with the following likelihood:
         p(y|x) = (e^{yx}) / (1+e^x)  (1)
         f(x) = -log p(y|x) = log(1+e^x) - yx
-    
+
     The second derivative is upper bounded by kappa=0.25
 
     Folloiwng Seeger et al, the data follows a Bernoulli distribution but the pseudodata follows a
@@ -168,7 +169,7 @@ class Bernoulli_PseudoY_Node(PseudoY):
     IMPROVE EXPLANATION
 
     Pseudodata is updated as follows:
-        yhat_ij = zeta_ij - f'(zeta_ij)/kappa 
+        yhat_ij = zeta_ij - f'(zeta_ij)/kappa
                 = zeta_ij - 4*(sigmoid(zeta_ij) - y_ij)
 
     """
@@ -197,11 +198,11 @@ class Binomial_PseudoY_Node(PseudoY):
     Class for a Binomial pseudodata node with the following likelihood:
         p(x|N,theta) = p(x|N,theta) = binom(N,x) * theta**(x) * (1-theta)**(N-x)
         f(x) = -log p(x|N,theta) = -log(binom(N,x)) - x*theta - (N-x)*(1-theta)
-    
+
     The second derivative is upper bounded:
         f''(x_ij) <= 0.25*max(N_{:,j})
 
-    Folloiwng Seeger et al, the pseudodata yhat_{nd} follows a normal distribution with mean 
+    Folloiwng Seeger et al, the pseudodata yhat_{nd} follows a normal distribution with mean
     E[w_{i,:}]*E[z_{j,:}] and precision 'kappa_j'
 
     IMPROVE EXPLANATION
@@ -238,10 +239,9 @@ class Binomial_PseudoY_Node(PseudoY):
 
         tmp = sigmoid(s.dot(Z,W.T))
 
+        # TODO change apprximation
         tmp[tmp==0] = 0.00000001
         tmp[tmp==1] = 0.99999999
         lik = s.log(s.special.binom(self.tot,self.obs)).sum() + s.sum(self.obs*s.log(tmp)) + \
             s.sum((self.tot-self.obs)*s.log(1-tmp))
         return lik
-
-

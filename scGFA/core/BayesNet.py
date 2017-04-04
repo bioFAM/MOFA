@@ -66,7 +66,7 @@ class BayesNet(object):
 
         # Option 2: coefficient of determination
         # Good: is based on how well the model fits the data
-        # Bad: slow, does it work with non-gaussian data?
+        # Bad: slow, does it work with non-gaussian data? RIGHT NOT WE ARE USING PSEUDODATA, WILL IT WORK IN REAL DATA?
         if by_r2 is not None:
             Z = self.nodes['Z'].getExpectation()
             Y = self.nodes["Y"].getExpectation()
@@ -74,10 +74,10 @@ class BayesNet(object):
 
             # compute r2 for every factor and every view
             all_r2 = s.zeros([self.dim['M'], self.dim['K']])
-            for m in range(self.dim['M']):
+            for m in xrange(self.dim['M']):
                 Y_m = Y[m]
                 W_m = W[m]
-                for k in range(self.dim['K']):
+                for k in xrange(self.dim['K']):
                     # predict with latent variable k only
                     predictions = s.outer(Z[:,k], W_m[:, k])
 
@@ -91,6 +91,7 @@ class BayesNet(object):
         # Option 2: proportion of residual variance explained by each factor
         #   Good: it is the proper way of doing it,
         #   Bad: slow, does it work with non-gaussian data?
+        # IT DOESNT WORK VERY WELL
         if by_pvar is not None:
             Z = self.nodes["Z"].getExpectation()
             Y = self.nodes["Y"].getExpectation()

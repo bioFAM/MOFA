@@ -40,7 +40,6 @@ def maskData(data, data_opts):
         # Mask samples in a complete view
         Nsamples2Mask = data_opts['maskNSamples'][m]
         if Nsamples2Mask != 0:
-            print Nsamples2Mask
             idxMask = np.random.choice(N, size=Nsamples2Mask, replace = False)
             data[m].ix[idxMask, :] = pd.np.nan
     return data
@@ -72,7 +71,7 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     # set the seed
     if seed is None:
         seed = int(round(time()*1000)%1e6)
-    # s.random.seed(seed)
+    s.random.seed(seed)
 
     print "\n"
     print "#"*45
@@ -85,7 +84,8 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     ####################
 
     # Mask
-    data = maskData(data, data_opts)
+    if any(data_opts['maskAtRandom']) or any(data_opts['maskNSamples']):
+        data = maskData(data, data_opts)
 
     ######################
     ## Define the model ##

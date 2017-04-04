@@ -37,9 +37,9 @@ CalculateVariance_Views <- function(object, views="all", factors="all", method=N
   K <- length(factors)
   
   # Collect relevant expectations
-  W <- getExpectations(object,"SW","EW")
-  S <- getExpectations(object,"SW","ES")
-  SW <- getExpectations(object,"SW","ESW")
+  # W <- getExpectations(object,"SW","EW")
+  # S <- getExpectations(object,"SW","ES")
+  SW <- getExpectations(object,"SW","E")
   Z <- getExpectations(object,"Z","E")
   Y <- getExpectations(object,"Y","E")
   

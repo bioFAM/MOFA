@@ -73,8 +73,8 @@ class Constant_Node(Node):
     def getValue(self):
         return self.value 
 
-    def getParameters(self):
-        return self.value
+    # def getParameters(self):
+        # return self.value
 
     def getExpectation(self):
         return self.getValue()

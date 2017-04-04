@@ -117,7 +117,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         # Concatenate multi-view nodes to avoid looping over M (maybe its not a good idea)
         M = len(Y)
         Y = ma.concatenate([Y[m] for m in xrange(M)],axis=1)
-        SW = s.concatenate([SWtmp[m]["ESW"]for m in xrange(M)],axis=0)
+        SW = s.concatenate([SWtmp[m]["E"]for m in xrange(M)],axis=0)
         SWW = s.concatenate([SWtmp[m]["ESWW"] for m in xrange(M)],axis=0)
         tau = s.concatenate([tau[m] for m in xrange(M)],axis=0)
 
@@ -182,7 +182,7 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         # Collect expectations from other nodes
         Y = self.markov_blanket["Y"].getExpectation()
         tmp = self.markov_blanket["SW"].getExpectations()
-        SW,SWW = tmp["ESW"], tmp["ESWW"]
+        SW,SWW = tmp["E"], tmp["ESWW"]
         Ztmp = self.markov_blanket["Z"].getExpectations()
         Z,ZZ = Ztmp["E"],Ztmp["E2"]
 
@@ -283,7 +283,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         theta_lnE, theta_lnEInv  = thetatmp['lnE'], thetatmp['lnEInv']
 
         # Collect parameters and expectations from P and Q distributions of this node
-        SW = self.Q.getExpectations()["ESW"]
+        SW = self.Q.getExpectations()["E"]
         Q = self.Q.getParameters()
         Qmean_S1, Qvar_S1, Qtheta = Q['mean_S1'], Q['var_S1'], Q['theta']
 

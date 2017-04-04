@@ -405,12 +405,12 @@ class BernoulliGaussian(Distribution):
         # Calculate expectations of the joint distribution
         ES = self.S.getExpectation()
         EW = self.W_S1.getExpectation()
-        ESW = ES * EW
+        E = ES * EW
         ESWW = ES * (EW**2 + self.params["var_S1"])
         EWW = ES*(EW**2+self.params["var_S1"]) + (1-ES)*self.params["var_S0"]
 
         # Collect expectations
-        self.expectations = {'E':ESW, 'ES':ES, 'EW':EW, 'ESW':ESW, 'ESWW':ESWW, 'EWW':EWW }
+        self.expectations = {'E':E, 'ES':ES, 'EW':EW, 'ESWW':ESWW, 'EWW':EWW }
 
     def removeDimensions(self, axis, idx):
         # Method to remove undesired dimensions

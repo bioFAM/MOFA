@@ -79,11 +79,14 @@ def saveParameters(model, hdf5, view_names=None):
 					tmp = "%d" % m
 				# Create subsubgroup for the view
 				view_subgrp = node_subgrp.create_group(tmp)
-				# Loop through the parameters
+				# Loop through the parameters of the view
 				if parameters[m] is not None:
+					# Variational nodes
 					if type(parameters[m]) == dict:
 						for param_name in parameters[m].keys():
-						   view_subgrp.create_dataset(param_name, data=parameters[m][param_name].T)
+							if parameters[m][param_name] is not None:
+								view_subgrp.create_dataset(param_name, data=parameters[m][param_name].T)
+					# Non-variational nodes (no distributions)
 					elif type(parameters[m]) == np.ndarray:
 						   view_subgrp.create_dataset("value", data=parameters[m].T)
 

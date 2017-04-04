@@ -77,8 +77,11 @@ data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
 	# data["Y"][m][missing[m],:] = s.ma.masked
 
 data_opts = {}
-data_opts['outfile'] = "/Users/bvelten/Documents/CLL_MOFA_data/out/test/model_imbalance.hdf5"
+data_opts['outfile'] = "/Users/bvelten/Documents/CLL_MOFA_data/out/test/model_imbalance_timesD_dropK1e-3.hdf5"
 data_opts['view_names'] = ["small", "medium", "large"]
+data_opts['maskAtRandom'] = [0]*M 
+data_opts['maskNSamples'] = [0]*M 
+
 
 #################################
 ## Initialise Bayesian Network ##
@@ -107,7 +110,10 @@ model_opts['k'] = K
 
 # Define priors
 model_opts["priorZ"] = { 'mean':0., 'var':1. }
-model_opts["priorAlpha"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
+model_opts["priorAlpha"] = { 'a':[1e-5 * D[m] for m in xrange(M) ], 'b':[1e-5]*M }
+print "Prior on Alpha"
+print model_opts["priorAlpha"]
+print "\n"
 model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M }
 model_opts["priorTau"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
 if model_opts['learnTheta']:
@@ -143,14 +149,16 @@ model_opts['schedule'] = ("SW", "Z", "Clusters", "Theta", "Alpha", "Tau")
 
 train_opts = {}
 train_opts['elbofreq'] = 1
-train_opts['maxiter'] = 1000
+train_opts['maxiter'] = 500
 train_opts['tolerance'] = 1E-2
 train_opts['forceiter'] = True
 # train_opts['dropK'] = { "by_norm":0.01, "by_pvar":None, "by_cor":None, "by_r2":0.01 }
-train_opts['dropK'] = { "by_norm":None, "by_pvar":None, "by_cor":0.75, "by_r2":0.01 }
+train_opts['drop'] = { "by_norm":None, "by_pvar":None, "by_cor":0.75, "by_r2":0.001 }
 train_opts['savefreq'] = s.nan
 train_opts['savefolder'] = s.nan
 train_opts['verbosity'] = 2
+train_opts['startdrop'] = 5
+train_opts['freqdrop'] = 1
 # train_opts['trials'] = 1
 cores = 1
 keep_best_run = False
@@ -162,7 +170,7 @@ keep_best_run = False
 ####################
 
 # runMultipleTrials(data_opts, model_opts, train_opts, cores, keep_best_run)
-trained_model = runSingleTrial(data["Y"], model_opts, train_opts)
+trained_model = runSingleTrial(data["Y"],data_opts, model_opts, train_opts)
 outfile = data_opts['outfile'] 
 # sample_names = (data["Y"])[0].index.to0list()
 # feature_names = [  data["Y"][m].columns.values.tolist() for m in xrange(len(data)) ]

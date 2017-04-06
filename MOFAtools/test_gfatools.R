@@ -78,3 +78,39 @@ nperm=3
 
 p <- GSEA(model, view, factor.indexes, gene.sets=b, local.statistic=local.statistic, transformation=transformation, 
           global.statistic=global.statistic, statistical.test=statistical.test, nperm=nperm, min_size=15)
+
+
+##################
+
+sigmoid <- function(x) 1/(1+exp(-x))
+Ypred <- sigmoid(t(model@Expectations$SW$mut$E %*% t(model@Expectations$Z$E)))
+# Ypred <- t(model@Expectations$SW$mut$E %*% t(model@Expectations$Z$E))
+Yobs <- model@TrainData$mut
+
+# impute and pca
+impute <- function(d, margin) {
+  if (margin == 1)
+    means <- rowMeans(d, na.rm=T)
+  else if (margin == 2)
+    means <- colMeans(d, na.rm=T)
+  else
+    stop("Margin has to be either 1 (rows) or 2 (cols)")
+  
+  if (any(is.na(means))) {
+    stop('Insufficient data for mean imputation!')
+  }
+  
+  for (i in 1:length(means)) {
+    if (margin == 1)
+      d[i,is.na(d[i,])] <- means[i]
+    else if (margin == 2)
+      d[is.na(d[,i]), i] <- means[i]
+  }
+  return (d)
+}
+
+Yobs_imput <- impute(Yobs,margin=2)
+p <- prcomp(Yobs_imput)
+
+asd <- cor(model@Expectations$Z$E,p$x)
+

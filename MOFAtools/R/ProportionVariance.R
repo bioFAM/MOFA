@@ -49,7 +49,7 @@ CalculateVariance_Views <- function(object, views="all", factors="all", method=N
   # Non-Bayesian approach 1
   # V_expl_k = var(Ypred_k)/var(Y) = var((E[W_k]*E[S_k])*E[Z_k])/var(Y)
   # According to Damien, this is not correct  because the variance might be just bullshit signal
-  # fvar_m <- sapply(names(Y), function(m) sum(apply(Y[[m]],2,var) - 1/object@Expectations$Tau[[m]]$E) / sum(apply(Y[[m]],2,var)))
+  fvar_m <- sapply(names(Y), function(m) sum(apply(Y[[m]],2,var) - 1/object@Expectations$Tau[[m]]$E) / sum(apply(Y[[m]],2,var)))
   
   # Non-Bayesian approach 2: coefficient of determination
   # This is better because it is dependent on how well our object fits the data

@@ -102,7 +102,6 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         return latent_variables
 
     def updateParameters(self):
-        # TODO: MAKE THIS FASTER (maybe)
 
         # Collect expectations from the markov blanket
         Y = self.markov_blanket["Y"].getExpectation()

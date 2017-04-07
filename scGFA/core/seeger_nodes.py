@@ -193,61 +193,6 @@ class Bernoulli_PseudoY_Node(PseudoY):
         tmp = s.dot(Z,W.T)
         lik = s.sum( self.obs*tmp - s.log(1+s.exp(tmp)) )
         return lik
-
-class Bernoulli_PseudoY_Node_Jaakola(PseuoY):
-	"""
-    Class for a Bernoulli (0,1 data) pseudodata node with the following likelihood:
-        p(y|x) = (e^{yx}) / (1+e^x) 
-    Following Jaakola et al and intterpreting the bound as a liklihood on gaussian pseudodata
-    leads to the folllowing updates
-
-	Pseudodata is given by
-			yhat_ij = (2*y_ij-1)/(4*lambadfn(xi_ij))
-		where lambdafn(x)= tanh(x/2)/(4*x).
-	
-	Its conditional distribution is given by 
-			N((ZW)_ij, 1/(2 lambadfn(xi_ij)))		
-	
-	Updates for the variational parameter xi_ij are given by
-			sqrt(E((ZW)_ij^2))
-
-	xi_ij in above notation is the same as zeta (variational parameter)			
-
-	NOTE: For this class to work the noise variance tau needs to be updated according to 
-		tau_ij <- 2*lambadfn(xi_ij)
-    """
-        def __init__(self, dim, obs, Zeta=None, E=None):
-        # - dim (2d tuple): dimensionality of each view
-        # - obs (ndarray): observed data
-        # - E (ndarray): initial expected value of pseudodata
-        PseudoY.__init__(self, dim=dim, obs=obs, Zeta=Zeta, E=E)
-
-        # Initialise the observed data
-        assert s.all( (self.obs==0) | (self.obs==1) ), "Data must be binary"
-
-    def lambdafn(self, X):
-    	return s.tanh(X/2)/(4*X)
-
-    def updateExpectations(self):
-        # Update the pseudodata
-        self.E = (2* self.obs - 1)/(4* lambdafn(self.Zeta))
-
-    def updateParameters(self):
-    	#should over-write the PseudoY update
-        Z = self.markov_blanket["Z"].getExpectation()
-        W = self.markov_blanket["W"].getExpectation()
-        Z2 = self.markov_blanket["Z"].getExpectations()[‘E2’]
-        W2 = self.markov_blanket["W"].getExpectations()[‘E2’]
-        self.Zeta = s.sqrt(s.square(Z.dot(W.T)) - s.dot(s.square(Z), s.square(W.T)) + s.dot(Z2, W2.T))
-
-    def calculateELBO(self):
-        # Compute Lower Bound using the Bernoulli likelihood with observed data
-        Z = self.markov_blanket["Z"].getExpectation()
-        W = self.markov_blanket["W"].getExpectation()
-        tmp = s.dot(Z,W.T)
-        lik = s.sum( self.obs*tmp - s.log(1+s.exp(tmp)) )
-        return lik
-
 class Binomial_PseudoY_Node(PseudoY):
     """
     Class for a Binomial pseudodata node with the following likelihood:

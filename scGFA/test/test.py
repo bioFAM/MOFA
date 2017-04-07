@@ -29,7 +29,7 @@ from scGFA.run.run_utils import *
 
 # Define dimensionalities
 M = 3
-N = 200
+N = 50
 D = s.asarray([400,400,400])
 K = 6
 
@@ -58,7 +58,7 @@ data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 # data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 data['tau']= [ stats.uniform.rvs(loc=0.1,scale=1,size=D[m]) for m in xrange(M) ]
 
-missingness = 0.2
+missingness = 0.0
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="gaussian", missingness=missingness)
 Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -69,7 +69,8 @@ Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=dat
 # 	likelihood="binomial", min_trials=10, max_trials=50, missingness=missingness)
 
 #data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
-data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
+data["Y"] = ( Y_bernoulli[0], Y_bernoulli[1], Y_bernoulli[2] )
+# data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 
 
 
@@ -94,7 +95,8 @@ dim["K"] = K
 
 model_opts = {}
 #model_opts['likelihood'] = ['gaussian']* M
-model_opts['likelihood'] = ['gaussian', 'poisson', 'bernoulli']
+# model_opts['likelihood'] = ['gaussian', 'poisson', 'bernoulli']
+model_opts['likelihood'] = ['bernoulli']*M
 model_opts['learnTheta'] = True
 model_opts['k'] = K
 
@@ -142,7 +144,7 @@ train_opts['maxiter'] = 1000
 train_opts['tolerance'] = 0.01
 train_opts['forceiter'] = True
 # train_opts['dropK'] = { "by_norm":0.01, "by_pvar":None, "by_cor":None, "by_r2":0.01 }
-train_opts['drop'] = { "by_norm":None, "by_pvar":None, "by_cor":.8, "by_r2":.05 }
+train_opts['drop'] = { "by_norm":None, "by_pvar":None, "by_cor":None, "by_r2":None }
 train_opts['startdrop'] = 5
 train_opts['freqdrop'] = 1
 train_opts['savefreq'] = s.nan

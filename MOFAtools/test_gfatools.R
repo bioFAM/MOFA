@@ -18,6 +18,8 @@ p <- CalculateVariance_Views(model, views="all", factors="all")
 
 ViewFactorPlot(model)
 
+CorrplotLFvsallPC(model, noPCs=5)
+
 
 N <- model@Dimensions[["N"]]
 
@@ -25,8 +27,8 @@ N <- model@Dimensions[["N"]]
 trainCurve(model, statistic="activeK", xlabel=" ", ylabel="")
 trainCurve(model, statistic="elbo", xlabel=" ", ylabel="")
 
-
-
+FactorsCorPlot(model)
+Factor
 
 ## test mutation ##
 

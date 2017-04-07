@@ -170,6 +170,7 @@ class init_sparse(initModel):
             elif self.lik[m] == "bernoulli":
                 tmp = s.ones(self.D[m])*0.25
                 tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
+                # tau_list[m] = Tau_Jaakola(dim=(self.N,self.D[m]), value=1)
             elif self.lik[m] == "binomial":
                 tmp = 0.25*s.amax(self.data["tot"][m],axis=0)
                 tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
@@ -188,6 +189,7 @@ class init_sparse(initModel):
                 Y_list[m] = Poisson_PseudoY_Node(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
             elif self.lik[m]=="bernoulli":
                 Y_list[m] = Bernoulli_PseudoY_Node(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
+                # Y_list[m] =  Bernoulli_PseudoY_Node_Jaakola(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
             elif self.lik[m]=="binomial":
                 Y_list[m] = Binomial_PseudoY_Node(dim=(self.N,self.D[m]), tot=data["tot"][m], obs=data["obs"][m], E=None)
         self.Y = Multiview_Mixed_Node(self.M, *Y_list)

@@ -11,57 +11,46 @@
 
 loadModel <- function(file) {
   
+  model <- new("MOFAmodel")
+  
   # Load expectations and parameters
-  expectations <- rhdf5::h5read(file,"expectations")
-  parameters <- rhdf5::h5read(file,"parameters")
+  model@Expectations <- rhdf5::h5read(file,"expectations")
+  model@Parameters <- rhdf5::h5read(file,"parameters")
   
   # Load training statistics
-  training_stats <- rhdf5::h5read(file,"training_stats")
-  colnames(training_stats$elbo_terms) <- attr(rhdf5::h5read(file,"training_stats/elbo_terms", read.attributes=T),"colnames")
+  tryCatch( {
+    model@TrainStats <- rhdf5::h5read(file, 'training_stats',read.attributes=T);
+    colnames(model@TrainStats$elbo_terms) <- attr(rhdf5::h5read(file,"training_stats/elbo_terms", read.attributes=T),"colnames")
+  }, error = function(x) { print("Training stats not found, not loading it...") })
+
   
   # Load training options
-  training_opts <- as.list(rhdf5::h5read(file,"training_opts", read.attributes=T))
+  tryCatch(model@TrainOpts <- as.list(rhdf5::h5read(file, 'training_opts',read.attributes=T)), error = function(x) { print("Training opts not found, not loading it...") })
   
   # Load model options
-  model_opts <- as.list(rhdf5::h5read(file,"model_opts", read.attributes=T))
+  tryCatch(model@ModelOpts <- as.list(rhdf5::h5read(file, 'model_opts',read.attributes=T)), error = function(x) { print("Model opts not found, not loading it...") })
   
   # Load training data
-  data <- rhdf5::h5read(file,"data")
-  featuredata <- rhdf5::h5read(file,"features")
-  sampledata <- rhdf5::h5read(file,"samples")
-  for (m in names(data)) {
-    rownames(data[[m]]) <- sampledata
-    colnames(data[[m]]) <- featuredata[[m]]
-  }
-  
-  # Specify dimensions 
-  M=length(data)
-  N=nrow(data[[1]])
-  D=sapply(data,ncol)
-  K=tail(training_stats$activeK[!is.nan(training_stats$activeK)],n=1)
-  dim=list("M"=M, "N"=N, "D"=D, "K"=K)
-  
-  
-  mofa <- new("MOFAmodel", TrainData=data, TrainStats=training_stats, ModelOpts=model_opts, TrainOpts=training_opts, Expectations=expectations, Parameters=parameters, Dimensions=dim)
-  # Create object: important first define dimensionalities and then the other slots
-  # mofa <- new("MOFAmodel", Dimensions=dim)
-  # .Expectations(mofa) <- expectations
-  # .Parameters(mofa) <- parameters
-  # .TrainStats(mofa) <- training_stats
-  # .TrainData(mofa) <- data
-  
-  # Define view names
-  viewNames(mofa) <- names(data)
-  
-  # Define sample names
-  sampleNames(mofa) <- rownames(data[[1]])
-  
-  # Define feature names
-  featureNames(mofa) <- lapply(data,colnames)
+  tryCatch( {
+    model@TrainData <- rhdf5::h5read(file,"data")
+    featuredata <- rhdf5::h5read(file,"features")
+    sampledata <- rhdf5::h5read(file,"samples")
+    for (m in names(model@TrainData)) {
+      rownames(model@TrainData[[m]]) <- sampledata
+      colnames(model@TrainData[[m]]) <- featuredata[[m]]
+    }
+    model@Dimensions[["M"]] <- length(model@TrainData)
+    model@Dimensions[["N"]] <- nrow(model@TrainData[[1]])
+    model@Dimensions[["D"]] <- sapply(model@TrainData,ncol)
+    model@Dimensions[["K"]] <- ncol(model@Expectations$Z$E)
+    viewNames(model) <- names(model@TrainData)
+    sampleNames(model) <- rownames(model@TrainData[[1]])
+    featureNames(model) <- lapply(model@TrainData,colnames)
+    factorNames(model) <- as.character(1:model@Dimensions[["K"]])
+    # K=tail(training_stats$activeK[!is.nan(training_stats$activeK)],n=1)
+    }, error = function(x) { print("Training data not found, not loading it...") })
 
-  # Define factor names
-  factorNames(mofa) <- as.character(1:K)
     
-  return(mofa)
+  return(model)
 }
 

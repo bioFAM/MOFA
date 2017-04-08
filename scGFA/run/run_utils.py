@@ -84,9 +84,9 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     ####################
 
     # Mask
-    if 'maskAtRandom' in data_opts or 'maskNSamples' in data_opts:
-        if any(data_opts['maskAtRandom']) or any(data_opts['maskNSamples']):
-            data = maskData(data, data_opts)
+    # if 'maskAtRandom' in data_opts or 'maskNSamples' in data_opts:
+    #     if any(data_opts['maskAtRandom']) or any(data_opts['maskNSamples']):
+    #         data = maskData(data, data_opts)
 
     ######################
     ## Define the model ##

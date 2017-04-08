@@ -6,29 +6,17 @@ library(MOFAtools)
 file = "/Users/ricard/test.hdf5"
 model <- loadModel(file)
 
-
-# require(gridExtra)
-# p1 <- FeaturesCorPlot(model, view=1, regress_factors=NULL, legend=TRUE)
-# p2 <- FeaturesCorPlot(model, view=1, regress_factors="all", legend=TRUE)
-# grid.arrange(p1, p2, ncol=2)
-# arrangeGrob(qp,hm, layout_matrix=lm)
-
 # FactorsCorPlot(model)
 p <- CalculateVariance_Views(model, views="all", factors="all")
+# ViewFactorPlot(model)
 
-ViewFactorPlot(model)
-
-CorrplotLFvsallPC(model, noPCs=5)
-
-
-N <- model@Dimensions[["N"]]
+FactorsCorPlot(model)
+CorrplotLFvsallPC(model, method="svd", noPCs=5)
 
 ## training curves ##
 trainCurve(model, statistic="activeK", xlabel=" ", ylabel="")
 trainCurve(model, statistic="elbo", xlabel=" ", ylabel="")
 
-FactorsCorPlot(model)
-Factor
 
 ## test mutation ##
 

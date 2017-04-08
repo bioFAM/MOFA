@@ -12,9 +12,9 @@ library(corrplot)
 #' @import corrplot
 #' @export
 
-CorrplotLFvsPC<-function(modelobject, viewname4PC, noPCs=5){
-  Z<-modelobject@Expectations$Z$E
-  singleview<-modelobject@TrainData[[viewname4PC]]
+CorrplotLFvsPC<-function(model, viewname4PC, noPCs=5){
+  Z<-model@Expectations$Z$E
+  singleview<-model@TrainData[[viewname4PC]]
   pc.out<-prcomp(singleview)
   
   corrmatrix<-apply(pc.out$x[,1:noPCs],2, function(pc) {
@@ -27,22 +27,27 @@ CorrplotLFvsPC<-function(modelobject, viewname4PC, noPCs=5){
   return(corrmatrix)
 }
 
-CorrplotLFvsallPC<-function(modelobject, noPCs=5){
-  Z<-modelobject@Expectations$Z$E
-  listPCs<-lapply(viewNames(modelobject), function(viewname4PC){
-  singleview<-modelobject@TrainData[[viewname4PC]]
-  pc.out<-prcomp(singleview)
-  tmp<-pc.out$x[,1:noPCs]
-  colnames(tmp) <- paste(viewname4PC, colnames(tmp), sep="_")
-  tmp
-  })
-  matPCs<-do.call(cbind,listPCs)
-  corrmatrix<-apply(matPCs,2, function(pc) {
-    apply(Z,2, function(lv){
-      cor(pc, lv)
-    })
+
+# methods: svd, ppca, bpca
+CorrplotLFvsallPC<-function(model, noPCs=5, method="svd"){
+  
+  # Collect expectations
+  Z <- getExpectations(model,"Z","E")
+  
+  # Perform PCAs
+  listPCs <- lapply(viewNames(model), function(m) {
+    # pc.out<-prcomp(model@TrainData[[m]])
+    pc.out <- pcaMethods::pca(model@TrainData[[m]], method=method, center=TRUE, nPcs=noPCs)
+    # tmp <- pc.out$x[,1:noPCs]
+    tmp <- pc.out@scores
+    colnames(tmp) <- paste(m, colnames(tmp), sep="_")
+    tmp
   })
   
-  corrplot::corrplot(corrmatrix, order="original", title="LFs vs single-view PCs",mar = c(1, 1, 3, 1))
+  # Calculate correlation matrix between latent factors and PCs
+  matPCs <- do.call(cbind,listPCs)
+  corrmatrix <- cor(matPCs,Z)
+  
+  corrplot::corrplot(corrmatrix, order="original", title="", mar = c(1, 1, 3, 1))
   return(corrmatrix)
 }

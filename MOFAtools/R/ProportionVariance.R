@@ -52,11 +52,15 @@ CalculateVariance_Views <- function(object, views="all", factors="all", method=N
   # fvar_m <- sapply(names(Y), function(m) sum(apply(Y[[m]],2,var) - 1/object@Expectations$Tau[[m]]$E) / sum(apply(Y[[m]],2,var)))
   
   # Non-Bayesian approach 2: coefficient of determination
+  #   R2 = 1 - SSres/SStot
+  #     SSres (residual sum of squares): \sum_n (y_n - ypred_n)^2
+  #     SStot (total sum of squares): \sum_n (y_n - ymean)^2
   # This is better because it is dependent on how well our object fits the data
-  Ypred_m <- sapply(views, function(m) Z%*%t(SW[[m]]))
-  fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2) / sum((Y[[m]]-mean(unlist(Y[[m]])))**2))
+  Ypred_m <- lapply(views, function(m) Z%*%t(SW[[m]])); names(Ypred_m) <- views
+  # fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2) / sum((Y[[m]]-mean(unlist(Y[[m]])))**2))
+  fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2) / sum(sweep(Y[[m]],2,apply(Y[[m]],2,mean),"-")**2))
   
-  Ypred_mk <- sapply(views, function(m) sapply(factors, function(k) Z[,k]%*%t(SW[[m]][,k]) ) )
+  Ypred_mk <- lapply(views, function(m) sapply(factors, function(k) Z[,k]%*%t(SW[[m]][,k]) ) ); names(Ypred_mk) <- views
   fvar_mk <- sapply(views, function(m) sapply(factors, function(k) 1 - sum((Y[[m]]-Ypred_mk[[m]][,k])**2) / sum((Y[[m]] - mean(unlist(Y[[m]])))**2) ) )
   
   # Set matrix names

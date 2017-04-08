@@ -84,6 +84,20 @@ setGeneric("TrainOpts", function(object) {standardGeneric("TrainOpts")})
 
 setGeneric(".TrainOpts<-", function(object, value) {standardGeneric(".TrainOpts<-")})
 
+
+###################
+## Model Options ##
+###################
+
+#' @title ModelOpts: set and retrieve Model options
+#' @name ModelOpts
+#' @rdname ModelOpts
+#' @export
+setGeneric("ModelOpts", function(object) {standardGeneric("ModelOpts")})
+
+setGeneric(".ModelOpts<-", function(object, value) {standardGeneric(".ModelOpts<-")})
+
+
 ######################
 ## Train Statistics ##
 ######################

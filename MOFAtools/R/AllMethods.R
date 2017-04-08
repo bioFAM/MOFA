@@ -268,6 +268,22 @@ setMethod(".TrainOpts<-", signature(object="MOFAmodel", value="list"),
             object
           })
 
+#######################################
+## Set and retrieve model options ##
+#######################################
+
+#' @rdname ModelOpts
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @rdname ModelOpts
+#' @return list of model options
+#' @export
+setMethod("ModelOpts", "MOFAmodel", function(object) { object@ModelOpts } )
+setMethod(".ModelOpts<-", signature(object="MOFAmodel", value="list"),
+          function(object,value) {
+            object@ModelOpts <- value
+            object
+          })
+
 ##########################################
 ## Set and retrieve training statistics ##
 ##########################################

@@ -145,8 +145,7 @@ def saveTrainingStats(model, hdf5):
 	stats_grp.create_dataset("elbo_terms", data=stats["elbo_terms"].T)
 	stats_grp['elbo_terms'].attrs['colnames'] = list(stats["elbo_terms"].columns.values)
 
-def saveTrainingOpts(model, hdf5):
-	opts = model.getTrainingOpts()
+def saveTrainingOpts(opts, hdf5):
 
 	# Remove dictionaries from the options
 	for k,v in opts.copy().iteritems():
@@ -156,6 +155,17 @@ def saveTrainingOpts(model, hdf5):
 			opts.pop(k)
 	hdf5.create_dataset("training_opts", data=np.array(opts.values(), dtype=np.float))
 	hdf5['training_opts'].attrs['names'] = opts.keys()
+
+def saveModelOpts(opts, hdf5):
+	opts_interest = ["schedule","likelihood","learnTheta"]
+	# opts_interest = ["schedule","likelihood"]
+	opts = dict((k, opts[k]) for k in opts_interest)
+
+	grp=hdf5.create_group('model_opts')
+	for k,v in opts.items():
+		grp.create_dataset(k, data=v)
+	grp[k].attrs['names'] = opts.keys()
+
 
 def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_names=None):
 	data = model.getTrainingData()
@@ -169,7 +179,7 @@ def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_na
 			featuredata_grp.create_dataset(view, data=feature_names[m])
 
 
-def saveModel(model, outfile, view_names=None, sample_names=None, feature_names=None):
+def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_names=None, feature_names=None):
 	assert model.trained == True, "Model is not trained yet"
 	assert len(np.unique(view_names)) == len(view_names), 'View names must be unique'
 	assert len(np.unique(sample_names)) == len(sample_names), 'Sample names must be unique'
@@ -177,6 +187,7 @@ def saveModel(model, outfile, view_names=None, sample_names=None, feature_names=
 	saveExpectations(model,hdf5,view_names)
 	saveParameters(model,hdf5,view_names)
 	saveTrainingStats(model,hdf5)
-	saveTrainingOpts(model,hdf5)
+	saveTrainingOpts(train_opts,hdf5)
+	saveModelOpts(model_opts,hdf5)
 	saveTrainingData(model, hdf5, view_names, sample_names, feature_names)
 	hdf5.close()

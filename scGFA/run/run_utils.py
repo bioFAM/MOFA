@@ -41,7 +41,10 @@ def maskData(data, data_opts):
         Nsamples2Mask = data_opts['maskNSamples'][m]
         if Nsamples2Mask != 0:
             idxMask = np.random.choice(N, size=Nsamples2Mask, replace = False)
-            data[m].ix[idxMask, :] = pd.np.nan
+            tmp = data[m].copy()
+            tmp.ix[idxMask, :] = pd.np.nan
+            data[m] = tmp
+
     return data
 
 def loadData(data_opts, verbose=True):
@@ -84,9 +87,9 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     ####################
 
     # Mask
-    # if 'maskAtRandom' in data_opts or 'maskNSamples' in data_opts:
-    #     if any(data_opts['maskAtRandom']) or any(data_opts['maskNSamples']):
-    #         data = maskData(data, data_opts)
+    if 'maskAtRandom' in data_opts or 'maskNSamples' in data_opts:
+        if any(data_opts['maskAtRandom']) or any(data_opts['maskNSamples']):
+            data = maskData(data, data_opts)
 
     ######################
     ## Define the model ##
@@ -213,4 +216,4 @@ def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, ve
     for t in xrange(len(save_models)):
         print "Saving model %d in %s...\n" % (t,outfiles[t])
         saveModel(save_models[t], outfile=outfiles[t], view_names=data_opts['view_names'],
-            sample_names=sample_names, feature_names=feature_names)
+            sample_names=sample_names, feature_names=feature_names, train_opts=train_opts, model_opts=model_opts)

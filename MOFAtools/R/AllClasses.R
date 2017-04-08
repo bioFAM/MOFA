@@ -20,6 +20,7 @@
 #'    \item{\code{TrainStats}:}{List with the training statistics.}
 #'    \item{\code{TrainData}:}{List with the data views used for training.}
 #'    \item{\code{TrainOpts}:}{List with the training options.}
+#'    \item{\code{ModelOpts}:}{List with the model options.}
 #'    \item{\code{Dimensions}:}{List with dimensionalities of the model. N for the number of samples, D for the number of features of each view, M for the number of views and K for the number of infered latent variables.}
 #'}
 #' @name MOFAmodel
@@ -31,6 +32,7 @@ setClass("MOFAmodel",
                  Parameters="list", 
                  TrainStats="list",
                  TrainOpts="list",
+                 ModelOpts="list",
                  TrainData="list",
                  Dimensions="list")
 )

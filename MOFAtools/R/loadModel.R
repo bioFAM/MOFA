@@ -22,6 +22,9 @@ loadModel <- function(file) {
   # Load training options
   training_opts <- as.list(rhdf5::h5read(file,"training_opts", read.attributes=T))
   
+  # Load model options
+  model_opts <- as.list(rhdf5::h5read(file,"model_opts", read.attributes=T))
+  
   # Load training data
   data <- rhdf5::h5read(file,"data")
   featuredata <- rhdf5::h5read(file,"features")
@@ -39,7 +42,7 @@ loadModel <- function(file) {
   dim=list("M"=M, "N"=N, "D"=D, "K"=K)
   
   
-  mofa <- new("MOFAmodel", TrainData=data, TrainStats=training_stats, TrainOpts=training_opts, Expectations=expectations, Parameters=parameters, Dimensions=dim)
+  mofa <- new("MOFAmodel", TrainData=data, TrainStats=training_stats, ModelOpts=model_opts, TrainOpts=training_opts, Expectations=expectations, Parameters=parameters, Dimensions=dim)
   # Create object: important first define dimensionalities and then the other slots
   # mofa <- new("MOFAmodel", Dimensions=dim)
   # .Expectations(mofa) <- expectations

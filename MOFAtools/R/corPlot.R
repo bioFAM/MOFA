@@ -93,3 +93,45 @@ FactorsScatterPlot <- function(object, z_order=NULL, title="") {
   
   return(p)
 }
+
+#' @title Correlate latent factors to principal components on single views
+#' @name CorrplotLFvsPC
+#' @description fill this
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @param views fill
+#' @param noPCs fill
+#' @param method fill, can be svd, ppca, bpca
+#' @details fill
+#' @return Correlation matrix of latent factors versus principal components
+#' @reference fill this
+#' @import corrplot pcaMethods
+#' @export
+
+CorrplotLFvsPC<-function(model, views="all", noPCs=5, method="svd"){
+  
+  if (views=="all") {
+    views <- viewNames(model)  
+  } else {
+    stopifnot(all(views%in%viewNames(model)))
+  }
+  
+  # Collect expectations
+  Z <- getExpectations(model,"Z","E")
+  
+  # Perform PCAs
+  listPCs <- lapply(views, function(m) {
+    pc.out <- pcaMethods::pca(model@TrainData[[m]], method=method, center=TRUE, nPcs=noPCs)
+    tmp <- pc.out@scores
+    colnames(tmp) <- paste(m, colnames(tmp), sep="_")
+    tmp
+  })
+  
+  # Calculate correlation matrix between latent factors and PCs
+  matPCs <- do.call(cbind,listPCs)
+  corrmatrix <- cor(matPCs,Z)
+  
+  # Plot correlation matrix
+  corrplot::corrplot(corrmatrix, order="original", title=viewname4PC,mar = c(1, 1, 3, 1))
+  
+  return(corrmatrix)
+}

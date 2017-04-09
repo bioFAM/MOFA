@@ -166,7 +166,6 @@ def saveModelOpts(opts, hdf5):
 		grp.create_dataset(k, data=v)
 	grp[k].attrs['names'] = opts.keys()
 
-
 def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_names=None):
 	data = model.getTrainingData()
 	data_grp = hdf5.create_group("data")
@@ -177,7 +176,6 @@ def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_na
 		data_grp.create_dataset(view, data=data[m].data.T)
 		if feature_names is not None:
 			featuredata_grp.create_dataset(view, data=feature_names[m])
-
 
 def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_names=None, feature_names=None):
 	assert model.trained == True, "Model is not trained yet"

@@ -20,6 +20,10 @@
 
 CalculateVariance_Views <- function(object, views="all", factors="all", method=NULL) {
   
+  # Sanity checks
+  if (class(object) != "MOFAmodel")
+    stop("'object' has to be an instance of MOFAmodel")
+  
   # Define views
   if (views=="all") { 
     views <- viewNames(object) 

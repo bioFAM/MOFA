@@ -19,9 +19,8 @@ FeaturesCorPlot <- function(object, view, method="pearson", regress_factors=NULL
   
   # Regress out latent variables
   if (!is.null(regress_factors)) {
-    if (regress_factors=="all")
-      regress_factors <- 1:model@Dimensions$K
-    SW <- getExpectations(model,"SW","E")[[view]]; rownames(SW) <- colnames(model@TrainData[[view]])
+    if (regress_factors=="all") { regress_factors <- 1:model@Dimensions$K }
+    SW <- getExpectations(model,"SW","E")[[view]]#; rownames(SW) <- colnames(model@TrainData[[view]])
     Z <- getExpectations(model,"Z","E")
     data <- data - t(SW[top_features,] %*% t(Z[,regress_factors]))
   }
@@ -30,9 +29,13 @@ FeaturesCorPlot <- function(object, view, method="pearson", regress_factors=NULL
   r <- cor(data, method=method)
   
   # Draw heatmap
-  p <- pheatmap::pheatmap(r, cluster_cols=F, cluster_rows=F, show_colnames=F, show_rownames=F, ...)
-  
-  return(p)
+  breaksList = seq(-1,1, by=0.01)
+  pheatmap::pheatmap(r, 
+    color=colorRampPalette(rev(RColorBrewer::brewer.pal(n=10, name="RdYlBu")))(length(breaksList)),
+    breaks=breaksList,
+    cluster_cols=F, cluster_rows=F, 
+    show_colnames=F, show_rownames=F, ...
+  )
 }
 
 
@@ -53,7 +56,7 @@ FactorsCorPlot <- function(object, method="pearson", ...) {
   
   Z <- model@Expectations$Z$E
   h <- cor(x=Z, y=Z, method=method)
-  p <- corrplot::corrplot(h, ...)
+  p <- corrplot::corrplot(h, tl.col="black", ...)
   return(p)
 }
 
@@ -69,7 +72,7 @@ FactorsCorPlot <- function(object, method="pearson", ...) {
 #' @import ggplot2 dplyr
 #' @export
 FactorsScatterPlot <- function(object, z_order=NULL, title="") {
-  
+  # THIS HAS TO BE FINISHED, WE SHOULDNT USE PIPES OR DPLYR 
   if (is.null(z_order))
     z_order <- 1:object@Dimensions[["K"]]
   
@@ -131,7 +134,7 @@ CorrplotLFvsPC<-function(model, views="all", noPCs=5, method="svd"){
   corrmatrix <- cor(matPCs,Z)
   
   # Plot correlation matrix
-  corrplot::corrplot(corrmatrix, order="original", title=viewname4PC,mar = c(1, 1, 3, 1))
+  corrplot::corrplot(t(corrmatrix), order="original", title="", tl.col="black", mar=c(1,1,3,1))
   
   return(corrmatrix)
 }

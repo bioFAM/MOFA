@@ -9,6 +9,11 @@
 #' @import pheatmap
 #' @export
 ViewFactorPlot <- function(model, ...) {
+  
+  # Sanity checks
+  if (class(object) != "MOFAmodel")
+    stop("'object' has to be an instance of MOFAmodel")
+  
   # Calculate proportion of residual variation explained by each factor in each view
   prvar_mk <- CalculateVariance_Views(model)
   

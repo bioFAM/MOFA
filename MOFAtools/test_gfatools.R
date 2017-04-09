@@ -6,16 +6,19 @@ library(MOFAtools)
 file = "/Users/ricard/test.hdf5"
 model <- loadModel(file)
 
-# FactorsCorPlot(model)
-p <- CalculateVariance_Views(model, views="all", factors="all")
-# ViewFactorPlot(model)
+showWeights(model,view="mRNA", factors="all", main=NULL, cluster_rows=F, cluster_cols=F, show_rownames=F)
+  
+CalculateVariance_Views(model, views="all", factors="all")
+
+ViewFactorPlot(model)
 
 FactorsCorPlot(model)
-CorrplotLFvsallPC(model, method="svd", noPCs=5)
+CorrplotLFvsPC(model, method="svd", noPCs=5)
+FeaturesCorPlot(model, "mRNA", method="pearson", regress_factors="all", top=500)
 
 ## training curves ##
-trainCurve(model, statistic="activeK", xlabel=" ", ylabel="")
-trainCurve(model, statistic="elbo", xlabel=" ", ylabel="")
+trainCurveFactors(model)
+trainCurveELBO(model, log=T)
 
 
 ## test mutation ##

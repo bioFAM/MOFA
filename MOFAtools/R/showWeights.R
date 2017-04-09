@@ -11,25 +11,39 @@
 #' @import pheatmap
 #' @export
 
-showWeights <- function(model, viewnm, showHeatmap =T, main=NULL,...) {
-stopifnot(viewnm %in% viewNames(model)) 
+showWeights <- function(model, view, features="all", factors="all", main=NULL, ...) {
   
-Z<-model@Expectations$Z$E
+  # Sanity checks
+  if (class(model) != "MOFAmodel")
+    stop("'model' has to be an instance of MOFAmodel")
+  stopifnot(all(view %in% viewNames(model)))  
+    
+  # Define factors
+  if (factors=="all") { 
+    factors <- factorNames(model) 
+  } else {
+    stopifnot(all(factors %in% factorNames(model)))  
+  }
 
-#get weights and appropriate names
-weights<-model@Expectations$SW[[viewnm]]$E
-
-if(!is.null(colnames(Z))) namesLF<-colnames(Z) else namesLF<- 1:ncol(Z)
-colnames(weights)<-namesLF
-rownames(weights)<-colnames(model@TrainData[[viewnm]])
-
-#plot heatmap
-if(showHeatmap){
-if(is.null(main)) main <- paste("Weights of Latent Factors on", viewnm)
-pheatmap(weights, main=main,...)
-}
-
-#return weight matrix
-return(weights)
+  # Define features
+  if (features=="all") { 
+    features <- featureNames(model)[[view]]
+  } else {
+    stopifnot(all(features %in% featureNames(model)[[view]]))  
+  }
+  
+  # Collect expectations
+  # Z <- getExpectations(model,"Z","E")[,factors]
+  # if(!is.null(colnames(Z))) namesLF <- colnames(Z) else namesLF <-  1:ncol(Z)
+  
+  # COMMENT Britta: use featureNames and factorNames, they automatically rename all dimensions of all variables
+  
+  W <- getExpectations(model,"SW","E")[[view]][features,factors]
+  # colnames(W) <- namesLF
+  # rownames(W) <- colnames(model@TrainData[[viewnm]])
+  
+  # Plot heatmap
+  if (is.null(main)) main <- paste("W of Latent Factors on", view)
+  pheatmap::pheatmap(W, main=main,...)
 }
 

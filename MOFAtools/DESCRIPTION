@@ -17,7 +17,7 @@ Description: A collection of tools for analysing MOFA models.
 	bla bla
 Encoding: UTF-8
 Depends: R (>= 3.3)
-Imports: rhdf5, dplyr, pheatmap, stringr, corrplot, ggplot2, methods, scales, safe
+Imports: rhdf5, dplyr, tidyr, pheatmap, stringr, corrplot, ggplot2, methods, scales, safe, gridExtra, pcaMethods
 Suggests: knitr
 VignetteBuilder: knitr
 LazyData: true

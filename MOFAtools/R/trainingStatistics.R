@@ -11,7 +11,6 @@
 #' @import ggplot2 scales
 #' @export
 
-
 trainCurveFactors <- function(object, title="", titlesize=16, xlabel="Iteration", ylabel=NULL,
                        linesize=1.2, xlim_down=NULL, xlim_up=NULL) {
   
@@ -78,16 +77,20 @@ trainCurveELBO <- function(object, log=F, title="", titlesize=16, xlabel="Iterat
   if (class(object) != "MOFAmodel") { stop("'object' has to be an instance of MOFAmodel") }
   if (is.null(ylabel)) { ylabel <- "Evidence lower bound" }
   
-  idx = seq(1+object@TrainOpts$startdrop,length(object@TrainStats$elbo),object@TrainOpts$elbofreq)
+  idx = seq(1,length(object@TrainStats$elbo),object@TrainOpts$elbofreq)
   stat = object@TrainStats$elbo[idx]
   if (log) { stat <- -log(-stat); ylabel <- paste(ylabel,"(log)") }
   data <- data.frame(time=idx, value=stat)
+  
+  if (!is.null(xlim_down)) { data <- data[data$time>=xlim_down,] }
+  if (!is.null(xlim_up)) { data <- data[data$time<=xlim_up,] }
   
   p <- ggplot2::ggplot(data, aes(x=time, y=value)) +
     geom_line(size=linesize) +
     ggtitle(title) + xlab(xlabel) + ylab(ylabel) +
     scale_x_continuous(limits=c(xlim_down,xlim_up)) +
-    scale_y_continuous(limits=c(ylim_down,ylim_up), breaks=scales::pretty_breaks()) +
+    # scale_y_continuous(limits=c(ylim_down,ylim_up), breaks=scales::pretty_breaks()) +
+    # scale_y_continuous(breaks=scales::pretty_breaks()) +
     theme(
       plot.title = element_text(size=titlesize),
       plot.margin = margin(10,10,10,10),

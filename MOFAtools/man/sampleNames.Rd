@@ -24,6 +24,3 @@ sampleNames(object) <- value
 \value{
 character vector with the sample names
 }
-\author{
-Ricard Argelaguet
-}

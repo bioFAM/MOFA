@@ -110,7 +110,7 @@ FactorsScatterPlot <- function(object, z_order=NULL, title="") {
 #' @import corrplot pcaMethods
 #' @export
 
-CorrplotLFvsPC<-function(model, views="all", noPCs=5, method="svd"){
+CorrplotLFvsPC <- function(model, views="all", noPCs=5, method="svd"){
   
   if (views=="all") {
     views <- viewNames(model)  

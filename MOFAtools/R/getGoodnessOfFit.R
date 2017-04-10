@@ -15,6 +15,7 @@
 #' @param plotit boolean, wether to produce a plot (default true)
 #' @details fill this
 #' @return a list containing list of R2 for all gaussian views and list of BS for all binary views
+#' @import pheatmap gridExtra 
 #' @export
 
 getGoodnessOfFit <- function(object, views="all", factors="all", plotit=T){

@@ -28,7 +28,12 @@ getGoodnessOfFit <- function(object, views="all", factors="all", plotit=T){
   M <- length(views)
 
  # Sort views by liklihood
- FamilyPerView <- model@ModelOpts$likelihood
+  if("ModelOpts" %in% names(getSlots("MOFAmodel")))
+ FamilyPerView <- object@ModelOpts$likelihood
+  else
+    #hack working for our old models without modelOpts
+    FamilyPerView <- ifelse(grepl("mut", viewNames(object)), "bernoulli", "gaussian" )
+  
   #Only gaussian and bernoulli views included so far:
   stopifnot(all(FamilyPerView %in% c("gaussian", "bernoulli")))
   
@@ -63,12 +68,13 @@ getGoodnessOfFit <- function(object, views="all", factors="all", plotit=T){
   fvar_md <- lapply(views[gaussianViews], function(m) 1 - colSums((Y[[m]]-Ypred_m[[m]])**2) / colSums(sweep(Y[[m]],2,apply(Y[[m]],2,mean),"-")**2))
 
   #Variance explained per factor in a view
-  Ypred_mk <- lapply(views[gaussianViews], function(m) sapply(factors, function(k) Z[,k]%*%t(SW[[m]][,k]) ) )
+  Ypred_mk <- lapply(views[gaussianViews], function(m) sapply(
+    seq_along(factors), function(k) Z[,k]%*%t(SW[[m]][,k]) ) )
   names(Ypred_mk) <- views[gaussianViews]
   
-  fvar_mk <- sapply(views[gaussianViews], function(m) sapply(factors, function(k) 1 - sum((Y[[m]]-Ypred_mk[[m]][,k])**2) / sum(sweep(Y[[m]],2,apply(Y[[m]],2,mean),"-")**2)))
+  fvar_mk <- sapply(views[gaussianViews], function(m) sapply( seq_along(factors), function(k) 1 - sum((Y[[m]]-Ypred_mk[[m]][,k])**2) / sum(sweep(Y[[m]],2,apply(Y[[m]],2,mean),"-")**2)))
   # seperatly for each feature
-  fvar_mdk <- lapply(views[gaussianViews], function(m) sapply(factors, function(k) 1 - colSums((Y[[m]]-Ypred_mk[[m]][,k])**2) / colSums(sweep(Y[[m]],2,apply(Y[[m]],2,mean),"-")**2)))
+  fvar_mdk <- lapply(views[gaussianViews], function(m) sapply( seq_along(factors), function(k) 1 - colSums((Y[[m]]-Ypred_mk[[m]][,k])**2) / colSums(sweep(Y[[m]],2,apply(Y[[m]],2,mean),"-")**2)))
   
   #Set names
   names(fvar_m) <- views[gaussianViews]
@@ -110,11 +116,11 @@ getGoodnessOfFit <- function(object, views="all", factors="all", plotit=T){
   BS_md <- lapply(views[bernoulliViews], function(m) 1/colSums(!is.na(Y[[m]]))*colSums((Yprob_m[[m]]-Y[[m]])^2, na.rm=T))
   
   #Variance explained per factor in a view
-  Yprob_mk <- lapply(views[bernoulliViews], function(m)   sapply(factors, function(k) 1/(1+exp(-Z[,k]%*%t(SW[[m]][,k])))))
+  Yprob_mk <- lapply(views[bernoulliViews], function(m)   sapply( seq_along(factors), function(k) 1/(1+exp(-Z[,k]%*%t(SW[[m]][,k])))))
   names(Yprob_mk)<-views[bernoulliViews]
-  BS_mk <- sapply(views[bernoulliViews], function(m) sapply(factors, function(k) 1/sum(!is.na(Y[[m]]))*sum((Yprob_mk[[m]][,k]-Y[[m]])^2, na.rm=T)))
+  BS_mk <- sapply(views[bernoulliViews], function(m) sapply( seq_along(factors), function(k) 1/sum(!is.na(Y[[m]]))*sum((Yprob_mk[[m]][,k]-Y[[m]])^2, na.rm=T)))
   # seperatly for each feature
-  BS_mdk <- lapply(views[bernoulliViews], function(m) sapply(factors, function(k) 1/colSums(!is.na(Y[[m]]))*colSums((Yprob_mk[[m]][,k]-Y[[m]])^2, na.rm=T)))
+  BS_mdk <- lapply(views[bernoulliViews], function(m) sapply( seq_along(factors), function(k) 1/colSums(!is.na(Y[[m]]))*colSums((Yprob_mk[[m]][,k]-Y[[m]])^2, na.rm=T)))
   
   #Set names
   names(BS_m) <- views[bernoulliViews]

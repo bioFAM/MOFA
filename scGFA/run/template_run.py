@@ -98,10 +98,10 @@ model_opts['learnTheta'] = args.learnTheta
 
 # Define priors
 model_opts["priorZ"] = { 'mean':0., 'var':1. }
-# model_opts["priorAlpha"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
-model_opts["priorAlpha"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
 D = [ data[m].shape[1] for m in xrange(M) ]
-# model_opts["priorAlpha"] = { 'a':[1e-5 * D[m] for m in xrange(M) ], 'b':[1e-5]*M }
+# model_opts["priorAlpha"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
+# model_opts["priorAlpha"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
+model_opts["priorAlpha"] = { 'a':[1e-5 * D[m] for m in xrange(M)], 'b':[1e-5]*M }
 model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M }
 # model_opts["priorTau"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
 model_opts["priorTau"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }

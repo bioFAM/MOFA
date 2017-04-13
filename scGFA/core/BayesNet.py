@@ -179,6 +179,7 @@ class BayesNet(object):
                     # Print ELBO monitoring
                     if self.options['verbosity'] > 0:
                         print "Trial %d, Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, K=%d" % (self.trial, i+1, time()-t, elbo.iloc[i]["total"], delta_elbo, self.dim["K"])
+                        if delta_elbo<0: print "Warning, lower bound is decreasing..."
                     if self.options['verbosity'] == 2:
                         print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
 

@@ -51,7 +51,9 @@ def ddot(d, mtx, left=True):
 	else:
 		return d*mtx
 
-
+def lambdafn(X):
+	return np.tanh(X/2.)/(4.*X)
+	
 def saveParameters(model, hdf5, view_names=None):
 
 	# Get nodes from the model

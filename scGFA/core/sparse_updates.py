@@ -48,6 +48,9 @@ Each node is a Variational_Node() class with the following main variables:
 """
 
 class Y_Node(Constant_Variational_Node):
+    """
+    Observed data node
+    """
     def __init__(self, dim, value):
         Constant_Variational_Node.__init__(self, dim, value)
 
@@ -71,16 +74,15 @@ class Y_Node(Constant_Variational_Node):
         self.value = ma.masked_invalid(self.value)
 
     def calculateELBO(self):
+        # Calculate evidence lower bound using the trick that the update of Tau already contains the Gaussian likelihod 
         tauQ_param = self.markov_blanket["Tau"].getParameters("Q")
         tauP_param = self.markov_blanket["Tau"].getParameters("P")
         tau_exp = self.markov_blanket["Tau"].getExpectations()
         lik = self.likconst + 0.5*s.sum(self.N*(tau_exp["lnE"])) - s.dot(tau_exp["E"],tauQ_param["b"]-tauP_param["b"])
-
         return lik
 
 class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
     def __init__(self, dim, pmean, pvar, qmean, qvar, qE=None, qE2=None, idx_covariates=None):
-        # UnivariateGaussian_Unobserved_Variational_Node.__init__(self, dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE)
         super(Z_Node,self).__init__(dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE, qE2=qE2)
         self.precompute()
 
@@ -109,6 +111,11 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         tau = self.markov_blanket["Tau"].getExpectation()
         Mu = self.markov_blanket['Cluster'].getExpectation()
 
+        # Check dimensionality of Tau and expand if necessary (for Jaakola's bound only)
+        for m in xrange(len(Y)):
+            if tau[m].shape != Y[m].shape:
+                tau[m] = s.repeat(tau[m][None,:], self.N, axis=0)
+
         # Collect parameters from the P and Q distributions of this node
         P,Q = self.P.getParameters(), self.Q.getParameters()
         Pvar, Qmean, Qvar = P['var'], Q['mean'], Q['var']
@@ -118,25 +125,22 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         Y = ma.concatenate([Y[m] for m in xrange(M)],axis=1)
         SW = s.concatenate([SWtmp[m]["E"]for m in xrange(M)],axis=0)
         SWW = s.concatenate([SWtmp[m]["ESWW"] for m in xrange(M)],axis=0)
-        tau = s.concatenate([tau[m] for m in xrange(M)],axis=0)
+        tau = s.concatenate([tau[m] for m in xrange(M)],axis=1)
 
-        ## Update variance
+        # Update variance
         Qvar_copy = Qvar.copy()
-        tmp = (tau*SWW.T).sum(axis=1)
-        tmp = s.repeat(tmp[None,:],self.N,0)
-        tmp += 1./Pvar  # adding the prior precision to the updated precision
-        Qvar = 1./tmp
+        Qvar = 1./(1./Pvar + s.dot(tau,SWW))
 
         # restoring values of the variance for the covariates
         if any(self.covariates):
             Qvar[:, self.covariates] = Qvar_copy[:, self.covariates]
 
-        ## Update mean
+        # Update mean
         latent_variables = self.getLvIndex() # excluding covariates from the list of latent variables
         for k in latent_variables:
-            Qmean[:,k] = Qvar[:,k] * (  1./Pvar[:,k] * Mu[:,k] +  ma.dot(
-                Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T ),
-                SW[:,k]*tau)  )
+            Qmean[:,k] = Qvar[:,k] * (  1./Pvar[:,k]*Mu[:,k] + ma.dot(
+                tau*(Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )),
+                SW[:,k])  )
 
         # Save updated parameters of the Q distribution
         self.Q.setParameters(mean=Qmean, var=Qvar)
@@ -258,11 +262,10 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
         return lb_p - lb_q
 
 class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
-    # SHOULD WE USE **KWARGS AND *KARGS ONLY?
+    # TOO MANY ARGUMENTS, SHOULD WE USE **KWARGS AND *KARGS ONLY?
     # def __init__(self, dim, pmean_S0, pmean_S1, pvar_S0, pvar_S1, ptheta, qmean_S0, qmean_S1, qvar_S0, qvar_S1, qtheta, qEW_S0=None, qEW_S1=None, qES=None):
     def __init__(self, dim, pmean_S0, pmean_S1, pvar_S0, pvar_S1, ptheta, qmean_S0, qmean_S1, qvar_S0, qvar_S1, qtheta, qEW_S0=None, qEW_S1=None, qES=None):
         super(SW_Node,self).__init__(dim, pmean_S0, pmean_S1, pvar_S0, pvar_S1, ptheta, qmean_S0, qmean_S1, qvar_S0, qvar_S1, qtheta, qEW_S0, qEW_S1, qES)
-        # BernoulliGaussian_Unobserved_Variational_Node.__init__(self, dim, pmean_S0, pmean_S1, pvar_S0, pvar_S1, ptheta, qmean_S0, qmean_S1, qvar_S0, qvar_S1, qtheta, qEW_S0, qEW_S1, qES)
         self.precompute()
 
     def precompute(self):
@@ -286,33 +289,35 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         Q = self.Q.getParameters()
         Qmean_S1, Qvar_S1, Qtheta = Q['mean_S1'], Q['var_S1'], Q['theta']
 
-        # check dimensions of theta and expand if necessary
-        # I THINK THIS SHOULD NOT BE HERE...
+        # Check dimensions of Theta and Tau and expand if necessary
+        # I THINK THIS SHOULD NOT BE HERE, BUT WE COULDNT COME UP WITH A SOLUTION..
         if theta_lnE.shape != Qmean_S1.shape:
             theta_lnE = s.repeat(theta_lnE[None,:],Qmean_S1.shape[0],0)
         if theta_lnEInv.shape != Qmean_S1.shape:
             theta_lnEInv = s.repeat(theta_lnEInv[None,:],Qmean_S1.shape[0],0)
+        if tau.shape != Y.shape:
+            tau = s.repeat(tau[None,:], Y.shape[0], axis=0)
 
+        # Update each latent variable in turn
         for k in xrange(self.dim[1]):
 
             # Calculate intermediate steps
             term1 = (theta_lnE-theta_lnEInv)[:,k]
-            term2 = 0.5*s.log(s.divide(alpha[k],tau))
-            term3 = 0.5*s.log(s.sum(ZZ[:,k]) + s.divide(alpha[k],tau))
-            term41 = ma.dot(Y.T,Z[:,k]).data
-            tmp = s.dot((Z[:,k]*Z[:,s.arange(self.dim[1])!=k].T).T, SW[:,s.arange(self.dim[1])!=k].T)
-            term42 = ma.array(tmp, mask=ma.getmask(Y)).sum(axis=0)
-            # term42 = s.dot( SW[:,s.arange(self.dim[1])!=k] , (Z[:,k]*Z[:,s.arange(self.dim[1])!=k].T).sum(axis=1) ) # THIS IS WRONG WITH NAs
-            term43 = s.sum(ZZ[:,k]) + s.divide(alpha[k],tau)
-            term4 = 0.5*tau * s.divide((term41-term42)**2,term43)
+            term2 = 0.5*s.log(alpha[k])
+            term3 = 0.5*s.log(ma.dot(ZZ[:,k],tau) + alpha[k])
+            term4_tmp1 = ma.dot((tau*Y).T,Z[:,k]).data
+            tmp = tau * s.dot((Z[:,k]*Z[:,s.arange(self.dim[1])!=k].T).T, SW[:,s.arange(self.dim[1])!=k].T)
+            term4_tmp2 = ma.array(tmp, mask=ma.getmask(Y)).sum(axis=0)
+            term4_tmp3 = ma.dot(ZZ[:,k].T,tau) + alpha[k]
+            term4 = 0.5*s.divide((term4_tmp1-term4_tmp2)**2,term4_tmp3)
 
             # Update S
             # NOTE there could be some precision issues in S --> loads of 1s in result
             Qtheta[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
 
             # Update W
-            Qmean_S1[:,k] = s.divide(term41-term42,term43)
-            Qvar_S1[:,k] = s.divide(1,tau*term43)
+            Qvar_S1[:,k] = s.divide(1,term4_tmp3)
+            Qmean_S1[:,k] = Qvar_S1[:,k]*(term4_tmp1-term4_tmp2)
 
             # Update Expectations for the next iteration
             SW[:,k] = Qtheta[:,k] * Qmean_S1[:,k]
@@ -435,6 +440,10 @@ class Theta_Constant_Node(Constant_Variational_Node):
         self.updateDim(axis=axis, new_dim=self.dim[axis]-len(idx))
 
 
+
+###############
+## TO-FINISH ##
+###############
 
 class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
     """ """

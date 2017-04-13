@@ -3,7 +3,8 @@ import scipy as s
 import numpy.ma as ma
 
 from variational_nodes import Unobserved_Variational_Node
-from utils import sigmoid
+from nodes import Node
+from utils import sigmoid, lambdafn
 
 """
 Module to define updates for non-conjugate matrix factorisation models using the Seeger approach
@@ -18,15 +19,12 @@ Reference: 'Fast Variational Bayesian Inference for Non-Conjugate Matrix Factori
 class PseudoY(Unobserved_Variational_Node):
     """
     General class for pseudodata nodes
-
-    IMPROVE EXPLANATION
-
     """
     def __init__(self, dim, obs, Zeta=None, E=None):
         # Inputs:
         #  dim (2d tuple): dimensionality of each view
         #  obs (ndarray): observed data
-        #  Zeta: parameter
+        #  Zeta: parameter (see reference paper)
         #  E (ndarray): initial expected value of pseudodata
         Unobserved_Variational_Node.__init__(self, dim)
 
@@ -42,19 +40,20 @@ class PseudoY(Unobserved_Variational_Node):
             self.mask()
 
         # Precompute some terms
-        self.precompute()
+        # self.precompute()
 
         # Initialise expectation
         if E is not None:
-            assert E.shape == dim.shape, "Problems with the dimensionalities"
+            assert E.shape == dim, "Problems with the dimensionalities"
+            E = ma.masked_invalid(E)
         else:
-            E = s.zeros(self.dim)
+            E = ma.masked_invalid(s.zeros(self.dim))
         self.E = E
 
     def updateParameters(self):
         Z = self.markov_blanket["Z"].getExpectation()
-        W = self.markov_blanket["W"].getExpectation()
-        self.Zeta = s.dot(Z,W.T)
+        SW = self.markov_blanket["SW"].getExpectation()
+        self.Zeta = s.dot(Z,SW.T)
 
     def mask(self):
         # Mask the observations if they have missing values
@@ -62,46 +61,43 @@ class PseudoY(Unobserved_Variational_Node):
 
     def precompute(self):
         # Precompute some terms to speed up the calculations
-        # self.N = self.dim[0]
-        # self.D = self.dim[1]
-        # self.lbconst = -0.5*self.N*self.D*s.log(2*s.pi)
-        # self.N = self.dim[0] - ma.getmask(self.obs).sum(axis=0)
-        # self.D = self.dim[1]
-        # self.lbconst = -0.5*s.sum(self.N)*s.log(2*s.pi)
         pass
 
     def updateExpectations(self):
+        print "Expectation updates for pseudodata node depend on the type of likelihood. They have to be specified in a child class."
+        exit()
         pass
 
     def getExpectation(self):
         return self.E
 
-    def getObservations(self):
-        return self.obs
-
-    def getValue(self):
-        return self.obs
-
     def getExpectations(self):
         return { 'E':self.getExpectation() }
 
+    def getObservations(self):
+        return self.obs
+
+    # def getValue(self):
+        # return self.obs
+
     def getParameters(self):
         return { 'zeta':self.Zeta }
-
-    # def getExpectations(self):
-        # return { 'obs':self.getObservations() }
 
     def calculateELBO(self):
         # TODO is it ever used ??
         # Compute Lower Bound using the Gaussian likelihood with pseudodata
         Z = self.markov_blanket["Z"].getExpectation()
-        W = self.markov_blanket["W"].getExpectation()
+        SW = self.markov_blanket["SW"].getExpectation()
         kappa = self.markov_blanket["kappa"].getExpectation()
 
-        lb = self.lbconst + s.sum(self.N*s.log(kappa))/2 - s.sum( kappa * (self.E-s.dot(Z,W.T))**2 )/2
+        lb = self.lbconst + s.sum(self.N*s.log(kappa))/2 - s.sum( kappa * (self.E-s.dot(Z,SW.T))**2 )/2
         return lb
 
-class Poisson_PseudoY_Node(PseudoY):
+##################
+## Seeger nodes ##
+##################
+
+class Poisson_PseudoY(PseudoY):
     """
     Class for a Poisson pseudodata node with the following likelihood:
         p(y|x) \prop gamma(x) * e^{-gamma(x)}  (1)
@@ -151,11 +147,11 @@ class Poisson_PseudoY_Node(PseudoY):
     def calculateELBO(self):
         # Compute Lower Bound using the Poisson likelihood with observed data
         Z = self.markov_blanket["Z"].getExpectation()
-        W = self.markov_blanket["W"].getExpectation()
-        tmp = self.ratefn(s.dot(Z,W.T))
+        SW = self.markov_blanket["SW"].getExpectation()
+        tmp = self.ratefn(s.dot(Z,SW.T))
         lb = s.sum( self.obs*s.log(tmp) - tmp)
         return lb
-class Bernoulli_PseudoY_Node(PseudoY):
+class Bernoulli_PseudoY(PseudoY):
     """
     Class for a Bernoulli (0,1 data) pseudodata node with the following likelihood:
         p(y|x) = (e^{yx}) / (1+e^x)  (1)
@@ -189,11 +185,11 @@ class Bernoulli_PseudoY_Node(PseudoY):
     def calculateELBO(self):
         # Compute Lower Bound using the Bernoulli likelihood with observed data
         Z = self.markov_blanket["Z"].getExpectation()
-        W = self.markov_blanket["W"].getExpectation()
-        tmp = s.dot(Z,W.T)
+        SW = self.markov_blanket["SW"].getExpectation()
+        tmp = s.dot(Z,SW.T)
         lik = s.sum( self.obs*tmp - s.log(1+s.exp(tmp)) )
         return lik
-class Binomial_PseudoY_Node(PseudoY):
+class Binomial_PseudoY(PseudoY):
     """
     Class for a Binomial pseudodata node with the following likelihood:
         p(x|N,theta) = p(x|N,theta) = binom(N,x) * theta**(x) * (1-theta)**(N-x)
@@ -235,13 +231,87 @@ class Binomial_PseudoY_Node(PseudoY):
     def calculateELBO(self):
         # Compute Lower Bound using the Bernoulli likelihood with observed data
         Z = self.markov_blanket["Z"].getExpectation()
-        W = self.markov_blanket["W"].getExpectation()
+        SW = self.markov_blanket["SW"].getExpectation()
 
-        tmp = sigmoid(s.dot(Z,W.T))
+        tmp = sigmoid(s.dot(Z,SW.T))
 
         # TODO change apprximation
         tmp[tmp==0] = 0.00000001
         tmp[tmp==1] = 0.99999999
         lik = s.log(s.special.binom(self.tot,self.obs)).sum() + s.sum(self.obs*s.log(tmp)) + \
             s.sum((self.tot-self.obs)*s.log(1-tmp))
+        return lik
+
+
+####################
+## Jaakkola nodes ##
+####################
+
+class Tau_Jaakkola(Node):
+    """
+    Add some description....
+    """
+    def __init__(self, dim, value):
+        Node.__init__(self, dim=dim)
+
+        if isinstance(value,(int,float)):
+            self.value = value * s.ones(dim)
+        else:
+            assert value.shape == dim, "Dimensionality mismatch"
+            self.value = value
+
+    def updateExpectations(self):
+        Zeta = self.markov_blanket["Y"].getParameters()["zeta"]
+        self.value = 2*lambdafn(Zeta)
+
+    def getValue(self):
+        return self.value
+
+    def getExpectation(self):
+        return self.getValue()
+        
+    def getExpectations(self):
+        return { 'E':self.getValue(), 'lnE':s.log(self.getValue()) }
+class Bernoulli_PseudoY_Jaakkola(PseudoY):
+    """
+    Class for a Bernoulli (0,1 data) pseudodata node with the following likelihood:
+        p(y|x) = (e^{yx}) / (1+e^x) 
+    Following Jaakola et al and intterpreting the bound as a liklihood on gaussian pseudodata
+    leads to the folllowing updates
+
+    Pseudodata is given by
+            yhat_ij = (2*y_ij-1)/(4*lambadfn(xi_ij))
+        where lambdafn(x)= tanh(x/2)/(4*x).
+    
+    Its conditional distribution is given by 
+            N((ZW)_ij, 1/(2 lambadfn(xi_ij)))       
+    
+    Updates for the variational parameter xi_ij are given by
+            sqrt(E((ZW)_ij^2))
+
+    xi_ij in above notation is the same as zeta (variational parameter)         
+
+    NOTE: For this class to work the noise variance tau needs to be updated according to 
+        tau_ij <- 2*lambadfn(xi_ij)
+    """
+    def __init__(self, dim, obs, Zeta=None, E=None):
+        PseudoY.__init__(self, dim=dim, obs=obs, Zeta=Zeta, E=E)
+
+        # Initialise the observed data
+        assert s.all( (self.obs==0) | (self.obs==1) ), "Data must be binary"
+
+    def updateExpectations(self):
+        self.E = (2.*self.obs - 1.)/(4.*lambdafn(self.Zeta))
+
+    def updateParameters(self):
+        Z = self.markov_blanket["Z"].getExpectations()
+        SW = self.markov_blanket["SW"].getExpectations()
+        self.Zeta = s.sqrt( s.square(Z["E"].dot(SW["E"].T)) - s.dot(s.square(Z["E"]),s.square(SW["E"].T)) + s.dot(Z["E2"], SW["ESWW"].T) )
+
+    def calculateELBO(self):
+        # Compute Lower Bound using the Bernoulli likelihood with observed data
+        Z = self.markov_blanket["Z"].getExpectation()
+        SW = self.markov_blanket["SW"].getExpectation()
+        tmp = s.dot(Z,SW.T)
+        lik = s.sum( self.obs*tmp - s.log(1+s.exp(tmp)) )
         return lik

@@ -68,7 +68,7 @@ Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=dat
 # Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 # 	likelihood="binomial", min_trials=10, max_trials=50, missingness=missingness)
 
-#data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
+# data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
 data["Y"] = ( Y_bernoulli[0], Y_bernoulli[1], Y_bernoulli[2] )
 # data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 
@@ -94,7 +94,7 @@ dim["K"] = K
 ##############################
 
 model_opts = {}
-#model_opts['likelihood'] = ['gaussian']* M
+# model_opts['likelihood'] = ['gaussian']* M
 # model_opts['likelihood'] = ['gaussian', 'poisson', 'bernoulli']
 model_opts['likelihood'] = ['bernoulli']*M
 model_opts['learnTheta'] = True
@@ -130,7 +130,7 @@ model_opts['covariates'] = None
 
 # Define schedule of updates
 # model_opts['schedule'] = ("SW","Z","Alpha","Tau","Theta","Y")
-model_opts['schedule'] = ("SW", "Z", "Clusters", "Theta", "Alpha", "Tau", 'Y')
+model_opts['schedule'] = ("Y","Tau","SW", "Z", "Clusters", "Theta", "Alpha")
 
 
 #############################

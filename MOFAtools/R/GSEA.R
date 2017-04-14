@@ -52,6 +52,7 @@ GSEA <- function(model, view, factor.indexes, gene.sets, local.statistic="loadin
   p <- pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=factor.indexes, gene.sets=gene.sets, gene.statistic=local.statistic,
         transformation=transformation, gene.set.statistic=global.statistic, gene.set.test=statistical.test, nperm=nperm)$p.values
   colnames(p) <- factorNames(model)[factor.indexes]
+  rownames(p) <- rownames(gene.sets)
   
   return(p)
 }

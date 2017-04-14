@@ -139,7 +139,7 @@ model_opts['schedule'] = ("Y","Tau","SW", "Z", "Clusters", "Theta", "Alpha")
 
 train_opts = {}
 train_opts['elbofreq'] = 1
-train_opts['maxiter'] = 1000
+train_opts['maxiter'] = 10
 # train_opts['tolerance'] = 1E-2
 train_opts['tolerance'] = 0.01
 train_opts['forceiter'] = True

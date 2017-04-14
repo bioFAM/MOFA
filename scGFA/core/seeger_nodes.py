@@ -77,8 +77,8 @@ class PseudoY(Unobserved_Variational_Node):
     def getObservations(self):
         return self.obs
 
-    # def getValue(self):
-        # return self.obs
+    def getValue(self):
+        return self.obs
 
     def getParameters(self):
         return { 'zeta':self.Zeta }

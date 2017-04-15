@@ -159,10 +159,8 @@ def saveTrainingOpts(opts, hdf5):
 	hdf5['training_opts'].attrs['names'] = opts.keys()
 
 def saveModelOpts(opts, hdf5):
-	opts_interest = ["schedule","likelihood","learnTheta"]
-	# opts_interest = ["schedule","likelihood"]
+	opts_interest = ["schedule","likelihood"]
 	opts = dict((k, opts[k]) for k in opts_interest)
-
 	grp=hdf5.create_group('model_opts')
 	for k,v in opts.items():
 		grp.create_dataset(k, data=v)
@@ -183,6 +181,12 @@ def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_na
 	assert model.trained == True, "Model is not trained yet"
 	assert len(np.unique(view_names)) == len(view_names), 'View names must be unique'
 	assert len(np.unique(sample_names)) == len(sample_names), 'Sample names must be unique'
+
+	# For some reason h5py orders the datasets alphabetically, so we have to modify the likelihood accordingly
+	idx = sorted(range(len(view_names)), key=lambda k: view_names[k])
+	tmp = [model_opts["likelihood"][idx[m]] for m in xrange(len(model_opts["likelihood"]))]
+	model_opts["likelihood"] = tmp
+
 	hdf5 = h5py.File(outfile,'w')
 	saveExpectations(model,hdf5,view_names)
 	saveParameters(model,hdf5,view_names)

@@ -1,9 +1,8 @@
 
 library(MOFAtools)
 
-# file = "/Users/ricard/data/CLL/out/robustness/trained_model_batch2_1.hdf5"
-# file = "/Users/ricard/data/CLL/out/imputation/model_0.05.hdf5"
-file = "/Users/ricard/test.hdf5"
+file = "/tmp/test.h5"
+# file = "/Users/ricard/test.hdf5"
 model <- loadModel(file)
 
 showWeights(model,view="mRNA", factors="all", main=NULL, cluster_rows=F, cluster_cols=F, show_rownames=F)

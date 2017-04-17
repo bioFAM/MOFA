@@ -82,6 +82,18 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     print "#"*45
     print "\n"
 
+    ###########################
+    ## Perform sanity checks ##
+    ###########################
+
+    if not os.path.isdir(os.path.dirname(data_opts["outfile"])):
+        print "Error: Output directory does not exist"
+        exit()
+
+    # If it doesnt exist, create the output folder
+    # outdir = os.path.dirname(data_opts['outfile'])
+    # if not os.path.exists(outdir): os.makedirs(outdir)
+
     ####################
     ## Parse the data ##
     ####################
@@ -167,16 +179,6 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
 
 # Function to run multiple trials of the model
 def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, verbose=True):
-
-    # If it doesnt exist, create the output folder
-    outdir = os.path.dirname(data_opts['outfile'])
-    if not os.path.exists(outdir): os.makedirs(outdir)
-
-    ###################
-    ## Load the data ##
-    ###################
-
-    # data = loadData(data_opts, verbose)
 
     #########################
     ## Run parallel trials ##

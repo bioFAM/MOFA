@@ -48,9 +48,9 @@ setReplaceMethod("featureNames", signature(object="MODAmodel", value="list"),
             if (!.hasSlot(object,"TrainData"))
               stop("Before assigning feature names you have to assign the training data")
             if (.hasSlot(object,"Dimensions"))
-              if (!all(sapply(value,length) == object@Dimensions["D"]))
+              if (!all(sapply(value,length) == object@Dimensions[["D"]]))
                 stop("Length of feature names does not match the dimensionality of the model")
-            if (!sapply(value,length)==sapply(object@TrainData,ncol))
+            if (!all(sapply(value,length)==sapply(object@TrainData,ncol)))
               stop("feature names do not match the dimensionality of the data (columns)")
             for (m in 1:length(object@TrainData))
               colnames(object@TrainData[[m]]) <- value[[m]]

@@ -21,7 +21,7 @@
 GSEA <- function(model, view, factor.indexes, gene.sets, local.statistic="loading",
                   transformation="none", global.statistic="mean.diff", statistical.test="cor.adj.parametric", nperm=1, min_size=10) {
   
-  if (factor.indexes == "all") {
+  if (paste0(factor.indexes,sep="",collapse="") == "all") { 
     factor.indexes <- 1:model@Dimensions[["K"]]
   }
   
@@ -184,7 +184,7 @@ computeGeneStatistics = function(data, prcomp.output, pc.index, gene.statistic, 
     gene.statistics = prcomp.output$rotation[,pc.index]
   } else {
     # compute the Pearson correlation between the selected PCs and the data
-    gene.statistics = cor(data, prcomp.output$x[,pc.index]) 
+    gene.statistics = cor(data, prcomp.output$x[,pc.index], use = "complete.obs") 
     if (gene.statistic == "z") {
       # use Fisher's Z transformation to convert to Z-statisics
       gene.statistics = sapply(gene.statistics, function(x) {
@@ -221,7 +221,7 @@ pcgseViaTTest = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene
     
     if (cor.adjustment) {      
       # compute sample correlation matrix for members of gene set
-      cor.mat = cor(data[,indexes.for.gene.set])
+      cor.mat = cor(data[,indexes.for.gene.set], use = "complete.obs")
       # compute the mean pair-wise correlation 
       mean.cor = (sum(cor.mat) - m1)/(m1*(m1-1))    
       # compute the VIF, using CAMERA formula from Wu et al., based on Barry et al.
@@ -276,7 +276,7 @@ setMethod("local.GeneStatistics",
               n = ncol(data) 
               gene.statistics = rep(0, p)
               # compute the Pearson correlation between the selected PCs and the data
-              gene.statistics = cor(t(data), vector) 
+              gene.statistics = cor(t(data), vector, use = "complete.obs") 
               if (gene.statistic == "z") {
                 # use Fisher's Z transformation to convert to Z-statisics
                 gene.statistics = sapply(gene.statistics, function(x) {

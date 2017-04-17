@@ -25,15 +25,15 @@ CalculateVariance_Views <- function(object, views="all", factors="all", method=N
     stop("'object' has to be an instance of MOFAmodel")
   
   # Define views
-  if (views=="all") { 
-    views <- viewNames(object) 
+  if (paste0(views,sep="",collapse="") =="all") { 
+    views <- viewNames(object)
   } else {
     stopifnot(all(views %in% viewNames(object)))  
   }
   M <- length(views)
   
   # Define factors
-  if (factors=="all") { 
+  if (paste0(factors,sep="",collapse="") == "all") { 
     factors <- factorNames(object) 
   } else {
     stopifnot(all(factors %in% factorNames(object)))  
@@ -62,10 +62,10 @@ CalculateVariance_Views <- function(object, views="all", factors="all", method=N
   # This is better because it is dependent on how well our object fits the data
   Ypred_m <- lapply(views, function(m) Z%*%t(SW[[m]])); names(Ypred_m) <- views
   # fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2) / sum((Y[[m]]-mean(unlist(Y[[m]])))**2))
-  fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2) / sum(sweep(Y[[m]],2,apply(Y[[m]],2,mean),"-")**2))
+  fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2, na.rm=T) / sum(sweep(Y[[m]],2,apply(Y[[m]],2,mean,na.rm=T),"-")**2, na.rm=T))
   
   Ypred_mk <- lapply(views, function(m) sapply(factors, function(k) Z[,k]%*%t(SW[[m]][,k]) ) ); names(Ypred_mk) <- views
-  fvar_mk <- sapply(views, function(m) sapply(factors, function(k) 1 - sum((Y[[m]]-Ypred_mk[[m]][,k])**2) / sum((Y[[m]] - mean(unlist(Y[[m]])))**2) ) )
+  fvar_mk <- sapply(views, function(m) sapply(factors, function(k) 1 - sum((Y[[m]]-Ypred_mk[[m]][,k])**2, na.rm=T) / sum(sweep(Y[[m]],2,apply(Y[[m]],2,mean,na.rm=T),"-")**2, na.rm=T) ))
   
   # Set matrix names
   colnames(fvar_mk) <- views

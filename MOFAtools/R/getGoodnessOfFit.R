@@ -13,12 +13,13 @@
 #' @param views Views to use, default is "all"
 #' @param factors Latent variables or factores to use, default is "all"
 #' @param plotit boolean, wether to produce a plot (default true)
+#' @param perFeature boolean, whether to calculate in addition variance explained per feature (and factor) (default FALSE)
 #' @details fill this
 #' @return a list containing list of R2 for all gaussian views and list of BS for all binary views
 #' @import pheatmap gridExtra ggplot2
 #' @export
 
-getGoodnessOfFit <- function(object, views="all", factors="all", plotit=T) {
+getGoodnessOfFit <- function(object, views="all", factors="all", plotit=T, perFeature=F) {
   
   # Define views
   if (paste0(views,sep="",collapse="") =="all") { 
@@ -69,20 +70,24 @@ getGoodnessOfFit <- function(object, views="all", factors="all", plotit=T) {
     #   per view
     fvar_m <- sapply(views[gaussianViews], function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2, na.rm=T) / sum(sweep(Y[[m]],2,apply(Y[[m]],2,mean,na.rm=T),"-")**2, na.rm=T))
     #   per view and feature
-    fvar_md <- lapply(views[gaussianViews], function(m) 1 - colSums((Y[[m]]-Ypred_m[[m]])**2,na.rm=T) / colSums(sweep(Y[[m]],2,apply(Y[[m]],2,mean,na.rm=T),"-")**2,na.rm=T))
+    if(perFeature)
+      fvar_md <- lapply(views[gaussianViews], function(m) 1 - colSums((Y[[m]]-Ypred_m[[m]])**2,na.rm=T) / colSums(sweep(Y[[m]],2,apply(Y[[m]],2,mean,na.rm=T),"-")**2,na.rm=T))
     #   per factor and view
     # fvar_mk <- sapply(views[gaussianViews], function(m) sapply( seq_along(factors), function(k) 1 - sum((Y[[m]]-Ypred_mk[[m]][,k])**2) / sum(sweep(Y[[m]],2,apply(Y[[m]],2,mean),"-")**2)))
     fvar_mk <- sapply(views[gaussianViews], function(m) sapply(factors, function(k) 1 - sum((Y[[m]]-Ypred_mk[[m]][,k])**2, na.rm=T) / sum(sweep(Y[[m]],2,apply(Y[[m]],2,mean,na.rm=T),"-")**2, na.rm=T) ))
     #   per factor and view and feature
-    # fvar_mdk <- lapply(views[gaussianViews], function(m) sapply( seq_along(factors), function(k) 1 - colSums((Y[[m]]-Ypred_mk[[m]][,k])**2) / colSums(sweep(Y[[m]],2,apply(Y[[m]],2,mean),"-")**2)))
-    fvar_mdk <- lapply(views[gaussianViews], function(m) sapply(factors, function(k) 1 - colSums((Y[[m]]-Ypred_mk[[m]][,k])**2,na.rm=T) / colSums(sweep(Y[[m]],2,apply(Y[[m]],2,mean,na.rm=T),"-")**2,na.rm=T)))
+    if(perFeature)
+      # fvar_mdk <- lapply(views[gaussianViews], function(m) sapply( seq_along(factors), function(k) 1 - colSums((Y[[m]]-Ypred_mk[[m]][,k])**2) / colSums(sweep(Y[[m]],2,apply(Y[[m]],2,mean),"-")**2)))
+      fvar_mdk <- lapply(views[gaussianViews], function(m) sapply(factors, function(k) 1 - colSums((Y[[m]]-Ypred_mk[[m]][,k])**2,na.rm=T) / colSums(sweep(Y[[m]],2,apply(Y[[m]],2,mean,na.rm=T),"-")**2,na.rm=T)))
     
     # Set names
     names(fvar_m) <- views[gaussianViews]
-    names(fvar_md) <- views[gaussianViews]
-    names(fvar_mdk) <- views[gaussianViews]
-    for(i in names(fvar_md)) names(fvar_md[[i]]) <- colnames(object@TrainData[[i]])
-    for(i in names(fvar_mdk)) rownames(fvar_mdk[[i]]) <- colnames(object@TrainData[[i]])
+    if(perFeature){
+      names(fvar_md) <- views[gaussianViews]
+      names(fvar_mdk) <- views[gaussianViews]
+      for(i in names(fvar_md)) names(fvar_md[[i]]) <- colnames(object@TrainData[[i]])
+      for(i in names(fvar_mdk)) rownames(fvar_mdk[[i]]) <- colnames(object@TrainData[[i]])
+    }
     colnames(fvar_mk) <- views[gaussianViews]
     rownames(fvar_mk) <- factors 
   
@@ -106,9 +111,12 @@ getGoodnessOfFit <- function(object, views="all", factors="all", plotit=T) {
     GoodnessFitList$gaussian <- list(
       R2Total = fvar_m,
       R2PerFactor = fvar_mk, 
-      R2PerFactorAndFeature = fvar_mdk,
-      R2PerFeature = fvar_md,
       measure = "R2")
+    
+    if(perFeature){
+      GoodnessFitList$gaussian$R2PerFactorAndFeature = fvar_mdk
+      GoodnessFitList$gaussian$R2PerFeature = fvar_md
+    }
   }
   
   
@@ -124,18 +132,22 @@ getGoodnessOfFit <- function(object, views="all", factors="all", plotit=T) {
     #   per view
     BS_m <- sapply(views[bernoulliViews], function(m) 1/sum(!is.na(Y[[m]]))*sum((Yprob_m[[m]]-Y[[m]])^2, na.rm=T))
     #   per view and feature
-    BS_md <- lapply(views[bernoulliViews], function(m) 1/colSums(!is.na(Y[[m]]))*colSums((Yprob_m[[m]]-Y[[m]])^2, na.rm=T))
+    if(perFeature)
+      BS_md <- lapply(views[bernoulliViews], function(m) 1/colSums(!is.na(Y[[m]]))*colSums((Yprob_m[[m]]-Y[[m]])^2, na.rm=T))
     #   per view and factor
     BS_mk <- sapply(views[bernoulliViews], function(m) sapply( seq_along(factors), function(k) 1/sum(!is.na(Y[[m]]))*sum((Yprob_mk[[m]][,k]-Y[[m]])^2, na.rm=T)))
     #   per view, feature and factor
-    BS_mdk <- lapply(views[bernoulliViews], function(m) sapply( seq_along(factors), function(k) 1/colSums(!is.na(Y[[m]]))*colSums((Yprob_mk[[m]][,k]-Y[[m]])^2, na.rm=T)))
+    if(perFeature)
+      BS_mdk <- lapply(views[bernoulliViews], function(m) sapply( seq_along(factors), function(k) 1/colSums(!is.na(Y[[m]]))*colSums((Yprob_mk[[m]][,k]-Y[[m]])^2, na.rm=T)))
     
     # Set names
     names(BS_m) <- views[bernoulliViews]
-    names(BS_md) <- views[bernoulliViews]
-    names(BS_mdk) <- views[bernoulliViews]
-    for(i in names(BS_md)) names(BS_md[[i]])<-colnames(object@TrainData[[i]])
-    for(i in names(BS_mdk)) rownames(BS_mdk[[i]])<-colnames(object@TrainData[[i]])
+    if(perFeature){
+      names(BS_md) <- views[bernoulliViews]
+      names(BS_mdk) <- views[bernoulliViews]
+      for(i in names(BS_md)) names(BS_md[[i]])<-colnames(object@TrainData[[i]])
+      for(i in names(BS_mdk)) rownames(BS_mdk[[i]])<-colnames(object@TrainData[[i]])
+    }
     colnames(BS_mk) <- views[bernoulliViews]
     rownames(BS_mk) <- factors 
     
@@ -160,9 +172,12 @@ getGoodnessOfFit <- function(object, views="all", factors="all", plotit=T) {
     GoodnessFitList$bernoulli <- list(
       BSTotal=BS_m, 
       BSPerFactor=BS_mk,
-      BSPerFactorAndFeature=BS_mdk,
-      BSPerFeature=BS_md,
       measure="BS")
+    
+    if(perFeature){
+      GoodnessFitList$bernoulli$BSPerFactorAndFeature=BS_mdk
+      GoodnessFitList$bernoulli$BSPerFeature=BS_md
+    }
   }
   
   

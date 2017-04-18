@@ -13,15 +13,15 @@ FeaturesCorPlot <- function(object, view, method="pearson", regress_factors=NULL
     stop("'object' has to be an instance of MOFAmodel")
   
   # Select 'top' most variable features
-  data <- model@TrainData[[view]]
+  data <- object@TrainData[[view]]
   top_features <- names(tail(sort(apply(data,2,var)),n=top))
   data <- data[,top_features]
   
   # Regress out latent variables
   if (!is.null(regress_factors)) {
-    if (regress_factors=="all") { regress_factors <- 1:model@Dimensions$K }
-    SW <- getExpectations(model,"SW","E")[[view]]#; rownames(SW) <- colnames(model@TrainData[[view]])
-    Z <- getExpectations(model,"Z","E")
+    if (regress_factors=="all") { regress_factors <- 1:object@Dimensions$K }
+    SW <- getExpectations(object,"SW","E")[[view]]#; rownames(SW) <- colnames(object@TrainData[[view]])
+    Z <- getExpectations(object,"Z","E")
     data <- data - t(SW[top_features,] %*% t(Z[,regress_factors]))
   }
   
@@ -54,7 +54,7 @@ FactorsCorPlot <- function(object, method="pearson", ...) {
   if (class(object) != "MOFAmodel")
     stop("'object' has to be an instance of MOFAmodel")
   
-  Z <- model@Expectations$Z$E
+  Z <- object@Expectations$Z$E
   h <- cor(x=Z, y=Z, method=method)
   p <- corrplot::corrplot(h, tl.col="black", ...)
   return(p)

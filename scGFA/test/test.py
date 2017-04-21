@@ -38,15 +38,15 @@ K = 6
 data = {}
 tmp = Simulate(M=M, N=N, D=D, K=K)
 
-# data['Z'] = s.zeros((N,K))
-# data['Z'][:,0] = s.sin(s.arange(N)/(N/20))
-# data['Z'][:,1] = s.cos(s.arange(N)/(N/20))
-# data['Z'][:,2] = 2*(s.arange(N)/N-0.5)
-# data['Z'][:,3] = stats.norm.rvs(loc=0, scale=1, size=N)
-# data['Z'][:,4] = stats.norm.rvs(loc=0, scale=1, size=N)
-# data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
+data['Z'] = s.zeros((N,K))
+data['Z'][:,0] = s.sin(s.arange(N)/(N/20))
+data['Z'][:,1] = s.cos(s.arange(N)/(N/20))
+data['Z'][:,2] = 2*(s.arange(N)/N-0.5)
+data['Z'][:,3] = stats.norm.rvs(loc=0, scale=1, size=N)
+data['Z'][:,4] = stats.norm.rvs(loc=0, scale=1, size=N)
+data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
 
-data['Z'] = stats.norm.rvs(loc=0, scale=1, size=(N,K))
+# data['Z'] = stats.norm.rvs(loc=0, scale=1, size=(N,K))
 
 
 data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
@@ -101,13 +101,14 @@ model_opts = {}
 model_opts['likelihood'] = ['gaussian']* M
 # model_opts['likelihood'] = ['gaussian', 'poisson', 'bernoulli']
 # model_opts['likelihood'] = ['bernoulli']*M
-model_opts['learnTheta'] = False
+model_opts['learnTheta'] = True
 model_opts['k'] = K
 
 
 # Define priors
-model_opts["priorZ"] = { 'mean':0., 'var':1. }
-model_opts["priorAlpha"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
+model_opts["priorZ"] = { 'mean':0., 'var':s.nan }
+model_opts["priorAlphaW"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
+model_opts["priorAlphaZ"] = { 'a':1e-14, 'b':1e-14 }
 model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M }
 model_opts["priorTau"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
 if model_opts['learnTheta']:
@@ -115,10 +116,11 @@ if model_opts['learnTheta']:
 
 # Define initialisation options
 model_opts["initZ"] = { 'mean':"random", 'var':1., 'E':None, 'E2':None }
-model_opts["initAlpha"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10000.]*M }
+model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
+model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':1. }
 model_opts["initSW"] = { 'Theta':[0.5]*M,
 # model_opts["initSW"] = { 'Theta':[1.0]*M,
-                          'mean_S0':[0.]*M, 'var_S0':model_opts["initAlpha"]['E'],
+                          'mean_S0':[0.]*M, 'var_S0':model_opts["initAlphaW"]['E'],
                           'mean_S1':[0]*M, 'var_S1':[1.]*M,
                           'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M}
 # model_opts["initTau"] = { 'a':[1.,1.,None], 'b':[1.,1.,None], 'E':[100.,100.,None] }
@@ -137,8 +139,9 @@ model_opts['covariates'] = None
 # Define schedule of updates
 # model_opts['schedule'] = ("SW","Z","Clusters","Alpha","Y","Tau","Theta")
 # model_opts['schedule'] = ("SW","Z","Alpha","Tau")
-model_opts['schedule'] = ("SW","Z","Clusters","Alpha","Tau","Theta")
 # model_opts['schedule'] = ("Y","Tau","SW", "Z", "Clusters", "Theta", "Alpha")
+# model_opts['schedule'] = ("SW","Z","AlphaZ","AlphaW","Tau","Theta")
+model_opts['schedule'] = ("SW","Z","AlphaW","Tau","Theta")
 
 
 #############################
@@ -151,7 +154,6 @@ train_opts['maxiter'] = 1000
 # train_opts['tolerance'] = 1E-2
 train_opts['tolerance'] = 0.01
 train_opts['forceiter'] = True
-# train_opts['dropK'] = { "by_norm":0.01, "by_pvar":None, "by_cor":None, "by_r2":0.01 }
 train_opts['drop'] = { "by_norm":0.01, "by_pvar":None, "by_cor":None, "by_r2":None }
 train_opts['startdrop'] = 10
 train_opts['freqdrop'] = 1
@@ -172,5 +174,5 @@ data_opts = {}
 data_opts["outfile"] = "/tmp/test.h5"
 data_opts['view_names'] = ["g","p","b"]
 
-runMultipleTrials(data["Y"], data_opts, model_opts, train_opts, keep_best_run)
-# runSingleTrial(data["Y"], model_opts, train_opts)
+# runMultipleTrials(data["Y"], data_opts, model_opts, train_opts, keep_best_run)
+runSingleTrial(data["Y"], data_opts, model_opts, train_opts)

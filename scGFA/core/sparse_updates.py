@@ -81,97 +81,97 @@ class Y_Node(Constant_Variational_Node):
         lik = self.likconst + 0.5*s.sum(self.N*(tau_exp["lnE"])) - s.dot(tau_exp["E"],tauQ_param["b"]-tauP_param["b"])
         return lik
 
-class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
-    def __init__(self, dim, pmean, pvar, qmean, qvar, qE=None, qE2=None, idx_covariates=None):
-        super(Z_Node,self).__init__(dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE, qE2=qE2)
-        self.precompute()
+# class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
+#     def __init__(self, dim, pmean, pvar, qmean, qvar, qE=None, qE2=None, idx_covariates=None):
+#         super(Z_Node,self).__init__(dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE, qE2=qE2)
+#         self.precompute()
 
-        # Define indices for covariates
-        if idx_covariates is not None:
-            self.covariates[idx_covariates] = True
+#         # Define indices for covariates
+#         if idx_covariates is not None:
+#             self.covariates[idx_covariates] = True
 
-    def precompute(self):
-        # Precompute terms to speed up computation
-        self.N = self.dim[0]
-        self.covariates = np.zeros(self.dim[1], dtype=bool)
-        self.factors_axis = 1
+#     def precompute(self):
+#         # Precompute terms to speed up computation
+#         self.N = self.dim[0]
+#         self.covariates = np.zeros(self.dim[1], dtype=bool)
+#         self.factors_axis = 1
 
-    def getLvIndex(self):
-        # Method to return the index of the latent variables (without covariates)
-        latent_variables = np.array(range(self.dim[1]))
-        if any(self.covariates):
-            latent_variables = np.delete(latent_variables, latent_variables[self.covariates])
-        return latent_variables
+#     def getLvIndex(self):
+#         # Method to return the index of the latent variables (without covariates)
+#         latent_variables = np.array(range(self.dim[1]))
+#         if any(self.covariates):
+#             latent_variables = np.delete(latent_variables, latent_variables[self.covariates])
+#         return latent_variables
 
-    def updateParameters(self):
+#     def updateParameters(self):
 
-        # Collect expectations from the markov blanket
-        Y = self.markov_blanket["Y"].getExpectation()
-        SWtmp = self.markov_blanket["SW"].getExpectations()
-        tau = self.markov_blanket["Tau"].getExpectation()
-        Mu = self.markov_blanket['Cluster'].getExpectation()
+#         # Collect expectations from the markov blanket
+#         Y = self.markov_blanket["Y"].getExpectation()
+#         SWtmp = self.markov_blanket["SW"].getExpectations()
+#         tau = self.markov_blanket["Tau"].getExpectation()
+#         Mu = self.markov_blanket['Cluster'].getExpectation()
 
-        # Check dimensionality of Tau and expand if necessary (for Jaakola's bound only)
-        for m in xrange(len(Y)):
-            if tau[m].shape != Y[m].shape:
-                tau[m] = s.repeat(tau[m][None,:], self.N, axis=0)
+#         # Check dimensionality of Tau and expand if necessary (for Jaakola's bound only)
+#         for m in xrange(len(Y)):
+#             if tau[m].shape != Y[m].shape:
+#                 tau[m] = s.repeat(tau[m][None,:], self.N, axis=0)
 
-        # Collect parameters from the P and Q distributions of this node
-        P,Q = self.P.getParameters(), self.Q.getParameters()
-        Pvar, Qmean, Qvar = P['var'], Q['mean'], Q['var']
+#         # Collect parameters from the P and Q distributions of this node
+#         P,Q = self.P.getParameters(), self.Q.getParameters()
+#         Pvar, Qmean, Qvar = P['var'], Q['mean'], Q['var']
 
-        # Concatenate multi-view nodes to avoid looping over M (maybe its not a good idea)
-        M = len(Y)
-        Y = ma.concatenate([Y[m] for m in xrange(M)],axis=1)
-        SW = s.concatenate([SWtmp[m]["E"]for m in xrange(M)],axis=0)
-        SWW = s.concatenate([SWtmp[m]["ESWW"] for m in xrange(M)],axis=0)
-        tau = s.concatenate([tau[m] for m in xrange(M)],axis=1)
+#         # Concatenate multi-view nodes to avoid looping over M (maybe its not a good idea)
+#         M = len(Y)
+#         Y = ma.concatenate([Y[m] for m in xrange(M)],axis=1)
+#         SW = s.concatenate([SWtmp[m]["E"]for m in xrange(M)],axis=0)
+#         SWW = s.concatenate([SWtmp[m]["ESWW"] for m in xrange(M)],axis=0)
+#         tau = s.concatenate([tau[m] for m in xrange(M)],axis=1)
 
-        # Update variance
-        Qvar_copy = Qvar.copy()
-        Qvar = 1./(1./Pvar + s.dot(tau,SWW))
-        # print "start test:"
-        # print 1./(1./Pvar + s.dot(tau,SWW))
-        # print "end test:"
+#         # Update variance
+#         Qvar_copy = Qvar.copy()
+#         Qvar = 1./(1./Pvar + s.dot(tau,SWW))
+#         # print "start test:"
+#         # print 1./(1./Pvar + s.dot(tau,SWW))
+#         # print "end test:"
 
-        # restoring values of the variance for the covariates
-        if any(self.covariates):
-            Qvar[:, self.covariates] = Qvar_copy[:, self.covariates]
+#         # restoring values of the variance for the covariates
+#         if any(self.covariates):
+#             Qvar[:, self.covariates] = Qvar_copy[:, self.covariates]
 
-        # Update mean
-        latent_variables = self.getLvIndex() # excluding covariates from the list of latent variables
-        for k in latent_variables:
-            Qmean[:,k] = Qvar[:,k] * (  1./Pvar[:,k]*Mu[:,k] + ma.dot(
-                tau*(Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )),
-                SW[:,k])  )
+#         # Update mean
+#         latent_variables = self.getLvIndex() # excluding covariates from the list of latent variables
+#         for k in latent_variables:
+#             Qmean[:,k] = Qvar[:,k] * (  1./Pvar[:,k]*Mu[:,k] + ma.dot(
+#                 tau*(Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )),
+#                 SW[:,k])  )
 
-        # Save updated parameters of the Q distribution
-        self.Q.setParameters(mean=Qmean, var=Qvar)
+#         # Save updated parameters of the Q distribution
+#         self.Q.setParameters(mean=Qmean, var=Qvar)
 
-    def calculateELBO(self):
-        # Collect parameters and expectations of current node
-        Ppar,Qpar,Qexp = self.P.getParameters(), self.Q.getParameters(), self.Q.getExpectations()
-        Pvar, Qmean, Qvar = Ppar['var'], Qpar['mean'], Qpar['var']
-        PE, PE2 = self.markov_blanket['Cluster'].getExpectations()['E'], self.markov_blanket['Cluster'].getExpectations()['E2']
-        QE, QE2 = Qexp['E'],Qexp['E2']
+#     def calculateELBO(self):
+#         # Collect parameters and expectations of current node
+#         Ppar,Qpar,Qexp = self.P.getParameters(), self.Q.getParameters(), self.Q.getExpectations()
+#         Pvar, Qmean, Qvar = Ppar['var'], Qpar['mean'], Qpar['var']
+#         PE, PE2 = self.markov_blanket['Cluster'].getExpectations()['E'], self.markov_blanket['Cluster'].getExpectations()['E2']
+#         QE, QE2 = Qexp['E'],Qexp['E2']
 
-        # This ELBO term contains only cross entropy between Q and P,and entropy of Q. So the covariates should not intervene at all
-        latent_variables = self.getLvIndex()
-        Pvar, Qmean, Qvar = Pvar[:, latent_variables], Qmean[:, latent_variables], Qvar[:, latent_variables]
-        PE, PE2 = PE[:, latent_variables], PE2[:, latent_variables]
-        QE, QE2 = QE[:, latent_variables],QE2[:, latent_variables]
+#         # This ELBO term contains only cross entropy between Q and P,and entropy of Q. So the covariates should not intervene at all
+#         latent_variables = self.getLvIndex()
+#         Pvar, Qmean, Qvar = Pvar[:, latent_variables], Qmean[:, latent_variables], Qvar[:, latent_variables]
+#         PE, PE2 = PE[:, latent_variables], PE2[:, latent_variables]
+#         QE, QE2 = QE[:, latent_variables],QE2[:, latent_variables]
 
-        # compute term from the exponential in the Gaussian
-        tmp1 = 0.5*QE2 - PE*QE + 0.5*PE2
-        tmp1 = -(tmp1/Pvar).sum()
+#         # compute term from the exponential in the Gaussian
+#         tmp1 = 0.5*QE2 - PE*QE + 0.5*PE2
+#         tmp1 = -(tmp1/Pvar).sum()
 
-        # compute term from the precision factor in front of the Gaussian
-        tmp2 = - (s.log(Pvar)/2.).sum()
+#         # compute term from the precision factor in front of the Gaussian
+#         tmp2 = - (s.log(Pvar)/2.).sum()
 
-        lb_p = tmp1 + tmp2
-        lb_q = - (s.log(Qvar).sum() + self.N*self.dim[1])/2.
+#         lb_p = tmp1 + tmp2
+#         lb_q = - (s.log(Qvar).sum() + self.N*self.dim[1])/2.
 
-        return lb_p-lb_q
+#         return lb_p-lb_q
 
 class Tau_Node(Gamma_Unobserved_Variational_Node):
     def __init__(self, dim, pa, pb, qa, qb, qE=None):
@@ -224,15 +224,15 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
 
         return lb_p - lb_q
 
-class Alpha_Node(Gamma_Unobserved_Variational_Node):
+class AlphaW_Node(Gamma_Unobserved_Variational_Node):
     def __init__(self, dim, pa, pb, qa, qb, qE=None):
         # Gamma_Unobserved_Variational_Node.__init__(self, dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
-        super(Alpha_Node,self).__init__(dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+        super(AlphaW_Node,self).__init__(dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
         self.precompute()
 
     def precompute(self):
         # self.lbconst = self.K * ( self.P.a*s.log(self.P.b) - special.gammaln(self.P.a) )
-        self.lbconst = s.sum( self.P.params['a']*s.log(self.P.params['b']) - special.gammaln(self.P.params['a']) )
+        # self.lbconst = s.sum( self.P.params['a']*s.log(self.P.params['b']) - special.gammaln(self.P.params['a']) )
         self.factors_axis = 0
 
     def updateParameters(self):
@@ -259,7 +259,7 @@ class Alpha_Node(Gamma_Unobserved_Variational_Node):
         QE, QlnE = self.Q.expectations['E'], self.Q.expectations['lnE']
 
         # Do the calculations
-        lb_p = self.lbconst + s.sum((Pa-1)*QlnE) - s.sum(Pb*QE)
+        lb_p = s.sum( self.P.params['a']*s.log(self.P.params['b']) - special.gammaln(self.P.params['a']) ) + s.sum((Pa-1)*QlnE) - s.sum(Pb*QE)
         lb_q = s.sum(Qa*s.log(Qb)) + s.sum((Qa-1)*QlnE) - s.sum(Qb*QE) - s.sum(special.gammaln(Qa))
 
         return lb_p - lb_q
@@ -444,150 +444,126 @@ class Theta_Constant_Node(Constant_Variational_Node):
 
 
 
-###############
-## TO-FINISH ##
-###############
+####################
+## ARD prior on Z ##
+####################
 
-class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
-    """ """
-    def __init__(self, pmean, pvar, qmean, qvar, clusters, n_Z, cluster_dic=None, qE=None, qE2=None):
-        # compute dim from numbers of clusters (n_clusters * Z)
-        self.clusters = clusters
-        self.n_clusters = len(np.unique(clusters))
-        dim = (self.n_clusters, n_Z)
+class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
+    def __init__(self, dim, pmean, pvar, qmean, qvar, qE=None, qE2=None, idx_covariates=None):
+        super(Z_Node,self).__init__(dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE, qE2=qE2)
+        self.precompute()
+
+        # Define indices for covariates
+        if idx_covariates is not None:
+            self.covariates[idx_covariates] = True
+
+    def precompute(self):
+        # Precompute terms to speed up computation
+        self.N = self.dim[0]
+        self.covariates = np.zeros(self.dim[1], dtype=bool)
         self.factors_axis = 1
-        super(Cluster_Node_Gaussian, self).__init__(dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE, qE2=qE2)
 
-
-    def getExpectations(self):
-        # reshape the values to N_samples * N_factors and return
-        QExp = self.Q.getExpectations()
-        expanded_expectation = QExp['E'][self.clusters, :]
-        expanded_E2 = QExp['E2'][self.clusters, :]
-        # do we need to expand the variance as well -> not used I think
-        return {'E': expanded_expectation , 'E2': expanded_E2}
+    def getLvIndex(self):
+        # Method to return the index of the latent variables (without covariates)
+        latent_variables = np.array(range(self.dim[1]))
+        if any(self.covariates):
+            latent_variables = np.delete(latent_variables, latent_variables[self.covariates])
+        return latent_variables
 
     def updateParameters(self):
-        Ppar = self.P.getParameters()
-        ZQPar = self.markov_blanket['Z'].Q.getParameters()
-        Qmean, Qvar = self.Q.getParameters()['mean'], self.Q.getParameters()['var']
 
-        ZTau = 1./ZQPar['var']
-        ZTauMean = ZQPar['mean']/ZQPar['var']
+        # Collect expectations from the markov blanket
+        Y = self.markov_blanket["Y"].getExpectation()
+        SWtmp = self.markov_blanket["SW"].getExpectations()
+        tau = self.markov_blanket["Tau"].getExpectation()
+        Alpha = self.markov_blanket['Alpha'].getExpectation() # Notice that this Alpha is the ARD prior on Z, not on W.
 
-        # TODO merge two loops when sure it's clean
-        # update of the variance
-        for c in range(self.n_clusters):
-            mask = (self.clusters == c)
-            tmp = (ZTau[mask, :]).sum(axis=0)
-            Qvar[c,:] = tmp
-        Qvar += 1./Ppar['var']
-        Qvar = 1./Qvar
+        # Check dimensionality of Tau and expand if necessary (for Jaakola's bound only)
+        for m in xrange(len(Y)):
+            if tau[m].shape != Y[m].shape:
+                tau[m] = s.repeat(tau[m][None,:], self.N, axis=0)
 
-        # update of the mean
-        for c in range(self.n_clusters):
-            mask = (self.clusters == c)
-            tmp = (ZTauMean[mask, :]).sum(axis=0)
-            Qmean[c,:] = tmp
-        Qmean = Qmean + Ppar['mean']/Ppar['var']
-        Qmean *= Qvar
+        # Collect parameters from the P and Q distributions of this node
+        # P,Q = self.P.getParameters(), self.Q.getParameters()
+        Q = self.Q.getParameters()
+        # Pvar, Qmean, Qvar = P['var'], Q['mean'], Q['var']
+        Qmean, Qvar = Q['mean'], Q['var']
 
+        # Concatenate multi-view nodes to avoid looping over M (maybe its not a good idea)
+        M = len(Y)
+        Y = ma.concatenate([Y[m] for m in xrange(M)],axis=1)
+        SW = s.concatenate([SWtmp[m]["E"]for m in xrange(M)],axis=0)
+        SWW = s.concatenate([SWtmp[m]["ESWW"] for m in xrange(M)],axis=0)
+        tau = s.concatenate([tau[m] for m in xrange(M)],axis=1)
+
+        # Update variance
+        Qvar_copy = Qvar.copy()
+        Qvar = 1./(Alpha + s.dot(tau,SWW))
+
+        # restoring values of the variance for the covariates
+        if any(self.covariates):
+            Qvar[:, self.covariates] = Qvar_copy[:, self.covariates]
+
+        # Update mean
+        latent_variables = self.getLvIndex() # excluding covariates from the list of latent variables
+        for k in latent_variables:
+            Qmean[:,k] = Qvar[:,k] * ( ma.dot(tau*(Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )), SW[:,k])  )
+
+        # Save updated parameters of the Q distribution
         self.Q.setParameters(mean=Qmean, var=Qvar)
 
     def calculateELBO(self):
-        PParam = self.P.getParameters()
-        PVar, Pmean = PParam['var'], PParam['mean']
+        # Collect parameters and expectations of current node
+        Qpar,Qexp = self.Q.getParameters(), self.Q.getExpectations()
+        Qmean, Qvar = Qpar['mean'], Qpar['var']
+        Alpha = self.markov_blanket['Alpha'].getExpectations()
+        QE, QE2 = Qexp['E'],Qexp['E2']
 
-        QExp = self.Q.getExpectations()
-        QE2, QE = QExp['E2'], QExp['E']
+        # This ELBO term contains only cross entropy between Q and P,and entropy of Q. So the covariates should not intervene at all
+        latent_variables = self.getLvIndex()
+        Alpha["E"], Alpha["lnE"] = Alpha["E"][latent_variables], Alpha["lnE"][latent_variables]
+        Qmean, Qvar = Qmean[:, latent_variables], Qvar[:, latent_variables]
+        QE, QE2 = QE[:, latent_variables], QE2[:, latent_variables]
 
-        Qvar = self.Q.getParameters()['var']
+        lb_p = (self.N*Alpha["lnE"].sum() - s.sum(Alpha["E"]*QE2))/2.
+        lb_q = - (s.log(Qvar).sum() + self.N*self.dim[1])/2.
 
-        # Cluster terms corersponding to covariates should not intervene
-        # filtering the covariates out
-        latent_variables = self.markov_blanket['Z'].getLvIndex()
-        PVar, Pmean = PVar[:, latent_variables], Pmean[:, latent_variables]
-        QE2, QE = QE2[:, latent_variables], QE[:, latent_variables]
-        Qvar = Qvar[:, latent_variables]
+        return lb_p-lb_q
 
+class AlphaZ_Node(Gamma_Unobserved_Variational_Node):
+    def __init__(self, dim, pa, pb, qa, qb, qE=None):
+        # Gamma_Unobserved_Variational_Node.__init__(self, dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+        super(AlphaZ_Node,self).__init__(dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+        self.precompute()
 
-        # minus cross entropy
-        tmp = -(0.5 * s.log(PVar)).sum()
-        tmp2 = - ((0.5/PVar) * (QE2 - 2.*QE*Pmean + Pmean**2.)).sum()
-
-        # entropy of Q
-        tmp3 = 0.5 * (s.log(Qvar)).sum()
-        tmp3 += 0.5 * self.dim[0] * len(latent_variables)
-        return tmp + tmp2 + tmp3
-
-
-# TODO update other node to use this prior instead of their own
-# TODO update sparse_test for this
-# TODO implement ELBO
-class Cluster_Node_Gamma(Gamma_Unobserved_Variational_Node):
-    """ """
-    def __init__(self, clusters, n_z, pa, pb, qa, qb, qE=None):
-        self.clusters = clusters
-        self.n_clusters = len(np.unique(clusters))
-        dim = (self.n_clusters, n_Z)
-        self.factors_axis = 1
-        super(Cluster_Node_Gamma, self).__init__(dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
-
-    def getExpectations(self):
-        # reshape the values to N_samples * N_factors and return
-        QExp = self.Q.getExpectations()
-        expanded_expectation = QExp['E'][self.clusters, :]
-        expanded_E2 = QExp['E2'][self.clusters, :]
-        return {'E': expanded_expectation , 'E2': expanded_E2}
+    def precompute(self):
+        self.factors_axis = 0
 
     def updateParameters(self):
+
         # Collect expectations from other nodes
-        Ztmp = self.markov_blanket["Z"].getExpectation()
-        ZE, ZE2  = Ztmp['E'], Ztmp['E2']
+        Ztmp = self.markov_blanket["Z"].getExpectations()
+        Z, ZZ = Ztmp["E"], Ztmp["E2"] 
 
-        Mutmp = self.markov_blanket['Cluster'].Q.getExpectations()
-        MuE, MuE2 = Mutmp['E'], Mutmp['E2']
-
-        # Collect parameters from the P and Q distributions of this node
+        # Collect parameters from the P distributions of this node
         P = self.P.getParameters()
         Pa, Pb = P['a'], P['b']
-        Qb, Qa =  self.Q.getParameters()['b'], self.Q.getParameters()['a']
 
-        # update of beta
-        # TODO merge two for loops when clean ?
-        for c in range(self.n_clusters):
-            mask = (self.clusters == c)
-            tmp = (ZE2[mask, :]).sum(axis=0)
-            tmp2 = (ZE[mask, :]).sum(axis=0) * MuE[c, :]
-            Qb[c,:] = tmp - 2 * tmp2
+        # Perform updates
+        Qa = Pa + 0.5*Z.shape[0]
+        Qb = Pb + 0.5*ZZ.sum(axis=0)
 
-        Qb += MuE2
-        Qb = 0.5 * Qb + Pb
-
-        # update of alpha TODO should be precomputed
-        for c in range(self.n_clusters):
-            mask = (self.clusters == c)
-            N = sum(mask)
-            Qa[c,:] = N/2
-        Qa += Pa
-
+        # Save updated parameters of the Q distribution
         self.Q.setParameters(a=Qa, b=Qb)
 
     def calculateELBO(self):
-        pass
+        # Collect parameters and expectations
+        P,Q = self.P.getParameters(), self.Q.getParameters()
+        Pa, Pb, Qa, Qb = P['a'], P['b'], Q['a'], Q['b']
+        QE, QlnE = self.Q.expectations['E'], self.Q.expectations['lnE']
 
+        # Do the calculations
+        lb_p = s.sum( self.P.params['a']*s.log(self.P.params['b']) - special.gammaln(self.P.params['a']) ) + s.sum((Pa-1)*QlnE) - s.sum(Pb*QE)
+        lb_q = s.sum(Qa*s.log(Qb)) + s.sum((Qa-1)*QlnE) - s.sum(Qb*QE) - s.sum(special.gammaln(Qa))
 
-
-# TODO do we need this ?
-class Cluster_Node_Constant(Constant_Variational_Node):
-    """ """
-    def __init__(self,  dim, pmean, pvar, qmean, qvar, qE=None, qE2=None):
-        super(Cluster_Node, self).__init__(dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE, qE2=qE2)
-
-
-    def updateParameters(self):
-
-        pass
-
-    def calculateELBO(self):
-        return 0
+        return lb_p - lb_q

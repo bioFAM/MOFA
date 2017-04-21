@@ -130,14 +130,17 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
                 qtheta=model_opts["initSW"]["Theta"], qmean_S0=model_opts["initSW"]["mean_S0"], qvar_S0=model_opts["initSW"]["var_S0"], qmean_S1=model_opts["initSW"]["mean_S1"], qvar_S1=model_opts["initSW"]["var_S1"],
                 qEW_S0=model_opts["initSW"]["EW_S0"], qEW_S1=model_opts["initSW"]["EW_S1"], qES=model_opts["initSW"]["ES"])
 
-    init.initAlpha(pa=model_opts["priorAlpha"]['a'], pb=model_opts["priorAlpha"]['b'],
-                   qa=model_opts["initAlpha"]['a'], qb=model_opts["initAlpha"]['b'], qE=model_opts["initAlpha"]['E'])
+    init.initAlphaZ(pa=model_opts["priorAlphaZ"]['a'], pb=model_opts["priorAlphaZ"]['b'],
+                   qa=model_opts["initAlphaZ"]['a'], qb=model_opts["initAlphaZ"]['b'], qE=model_opts["initAlphaZ"]['E'])
+    
+    init.initAlphaW(pa=model_opts["priorAlphaW"]['a'], pb=model_opts["priorAlphaW"]['b'],
+                   qa=model_opts["initAlphaW"]['a'], qb=model_opts["initAlphaW"]['b'], qE=model_opts["initAlphaW"]['E'])
 
 
     init.initTau(pa=model_opts["priorTau"]['a'], pb=model_opts["priorTau"]['b'],
                  qa=model_opts["initTau"]['a'], qb=model_opts["initTau"]['b'], qE=model_opts["initTau"]['E'])
 
-    init.initClusters()
+    # init.initClusters()
 
     if model_opts['learnTheta']:
         init.initThetaLearn(pa=model_opts["priorTheta"]['a'], pb=model_opts["priorTheta"]['b'],

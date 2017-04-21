@@ -268,7 +268,7 @@ class Gamma(Distribution):
         if E is None:
             self.updateExpectations()
         else:
-            self.expectations = { 'E':s.ones(dim)*E }
+            self.expectations = { 'E':s.ones(dim)*E, 'lnE':s.log(s.ones(dim)*E) }
 
         # Check that dimensionalities match
         self.CheckDimensionalities()

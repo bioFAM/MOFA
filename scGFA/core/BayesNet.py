@@ -24,15 +24,6 @@ A Bayesian network requires the following information:
 - Update schedule: order of nodes in the updates
 - Monitoring and algorithmic options: verbosity, tolerance for convergence, number of iterations, lower bound frequency...
 
-To-do:
-- More sanity checks (algorithmic options)
-- assert nodes and options and so on is dic
-- improve convergence criterion
-- Test whether dropping factors work well with non-gaussian data
-- Define verbosity levels
-- Avoid numpy warnings?
-- Save only main expectations
-- add _ to trials
 """
 
 class BayesNet(object):
@@ -77,8 +68,8 @@ class BayesNet(object):
         # s.fill_diagonal(r,0)
         # r *= s.tri(*r.shape)
         # print r.max()
-        # # alpha = self.nodes["Alpha"].getExpectation()
-        # # print (alpha)
+        # alpha = self.nodes["AlphaZ"].getExpectation()
+        # print (alpha)
         # SW = s.concatenate(self.nodes["SW"].getExpectation(), axis=0)
         # print (s.absolute(SW)>0.01).sum(axis=0)
         # # print (s.absolute(SW)).mean(axis=0)
@@ -154,9 +145,9 @@ class BayesNet(object):
 
     def iterate(self):
         # Define some variables to monitor training
-        vb_nodes = self.getVariationalNodes().keys()
-        elbo = pd.DataFrame(data = nans((self.options['maxiter'], len(vb_nodes)+1 )),
-                            columns = vb_nodes+["total"] )
+        nodes = self.getVariationalNodes().keys()
+        elbo = pd.DataFrame(data = nans((self.options['maxiter'], len(nodes)+1 )),
+                            columns = nodes+["total"] )
         activeK = nans((self.options['maxiter']))
 
         # Start training
@@ -179,7 +170,7 @@ class BayesNet(object):
 
             # Calculate Evidence Lower Bound
             if i % self.options['elbofreq'] == 0:
-                elbo.iloc[i] = self.calculateELBO(*vb_nodes)
+                elbo.iloc[i] = self.calculateELBO()
 
                 # Print first iteration
                 if i==0:
@@ -269,8 +260,8 @@ class BayesNet(object):
 
     def calculateELBO(self, *nodes):
         # Method to calculate the Evidence Lower Bound for a set of nodes
-        if len(nodes) == 0: nodes = self.nodes.keys()
-        elbo = pd.Series(s.zeros(len(nodes)+1), index=nodes+("total",))
+        if len(nodes) == 0: nodes = self.getVariationalNodes().keys()
+        elbo = pd.Series(s.zeros(len(nodes)+1), index=list(nodes)+["total"])
         for node in nodes:
             elbo[node] = float(self.nodes[node].calculateELBO())
             elbo["total"] += elbo[node]

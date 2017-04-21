@@ -90,6 +90,7 @@ class init_sparse(initModel):
             idx_covariates = None
 
         # Initialise the node
+        # self.Z = Constant_Node(dim=(self.N,self.K), value=qmean)
         self.Z = Z_Node(dim=(self.N,self.K),
                         pmean=s.ones((self.N,self.K))*pmean,
                         pvar=s.ones((self.N,self.K))*pvar,
@@ -141,7 +142,7 @@ class init_sparse(initModel):
         self.SW = Multiview_Variational_Node(self.M, *SW_list)
         self.nodes["SW"] = self.SW
 
-    def initAlpha(self, pa, pb, qa, qb, qE):
+    def initAlphaW(self, pa, pb, qa, qb, qE):
         # Method to initialise the precision of the group-wise ARD prior
         # Inputs:
         #  pa (float): 'a' parameter of the prior distribution
@@ -150,9 +151,25 @@ class init_sparse(initModel):
         #  qE (float): initial expectation of the variational distribution
         alpha_list = [None]*self.M
         for m in xrange(self.M):
-            alpha_list[m] = Alpha_Node(dim=(self.K,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
-        self.Alpha = Multiview_Variational_Node((self.K,)*self.M, *alpha_list)
-        self.nodes["Alpha"] = self.Alpha
+            alpha_list[m] = AlphaW_Node(dim=(self.K,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
+            # alpha_list[m] = Constant_Node(dim=(self.K,), value=qE[m])
+            # alpha_list[m].factors_axis = 0
+        self.AlphaW = Multiview_Variational_Node((self.K,)*self.M, *alpha_list)
+        # self.AlphaW = Multiview_Constant_Node((self.K,)*self.M, *alpha_list)
+        self.nodes["AlphaW"] = self.AlphaW
+
+    def initAlphaZ(self, pa, pb, qa, qb, qE):
+        # Method to initialise the precision of the latent variable ARD prior
+        # Inputs:
+        #  pa (float): 'a' parameter of the prior distribution
+        #  pb (float): 'b' parameter of the prior distribution
+        #  qb (float): initialisation of the 'b' parameter of the variational distribution
+        #  qE (float): initial expectation of the variational distribution
+        
+        # self.AlphaZ = AlphaZ_Node(dim=(self.K,), pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+        self.AlphaZ = Constant_Node(dim=(self.K,), value=qE)
+        self.AlphaZ.factors_axis = 0
+        self.nodes["AlphaZ"] = self.AlphaZ
 
     def initTau(self, pa, pb, qa, qb, qE):
         # Method to initialise the precision of the noise
@@ -211,11 +228,11 @@ class init_sparse(initModel):
         self.Theta = Multiview_Constant_Node(self.M, *Theta_list)
         self.nodes["Theta"] = self.Theta
 
-    def initClusters(self, clusters=None, pmean=0, pvar=1, qmean=0, qvar=1):
+    def initClusters(self, clusters=None, pmean=0, pvar=1, qmean=0, qvar=1, qE=None):
         if clusters is None:
             clusters = s.zeros(self.N, int)
-        self.Clusters = Cluster_Node_Gaussian(pmean, pvar, qmean,
-        					  qvar, clusters, self.K)
+        # self.Clusters = Cluster_Node_Gaussian(pmean, pvar, qmean, qvar, clusters, self.K)
+        self.Clusters = Constant_Node(pmean, pvar, qmean, qvar, clusters, self.K)
         self.nodes['Clusters'] = self.Clusters
 
     def initExpectations(self, *nodes):
@@ -225,12 +242,14 @@ class init_sparse(initModel):
 
     def MarkovBlanket(self):
         # Method to define the markov blanket
-        self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y, Cluster=self.Clusters)
-        self.Clusters.addMarkovBlanket(Z=self.Z)
+        # self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y, Cluster=self.Clusters, Alpha=self.AlphaZ)
+        self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y, Alpha=self.AlphaZ)
+        self.AlphaZ.addMarkovBlanket(Z=self.Z)
+        # self.Clusters.addMarkovBlanket(Z=self.Z)# I THINK WE MIGHT HAVE TO INCORPORATE ALPHAZ HERE
         for m in xrange(self.M):
             self.Theta.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m])
-            self.Alpha.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m])
-            self.SW.nodes[m].addMarkovBlanket(Z=self.Z, Tau=self.Tau.nodes[m], Alpha=self.Alpha.nodes[m], Y=self.Y.nodes[m], Theta=self.Theta.nodes[m])
+            self.AlphaW.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m])
+            self.SW.nodes[m].addMarkovBlanket(Z=self.Z, Tau=self.Tau.nodes[m], Alpha=self.AlphaW.nodes[m], Y=self.Y.nodes[m], Theta=self.Theta.nodes[m])
             if self.lik[m]=="gaussian":
                 self.Y.nodes[m].addMarkovBlanket(Z=self.Z, SW=self.SW.nodes[m], Tau=self.Tau.nodes[m])
                 self.Tau.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m], Z=self.Z, Y=self.Y.nodes[m])

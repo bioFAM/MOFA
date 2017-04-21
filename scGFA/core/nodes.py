@@ -80,7 +80,7 @@ class Constant_Node(Node):
         return self.getValue()
         
     def getExpectations(self):
-        return { 'E':self.getValue() }
+        return { 'E':self.getValue(), 'lnE':s.log(self.getValue()), 'E2':self.getValue()**2 }
 
     def removeFactors(self, idx, axis=None):
         if hasattr(self,"factors_axis"): axis = self.factors_axis

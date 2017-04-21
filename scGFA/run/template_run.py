@@ -97,12 +97,10 @@ model_opts['k'] = args.factors
 model_opts['learnTheta'] = args.learnTheta
 
 # Define priors
-model_opts["priorZ"] = { 'mean':0., 'var':1 }
-# model_opts["priorZ"] = { 'mean':0., 'var':0.1 }
+model_opts["priorZ"] = { 'mean':0., 'var':s.nan }
 D = [ data[m].shape[1] for m in xrange(M) ]
-model_opts["priorAlpha"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
-# model_opts["priorAlpha"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
-# model_opts["priorAlpha"] = { 'a':[1e-5 * D[m] for m in xrange(M)], 'b':[1e-5]*M }
+model_opts["priorAlphaW"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
+model_opts["priorAlphaZ"] = { 'a':1e-5, 'b':1e-5 }
 model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M }
 model_opts["priorTau"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
 # model_opts["priorTau"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
@@ -111,10 +109,10 @@ if model_opts['learnTheta']:
 
 # Define initialisations
 model_opts["initZ"] = { 'mean':"random", 'var':1., 'E':None, 'E2':None }
-# model_opts["initAlpha"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M }
-model_opts["initAlpha"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
+model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
+model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':1. }
 model_opts["initSW"] = { 'Theta':[0.5]*M,
-                          'mean_S0':[0.]*M, 'var_S0':model_opts["initAlpha"]['E'],
+                          'mean_S0':[0.]*M, 'var_S0':model_opts["initAlphaW"]['E'],
                           # 'mean_S1':["random"]*M, 'var_S1':[1.]*M,
                           'mean_S1':[0.]*M, 'var_S1':[1.]*M,
                           'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M}

@@ -101,7 +101,7 @@ model_opts = {}
 model_opts['likelihood'] = ['gaussian']* M
 # model_opts['likelihood'] = ['gaussian', 'poisson', 'bernoulli']
 # model_opts['likelihood'] = ['bernoulli']*M
-model_opts['learnTheta'] = False
+model_opts['learnTheta'] = True
 model_opts['k'] = K
 
 
@@ -137,7 +137,7 @@ model_opts['covariates'] = None
 # Define schedule of updates
 # model_opts['schedule'] = ("SW","Z","Clusters","Alpha","Y","Tau","Theta")
 # model_opts['schedule'] = ("SW","Z","Alpha","Tau")
-model_opts['schedule'] = ("SW","Z","Clusters","Alpha","Tau","Theta")
+model_opts['schedule'] = ("SW","Z","Alpha","Tau","Theta")
 # model_opts['schedule'] = ("Y","Tau","SW", "Z", "Clusters", "Theta", "Alpha")
 
 

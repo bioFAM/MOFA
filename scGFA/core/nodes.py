@@ -63,8 +63,6 @@ class Constant_Node(Node):
     However, for technical reasons Expectations are defined to be the same as the values
     """
     def __init__(self, dim, value):
-        print dim
-        print value.shape
         self.dim = dim
         if isinstance(value,(int,float)):
             self.value = value * s.ones(dim)

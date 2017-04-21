@@ -130,6 +130,9 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         # Update variance
         Qvar_copy = Qvar.copy()
         Qvar = 1./(1./Pvar + s.dot(tau,SWW))
+        # print "start test:"
+        # print 1./(1./Pvar + s.dot(tau,SWW))
+        # print "end test:"
 
         # restoring values of the variance for the covariates
         if any(self.covariates):

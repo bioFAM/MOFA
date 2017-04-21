@@ -11,6 +11,8 @@ from nodes import Node
 from variational_nodes import Unobserved_Variational_Node, Variational_Node
 from utils import corr, nans
 
+import scipy.stats as stats
+
 """
 This module is used to define the class containing the entire Bayesian Network,
 and the corresponding attributes/methods to train the model, set algorithmic options, calculate lower bound, etc.
@@ -62,16 +64,35 @@ class BayesNet(object):
         #   Bad: it is an approximation and covariates are never removed
         if by_norm is not None:
             Z = self.nodes["Z"].getExpectation()
-            drop_dic["by_norm"] = s.where( s.absolute(Z).mean(axis=0) < by_norm )[0]
+            Z = Z + 1e-6*stats.norm.rvs(loc=0, scale=1, size=(Z.shape[0],Z.shape[1]))
+            # SW = s.concatenate(self.nodes["SW"].getExpectation(), axis=0)
+            # print s.absolute(SW).mean(axis=0)
+            # print s.absolute(Z).mean(axis=0)
+            # drop_dic["by_norm"] = (s.absolute(Z).mean(axis=0)<by_norm) + (s.absolute(SW).mean(axis=0)<by_norm)
+            drop_dic["by_norm"] = s.where((Z**2).mean(axis=0) < by_norm)[0]
+
+        ### test ###
+        # s.set_printoptions(precision=2)
+        # r = s.absolute(corr(Z.T,Z.T))
+        # s.fill_diagonal(r,0)
+        # r *= s.tri(*r.shape)
+        # print r.max()
+        # # alpha = self.nodes["Alpha"].getExpectation()
+        # # print (alpha)
+        # SW = s.concatenate(self.nodes["SW"].getExpectation(), axis=0)
+        # print (s.absolute(SW)>0.01).sum(axis=0)
+        # # print (s.absolute(SW)).mean(axis=0)
+        # Z = self.nodes["Z"].getExpectation()
+        # print (Z**2).mean(axis=0)
+        ### test ###
 
         # Option 2: coefficient of determination
         # Good: is based on how well the model fits the data
-        # Bad: slow, does it work with non-gaussian data? RIGHT NOT WE ARE USING PSEUDODATA, WILL IT WORK IN REAL DATA?
+        # Bad: slow, doesnt work with non-gaussian data
         if by_r2 is not None:
             Z = self.nodes['Z'].getExpectation()
             Y = self.nodes["Y"].getExpectation()
             W = self.nodes["SW"].getExpectation()
-
             # compute r2 for every factor and every view
             all_r2 = s.zeros([self.dim['M'], self.dim['K']])
             for m in xrange(self.dim['M']):
@@ -80,31 +101,29 @@ class BayesNet(object):
                 for k in xrange(self.dim['K']):
                     # predict with latent variable k only
                     predictions = s.outer(Z[:,k], W_m[:, k])
-
                     # compute r2
                     Res = ((Y_m - predictions)**2.).sum()
                     Var = ((Y_m - Y_m.mean())**2.).sum()
                     all_r2[m,k] = 1. - Res/Var
-
             drop_dic["by_r2"] = s.where( (all_r2>by_r2).sum(axis=0) == 0)[0]
 
         # Option 2: proportion of residual variance explained by each factor
         #   Good: it is the proper way of doing it,
         #   Bad: slow, does it work with non-gaussian data?
         # IT DOESNT WORK VERY WELL
-        if by_pvar is not None:
-            Z = self.nodes["Z"].getExpectation()
-            Y = self.nodes["Y"].getExpectation()
-            tau = self.nodes["Tau"].getExpectation()
-            alpha = self.nodes["Alpha"].getExpectation()
+        # if by_pvar is not None:
+        #     Z = self.nodes["Z"].getExpectation()
+        #     Y = self.nodes["Y"].getExpectation()
+        #     tau = self.nodes["Tau"].getExpectation()
+        #     alpha = self.nodes["Alpha"].getExpectation()
 
-            factor_pvar = s.zeros((self.dim['M'],self.dim['K']))
-            for m in xrange(self.dim['M']):
-                residual_var = (s.var(Y[m],axis=0) - 1/tau[m]).sum()
-                for k in xrange(self.dim["K"]):
-                    factor_var = (self.dim["D"][m]/alpha[m][k])# * s.var(Z[:,k])
-                    factor_pvar[m,k] = factor_var / residual_var
-            drop_dic['by_pvar'] = s.where( (factor_pvar>by_pvar).sum(axis=0) == 0)[0]
+        #     factor_pvar = s.zeros((self.dim['M'],self.dim['K']))
+        #     for m in xrange(self.dim['M']):
+        #         residual_var = (s.var(Y[m],axis=0) - 1/tau[m]).sum()
+        #         for k in xrange(self.dim["K"]):
+        #             factor_var = (self.dim["D"][m]/alpha[m][k])# * s.var(Z[:,k])
+        #             factor_pvar[m,k] = factor_var / residual_var
+        #     drop_dic['by_pvar'] = s.where( (factor_pvar>by_pvar).sum(axis=0) == 0)[0]
 
         # Option 3: highly correlated factors
         # (Q) Which of the two factors should we remove? Maybe the one that explains less variation
@@ -115,12 +134,14 @@ class BayesNet(object):
             r *= s.tri(*r.shape)
             drop_dic["by_cor"] = s.where(r>by_cor)[0]
             if len(drop_dic["by_cor"]) > 0:
+                # Drop just one latent variable, chosen randomly
                 drop_dic["by_cor"] = [ s.random.choice(drop_dic["by_cor"]) ]
 
         # Drop the factors
         drop = s.unique(s.concatenate(drop_dic.values()))
 
         if len(drop) > 0:
+            print drop_dic
             for node in self.nodes.keys():
                 self.nodes[node].removeFactors(drop)
         self.dim['K'] -= len(drop)

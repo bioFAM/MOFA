@@ -46,10 +46,9 @@ class PseudoY(Unobserved_Variational_Node):
         if E is not None:
             assert E.shape == dim, "Problems with the dimensionalities"
             E = ma.masked_invalid(E)
-        else:
-            E = ma.masked_invalid(s.zeros(self.dim))
+        # else:
+            # E = ma.masked_invalid(s.zeros(self.dim))
         self.E = E
-
     def updateParameters(self):
         Z = self.markov_blanket["Z"].getExpectation()
         SW = self.markov_blanket["SW"].getExpectation()
@@ -272,6 +271,9 @@ class Tau_Jaakkola(Node):
         
     def getExpectations(self):
         return { 'E':self.getValue(), 'lnE':s.log(self.getValue()) }
+
+    def removeFactors(self, idx, axis=None):
+        pass
 class Bernoulli_PseudoY_Jaakkola(PseudoY):
     """
     Class for a Bernoulli (0,1 data) pseudodata node with the following likelihood:

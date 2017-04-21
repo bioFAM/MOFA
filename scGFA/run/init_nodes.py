@@ -188,7 +188,8 @@ class init_sparse(initModel):
                 Y_list[m] = Poisson_PseudoY(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
             elif self.lik[m]=="bernoulli":
                 # Y_list[m] = Bernoulli_PseudoY(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
-                Y_list[m] =  Bernoulli_PseudoY_Jaakkola(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
+                tmp = stats.norm.rvs(loc=0, scale=1, size=(self.N,self.D[m]))
+                Y_list[m] =  Bernoulli_PseudoY_Jaakkola(dim=(self.N,self.D[m]), obs=self.data[m], E=tmp)
             elif self.lik[m]=="binomial":
                 Y_list[m] = Binomial_PseudoY(dim=(self.N,self.D[m]), tot=data["tot"][m], obs=data["obs"][m], E=None)
         self.Y = Multiview_Mixed_Node(self.M, *Y_list)

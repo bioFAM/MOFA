@@ -30,7 +30,7 @@ from scGFA.run.run_utils import *
 # Define dimensionalities
 M = 3
 N = 50
-D = s.asarray([400,400,400])
+D = s.asarray([500,500,500])
 K = 6
 
 
@@ -38,13 +38,16 @@ K = 6
 data = {}
 tmp = Simulate(M=M, N=N, D=D, K=K)
 
-data['Z'] = s.zeros((N,K))
-data['Z'][:,0] = s.sin(s.arange(N)/(N/20))
-data['Z'][:,1] = s.cos(s.arange(N)/(N/20))
-data['Z'][:,2] = 2*(s.arange(N)/N-0.5)
-data['Z'][:,3] = stats.norm.rvs(loc=0, scale=1, size=N)
-data['Z'][:,4] = stats.norm.rvs(loc=0, scale=1, size=N)
-data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
+# data['Z'] = s.zeros((N,K))
+# data['Z'][:,0] = s.sin(s.arange(N)/(N/20))
+# data['Z'][:,1] = s.cos(s.arange(N)/(N/20))
+# data['Z'][:,2] = 2*(s.arange(N)/N-0.5)
+# data['Z'][:,3] = stats.norm.rvs(loc=0, scale=1, size=N)
+# data['Z'][:,4] = stats.norm.rvs(loc=0, scale=1, size=N)
+# data['Z'][:,5] = stats.norm.rvs(loc=0, scale=1, size=N)
+
+data['Z'] = stats.norm.rvs(loc=0, scale=1, size=(N,K))
+
 
 data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
 data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
@@ -52,11 +55,12 @@ data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
 data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
 theta = [ s.ones(K)*0.5 for m in xrange(M) ]
+# theta = [ s.ones(K)*1.0 for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
 
 data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
-# data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
-data['tau']= [ stats.uniform.rvs(loc=0.1,scale=1,size=D[m]) for m in xrange(M) ]
+data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
+# data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
 
 missingness = 0.0
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -68,9 +72,9 @@ Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=dat
 # Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 # 	likelihood="binomial", min_trials=10, max_trials=50, missingness=missingness)
 
-# data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
+data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
 # data["Y"] = ( Y_bernoulli[0], Y_bernoulli[1], Y_bernoulli[2] )
-data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
+# data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 
 
 
@@ -79,7 +83,7 @@ data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 #################################
 
 # Define initial number of latent variables
-K = 15
+K = 20
 
 # Define model dimensionalities
 dim = {}
@@ -94,10 +98,10 @@ dim["K"] = K
 ##############################
 
 model_opts = {}
-# model_opts['likelihood'] = ['gaussian']* M
-model_opts['likelihood'] = ['gaussian', 'poisson', 'bernoulli']
+model_opts['likelihood'] = ['gaussian']* M
+# model_opts['likelihood'] = ['gaussian', 'poisson', 'bernoulli']
 # model_opts['likelihood'] = ['bernoulli']*M
-model_opts['learnTheta'] = True
+model_opts['learnTheta'] = False
 model_opts['k'] = K
 
 
@@ -111,8 +115,9 @@ if model_opts['learnTheta']:
 
 # Define initialisation options
 model_opts["initZ"] = { 'mean':"random", 'var':1., 'E':None, 'E2':None }
-model_opts["initAlpha"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M }
+model_opts["initAlpha"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10000.]*M }
 model_opts["initSW"] = { 'Theta':[0.5]*M,
+# model_opts["initSW"] = { 'Theta':[1.0]*M,
                           'mean_S0':[0.]*M, 'var_S0':model_opts["initAlpha"]['E'],
                           'mean_S1':[0]*M, 'var_S1':[1.]*M,
                           'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M}
@@ -123,14 +128,17 @@ if model_opts['learnTheta']:
     model_opts["initTheta"] = { 'a':[1.]*M, 'b':[1.]*M, 'E':[None]*M }
 else:
     model_opts["initTheta"] = { 'value':[.5]*M }
+    # model_opts["initTheta"] = { 'value':[1.]*M }
 
 
 # Define covariates
 model_opts['covariates'] = None
 
 # Define schedule of updates
-# model_opts['schedule'] = ("SW","Z","Alpha","Tau","Theta","Y")
-model_opts['schedule'] = ("Y","Tau","SW", "Z", "Clusters", "Theta", "Alpha")
+# model_opts['schedule'] = ("SW","Z","Clusters","Alpha","Y","Tau","Theta")
+# model_opts['schedule'] = ("SW","Z","Alpha","Tau")
+model_opts['schedule'] = ("SW","Z","Clusters","Alpha","Tau","Theta")
+# model_opts['schedule'] = ("Y","Tau","SW", "Z", "Clusters", "Theta", "Alpha")
 
 
 #############################
@@ -139,13 +147,13 @@ model_opts['schedule'] = ("Y","Tau","SW", "Z", "Clusters", "Theta", "Alpha")
 
 train_opts = {}
 train_opts['elbofreq'] = 1
-train_opts['maxiter'] = 10
+train_opts['maxiter'] = 1000
 # train_opts['tolerance'] = 1E-2
 train_opts['tolerance'] = 0.01
 train_opts['forceiter'] = True
 # train_opts['dropK'] = { "by_norm":0.01, "by_pvar":None, "by_cor":None, "by_r2":0.01 }
-train_opts['drop'] = { "by_norm":None, "by_pvar":None, "by_cor":None, "by_r2":None }
-train_opts['startdrop'] = 5
+train_opts['drop'] = { "by_norm":0.01, "by_pvar":None, "by_cor":None, "by_r2":None }
+train_opts['startdrop'] = 10
 train_opts['freqdrop'] = 1
 train_opts['savefreq'] = s.nan
 train_opts['savefolder'] = s.nan

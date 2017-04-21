@@ -171,6 +171,20 @@ class MultivariateGaussian(Distribution):
         return l
         # return s.sum( s.log(stats.multivariate_normal.pdf(x, mean=self.mean[n,:], cov=self.cov[n,:,:])) )
 
+    def removeDimensions(self, axis, idx):
+        # Method to remove undesired dimensions
+        # - axis (int): axis from where to remove the elements
+        # - idx (numpy array): indices of the elements to remove
+        assert axis <= len(self.dim)
+        assert s.all(idx < self.dim[axis])
+        self.params["mean"] = s.delete(self.params["mean"], axis=1, obj=idx)
+        self.params["cov"] = s.delete(self.params["cov"], axis=1, obj=idx)
+        self.params["cov"] = s.delete(self.params["cov"], axis=2, obj=idx)
+        self.expectations["E"] = s.delete(self.expectations["E"], axis=1, obj=idx)
+        self.expectations["E2"] = s.delete(self.expectations["E2"], axis=1, obj=idx)
+        self.expectations["E2"] = s.delete(self.expectations["E2"], axis=2, obj=idx)
+        self.dim = (self.dim[0],self.dim[1]-len(idx))
+
     # def entropy(self):
         # CHECK THIs Is CORRECT
         # tmp = sum( [ logdet(self.cov[i,:,:]) for i in xrange(self.dim[0]) ] )
@@ -407,7 +421,9 @@ class BernoulliGaussian(Distribution):
         EW = self.W_S1.getExpectation()
         E = ES * EW
         ESWW = ES * (EW**2 + self.params["var_S1"])
+        # ESWW = self.params["theta"] * (self.params["mean_S1"]**2 + self.params["var_S1"])
         EWW = ES*(EW**2+self.params["var_S1"]) + (1-ES)*self.params["var_S0"]
+        # EWW = self.params["theta"]*(self.params["mean_S1"]**2+self.params["var_S1"]) + (1-self.params["theta"])*self.params["var_S0"]
 
         # Collect expectations
         self.expectations = {'E':E, 'ES':ES, 'EW':EW, 'ESWW':ESWW, 'EWW':EWW }

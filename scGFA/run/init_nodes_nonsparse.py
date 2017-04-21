@@ -1,7 +1,45 @@
 
-# Class to iniailise the traditional GFA model
-# Main differences: no element-wise sparsity and latent variables do not fully factorise
-# PROBABLY THIS DOESNT WORK ANYMORE
+"""
+Module to initalise the non-sparse model
+"""
+
+import scipy as s
+import scipy.stats as stats
+from sys import path
+import sklearn.decomposition
+
+from scGFA.core.nodes import *
+from scGFA.core.multiview_nodes import *
+from scGFA.core.seeger_nodes import *
+from scGFA.core.nonsparse_updates import *
+
+
+# General class to initialise a MOFA model
+class initModel(object):
+    def __init__(self, dim, data, lik, seed=None):
+        # Inputs:
+        #  dim (dic): keyworded dimensionalities
+        #    N for the number of samples, M for the number of views
+        #    K for the number of latent variables, D for the number of features (per view, so it is a list)
+        #  data (list of ndarrays of length M): observed data
+        #  lik (list): likelihood type for each view
+        self.data = data
+        self.lik = lik
+        self.N = dim["N"]
+        self.K = dim["K"]
+        self.M = dim["M"]
+        self.D = dim["D"]
+
+        self.nodes = {}
+
+        s.random.seed(seed)
+
+    def getNodes(self):
+        return { k:v for (k,v) in self.nodes.iteritems()}
+
+
+
+# Class to iniailise the non-sparse model
 class init_nonsparse(initModel):
     def __init__(self, *args, **kwargs):
         super(init_nonsparse, self).__init__(*args, **kwargs)
@@ -140,7 +178,6 @@ class init_nonsparse(initModel):
         self.Y = Multiview_Mixed_Node(self.M, *Y_list)
         self.nodes["Y"] = self.Y
 
-
     def initExpectations(self, *nodes):
         # Method to initialise the expectations of some nodes
         for node in nodes:
@@ -156,4 +193,6 @@ class init_nonsparse(initModel):
                 self.Y.nodes[m].addMarkovBlanket(Z=self.Z, W=self.W.nodes[m], Tau=self.Tau.nodes[m])
                 self.Tau.nodes[m].addMarkovBlanket(W=self.W.nodes[m], Z=self.Z, Y=self.Y.nodes[m])
             else:
+                print "This will not work, we have to update jaakola's bound"
+                exit()
                 self.Y.nodes[m].addMarkovBlanket(Z=self.Z, W=self.W.nodes[m], kappa=self.Tau.nodes[m])

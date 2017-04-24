@@ -73,7 +73,7 @@ class Y_Node(Constant_Variational_Node):
         self.value = ma.masked_invalid(self.value)
 
     def calculateELBO(self):
-        # Calculate evidence lower bound using the trick that the update of Tau already contains the Gaussian likelihod 
+        # Calculate evidence lower bound using the trick that the update of Tau already contains the Gaussian likelihod
         tauQ_param = self.markov_blanket["Tau"].getParameters("Q")
         tauP_param = self.markov_blanket["Tau"].getParameters("P")
         tau_exp = self.markov_blanket["Tau"].getExpectations()
@@ -258,7 +258,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         # Get ARD sparsity or prior variance
         if "Alpha" in self.markov_blanket:
             alpha = self.markov_blanket['Alpha'].getExpectations() # ARD prior
-            if alpha["E"].shape[0] == 1: 
+            if alpha["E"].shape[0] == 1:
                 alpha["E"] = s.repeat(alpha["E"][:], self.dim[1], axis=0)
                 alpha["lnE"] = s.repeat(alpha["lnE"][:], self.dim[1], axis=0)
         else:
@@ -397,6 +397,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         Y = self.markov_blanket["Y"].getExpectation()
         SWtmp = self.markov_blanket["SW"].getExpectations()
         tau = self.markov_blanket["Tau"].getExpectation()
+        Mu = self.markov_blanket['Cluster'].getExpectation()
 
         if "Alpha" in self.markov_blanket:
             Alpha = self.markov_blanket['Alpha'].getExpectation() # Notice that this Alpha is the ARD prior on Z, not on W.
@@ -432,7 +433,8 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         # Update mean
         latent_variables = self.getLvIndex() # excluding covariates from the list of latent variables
         for k in latent_variables:
-            Qmean[:,k] = Qvar[:,k] * ( ma.dot(tau*(Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )), SW[:,k])  )
+            Qmean[:,k] = Qvar[:,k] * (  Alpha[:,k]*Mu[:,k] +
+                                        ma.dot(tau*(Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )), SW[:,k])  )
 
         # Save updated parameters of the Q distribution
         self.Q.setParameters(mean=Qmean, var=Qvar)
@@ -441,6 +443,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         # Collect parameters and expectations of current node
         Qpar,Qexp = self.Q.getParameters(), self.Q.getExpectations()
         Qmean, Qvar = Qpar['mean'], Qpar['var']
+        PE, PE2 = self.markov_blanket['Cluster'].getExpectations()['E'], self.markov_blanket['Cluster'].getExpectations()['E2']
         QE, QE2 = Qexp['E'],Qexp['E2']
 
         if "Alpha" in self.markov_blanket:
@@ -454,9 +457,18 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         latent_variables = self.getLvIndex()
         Alpha["E"], Alpha["lnE"] = Alpha["E"][:,latent_variables], Alpha["lnE"][:,latent_variables]
         Qmean, Qvar = Qmean[:, latent_variables], Qvar[:, latent_variables]
+        PE, PE2 = PE[:, latent_variables], PE2[:, latent_variables]
         QE, QE2 = QE[:, latent_variables], QE2[:, latent_variables]
 
-        lb_p = (Alpha["lnE"].sum() - s.sum(Alpha["E"]*QE2))/2.
+        # compute term from the exponential in the Gaussian
+        tmp1 = 0.5*QE2 - PE*QE + 0.5*PE2
+        tmp1 = -(tmp1 * Alpha['E']).sum()
+
+        # compute term from the precision factor in front of the Gaussian
+        tmp2 = .5 * Alpha["lnE"].sum()
+
+        # lb_p = (Alpha["lnE"].sum() - s.sum(Alpha["E"]*QE2))/2.
+        lb_p = tmp1 + tmp2
         lb_q = -(s.log(Qvar).sum() + self.N*self.dim[1])/2.
 
         return lb_p-lb_q
@@ -474,7 +486,10 @@ class AlphaZ_Node(Gamma_Unobserved_Variational_Node):
 
         # Collect expectations from other nodes
         Ztmp = self.markov_blanket["Z"].getExpectations()
-        Z, ZZ = Ztmp["E"], Ztmp["E2"] 
+        Z, ZZ = Ztmp["E"], Ztmp["E2"]
+
+        Mutmp = self.markov_blanket['Cluster'].Q.getExpectations()
+        MuE, MuE2 = Mutmp['E'], Mutmp['E2']
 
         # Collect parameters from the P distributions of this node
         P = self.P.getParameters()
@@ -482,7 +497,10 @@ class AlphaZ_Node(Gamma_Unobserved_Variational_Node):
 
         # Perform updates
         Qa = Pa + 0.5*Z.shape[0]
+
         Qb = Pb + 0.5*ZZ.sum(axis=0)
+        Qb -= 2*(Z * MuE).sum(axis =0)
+        Qb += MuE2
 
         # Save updated parameters of the Q distribution
         self.Q.setParameters(a=Qa, b=Qb)
@@ -498,3 +516,80 @@ class AlphaZ_Node(Gamma_Unobserved_Variational_Node):
         lb_q = s.sum(Qa*s.log(Qb)) + s.sum((Qa-1)*QlnE) - s.sum(Qb*QE) - s.sum(special.gammaln(Qa))
 
         return lb_p - lb_q
+
+class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
+    """ """
+    def __init__(self, pmean, pvar, qmean, qvar, clusters, n_Z, cluster_dic=None, qE=None, qE2=None):
+        # compute dim from numbers of clusters (n_clusters * Z)
+        self.clusters = clusters
+        self.N = len(self.clusters)
+        self.n_clusters = len(np.unique(clusters))
+        dim = (self.n_clusters, n_Z)
+        self.factors_axis = 1
+        super(Cluster_Node_Gaussian, self).__init__(dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE, qE2=qE2)
+
+
+    def getExpectations(self):
+        # reshape the values to N_samples * N_factors and return
+        QExp = self.Q.getExpectations()
+        expanded_expectation = QExp['E'][self.clusters, :]
+        expanded_E2 = QExp['E2'][self.clusters, :]
+        # do we need to expand the variance as well -> not used I think
+        return {'E': expanded_expectation , 'E2': expanded_E2}
+
+    def updateParameters(self):
+        Ppar = self.P.getParameters()
+        Z = self.markov_blanket['Z'].Q.getExpectation()
+
+        if "Alpha" in self.markov_blanket:
+            Alpha = self.markov_blanket['Alpha'].getExpectation() # Notice that this Alpha is the ARD prior on Z, not on W.
+            Alpha = s.repeat(Alpha[None,:], self.N, axis=0)
+        else:
+            Alpha = 1./self.markov_blanket['Z'].P.getParameters()["var"]
+
+        Qmean, Qvar = self.Q.getParameters()['mean'], self.Q.getParameters()['var']
+        ZTauMean = ZQPar['mean'] * Alpha
+
+        # TODO merge two loops when sure it's clean
+        # update of the variance
+        for c in range(self.n_clusters):
+            mask = (self.clusters == c)
+            tmp = (Alpha[mask, :]).sum(axis=0)
+            Qvar[c,:] = tmp
+        Qvar += 1./Ppar['var']
+        Qvar = 1./Qvar
+
+        # update of the mean
+        for c in range(self.n_clusters):
+            mask = (self.clusters == c)
+            tmp = (ZTauMean[mask, :]).sum(axis=0)
+            Qmean[c,:] = tmp
+        Qmean = Qmean + Ppar['mean']/Ppar['var']
+        Qmean *= Qvar
+
+        self.Q.setParameters(mean=Qmean, var=Qvar)
+
+    def calculateELBO(self):
+        PParam = self.P.getParameters()
+        PVar, Pmean = PParam['var'], PParam['mean']
+
+        QExp = self.Q.getExpectations()
+        QE2, QE = QExp['E2'], QExp['E']
+
+        Qvar = self.Q.getParameters()['var']
+
+        # Cluster terms corersponding to covariates should not intervene
+        # filtering the covariates out
+        latent_variables = self.markov_blanket['Z'].getLvIndex()
+        PVar, Pmean = PVar[:, latent_variables], Pmean[:, latent_variables]
+        QE2, QE = QE2[:, latent_variables], QE[:, latent_variables]
+        Qvar = Qvar[:, latent_variables]
+
+        # minus cross entropy
+        tmp = -(0.5 * s.log(PVar)).sum()
+        tmp2 = - ((0.5/PVar) * (QE2 - 2.*QE*Pmean + Pmean**2.)).sum()
+
+        # entropy of Q
+        tmp3 = 0.5 * (s.log(Qvar)).sum()
+        tmp3 += 0.5 * self.dim[0] * len(latent_variables)
+        return tmp + tmp2 + tmp3

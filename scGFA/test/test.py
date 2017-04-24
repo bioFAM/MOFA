@@ -62,7 +62,7 @@ data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 # data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
 
-missingness = 0.4
+missingness = 0.
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="gaussian", missingness=missingness)
 Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -101,8 +101,8 @@ model_opts = {}
 model_opts['likelihood'] = ['gaussian']* M
 model_opts['learnTheta'] = True
 model_opts['k'] = K
-model_opts['ardZ'] = True
-model_opts['ardW'] = "basic"
+model_opts['ardZ'] = False
+model_opts['ardW'] = "extended"
 
 ####################################
 ## Define priors (P distribution) ##
@@ -123,7 +123,7 @@ elif model_opts['ardW'] == "extended":
   model_opts["priorAlphaW"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
 if model_opts['learnTheta']:
     model_opts["priorTheta"] = { 'a':[1.]*M, 'b':[1.]*M }
-  
+
 # Noise
 model_opts["priorTau"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
 
@@ -137,7 +137,7 @@ if model_opts['ardZ']:
   model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':1. }
 
 # Weights
-model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M } 
+model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
 model_opts["initSW"] = { 'Theta':[0.5]*M,
                           'mean_S0':[0.]*M, 'var_S0':model_opts["initAlphaW"]['E'],
                           # 'mean_S1':["random"]*M, 'var_S1':[1.]*M,

@@ -23,7 +23,7 @@ from scGFA.core.BayesNet import BayesNet
 def maskData(data, data_opts):
 
     print "Masking data..."
-    
+
     for m in xrange(len(data)):
 
         # Mask values at random
@@ -133,7 +133,7 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     if model_opts["ardZ"]:
         init.initAlphaZ(pa=model_opts["priorAlphaZ"]['a'], pb=model_opts["priorAlphaZ"]['b'],
                        qa=model_opts["initAlphaZ"]['a'], qb=model_opts["initAlphaZ"]['b'], qE=model_opts["initAlphaZ"]['E'])
-    
+
     if model_opts["ardW"] == "basic":
         init.initAlphaW_basic(pa=model_opts["priorAlphaW"]['a'], pb=model_opts["priorAlphaW"]['b'],
                        qa=model_opts["initAlphaW"]['a'], qb=model_opts["initAlphaW"]['b'], qE=model_opts["initAlphaW"]['E'])
@@ -144,7 +144,7 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     init.initTau(pa=model_opts["priorTau"]['a'], pb=model_opts["priorTau"]['b'],
                  qa=model_opts["initTau"]['a'], qb=model_opts["initTau"]['b'], qE=model_opts["initTau"]['E'])
 
-    # init.initClusters()
+    init.initClusters()
 
     if model_opts['learnTheta']:
         init.initThetaLearn(pa=model_opts["priorTheta"]['a'], pb=model_opts["priorTheta"]['b'],

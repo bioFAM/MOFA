@@ -56,7 +56,7 @@ class init_sparse(initModel):
                 if qmean == "random": # Random initialisation of latent variables
                     qmean = stats.norm.rvs(loc=0, scale=1, size=(self.N,self.K))
 
-                elif qmean == "orthogonal": # Latent variables are initialised randomly but ensuring orthogonality 
+                elif qmean == "orthogonal": # Latent variables are initialised randomly but ensuring orthogonality
                     pca = sklearn.decomposition.PCA(n_components=self.K, copy=True, whiten=True)
                     pca.fit(stats.norm.rvs(loc=0, scale=1, size=(self.N,9999)).T)
                     qmean = pca.components_.T
@@ -183,7 +183,7 @@ class init_sparse(initModel):
         #  pb (float): 'b' parameter of the prior distribution
         #  qb (float): initialisation of the 'b' parameter of the variational distribution
         #  qE (float): initial expectation of the variational distribution
-        
+
         # self.AlphaZ = AlphaZ_Node(dim=(self.K,), pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
         self.AlphaZ = Constant_Node(dim=(self.K,), value=qE)
         self.AlphaZ.factors_axis = 0
@@ -249,8 +249,8 @@ class init_sparse(initModel):
     def initClusters(self, clusters=None, pmean=0, pvar=1, qmean=0, qvar=1, qE=None):
         if clusters is None:
             clusters = s.zeros(self.N, int)
-        # self.Clusters = Cluster_Node_Gaussian(pmean, pvar, qmean, qvar, clusters, self.K)
-        self.Clusters = Constant_Node(pmean, pvar, qmean, qvar, clusters, self.K)
+        self.Clusters = Cluster_Node_Gaussian(pmean, pvar, qmean, qvar, clusters, self.K)
+        # self.Clusters = Constant_Node(pmean, pvar, qmean, qvar, clusters, self.K)
         self.nodes['Clusters'] = self.Clusters
 
     def initExpectations(self, *nodes):
@@ -262,12 +262,12 @@ class init_sparse(initModel):
         # Method to define the markov blanket
         # self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y, Cluster=self.Clusters, Alpha=self.AlphaZ)
         if 'AlphaZ' in self.nodes:
-            self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y, Alpha=self.AlphaZ)
-            self.AlphaZ.addMarkovBlanket(Z=self.Z)
+            self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y, Alpha=self.AlphaZ, Cluster=self.Clusters)
+            self.AlphaZ.addMarkovBlanket(Z=self.Z, Cluster=self.Clusters)
         else:
-            self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y)
+            self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y, Cluster=self.Clusters)
 
-        # self.Clusters.addMarkovBlanket(Z=self.Z)# I THINK WE MIGHT HAVE TO INCORPORATE ALPHAZ HERE
+        self.Clusters.addMarkovBlanket(Z=self.Z, Alpha=self.AlphaZ)# I THINK WE MIGHT HAVE TO INCORPORATE ALPHAZ HERE
         for m in xrange(self.M):
             self.Theta.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m])
             self.AlphaW.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m])

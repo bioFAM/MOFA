@@ -62,7 +62,7 @@ data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 # data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
 
-missingness = 0.0
+missingness = 0.4
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="gaussian", missingness=missingness)
 Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -99,49 +99,61 @@ dim["K"] = K
 
 model_opts = {}
 model_opts['likelihood'] = ['gaussian']* M
-# model_opts['likelihood'] = ['gaussian', 'poisson', 'bernoulli']
-# model_opts['likelihood'] = ['bernoulli']*M
 model_opts['learnTheta'] = True
 model_opts['k'] = K
+model_opts['ardZ'] = True
+model_opts['ardW'] = "basic"
 
+####################################
+## Define priors (P distribution) ##
+####################################
 
-# Define priors
-model_opts["priorZ"] = { 'mean':0., 'var':s.nan }
-model_opts["priorAlphaW"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
-model_opts["priorAlphaZ"] = { 'a':1e-14, 'b':1e-14 }
-model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M }
-model_opts["priorTau"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
+# Latent Variables
+if model_opts['ardZ']:
+  model_opts["priorZ"] = { 'mean':0., 'var':s.nan }
+  model_opts["priorAlphaZ"] = { 'a':1e-5, 'b':1e-5 }
+else:
+  model_opts["priorZ"] = { 'mean':0., 'var':1. }
+
+# Weights
+model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M } # Not required
+if model_opts['ardW'] == "basic":
+  model_opts["priorAlphaW"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
+elif model_opts['ardW'] == "extended":
+  model_opts["priorAlphaW"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
 if model_opts['learnTheta']:
-	model_opts["priorTheta"] = { 'a':[1.]*M, 'b':[1.]*M }
+    model_opts["priorTheta"] = { 'a':[1.]*M, 'b':[1.]*M }
+  
+# Noise
+model_opts["priorTau"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
 
-# Define initialisation options
-model_opts["initZ"] = { 'mean':"random", 'var':1., 'E':None, 'E2':None }
-model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
-model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':1. }
+#############################################
+## Define initialisations (Q distribution) ##
+#############################################
+
+# Latent variables
+model_opts["initZ"] = { 'mean':"orthogonal", 'var':1., 'E':None, 'E2':None }
+if model_opts['ardZ']:
+  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':1. }
+
+# Weights
+model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M } 
 model_opts["initSW"] = { 'Theta':[0.5]*M,
-# model_opts["initSW"] = { 'Theta':[1.0]*M,
                           'mean_S0':[0.]*M, 'var_S0':model_opts["initAlphaW"]['E'],
-                          'mean_S1':[0]*M, 'var_S1':[1.]*M,
+                          # 'mean_S1':["random"]*M, 'var_S1':[1.]*M,
+                          'mean_S1':[0.]*M, 'var_S1':[1.]*M,
                           'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M}
-# model_opts["initTau"] = { 'a':[1.,1.,None], 'b':[1.,1.,None], 'E':[100.,100.,None] }
-model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M }
-
 if model_opts['learnTheta']:
     model_opts["initTheta"] = { 'a':[1.]*M, 'b':[1.]*M, 'E':[None]*M }
 else:
-    model_opts["initTheta"] = { 'value':[.5]*M }
-    # model_opts["initTheta"] = { 'value':[1.]*M }
+    model_opts["initTheta"] = { 'value':[args.initTheta]*M }
+
+# Noise
+model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M }
 
 
 # Define covariates
 model_opts['covariates'] = None
-
-# Define schedule of updates
-# model_opts['schedule'] = ("SW","Z","Clusters","Alpha","Y","Tau","Theta")
-# model_opts['schedule'] = ("SW","Z","Alpha","Tau")
-# model_opts['schedule'] = ("Y","Tau","SW", "Z", "Clusters", "Theta", "Alpha")
-# model_opts['schedule'] = ("SW","Z","AlphaZ","AlphaW","Tau","Theta")
-model_opts['schedule'] = ("SW","Z","AlphaW","Tau","Theta")
 
 
 #############################
@@ -149,12 +161,15 @@ model_opts['schedule'] = ("SW","Z","AlphaW","Tau","Theta")
 #############################
 
 train_opts = {}
+# Define schedule of updates
+# train_opts['schedule'] = ("Y","Tau","SW", "Z", "Clusters", "Theta", "Alpha")
+train_opts['schedule'] = ("SW","Z","AlphaZ","AlphaW","Tau","Theta")
 train_opts['elbofreq'] = 1
-train_opts['maxiter'] = 1000
+train_opts['maxiter'] = 3000
 # train_opts['tolerance'] = 1E-2
 train_opts['tolerance'] = 0.01
 train_opts['forceiter'] = True
-train_opts['drop'] = { "by_norm":0.01, "by_pvar":None, "by_cor":None, "by_r2":None }
+train_opts['drop'] = { "by_norm":None, "by_pvar":None, "by_cor":None, "by_r2":None }
 train_opts['startdrop'] = 10
 train_opts['freqdrop'] = 1
 train_opts['savefreq'] = s.nan

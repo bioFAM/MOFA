@@ -130,12 +130,16 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
                 qtheta=model_opts["initSW"]["Theta"], qmean_S0=model_opts["initSW"]["mean_S0"], qvar_S0=model_opts["initSW"]["var_S0"], qmean_S1=model_opts["initSW"]["mean_S1"], qvar_S1=model_opts["initSW"]["var_S1"],
                 qEW_S0=model_opts["initSW"]["EW_S0"], qEW_S1=model_opts["initSW"]["EW_S1"], qES=model_opts["initSW"]["ES"])
 
-    init.initAlphaZ(pa=model_opts["priorAlphaZ"]['a'], pb=model_opts["priorAlphaZ"]['b'],
-                   qa=model_opts["initAlphaZ"]['a'], qb=model_opts["initAlphaZ"]['b'], qE=model_opts["initAlphaZ"]['E'])
+    if model_opts["ardZ"]:
+        init.initAlphaZ(pa=model_opts["priorAlphaZ"]['a'], pb=model_opts["priorAlphaZ"]['b'],
+                       qa=model_opts["initAlphaZ"]['a'], qb=model_opts["initAlphaZ"]['b'], qE=model_opts["initAlphaZ"]['E'])
     
-    init.initAlphaW(pa=model_opts["priorAlphaW"]['a'], pb=model_opts["priorAlphaW"]['b'],
-                   qa=model_opts["initAlphaW"]['a'], qb=model_opts["initAlphaW"]['b'], qE=model_opts["initAlphaW"]['E'])
-
+    if model_opts["ardW"] == "basic":
+        init.initAlphaW_basic(pa=model_opts["priorAlphaW"]['a'], pb=model_opts["priorAlphaW"]['b'],
+                       qa=model_opts["initAlphaW"]['a'], qb=model_opts["initAlphaW"]['b'], qE=model_opts["initAlphaW"]['E'])
+    if model_opts["ardW"] == "extended":
+        init.initAlphaW_extended(pa=model_opts["priorAlphaW"]['a'], pb=model_opts["priorAlphaW"]['b'],
+                              qa=model_opts["initAlphaW"]['a'], qb=model_opts["initAlphaW"]['b'], qE=model_opts["initAlphaW"]['E'])
 
     init.initTau(pa=model_opts["priorTau"]['a'], pb=model_opts["priorTau"]['b'],
                  qa=model_opts["initTau"]['a'], qb=model_opts["initTau"]['b'], qE=model_opts["initTau"]['E'])
@@ -164,7 +168,7 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
 
     # Initialise Bayesian Network
     # print "Initialising Bayesian network...\n"
-    net = BayesNet(dim=dim, trial=trial, schedule=model_opts["schedule"], nodes=init.getNodes(), options=train_opts)
+    net = BayesNet(dim=dim, trial=trial, schedule=train_opts["schedule"], nodes=init.getNodes(), options=train_opts)
 
     ####################
     ## Start training ##

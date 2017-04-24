@@ -61,6 +61,8 @@ class BayesNet(object):
             # print s.absolute(Z).mean(axis=0)
             # drop_dic["by_norm"] = (s.absolute(Z).mean(axis=0)<by_norm) + (s.absolute(SW).mean(axis=0)<by_norm)
             drop_dic["by_norm"] = s.where((Z**2).mean(axis=0) < by_norm)[0]
+            if len(drop_dic["by_norm"]) > 0:
+                drop_dic["by_norm"] = [ s.random.choice(drop_dic["by_norm"]) ]
 
         ### test ###
         # s.set_printoptions(precision=2)
@@ -72,7 +74,7 @@ class BayesNet(object):
         # print (alpha)
         # SW = s.concatenate(self.nodes["SW"].getExpectation(), axis=0)
         # print (s.absolute(SW)>0.01).sum(axis=0)
-        # # print (s.absolute(SW)).mean(axis=0)
+        # print (s.absolute(SW)).mean(axis=0)
         # Z = self.nodes["Z"].getExpectation()
         # print (Z**2).mean(axis=0)
         ### test ###
@@ -169,7 +171,7 @@ class BayesNet(object):
                 # print (end - start)
 
             # Calculate Evidence Lower Bound
-            if i % self.options['elbofreq'] == 0:
+            if (i+1) % self.options['elbofreq'] == 0:
                 elbo.iloc[i] = self.calculateELBO()
 
                 # Print first iteration

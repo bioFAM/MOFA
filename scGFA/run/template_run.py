@@ -30,10 +30,13 @@ p.add_argument( '--learnTheta',        action='store_true',                     
 p.add_argument( '--initTheta',         type=float, default=0.5 ,                            help='hyperparameter theta in case that learnTheta is set to False')
 p.add_argument( '--tolerance',         type=float, default=0.1 ,                            help='tolerance for convergence (deltaELBO)')
 p.add_argument( '--startDrop',         type=int, default=5 ,                                help='First iteration to start dropping factors')
-p.add_argument( '--freqDrop',         type=int, default=1 ,                                 help='Frequency for dropping factors')
+p.add_argument( '--freqDrop',          type=int, default=1 ,                                help='Frequency for dropping factors')
 p.add_argument( '--maskAtRandom',  	   type=float,nargs="+", default=None,                  help='Fraction of data to mask per view')
 p.add_argument( '--maskNSamples',      type=int,nargs="+", default=None,                    help='Number of patients to mask per view')
 p.add_argument( '--nostop',            action='store_true',                                 help='Do not stop even when convergence criterion is met?' )
+p.add_argument( '--ardZ',              action='store_true',                                 help='Automatic Relevance Determination on the latent variables?' )
+p.add_argument( '--ardW',              type=str, default="basic" ,                          help=' "basic" = Per view, "extended" = Per view and factor' )
+p.add_argument( '--dropNorm',          type=float, default=None ,                           help='Threshold to drop latent variables based on norm of the latent variable' )
 p.add_argument( '-n', '--ntrials',     type=int, default=1,                                 help='Number of trials' )
 p.add_argument( '-c', '--ncores',      type=int, default=1,                                 help='Number of cores' )
 p.add_argument( '-i', '--iter',        type=int, default=10,                                help='Number of iterations' )
@@ -83,7 +86,6 @@ data = loadData(data_opts)
 ## Define the model options ##
 ##############################
 
-
 model_opts = {}
 
 # Define likelihoods
@@ -96,37 +98,60 @@ model_opts['k'] = args.factors
 # Define whether to learn the sparsity parameter of the spike and slab
 model_opts['learnTheta'] = args.learnTheta
 
-# Define priors
-model_opts["priorZ"] = { 'mean':0., 'var':s.nan }
-D = [ data[m].shape[1] for m in xrange(M) ]
-model_opts["priorAlphaW"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
-model_opts["priorAlphaZ"] = { 'a':1e-5, 'b':1e-5 }
-model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M }
-model_opts["priorTau"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
-# model_opts["priorTau"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
+# Define the sparsity levels
+model_opts['ardZ'] = args.ardZ
+model_opts['ardW'] = args.ardW
+
+####################################
+## Define priors (P distribution) ##
+####################################
+
+# Latent Variables
+if model_opts['ardZ']:
+  model_opts["priorZ"] = { 'mean':0., 'var':s.nan }
+  model_opts["priorAlphaZ"] = { 'a':1e-5, 'b':1e-5 }
+else:
+  model_opts["priorZ"] = { 'mean':0., 'var':1. }
+
+# Weights
+model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M } # Not required
+
+if model_opts['ardW'] == "basic":
+  model_opts["priorAlphaW"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
+elif model_opts['ardW'] == "extended":
+  model_opts["priorAlphaW"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
+
 if model_opts['learnTheta']:
     model_opts["priorTheta"] = { 'a':[1.]*M, 'b':[1.]*M }
+  
+# Noise
+model_opts["priorTau"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
+# model_opts["priorTau"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
 
-# Define initialisations
-model_opts["initZ"] = { 'mean':"random", 'var':1., 'E':None, 'E2':None }
-model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
-model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':1. }
+
+#############################################
+## Define initialisations (Q distribution) ##
+#############################################
+
+# Latent variables 
+model_opts["initZ"] = { 'mean':"orthogonal", 'var':1., 'E':None, 'E2':None }
+if model_opts['ardZ']:
+  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':1000. }
+
+# Weights
+model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M } 
 model_opts["initSW"] = { 'Theta':[0.5]*M,
                           'mean_S0':[0.]*M, 'var_S0':model_opts["initAlphaW"]['E'],
                           # 'mean_S1':["random"]*M, 'var_S1':[1.]*M,
                           'mean_S1':[0.]*M, 'var_S1':[1.]*M,
                           'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M}
-# model_opts["initTau"] = { 'a':[1.,1.,None], 'b':[1.,1.,None], 'E':[100.,100.,None] }
-model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
-
 if model_opts['learnTheta']:
     model_opts["initTheta"] = { 'a':[1.]*M, 'b':[1.]*M, 'E':[None]*M }
 else:
     model_opts["initTheta"] = { 'value':[args.initTheta]*M }
 
-
-# Define schedule of updates
-model_opts['schedule'] = args.schedule
+# Noise
+model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
 
 # pprint(model_opts)
 # print "\n"
@@ -136,6 +161,14 @@ model_opts['schedule'] = args.schedule
 #################################
 
 train_opts = {}
+
+# Define schedule of updates
+train_opts['schedule'] = args.schedule
+if model_opts["ardZ"]: 
+  assert "AlphaZ" in args.schedule, "AlphaZ should be in the update schedule"
+else:
+  assert "AlphaZ" not in args.schedule, "AlphaZ should not be in the update schedule"
+
 
 # Maximum number of iterations
 train_opts['maxiter'] = args.iter
@@ -151,8 +184,7 @@ train_opts['savefolder'] = s.nan
 train_opts['verbosity'] = 2
 
 # Criteria to drop latent variables while training
-train_opts['drop'] = { "by_norm":0.01, "by_pvar":None, "by_cor":None, "by_r2":None }
-# train_opts['drop'] = { "by_norm":0.01, "by_pvar":None, "by_cor":0.5, "by_r2":None }
+train_opts['drop'] = { "by_norm":args.dropNorm, "by_pvar":None, "by_cor":None, "by_r2":None }
 train_opts['startdrop'] = args.startDrop
 train_opts['freqdrop'] = args.freqDrop
 
@@ -181,6 +213,7 @@ keep_best_run = False
 # print "\n"
 
 # Go!
-runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run)
+runSingleTrial(data, data_opts, model_opts, train_opts, seed=None)
+
 # runMultipleTrials(data_opts, model_opts, train_opts, keep_best_run)
 

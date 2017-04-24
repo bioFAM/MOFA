@@ -53,15 +53,17 @@ class init_sparse(initModel):
         # Initialise first moment
         if qmean is not None:
             if isinstance(qmean,str):
-                if qmean == "random":
+                if qmean == "random": # Random initialisation of latent variables
                     qmean = stats.norm.rvs(loc=0, scale=1, size=(self.N,self.K))
-                elif qmean == "orthogonal":
-                    print "Not implemented"
-                    exit()
-                elif qmean == "pca":
+
+                elif qmean == "orthogonal": # Latent variables are initialised randomly but ensuring orthogonality 
                     pca = sklearn.decomposition.PCA(n_components=self.K, copy=True, whiten=True)
-                    tmp = s.concatenate(self.data,axis=0).T
-                    pca.fit(tmp)
+                    pca.fit(stats.norm.rvs(loc=0, scale=1, size=(self.N,9999)).T)
+                    qmean = pca.components_.T
+
+                elif qmean == "pca": # Latent variables are initialised from PCA in the concatenated matrix
+                    pca = sklearn.decomposition.PCA(n_components=self.K, copy=True, whiten=True)
+                    pca.fit(s.concatenate(self.data,axis=0).T)
                     qmean = pca.components_.T
 
             elif isinstance(qmean,s.ndarray):
@@ -142,7 +144,7 @@ class init_sparse(initModel):
         self.SW = Multiview_Variational_Node(self.M, *SW_list)
         self.nodes["SW"] = self.SW
 
-    def initAlphaW(self, pa, pb, qa, qb, qE):
+    def initAlphaW_extended(self, pa, pb, qa, qb, qE):
         # Method to initialise the precision of the group-wise ARD prior
         # Inputs:
         #  pa (float): 'a' parameter of the prior distribution
@@ -153,9 +155,25 @@ class init_sparse(initModel):
         for m in xrange(self.M):
             alpha_list[m] = AlphaW_Node(dim=(self.K,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
             # alpha_list[m] = Constant_Node(dim=(self.K,), value=qE[m])
-            # alpha_list[m].factors_axis = 0
-        self.AlphaW = Multiview_Variational_Node((self.K,)*self.M, *alpha_list)
-        # self.AlphaW = Multiview_Constant_Node((self.K,)*self.M, *alpha_list)
+            alpha_list[m].factors_axis = 0
+        self.AlphaW = Multiview_Variational_Node(self.M, *alpha_list)
+        # self.AlphaW = Multiview_Constant_Node(self.M, *alpha_list)
+        self.nodes["AlphaW"] = self.AlphaW
+
+    def initAlphaW_basic(self, pa, pb, qa, qb, qE):
+        # Method to initialise the precision of the group-wise ARD prior
+        # Inputs:
+        #  pa (float): 'a' parameter of the prior distribution
+        #  pb (float): 'b' parameter of the prior distribution
+        #  qb (float): initialisation of the 'b' parameter of the variational distribution
+        #  qE (float): initial expectation of the variational distribution
+        alpha_list = [None]*self.M
+        for m in xrange(self.M):
+            # alpha_list[m] = AlphaW_Node(dim=(1,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
+            alpha_list[m] = Constant_Node(dim=(1,), value=qE[m])
+            alpha_list[m].factors_axis = 0
+        # self.AlphaW = Multiview_Variational_Node(self.M, *alpha_list)
+        self.AlphaW = Multiview_Constant_Node(self.M, *alpha_list)
         self.nodes["AlphaW"] = self.AlphaW
 
     def initAlphaZ(self, pa, pb, qa, qb, qE):
@@ -243,8 +261,12 @@ class init_sparse(initModel):
     def MarkovBlanket(self):
         # Method to define the markov blanket
         # self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y, Cluster=self.Clusters, Alpha=self.AlphaZ)
-        self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y, Alpha=self.AlphaZ)
-        self.AlphaZ.addMarkovBlanket(Z=self.Z)
+        if 'AlphaZ' in self.nodes:
+            self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y, Alpha=self.AlphaZ)
+            self.AlphaZ.addMarkovBlanket(Z=self.Z)
+        else:
+            self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y)
+
         # self.Clusters.addMarkovBlanket(Z=self.Z)# I THINK WE MIGHT HAVE TO INCORPORATE ALPHAZ HERE
         for m in xrange(self.M):
             self.Theta.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m])

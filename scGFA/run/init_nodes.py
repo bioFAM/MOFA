@@ -78,16 +78,8 @@ class init_sparse(initModel):
 
         # Add covariates
         if covariates is not None:
-            # idx_covariates = s.arange(self.K)[-covariates.shape[1]:]
-            # putting the covariates first instead
-            # import pdb; pdb.set_trace()
             idx_covariates = s.array(range(covariates.shape[1]))
-
             qmean[:,idx_covariates] = covariates
-            qvar = s.ones((self.N,self.K))*qvar
-            qvar[:, idx_covariates] = 0.
-            # qmean = s.c_[ qmean, covariates ]
-            # idx_covariates = s.arange(covariates.shape[1]) + self.K
         else:
             idx_covariates = None
 
@@ -121,21 +113,20 @@ class init_sparse(initModel):
             else:
                 print "Wrong initialisation for SW"
                 exit()
-
             SW_list[m] = SW_Node(
                 dim=(self.D[m],self.K),
 
-                ptheta=s.ones((self.D[m],self.K))*ptheta[m],
-                pmean_S0=s.ones((self.D[m],self.K))*pmean_S0[m],
-                pvar_S0=s.ones((self.D[m],self.K))*pvar_S0[m],
-                pmean_S1=s.ones((self.D[m],self.K))*pmean_S1[m],
-                pvar_S1=s.ones((self.D[m],self.K))*pvar_S1[m],
+                ptheta=ptheta[m],
+                pmean_S0=pmean_S0[m],
+                pvar_S0=pvar_S0[m],
+                pmean_S1=pmean_S1[m],
+                pvar_S1=pvar_S1[m],
 
-                qtheta=s.ones((self.D[m],self.K))*qtheta[m],
-                qmean_S0=s.ones((self.D[m],self.K))*qmean_S0[m],
-                qvar_S0=s.ones((self.D[m],self.K))*qvar_S0[m],
+                qtheta=qtheta[m],
+                qmean_S0=qmean_S0[m],
+                qvar_S0=qvar_S0[m],
                 qmean_S1=qmean_S1[m],
-                qvar_S1=s.ones((self.D[m],self.K))*qvar_S1[m],
+                qvar_S1=qvar_S1[m],
                 qES=qES[m],
                 qEW_S0=qEW_S0[m],
                 qEW_S1=qEW_S1[m],
@@ -155,7 +146,7 @@ class init_sparse(initModel):
         for m in xrange(self.M):
             alpha_list[m] = AlphaW_Node(dim=(self.K,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
             # alpha_list[m] = Constant_Node(dim=(self.K,), value=qE[m])
-            alpha_list[m].factors_axis = 0
+            # alpha_list[m].factors_axis = 0
         self.AlphaW = Multiview_Variational_Node(self.M, *alpha_list)
         # self.AlphaW = Multiview_Constant_Node(self.M, *alpha_list)
         self.nodes["AlphaW"] = self.AlphaW
@@ -169,11 +160,11 @@ class init_sparse(initModel):
         #  qE (float): initial expectation of the variational distribution
         alpha_list = [None]*self.M
         for m in xrange(self.M):
-            # alpha_list[m] = AlphaW_Node(dim=(1,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
-            alpha_list[m] = Constant_Node(dim=(1,), value=qE[m])
-            alpha_list[m].factors_axis = 0
-        # self.AlphaW = Multiview_Variational_Node(self.M, *alpha_list)
-        self.AlphaW = Multiview_Constant_Node(self.M, *alpha_list)
+            alpha_list[m] = AlphaW_Node(dim=(1,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
+            # alpha_list[m] = Constant_Node(dim=(1,), value=qE[m])
+            # alpha_list[m].factors_axis = 0
+        self.AlphaW = Multiview_Variational_Node(self.M, *alpha_list)
+        # self.AlphaW = Multiview_Constant_Node(self.M, *alpha_list)
         self.nodes["AlphaW"] = self.AlphaW
 
     def initAlphaZ(self, pa, pb, qa, qb, qE):
@@ -204,7 +195,7 @@ class init_sparse(initModel):
             elif self.lik[m] == "bernoulli":
                 # tmp = s.ones(self.D[m])*0.25
                 # tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
-                tau_list[m] = Tau_Jaakkola(dim=(self.N,self.D[m]), value=1)
+                tau_list[m] = Tau_Jaakkola(dim=(self.D[m],), value=1)
             elif self.lik[m] == "binomial":
                 tmp = 0.25*s.amax(self.data["tot"][m],axis=0)
                 tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
@@ -242,7 +233,7 @@ class init_sparse(initModel):
         # Method to initialise the theta node
         Theta_list = [None] * self.M
         for m in xrange(self.M):
-            Theta_list[m] = Theta_Constant_Node(dim=(self.D[m], self.K), value=value[m], N_cells=1.)
+            Theta_list[m] = Theta_Constant_Node(dim=(self.K,), value=value[m], N_cells=1.)
         self.Theta = Multiview_Constant_Node(self.M, *Theta_list)
         self.nodes["Theta"] = self.Theta
 

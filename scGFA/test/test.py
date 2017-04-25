@@ -102,7 +102,15 @@ model_opts['likelihood'] = ['gaussian']* M
 model_opts['learnTheta'] = True
 model_opts['k'] = K
 model_opts['ardZ'] = True
-model_opts['ardW'] = "basic"
+model_opts['ardW'] = "extended"
+
+# Define covariates
+# model_opts['covariates'] = s.ones((dim["N"],3))
+# model_opts['sparse_covariates'] = [False,False,False]
+model_opts['covariates'] = None
+model_opts['sparse_covariates'] = None
+if model_opts['covariates'] is not None:
+  dim["K"] += model_opts['covariates'].shape[1]
 
 ####################################
 ## Define priors (P distribution) ##
@@ -110,50 +118,99 @@ model_opts['ardW'] = "basic"
 
 # Latent Variables
 if model_opts['ardZ']:
-  model_opts["priorZ"] = { 'mean':0., 'var':s.nan }
-  model_opts["priorAlphaZ"] = { 'a':1e-5, 'b':1e-5 }
+  model_opts["priorZ"] = { 'mean':s.zeros((N,K)), 'var':s.nan }
+  model_opts["priorAlphaZ"] = { 'a':s.ones(K)*1e-5, 'b':s.ones(K)*1e-5 }
 else:
-  model_opts["priorZ"] = { 'mean':0., 'var':1. }
+  model_opts["priorZ"] = { 'mean':s.zeros((N,K)), 'var':s.ones((N,K)) }
 
 # Weights
 model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M } # Not required
 if model_opts['ardW'] == "basic":
   model_opts["priorAlphaW"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
 elif model_opts['ardW'] == "extended":
-  model_opts["priorAlphaW"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
+  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-5]*M, 'b':[s.ones(K)*1e-5]*M }
 if model_opts['learnTheta']:
-    model_opts["priorTheta"] = { 'a':[1.]*M, 'b':[1.]*M }
+    model_opts["priorTheta"] = { 'a':[s.ones(K)]*M, 'b':[s.ones(K)]*M }
   
 # Noise
-model_opts["priorTau"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
+model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-5 for m in xrange(M)], 'b':[s.ones(D[m])*1e-5 for m in xrange(M)] }
 
 #############################################
 ## Define initialisations (Q distribution) ##
 #############################################
 
 # Latent variables
-model_opts["initZ"] = { 'mean':"orthogonal", 'var':1., 'E':None, 'E2':None }
+model_opts["initZ"] = { 'mean':"orthogonal", 'var':s.ones((N,K)), 'E':None, 'E2':None }
 if model_opts['ardZ']:
-  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':1. }
+  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K) }
 
 # Weights
-model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M } 
-model_opts["initSW"] = { 'Theta':[0.5]*M,
-                          'mean_S0':[0.]*M, 'var_S0':model_opts["initAlphaW"]['E'],
-                          # 'mean_S1':["random"]*M, 'var_S1':[1.]*M,
-                          'mean_S1':[0.]*M, 'var_S1':[1.]*M,
+model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*10. for m in xrange(M)] } 
+model_opts["initSW"] = { 'Theta':[s.ones((D[m],K))*.5 for m in xrange(M)],
+                          'mean_S0':[s.zeros((D[m],K))*.5 for m in xrange(M)],
+                          'var_S0':[s.ones((D[m],K)) for m in xrange(M)],
+                          'mean_S1':[s.zeros((D[m],K)) for m in xrange(M)], # (TO-DO) allow also random
+                          'var_S1':[s.ones((D[m],K)) for m in xrange(M)],
                           'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M}
 if model_opts['learnTheta']:
-    model_opts["initTheta"] = { 'a':[1.]*M, 'b':[1.]*M, 'E':[None]*M }
+    model_opts["initTheta"] = { 'a':[s.ones(K)]*M, 'b':[s.ones(K)]*M, 'E':[None]*M }
 else:
-    model_opts["initTheta"] = { 'value':[args.initTheta]*M }
+    model_opts["initTheta"] = { 'value':[s.ones(K)*args.initTheta]*M }
 
 # Noise
-model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M }
+model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(D[m])*100 for m in xrange(M)] }
 
+######################################################
+## Modify priors and initialisations for covariates ##
+######################################################
 
-# Define covariates
-model_opts['covariates'] = None
+if model_opts['covariates'] is not None:
+  idx = xrange(model_opts['covariates'].shape[1])
+
+  ## Prior distributions (P) ##
+  # Latent variables
+  if model_opts['ardZ']:
+    model_opts["priorZ"]["mean"][:,idx] = s.nan
+    model_opts["priorAlphaZ"]["a"][idx] = s.nan
+    model_opts["priorAlphaZ"]["b"][idx] = s.nan
+  else:
+    model_opts["priorZ"]["var"][:,idx] = s.nan
+
+  ## Variational distributions (Q) ##
+  # Latent variables
+  # model_opts["initZ"]["mean"][:,idx] = model_opts["covariates"]
+  model_opts["initZ"]["var"][:,idx] = 0.
+  if model_opts['ardZ']:
+        model_opts["initAlphaZ"]["E"][idx] = s.nan
+
+  ## Sparse covariates ##
+  if any(model_opts['sparse_covariates']):
+    idx = s.where(model_opts['sparse_covariates'])
+
+    ## Prior distributions (P) ##
+    # Weights
+    if model_opts['ardW'] == "extended":
+      for m in range(M): 
+        model_opts["priorAlphaW"]['a'][m][idx] = s.nan
+        model_opts["priorAlphaW"]['b'][m][idx] = s.nan
+        if model_opts['learnTheta']:
+          model_opts["priorTheta"]['a'][m][idx] = s.nan
+          model_opts["priorTheta"]['b'][m][idx] = s.nan
+
+    ## Variational distributions (Q) ##
+    # Weights
+    for m in range(M): 
+      model_opts["initAlphaW"]["E"][m][idx] = s.nan
+      model_opts["initSW"]["Theta"][m][:,idx] = s.nan
+      model_opts["initSW"]["mean_S0"][m][:,idx] = s.nan
+      model_opts["initSW"]["var_S0"][m][:,idx] = s.nan
+      model_opts["initSW"]["mean_S1"][m][:,idx] = s.nan
+      model_opts["initSW"]["var_S1"][m][:,idx] = s.nan
+      if model_opts['learnTheta']:
+        model_opts["initTheta"]["a"][m][idx] = s.nan
+        model_opts["initTheta"]["b"][m][idx] = s.nan
+      else:
+        model_opts["initTheta"]["value"][m][idx] = s.nan
 
 
 #############################
@@ -163,6 +220,7 @@ model_opts['covariates'] = None
 train_opts = {}
 # Define schedule of updates
 # train_opts['schedule'] = ("Y","Tau","SW", "Z", "Clusters", "Theta", "Alpha")
+# train_opts['schedule'] = ("SW","Z","AlphaZ","AlphaW","Tau","Theta")
 train_opts['schedule'] = ("SW","Z","AlphaZ","AlphaW","Tau","Theta")
 train_opts['elbofreq'] = 1
 train_opts['maxiter'] = 3000

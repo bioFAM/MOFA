@@ -62,7 +62,7 @@ data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
 data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 # data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
 
-missingness = 0.
+missingness = 0.2
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="gaussian", missingness=missingness)
 Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -131,7 +131,7 @@ elif model_opts['ardW'] == "extended":
   model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-5]*M, 'b':[s.ones(K)*1e-5]*M }
 if model_opts['learnTheta']:
     model_opts["priorTheta"] = { 'a':[s.ones(K)]*M, 'b':[s.ones(K)]*M }
-  
+
 # Noise
 model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-5 for m in xrange(M)], 'b':[s.ones(D[m])*1e-5 for m in xrange(M)] }
 
@@ -146,7 +146,7 @@ if model_opts['ardZ']:
 
 # Weights
 
-model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*10. for m in xrange(M)] } 
+model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*10. for m in xrange(M)] }
 model_opts["initSW"] = { 'Theta':[s.ones((D[m],K))*.5 for m in xrange(M)],
                           'mean_S0':[s.zeros((D[m],K))*.5 for m in xrange(M)],
                           'var_S0':[s.ones((D[m],K)) for m in xrange(M)],
@@ -191,7 +191,7 @@ if model_opts['covariates'] is not None:
     ## Prior distributions (P) ##
     # Weights
     if model_opts['ardW'] == "extended":
-      for m in range(M): 
+      for m in range(M):
         model_opts["priorAlphaW"]['a'][m][idx] = s.nan
         model_opts["priorAlphaW"]['b'][m][idx] = s.nan
         if model_opts['learnTheta']:
@@ -200,7 +200,7 @@ if model_opts['covariates'] is not None:
 
     ## Variational distributions (Q) ##
     # Weights
-    for m in range(M): 
+    for m in range(M):
       model_opts["initAlphaW"]["E"][m][idx] = s.nan
       model_opts["initSW"]["Theta"][m][:,idx] = s.nan
       model_opts["initSW"]["mean_S0"][m][:,idx] = s.nan
@@ -222,7 +222,7 @@ train_opts = {}
 # Define schedule of updates
 # train_opts['schedule'] = ("Y","Tau","SW", "Z", "Clusters", "Theta", "Alpha")
 # train_opts['schedule'] = ("SW","Z","AlphaZ","AlphaW","Tau","Theta")
-train_opts['schedule'] = ("SW","Z","AlphaZ","AlphaW","Tau","Theta")
+train_opts['schedule'] = ("SW","Z","AlphaZ","AlphaW","Tau","Theta", 'Clusters')
 train_opts['elbofreq'] = 1
 train_opts['maxiter'] = 3000
 # train_opts['tolerance'] = 1E-2

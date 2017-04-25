@@ -432,7 +432,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         # Update mean
         latent_variables = self.getLvIndex() # excluding covariates from the list of latent variables
         for k in latent_variables:
-            Qmean[:,k] = Qvar[:,k] * (  Alpha[:,k]*Mu[:,k] +
+            Qmean[:,k] = Qvar[:,k] * (  Alpha[k]*Mu[:,k] +
                                         ma.dot(tau*(Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )), SW[:,k])  )
 
         # Save updated parameters of the Q distribution
@@ -531,7 +531,6 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
         self.factors_axis = 1
         super(Cluster_Node_Gaussian, self).__init__(dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE, qE2=qE2)
 
-
     def getExpectations(self):
         # reshape the values to N_samples * N_factors and return
         QExp = self.Q.getExpectations()
@@ -551,7 +550,7 @@ class Cluster_Node_Gaussian(UnivariateGaussian_Unobserved_Variational_Node):
             Alpha = 1./self.markov_blanket['Z'].P.getParameters()["var"]
 
         Qmean, Qvar = self.Q.getParameters()['mean'], self.Q.getParameters()['var']
-        ZTauMean = ZQPar['mean'] * Alpha
+        ZTauMean = Z * Alpha
 
         # TODO merge two loops when sure it's clean
         # update of the variance

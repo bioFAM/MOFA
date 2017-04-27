@@ -200,9 +200,6 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         thetatmp = self.markov_blanket['Theta'].getExpectations()
         theta_lnE, theta_lnEInv  = thetatmp['lnE'], thetatmp['lnEInv']
 
-        print alpha
-        print Y
-        exit()
         # Collect parameters and expectations from P and Q distributions of this node
         SW = self.Q.getExpectations()["E"]
         Q = self.Q.getParameters()

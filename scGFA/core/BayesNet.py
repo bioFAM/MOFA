@@ -75,8 +75,8 @@ class BayesNet(object):
         # SW = s.concatenate(self.nodes["SW"].getExpectation(), axis=0)
         # print (s.absolute(SW)>0.01).sum(axis=0)
         # print (s.absolute(SW)).mean(axis=0)
-        # Z = self.nodes["Z"].getExpectation()
-        # print (Z**2).mean(axis=0)
+        Z = self.nodes["Z"].getExpectation()
+        print (Z**2).mean(axis=0)
         ### test ###
 
         # Option 2: coefficient of determination

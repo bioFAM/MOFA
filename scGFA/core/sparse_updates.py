@@ -434,7 +434,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         # Update mean
         latent_variables = self.getLvIndex() # excluding covariates from the list of latent variables
         for k in latent_variables:
-            Qmean[:,k] = Qvar[:,k] * (  Alpha[k]*Mu[:,k] +
+            Qmean[:,k] = Qvar[:,k] * (  Alpha[:,k]*Mu[:,k] +
                                         ma.dot(tau*(Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )), SW[:,k])  )
 
         # Save updated parameters of the Q distribution

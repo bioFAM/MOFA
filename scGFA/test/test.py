@@ -59,11 +59,11 @@ data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 theta = [ s.ones(K)*0.5 for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
 
-data['mu'] = [ s.zeros(D[m]) for m in xrange(M)]
+data['mu'] = [ s.ones(D[m])*3. for m in xrange(M)]
 data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 # data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
 
-missingness = 0.2
+missingness = 0.0
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="gaussian", missingness=missingness)
 Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -87,7 +87,6 @@ data_opts = {}
 data_opts["outfile"] = "/tmp/test.h5"
 data_opts['view_names'] = ["g","p","b"]
 
-# data_opts['covariates'] = s.ones((data["Y"][0].shape[0],3))
 data_opts['covariates'] = None
 
 #################################
@@ -95,7 +94,7 @@ data_opts['covariates'] = None
 #################################
 
 # Define initial number of latent variables
-K = 10
+K = 20
 
 # Define model dimensionalities
 dim = {}
@@ -113,10 +112,19 @@ model_opts = {}
 
 # Define type of covariates
 model_opts['nonsparse_covariates'] = None
-# model_opts['nonsparse_covariates'] = [True,True,True]
 if data_opts['covariates'] is not None:
   dim["K"] += data_opts['covariates'].shape[1]
   K = dim["K"]
+
+# Define whether to learn means
+model_opts["learnMean"] = True
+if model_opts["learnMean"]:
+  # MODIFY THIS
+  data_opts['covariates'] = s.ones((dim["N"],1))
+  dim["K"] += data_opts['covariates'].shape[1]
+  K = dim["K"]
+  model_opts['nonsparse_covariates'] = [True]
+
 
 # Define likelihoods
 model_opts['likelihood'] = ['gaussian']* M
@@ -125,12 +133,16 @@ model_opts['likelihood'] = ['gaussian']* M
 model_opts['k'] = K
 
 # Define sparsities
-model_opts['ardZ'] = False
+model_opts['ardZ'] = True
 model_opts['ardW'] = "extended"
 
 # Define for which factors to learn Theta
 model_opts['learnTheta'] = s.ones((M,K))
 
+# Define schedule of updates
+# model_opts['schedule'] = ("Y","Tau","SW", "Z", "Clusters", "Theta", "Alpha")
+model_opts['schedule'] = ["SW","Z","AlphaZ","AlphaW","Tau","Theta"]
+# model_opts['schedule'] = ("SW","Z","AlphaW","Tau","Theta")
 
 ####################################
 ## Define priors (P distribution) ##
@@ -171,7 +183,7 @@ model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-5 for m in xrange(M)], 'b':[s.on
 model_opts["initZ"] = { 'mean':"orthogonal", 'var':s.ones((N,K)), 'E':None, 'E2':None }
 # model_opts["initZ"] = { 'mean':"random", 'var':s.ones((N,K)), 'E':None, 'E2':None }
 if model_opts['ardZ']:
-  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K) }
+  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*1000 }
 
 # Weights
 if model_opts['ardW'] == "basic":
@@ -253,12 +265,8 @@ if data_opts['covariates'] is not None:
 #############################
 
 train_opts = {}
-# Define schedule of updates
-# train_opts['schedule'] = ("Y","Tau","SW", "Z", "Clusters", "Theta", "Alpha")
-# train_opts['schedule'] = ("SW","Z","AlphaZ","AlphaW","Tau","Theta")
-train_opts['schedule'] = ("SW","Z","AlphaW","Tau","Theta")
 train_opts['elbofreq'] = 1
-train_opts['maxiter'] = 3000
+train_opts['maxiter'] = 500
 # train_opts['tolerance'] = 1E-2
 train_opts['tolerance'] = 0.01
 train_opts['forceiter'] = True
@@ -270,12 +278,12 @@ train_opts['savefolder'] = s.nan
 train_opts['verbosity'] = 2
 train_opts['trials'] = 1
 train_opts['cores'] = 1
-keep_best_run = False
 
 
 ####################
 ## Start training ##
 ####################
 
-# runMultipleTrials(data["Y"], data_opts, model_opts, train_opts, keep_best_run)
-runSingleTrial(data["Y"], data_opts, model_opts, train_opts)
+keep_best_run = False
+runMultipleTrials(data["Y"], data_opts, model_opts, train_opts, keep_best_run)
+# runSingleTrial(data["Y"], data_opts, model_opts, train_opts)

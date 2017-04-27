@@ -148,7 +148,6 @@ def saveTrainingStats(model, hdf5):
 	stats_grp['elbo_terms'].attrs['colnames'] = list(stats["elbo_terms"].columns.values)
 
 def saveTrainingOpts(opts, hdf5):
-
 	# Remove dictionaries from the options
 	for k,v in opts.copy().iteritems():
 		if type(v)==dict:
@@ -159,7 +158,7 @@ def saveTrainingOpts(opts, hdf5):
 	hdf5['training_opts'].attrs['names'] = opts.keys()
 
 def saveModelOpts(opts, hdf5):
-	opts_interest = ["schedule","likelihood"]
+	opts_interest = ["learnMean","schedule","likelihood"]
 	opts = dict((k, opts[k]) for k in opts_interest)
 	grp=hdf5.create_group('model_opts')
 	for k,v in opts.items():

@@ -113,6 +113,14 @@ K = model_opts['k'] = args.factors
 model_opts['likelihood'] = args.likelihoods
 assert M==len(model_opts['likelihood']), "Please specify one likelihood for each view"
 
+# Define schedule of updates
+model_opts['schedule'] = args.schedule
+if model_opts["ardZ"]: 
+  assert "AlphaZ" in args.schedule, "AlphaZ should be in the update schedule"
+else:
+  assert "AlphaZ" not in args.schedule, "AlphaZ should not be in the update schedule"
+
+
 # Define whether to learn the feature-wise means
 model_opts["learnMean"] = args.learnMean
 
@@ -132,7 +140,7 @@ else:
 # Latent Variables
 if model_opts['ardZ']:
   model_opts["priorZ"] = { 'mean':s.zeros((N,K)), 'var':s.nan }
-  model_opts["priorAlphaZ"] = { 'a':s.ones(K)*1e-5, 'b':s.ones(K)*1e-5 }
+  model_opts["priorAlphaZ"] = { 'a':s.ones(K)*1e-14, 'b':s.ones(K)*1e-14 }
 else:
   model_opts["priorZ"] = { 'mean':s.zeros((N,K)), 'var':s.ones((N,K)) }
 
@@ -141,7 +149,7 @@ model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.na
 if model_opts['ardW'] == "basic":
   model_opts["priorAlphaW"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
 elif model_opts['ardW'] == "extended":
-  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-5]*M, 'b':[s.ones(K)*1e-5]*M }
+  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-14]*M, 'b':[s.ones(K)*1e-14]*M }
 
 # Theta
 model_opts["priorTheta"] = { 'a':[s.ones(K) for m in xrange(M)], 'b':[s.ones(K) for m in xrange(M)] }
@@ -163,7 +171,7 @@ model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-5 for m in xrange(M)], 'b':[s.on
 model_opts["initZ"] = { 'mean':"orthogonal", 'var':s.ones((N,K)), 'E':None, 'E2':None }
 # model_opts["initZ"] = { 'mean':"random", 'var':s.ones((N,K)), 'E':None, 'E2':None }
 if model_opts['ardZ']:
-  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K) }
+  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*2500 }
 
 # Weights
 model_opts["initSW"] = { 
@@ -175,9 +183,9 @@ model_opts["initSW"] = {
   'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M 
 }
 if model_opts['ardW'] == "basic":
-  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M } # TO-DO: INITIALISE THIS WITH OBSERVED VARIANCE
+  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M } # TO-DO: INITIALISE THIS WITH OBSERVED VARIANCE
 else:
-  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*1000. for m in xrange(M)] }
+  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*100. for m in xrange(M)] }
 
 # Theta
 model_opts["initTheta"] = { 'a':[s.ones(K) for m in xrange(M)], 'b':[s.ones(K) for m in xrange(M)], 'E':[s.zeros(K)*s.nan for m in xrange(M)] }
@@ -238,13 +246,6 @@ if model_opts["learnMean"]:
 
 train_opts = {}
 
-# Define schedule of updates
-train_opts['schedule'] = args.schedule
-if model_opts["ardZ"]: 
-  assert "AlphaZ" in args.schedule, "AlphaZ should be in the update schedule"
-else:
-  assert "AlphaZ" not in args.schedule, "AlphaZ should not be in the update schedule"
-
 
 # Maximum number of iterations
 train_opts['maxiter'] = args.iter
@@ -284,6 +285,6 @@ train_opts['cores'] = args.ncores
 keep_best_run = False
 
 # Go!
-runSingleTrial(data, data_opts, model_opts, train_opts, seed=None)
-# runMultipleTrials(data_opts, model_opts, train_opts, keep_best_run)
+# runSingleTrial(data, data_opts, model_opts, train_opts, seed=None)
+runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run)
 

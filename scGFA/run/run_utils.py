@@ -163,7 +163,7 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
 
     # Initialise Bayesian Network
     # print "Initialising Bayesian network...\n"
-    net = BayesNet(dim=dim, trial=trial, schedule=train_opts["schedule"], nodes=init.getNodes(), options=train_opts)
+    net = BayesNet(dim=dim, trial=trial, schedule=model_opts["schedule"], nodes=init.getNodes(), options=train_opts)
 
     ####################
     ## Start training ##

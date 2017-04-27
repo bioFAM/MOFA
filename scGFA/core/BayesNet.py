@@ -65,11 +65,11 @@ class BayesNet(object):
                 drop_dic["by_norm"] = [ s.random.choice(drop_dic["by_norm"]) ]
 
         ### test ###
-        s.set_printoptions(precision=2)
-        r = s.absolute(corr(Z.T,Z.T))
-        s.fill_diagonal(r,0)
-        r *= s.tri(*r.shape)
-        print r.max()
+        # s.set_printoptions(precision=2)
+        # r = s.absolute(corr(Z.T,Z.T))
+        # s.fill_diagonal(r,0)
+        # r *= s.tri(*r.shape)
+        # print r.max()
         # alpha = self.nodes["AlphaZ"].getExpectation()
         # print (alpha)
         # SW = s.concatenate(self.nodes["SW"].getExpectation(), axis=0)
@@ -134,6 +134,7 @@ class BayesNet(object):
         drop = s.unique(s.concatenate(drop_dic.values()))
 
         if len(drop) > 0:
+            # print drop
             for node in self.nodes.keys():
                 self.nodes[node].removeFactors(drop)
         self.dim['K'] -= len(drop)

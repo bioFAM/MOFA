@@ -211,7 +211,7 @@ setMethod("viewNames<-", signature(object="MOFAmodel", value="character"),
       stop("view names do not match the number of views in the training data")
     
     # We have to modify this
-    multiview_nodes <- c("Alpha","SW","Tau","Theta","Y")
+    multiview_nodes <- c("AlphaW","SW","Tau","Theta","Y")
     names(object@TrainData) <- value
     for (node in multiview_nodes) { 
       names(object@Expectations[[node]]) <- value 

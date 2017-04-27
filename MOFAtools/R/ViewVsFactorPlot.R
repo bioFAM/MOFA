@@ -11,7 +11,7 @@
 ViewFactorPlot <- function(object, views="all", factors="all") {
   
   # Define views
-  if (views=="all") { 
+  if (paste0(views,sep="",collapse="") =="all") { 
     views <- viewNames(object) 
   } else {
     stopifnot(all(views %in% viewNames(object)))  
@@ -19,7 +19,7 @@ ViewFactorPlot <- function(object, views="all", factors="all") {
   M <- length(views)
   
   # Define factors
-  if (factors=="all") { 
+  if (paste0(factors,sep="",collapse="") == "all") { 
     factors <- factorNames(object) 
   } else {
     stopifnot(all(factors %in% factorNames(object)))  
@@ -31,9 +31,9 @@ ViewFactorPlot <- function(object, views="all", factors="all") {
     stop("'object' has to be an instance of MOFAmodel")
   
   # Calculate proportion of residual variation explained by each factor in each view
-  prvar_mk <- CalculateVariance_Views(object, views, factors)
+  fvar_mk <- CalculateVariance_Views(object, views, factors)
     
   # Generate plot
   color <- colorRampPalette(c("grey100", "grey0"))(100)
-  pheatmap::pheatmap(prvar_mk, color=color)
+  pheatmap::pheatmap(fvar_mk, color=color)
 }

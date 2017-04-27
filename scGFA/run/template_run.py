@@ -112,14 +112,14 @@ if model_opts['learnTheta']:
 # Define initialisations
 model_opts["initZ"] = { 'mean':"random", 'var':1., 'E':None, 'E2':None }
 # model_opts["initAlpha"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M }
-model_opts["initAlpha"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
+model_opts["initAlpha"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[1.]*M }
 model_opts["initSW"] = { 'Theta':[0.5]*M,
                           'mean_S0':[0.]*M, 'var_S0':model_opts["initAlpha"]['E'],
                           # 'mean_S1':["random"]*M, 'var_S1':[1.]*M,
                           'mean_S1':[0.]*M, 'var_S1':[1.]*M,
                           'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M}
 # model_opts["initTau"] = { 'a':[1.,1.,None], 'b':[1.,1.,None], 'E':[100.,100.,None] }
-model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
+model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[1000.]*M }
 
 if model_opts['learnTheta']:
     model_opts["initTheta"] = { 'a':[1.]*M, 'b':[1.]*M, 'E':[None]*M }

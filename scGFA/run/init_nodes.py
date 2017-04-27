@@ -127,6 +127,7 @@ class init_sparse(initModel):
                 qvar_S0=qvar_S0[m],
                 qmean_S1=qmean_S1[m],
                 qvar_S1=qvar_S1[m],
+
                 qES=qES[m],
                 qEW_S0=qEW_S0[m],
                 qEW_S1=qEW_S1[m],
@@ -162,12 +163,11 @@ class init_sparse(initModel):
         for m in xrange(self.M):
             alpha_list[m] = AlphaW_Node(dim=(1,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
             # alpha_list[m] = Constant_Node(dim=(1,), value=qE[m])
-            # alpha_list[m].factors_axis = 0
         self.AlphaW = Multiview_Variational_Node(self.M, *alpha_list)
         # self.AlphaW = Multiview_Constant_Node(self.M, *alpha_list)
         self.nodes["AlphaW"] = self.AlphaW
 
-    def initAlphaZ(self, pa, pb, qa, qb, qE):
+    def initAlphaZ(self, pa, pb, qa, qb, qE, covariates=None):
         # Method to initialise the precision of the latent variable ARD prior
         # Inputs:
         #  pa (float): 'a' parameter of the prior distribution
@@ -175,9 +175,9 @@ class init_sparse(initModel):
         #  qb (float): initialisation of the 'b' parameter of the variational distribution
         #  qE (float): initial expectation of the variational distribution
 
-        # self.AlphaZ = AlphaZ_Node(dim=(self.K,), pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
-        self.AlphaZ = Constant_Node(dim=(self.K,), value=qE)
-        self.AlphaZ.factors_axis = 0
+        self.AlphaZ = AlphaZ_Node(dim=(self.K,), pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
+        # self.AlphaZ = Constant_Node(dim=(self.K,), value=qE)
+        # self.AlphaZ.factors_axis = 0
         self.nodes["AlphaZ"] = self.AlphaZ
 
     def initTau(self, pa, pb, qa, qb, qE):
@@ -221,6 +221,29 @@ class init_sparse(initModel):
         self.Y = Multiview_Mixed_Node(self.M, *Y_list)
         self.nodes["Y"] = self.Y
 
+    def initTheta(self, pa, pb, qa, qb, qE, learnTheta):
+        # Method to initialie a general theta node
+        # Inputs:
+        #  pa (float): 'a' parameter of the prior distribution
+        #  pb (float): 'b' parameter of the prior distribution
+        #  qb (float): initialisation of the 'b' parameter of the variational distribution
+        #  qE (float): initial expectation of the variational distribution
+        #  
+        Theta_list = [None] * self.M
+        for m in xrange(self.M):
+            Klearn = learnTheta[m,:]==1.
+            Kconst = learnTheta[m,:]==0.
+            Theta_list[m] = Mixed_Theta_Nodes(
+                LearnTheta=Theta_Node(dim=(s.sum(Klearn),), pa=pa[m][Klearn], pb=pb[m][Klearn], qa=qa[m][Klearn], qb=qb[m][Klearn], qE=qE[m][Klearn]),
+                ConstTheta=Theta_Constant_Node(dim=((self.D[m],s.sum(Kconst),)), value=s.repeat(qE[m][Kconst][None,:], self.D[m], 0), N_cells=1.),
+                idx=learnTheta[m,:]
+            )
+        # WHAT IS THIS???
+        # self.Theta = Multiview_Mixed_Theta_Nodes(self.M, *Theta_list)
+        # self.Theta = Multiview_Variational_Node(self.M, *Theta_list)
+        self.Theta = Multiview_Mixed_Node(self.M, *Theta_list)
+        self.nodes["Theta"] = self.Theta
+
     def initThetaLearn(self, pa, pb, qa, qb, qE):
         # Method to initialise the theta node
         Theta_list = [None] * self.M
@@ -251,14 +274,22 @@ class init_sparse(initModel):
 
     def MarkovBlanket(self):
         # Method to define the markov blanket
-        # self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y, Cluster=self.Clusters, Alpha=self.AlphaZ)
-        if 'AlphaZ' in self.nodes:
-            self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y, Alpha=self.AlphaZ, Cluster=self.Clusters)
-            self.AlphaZ.addMarkovBlanket(Z=self.Z, Cluster=self.Clusters)
-        else:
-            self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y, Cluster=self.Clusters)
 
-        self.Clusters.addMarkovBlanket(Z=self.Z, Alpha=self.AlphaZ)# I THINK WE MIGHT HAVE TO INCORPORATE ALPHAZ HERE
+        if 'AlphaZ' in self.nodes:
+            if 'Cluster' in self.nodes:
+                self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y, Alpha=self.AlphaZ, Cluster=self.Clusters)
+                self.AlphaZ.addMarkovBlanket(Z=self.Z, Cluster=self.Clusters)
+                self.Clusters.addMarkovBlanket(Z=self.Z, Alpha=self.AlphaZ)
+            else:
+                self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y, Alpha=self.AlphaZ)
+                self.AlphaZ.addMarkovBlanket(Z=self.Z)
+        else:
+            if 'Cluster' in self.nodes:
+                self.Clusters.addMarkovBlanket(Z=self.Z)
+                self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y, Cluster=self.Clusters)
+            else:
+                self.Z.addMarkovBlanket(SW=self.SW, Tau=self.Tau, Y=self.Y)
+
         for m in xrange(self.M):
             self.Theta.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m])
             self.AlphaW.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m])

@@ -13,72 +13,67 @@ import pdb
 
 class Mixed_Theta_Nodes(Variational_Node, Constant_Node):
     """
-    Class for a mixture of annotated Theta and non annotated Theta
-
-    Annotated_theta is a Constant_Node of dimension k_1
-    Non_Annotated_Theta is a Theta_Node_No_Annotation of diemnsion K - k_1
-
-    When updating the non_annotated part of a Mixed_Theta_Nodes, we need to pass
-    as an argument to the Theta_Node_No_Annotation the indices of the factors which
-    are not annotated
+    Class for a mixture of LearningTheta and constant ConstantTheta nodes.
+    For a total of K factors, some (Klearn) will learn Theta whereas for the others (Kconst) it will be constant
+        K = Klearn + Kconst
     """
-    def __init__(self, Annotated_Theta, Non_Annotated_Theta):
-        self.annotated_theta = Annotated_Theta  # Constant_Node
-        self.non_annotated_theta = Non_Annotated_Theta  # Beta_Node
+    def __init__(self, LearnTheta, ConstTheta, idx):
+        # Inputs:
+        # - LearnTheta: Theta_Node with dimensions (Klearn,)
+        # - ConstTheta: Theta_Constant_Node with dimensions (D,Kconst) or (Kconst,1) - NOT IMPLEMENTED YET -
+        # - idx: list or numpy array indicating which factors are LearnTheta(idx=1. or idx=True) and which are ConstTheta(idx=0. or idx=False)
+        self.constTheta = ConstTheta
+        self.learnTheta = LearnTheta
 
-        self.K = Annotated_Theta.dim[1] + Non_Annotated_Theta.Q.dim[0]
+        self.K = ConstTheta.dim[1] + LearnTheta.dim[0]
+        self.D = ConstTheta.dim[0]
 
-        self.annotated_factors_ix = range(0, Annotated_Theta.dim[1])
-        self.non_annotated_factors_ix = range(Annotated_Theta.dim[1], self.K)
-
+        self.idx = idx
+        
     def addMarkovBlanket(self, **kargs):
-        self.non_annotated_theta.addMarkovBlanket(**kargs)
+        # SHOULD WE ALSO ADD MARKOV BLANKET FOR CONSTHTETA???
+        self.learnTheta.addMarkovBlanket(**kargs)
 
     def getExpectations(self):
-        # get expectations or values for each node and return concatenated array
-        values_annotated = self.annotated_theta.getExpectations()['E']
-        values_annotated_ln = self.annotated_theta.getExpectations()['lnE']
-        values_annotated_lnInv = self.annotated_theta.getExpectations()['lnEInv']
 
-        exp = self.non_annotated_theta.getExpectations()['E']
-        lnExp = self.non_annotated_theta.getExpectations()['lnE']
-        lnExpInv = self.non_annotated_theta.getExpectations()['lnEInv']
+        # Get expectations from ConstTheta nodes (D,Kconst)
+        Econst = self.constTheta.getExpectations().copy()
 
-        # deal with different dimensions TODO handle other cases here ?
-        # TODO this does not handle learnign some theta and not others for
+        # Get expectations from LearnTheta nodes and expand to (D,Kconst)
+        Elearn = self.learnTheta.getExpectations().copy()
+        Elearn["E"] = s.repeat(Elearn["E"][None,:], self.D, 0)
+        Elearn["lnE"] = s.repeat(Elearn["lnE"][None,:], self.D, 0)
+        Elearn["lnEInv"] = s.repeat(Elearn["lnEInv"][None,:], self.D, 0)
 
-        exp = s.repeat(exp[None, :], values_annotated.shape[0], 0)
-        lnExp = s.repeat(lnExp[None, :], values_annotated.shape[0], 0)
-        lnExpInv = s.repeat(lnExpInv[None, :], values_annotated.shape[0], 0)
+        # Concatenate expectations to (D,K)
+        E = s.concatenate((Econst["E"], Elearn["E"]), axis=1)
+        lnE = s.concatenate((Econst["lnE"], Elearn["lnE"]), axis=1)
+        lnEInv = s.concatenate((Econst["lnEInv"], Elearn["lnEInv"]), axis=1)
 
-        E = s.concatenate((values_annotated, exp), axis=1)
-        lnE = s.concatenate((values_annotated_ln, lnExp), axis=1)
-        lnEInv = s.concatenate((values_annotated_lnInv, lnExpInv), axis=1)
+        # Permute to the right order given by self.idx
+        idx = s.concatenate((s.nonzero(1-self.idx)[0],s.where(self.idx)[0]), axis=0)
+        E, lnE, lnEinv = E[:,idx], lnE[:,idx], lnEInv[:,idx]
         return dict({'E': E, 'lnE': lnE, 'lnEInv':lnEInv})
 
     def getExpectation(self):
         return self.getExpectations()['E']
 
     def updateExpectations(self):
-        self.non_annotated_theta.updateExpectations()
+        self.learnTheta.updateExpectations()
 
     def updateParameters(self):
         # the argument contains the indices of the non_annotated factors
-        self.non_annotated_theta.updateParameters(self.non_annotated_factors_ix)
+        self.learnTheta.updateParameters(s.nonzero(self.idx)[0])
 
     def calculateELBO(self):
-        return self.non_annotated_theta.calculateELBO()
+        return self.learnTheta.calculateELBO()
 
-    def removeFactors(self, *ix):
-        annotated_to_rm = s.intersect1d(ix, self.annotated_factors_ix)
-        non_annotated_to_rm = s.intersect1d(ix, self.non_annotated_factors_ix)
+    def removeFactors(self, *idx):
+        for i in idx:
+            if self.idx[idx] == 1:
+                self.learnTheta.removeFactors(s.where(i == s.nonzero(self.idx)[0])[0])
+            else:
+                self.constTheta.removeFactors(s.where(i == s.nonzero(1-self.idx)[0])[0])
+            self.idx = self.idx[s.arange(self.K)!=i]
+            self.K -= 1
 
-        non_annotated_to_rm_reindexed = non_annotated_to_rm - len(self.annotated_factors_ix)
-
-        self.non_annotated_theta.removeFactors(non_annotated_to_rm_reindexed)
-        self.annotated_theta.removeFactors(annotated_to_rm)
-
-        self.annotated_factors_ix = range(len(self.annotated_factors_ix) - len(annotated_to_rm))
-        self.non_annotated_factors_ix = range(len(self.annotated_factors_ix), len(self.annotated_factors_ix) +len(self.non_annotated_factors_ix) - len(non_annotated_to_rm))
-
-        self.K = len(self.annotated_factors_ix) + len(self.non_annotated_factors_ix)

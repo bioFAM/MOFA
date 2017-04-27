@@ -65,11 +65,11 @@ class BayesNet(object):
                 drop_dic["by_norm"] = [ s.random.choice(drop_dic["by_norm"]) ]
 
         ### test ###
-        # s.set_printoptions(precision=2)
-        # r = s.absolute(corr(Z.T,Z.T))
-        # s.fill_diagonal(r,0)
-        # r *= s.tri(*r.shape)
-        # print r.max()
+        s.set_printoptions(precision=2)
+        r = s.absolute(corr(Z.T,Z.T))
+        s.fill_diagonal(r,0)
+        r *= s.tri(*r.shape)
+        print r.max()
         # alpha = self.nodes["AlphaZ"].getExpectation()
         # print (alpha)
         # SW = s.concatenate(self.nodes["SW"].getExpectation(), axis=0)
@@ -134,7 +134,6 @@ class BayesNet(object):
         drop = s.unique(s.concatenate(drop_dic.values()))
 
         if len(drop) > 0:
-            print drop_dic
             for node in self.nodes.keys():
                 self.nodes[node].removeFactors(drop)
         self.dim['K'] -= len(drop)
@@ -151,7 +150,7 @@ class BayesNet(object):
         elbo = pd.DataFrame(data = nans((self.options['maxiter'], len(nodes)+1 )),
                             columns = nodes+["total"] )
         activeK = nans((self.options['maxiter']))
-
+        
         # Start training
         for i in xrange(self.options['maxiter']):
             t = time();
@@ -189,6 +188,7 @@ class BayesNet(object):
                     if self.options['verbosity'] > 0:
                         print "Trial %d, Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, K=%d" % (self.trial, i+1, time()-t, elbo.iloc[i]["total"], delta_elbo, self.dim["K"])
                         if delta_elbo<0: print "Warning, lower bound is decreasing..."
+                        if delta_elbo<0: print '\a'
                     if self.options['verbosity'] == 2:
                         print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
 

@@ -27,6 +27,7 @@ p.add_argument( '--views',             type=str, nargs='+', required=True,      
 p.add_argument( '--covariatesFile',    type=str,                                            help='Input covariate data' )
 p.add_argument( '--schedule',          type=str, nargs="+", required=True,                  help='Update schedule' )
 p.add_argument( '--learnTheta',        action='store_true',                                 help='learn the sparsity parameter from the spike and slab?' )
+p.add_argument( '--learnMean',         action='store_true',                                 help='learn the feature mean?' )
 p.add_argument( '--initTheta',         type=float, default=0.5 ,                            help='hyperparameter theta in case that learnTheta is set to False')
 p.add_argument( '--tolerance',         type=float, default=0.1 ,                            help='tolerance for convergence (deltaELBO)')
 p.add_argument( '--startDrop',         type=int, default=5 ,                                help='First iteration to start dropping factors')
@@ -81,6 +82,22 @@ assert M == len(data_opts['maskNSamples']), "Length of MaskAtRandom and input fi
 
 # Load data
 data = loadData(data_opts)
+N = data[0].shape[0]
+D = [data[m].shape[1] for m in xrange(M)]
+
+# Load covariates
+if args.covariatesFile is not None:
+    data_opts['covariates'] = pd.read_csv(args.covariatesFile, delimiter=" ", header=0, index_col=0)
+    args.factors += data_opts['covariates'].shape[1]
+else:
+    data_opts['covariates'] = None
+
+if args.learnMean:
+  if data_opts['covariates'] is not None:
+    exit()
+  else:
+    data_opts['covariates'] = s.ones((N,1))
+  args.factors += 1
 
 ##############################
 ## Define the model options ##
@@ -88,19 +105,25 @@ data = loadData(data_opts)
 
 model_opts = {}
 
+# Define number of latent factors
+K = model_opts['k'] = args.factors
+
+
 # Define likelihoods
 model_opts['likelihood'] = args.likelihoods
 assert M==len(model_opts['likelihood']), "Please specify one likelihood for each view"
 
-# Define number of latent variables
-model_opts['k'] = args.factors
-
-# Define whether to learn the sparsity parameter of the spike and slab
-model_opts['learnTheta'] = args.learnTheta
+# Define whether to learn the feature-wise means
+model_opts["learnMean"] = args.learnMean
 
 # Define the sparsity levels
 model_opts['ardZ'] = args.ardZ
 model_opts['ardW'] = args.ardW
+
+if args.learnTheta:
+  model_opts['learnTheta'] = s.ones((M,K))
+else:
+  model_opts['learnTheta'] = s.zeros((M,K))
 
 ####################################
 ## Define priors (P distribution) ##
@@ -108,25 +131,28 @@ model_opts['ardW'] = args.ardW
 
 # Latent Variables
 if model_opts['ardZ']:
-  model_opts["priorZ"] = { 'mean':0., 'var':s.nan }
-  model_opts["priorAlphaZ"] = { 'a':1e-5, 'b':1e-5 }
+  model_opts["priorZ"] = { 'mean':s.zeros((N,K)), 'var':s.nan }
+  model_opts["priorAlphaZ"] = { 'a':s.ones(K)*1e-5, 'b':s.ones(K)*1e-5 }
 else:
-  model_opts["priorZ"] = { 'mean':0., 'var':1. }
+  model_opts["priorZ"] = { 'mean':s.zeros((N,K)), 'var':s.ones((N,K)) }
 
 # Weights
 model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M } # Not required
-
 if model_opts['ardW'] == "basic":
   model_opts["priorAlphaW"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
 elif model_opts['ardW'] == "extended":
-  model_opts["priorAlphaW"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
+  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-5]*M, 'b':[s.ones(K)*1e-5]*M }
 
-if model_opts['learnTheta']:
-    model_opts["priorTheta"] = { 'a':[1.]*M, 'b':[1.]*M }
-  
+# Theta
+model_opts["priorTheta"] = { 'a':[s.ones(K) for m in xrange(M)], 'b':[s.ones(K) for m in xrange(M)] }
+for m in xrange(M):
+  for k in xrange(K):
+    if model_opts['learnTheta'][m,k]==0:
+      model_opts["priorTheta"]["a"][m][k] = s.nan
+      model_opts["priorTheta"]["b"][m][k] = s.nan
+
 # Noise
-model_opts["priorTau"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
-# model_opts["priorTau"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
+model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-5 for m in xrange(M)], 'b':[s.ones(D[m])*1e-5 for m in xrange(M)] }
 
 
 #############################################
@@ -134,27 +160,77 @@ model_opts["priorTau"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
 #############################################
 
 # Latent variables 
-model_opts["initZ"] = { 'mean':"orthogonal", 'var':1., 'E':None, 'E2':None }
+model_opts["initZ"] = { 'mean':"orthogonal", 'var':s.ones((N,K)), 'E':None, 'E2':None }
+# model_opts["initZ"] = { 'mean':"random", 'var':s.ones((N,K)), 'E':None, 'E2':None }
 if model_opts['ardZ']:
-  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':1000. }
+  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K) }
 
 # Weights
-model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M } 
-model_opts["initSW"] = { 'Theta':[0.5]*M,
-                          'mean_S0':[0.]*M, 'var_S0':model_opts["initAlphaW"]['E'],
-                          # 'mean_S1':["random"]*M, 'var_S1':[1.]*M,
-                          'mean_S1':[0.]*M, 'var_S1':[1.]*M,
-                          'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M}
-if model_opts['learnTheta']:
-    model_opts["initTheta"] = { 'a':[1.]*M, 'b':[1.]*M, 'E':[None]*M }
+model_opts["initSW"] = { 
+  'Theta':[s.ones((D[m],K))*.5 for m in xrange(M)],
+  'mean_S0':[s.zeros((D[m],K))*.5 for m in xrange(M)],
+  'var_S0':[s.ones((D[m],K)) for m in xrange(M)],
+  'mean_S1':[s.zeros((D[m],K)) for m in xrange(M)], # (TO-DO) allow also random
+  'var_S1':[s.ones((D[m],K)) for m in xrange(M)],
+  'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M 
+}
+if model_opts['ardW'] == "basic":
+  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.]*M } # TO-DO: INITIALISE THIS WITH OBSERVED VARIANCE
 else:
-    model_opts["initTheta"] = { 'value':[args.initTheta]*M }
+  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*1000. for m in xrange(M)] }
+
+# Theta
+model_opts["initTheta"] = { 'a':[s.ones(K) for m in xrange(M)], 'b':[s.ones(K) for m in xrange(M)], 'E':[s.zeros(K)*s.nan for m in xrange(M)] }
+for m in xrange(M):
+  for k in xrange(K):
+    if model_opts['learnTheta'][m,k]==0.:
+      model_opts["initTheta"]["a"][m][k] = s.nan
+      model_opts["initTheta"]["b"][m][k] = s.nan
+      model_opts["initTheta"]["E"][m][k] = args.initTheta
+
 
 # Noise
-model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
+model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(D[m])*10 for m in xrange(M)] }
 
-# pprint(model_opts)
-# print "\n"
+
+##############################
+## Learn feature-wise means ##
+##############################
+
+if model_opts["learnMean"]:
+
+  ## Remove sparsities on the latent variables ##
+
+  # Prior distribution of latent variables
+  if model_opts['ardZ']:
+    model_opts["priorZ"]["mean"][:,0] = s.nan
+    model_opts["priorAlphaZ"]["a"][0] = s.nan
+    model_opts["priorAlphaZ"]["b"][0] = s.nan
+  else:
+    model_opts["priorZ"]["var"][:,0] = s.nan
+
+  # Variational distribution of latent variables
+  # model_opts["initZ"]["mean"][:,idx] = model_opts["covariates"]
+  model_opts["initZ"]["var"][:,0] = 0.
+  if model_opts['ardZ']:
+        model_opts["initAlphaZ"]["E"][0] = s.nan
+
+  ## Remove sparsities on the weights ##
+  for m in range(M): 
+
+    # Prior distribution of Theta
+    model_opts['learnTheta'][:,0] = 0.
+    model_opts["priorTheta"]['a'][m][0] = s.nan
+    model_opts["priorTheta"]['b'][m][0] = s.nan
+
+    # Variational distribution of weights
+    model_opts["initSW"]["Theta"][m][:,0] = 1.
+
+    # Variational distribution of Theta
+    model_opts["initTheta"]["a"][m][0] = s.nan
+    model_opts["initTheta"]["b"][m][0] = s.nan
+    model_opts["initTheta"]["E"][m][0] = 1. 
+
 
 #################################
 ## Define the training options ##
@@ -194,26 +270,20 @@ train_opts['tolerance'] = args.tolerance
 # Do no stop even when convergence criteria is met?
 train_opts['forceiter'] = args.nostop
 
-# Covariates
-if args.covariatesFile is not None:
-    model_opts['covariates'] = pd.read_csv(args.covariatesFile, delimiter=" ", header=0, index_col=0)
-else:
-    model_opts['covariates'] = None
-
 # Number of trials
 train_opts['trials'] = args.ntrials
 
 # Number of cores
 train_opts['cores'] = args.ncores
 
+#####################
+## Train the model ##
+#####################
+
 # Keep the trial with the highest lower bound?
 keep_best_run = False
 
-# pprint(train_opts)
-# print "\n"
-
 # Go!
 runSingleTrial(data, data_opts, model_opts, train_opts, seed=None)
-
 # runMultipleTrials(data_opts, model_opts, train_opts, keep_best_run)
 

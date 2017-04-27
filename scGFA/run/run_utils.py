@@ -10,14 +10,6 @@ from init_nodes import *
 from scGFA.run.init_nodes import *
 from scGFA.core.BayesNet import BayesNet
 
-# def pprint(d, indent=0):
-#     for key, value in d.iteritems():
-#         print '\t' * indent + str(key)
-#         if isinstance(value, dict):
-#             pprint(value, indent+1)
-#         else:
-#             print '\t' * (indent+1) + str(value)
-
 # Function to load the data
 
 def maskData(data, data_opts):
@@ -123,7 +115,7 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
 
     init.initZ(pmean=model_opts["priorZ"]["mean"], pvar=model_opts["priorZ"]["var"],
                qmean=model_opts["initZ"]["mean"], qvar=model_opts["initZ"]["var"], qE=model_opts["initZ"]["E"], qE2=model_opts["initZ"]["E2"],
-               covariates=model_opts['covariates'])
+               covariates=data_opts['covariates'])
 
 
     init.initSW(ptheta=model_opts["priorSW"]["Theta"], pmean_S0=model_opts["priorSW"]["mean_S0"], pvar_S0=model_opts["priorSW"]["var_S0"], pmean_S1=model_opts["priorSW"]["mean_S1"], pvar_S1=model_opts["priorSW"]["var_S1"],
@@ -136,21 +128,24 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
 
     if model_opts["ardW"] == "basic":
         init.initAlphaW_basic(pa=model_opts["priorAlphaW"]['a'], pb=model_opts["priorAlphaW"]['b'],
-                       qa=model_opts["initAlphaW"]['a'], qb=model_opts["initAlphaW"]['b'], qE=model_opts["initAlphaW"]['E'])
+                              qa=model_opts["initAlphaW"]['a'], qb=model_opts["initAlphaW"]['b'], qE=model_opts["initAlphaW"]['E'])
     if model_opts["ardW"] == "extended":
         init.initAlphaW_extended(pa=model_opts["priorAlphaW"]['a'], pb=model_opts["priorAlphaW"]['b'],
-                              qa=model_opts["initAlphaW"]['a'], qb=model_opts["initAlphaW"]['b'], qE=model_opts["initAlphaW"]['E'])
+                                 qa=model_opts["initAlphaW"]['a'], qb=model_opts["initAlphaW"]['b'], qE=model_opts["initAlphaW"]['E'])
 
     init.initTau(pa=model_opts["priorTau"]['a'], pb=model_opts["priorTau"]['b'],
                  qa=model_opts["initTau"]['a'], qb=model_opts["initTau"]['b'], qE=model_opts["initTau"]['E'])
 
-    init.initClusters()
-
-    if model_opts['learnTheta']:
+    # init.initClusters()
+    if s.all(model_opts['learnTheta']==1.):
         init.initThetaLearn(pa=model_opts["priorTheta"]['a'], pb=model_opts["priorTheta"]['b'],
-                            qa=model_opts["initTheta"]['a'],  qb=model_opts["initTheta"]['b'], qE=model_opts["initTheta"]['E'])
+                       qa=model_opts["initTheta"]['a'],  qb=model_opts["initTheta"]['b'], qE=model_opts["initTheta"]['E'])
+    elif s.all(model_opts['learnTheta']==0.):
+        init.initThetaConst(value=model_opts["initTheta"]['E'])
     else:
-        init.initThetaConst(value=model_opts["initTheta"]['value'])
+        init.initTheta(pa=model_opts["priorTheta"]['a'], pb=model_opts["priorTheta"]['b'],
+                       qa=model_opts["initTheta"]['a'],  qb=model_opts["initTheta"]['b'], qE=model_opts["initTheta"]['E'],
+                       learnTheta=model_opts['learnTheta'])
 
     init.initY()
 

@@ -18,7 +18,7 @@ compareModels <- function(ModelList, comparison="all") {
   #check inputs
   if(class(ModelList)!="list")
     stop("'ModelList' has to be a list")
-  if (!all(sapply(ARDModels, function (l) class(l)=="MOFAmodel")))
+  if (!all(sapply(ModelList, function (l) class(l)=="MOFAmodel")))
     stop("List elements of 'ModelList' have to be an instance of MOFAmodel")
   if (!comparison %in% c("all", "pairwise"))
     stop("'comparison' has to be either 'all' or 'pairwise'")

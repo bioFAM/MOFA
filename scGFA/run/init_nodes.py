@@ -113,6 +113,7 @@ class init_sparse(initModel):
             else:
                 print "Wrong initialisation for SW"
                 exit()
+
             SW_list[m] = SW_Node(
                 dim=(self.D[m],self.K),
 
@@ -195,7 +196,7 @@ class init_sparse(initModel):
             elif self.lik[m] == "bernoulli":
                 # tmp = s.ones(self.D[m])*0.25
                 # tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
-                tau_list[m] = Tau_Jaakkola(dim=(self.D[m],), value=1)
+                tau_list[m] = Tau_Jaakkola(dim=(self.D[m],), value=0.25)
             elif self.lik[m] == "binomial":
                 tmp = 0.25*s.amax(self.data["tot"][m],axis=0)
                 tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
@@ -215,7 +216,8 @@ class init_sparse(initModel):
             elif self.lik[m]=="bernoulli":
                 # Y_list[m] = Bernoulli_PseudoY(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
                 tmp = stats.norm.rvs(loc=0, scale=1, size=(self.N,self.D[m]))
-                Y_list[m] =  Bernoulli_PseudoY_Jaakkola(dim=(self.N,self.D[m]), obs=self.data[m], E=tmp)
+                # Y_list[m] =  Bernoulli_PseudoY_Jaakkola(dim=(self.N,self.D[m]), obs=self.data[m], E=tmp)
+                Y_list[m] =  Bernoulli_PseudoY_Jaakkola(dim=(self.N,self.D[m]), obs=self.data[m], E=Y_list[m])
             elif self.lik[m]=="binomial":
                 Y_list[m] = Binomial_PseudoY(dim=(self.N,self.D[m]), tot=data["tot"][m], obs=data["obs"][m], E=None)
         self.Y = Multiview_Mixed_Node(self.M, *Y_list)
@@ -298,7 +300,7 @@ class init_sparse(initModel):
                 self.Y.nodes[m].addMarkovBlanket(Z=self.Z, SW=self.SW.nodes[m], Tau=self.Tau.nodes[m])
                 self.Tau.nodes[m].addMarkovBlanket(SW=self.SW.nodes[m], Z=self.Z, Y=self.Y.nodes[m])
             elif self.lik[m]=="bernoulli":
-                self.Tau.nodes[m].addMarkovBlanket(Z=self.Z, SW=self.SW.nodes[m], Y=self.Y.nodes[m]) # Jaakkola
+                self.Tau.nodes[m].addMarkovBlanket(Z=self.Z, SW=self.SW.nodes[m], Y=self.Y.nodes[m]) # Jaakkola (not required for Seeger)
                 self.Y.nodes[m].addMarkovBlanket(Z=self.Z, SW=self.SW.nodes[m])
             else:
                 self.Y.nodes[m].addMarkovBlanket(Z=self.Z, SW=self.SW.nodes[m], kappa=self.Tau.nodes[m])

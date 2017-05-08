@@ -227,13 +227,12 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             term4_tmp1 = ma.dot((tau*Y).T,Z[:,k]).data
             term4_tmp2 = ( tau * s.dot((Z[:,k]*Z[:,s.arange(self.dim[1])!=k].T).T, SW[:,s.arange(self.dim[1])!=k].T) ).sum(axis=0)
             term4_tmp3 = ma.dot(ZZ[:,k].T,tau) + alpha[k]
-
             term4 = 0.5*s.divide((term4_tmp1-term4_tmp2)**2,term4_tmp3)
             # Update S
             # NOTE there could be some precision issues in S --> loads of 1s in result
-            Qtheta[:,k] = 1/(1+s.exp(-(term1+term2-term3+term4)))
-
+            Qtheta[:,k] = 1./(1.+s.exp(-(term1+term2-term3+term4)))
             # Update W
+
             Qvar_S1[:,k] = s.divide(1,term4_tmp3)
             Qmean_S1[:,k] = Qvar_S1[:,k]*(term4_tmp1-term4_tmp2)
 
@@ -268,16 +267,11 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         lb_w = lb_pw - lb_qw
 
         # Calculate ELBO for S
-        lb_ps_tmp = S*theta['lnE'] + (1.-S)*theta['lnEInv']
-        lb_qs_tmp = S*s.log(S) + (1.-S)*s.log(1.-S)
-
-        # Ignore NAs
-        lb_ps_tmp[s.isnan(lb_ps_tmp)] = 0.
-        lb_qs_tmp[s.isnan(lb_qs_tmp)] = 0.
-
-        lb_ps = s.sum(lb_ps_tmp)
-        lb_qs = s.sum(lb_qs_tmp)
-        lb_s = lb_ps - lb_qs
+        lb_ps = S*theta['lnE'] + (1.-S)*theta['lnEInv']
+        lb_qs = S*s.log(S) + (1.-S)*s.log(1.-S)
+        lb_ps[s.isnan(lb_ps)] = 0.
+        lb_qs[s.isnan(lb_qs)] = 0.
+        lb_s = s.sum(lb_ps) - s.sum(lb_qs)
 
         return lb_w + lb_s
 
@@ -331,12 +325,10 @@ class Theta_Node(Beta_Unobserved_Variational_Node):
         QE, QlnE, QlnEInv = Qexp['E'], Qexp['lnE'], Qexp['lnEInv']
 
         # minus cross entropy of Q and P
-        tmp1 = (Pa-1.)*QlnE + (Pb-1.)*QlnEInv - special.betaln(Pa,Pb)
-        lb_p = tmp1.sum()
+        lb_p = ma.masked_invalid( (Pa-1.)*QlnE + (Pb-1.)*QlnEInv - special.betaln(Pa,Pb) ).sum()
 
         # minus entropy of Q
-        tmp2 = (Qa-1.)*QlnE + (Qb-1.)*QlnEInv - special.betaln(Qa,Qb)
-        lb_q = tmp2.sum()
+        lb_q = ma.masked_invalid( (Qa-1.)*QlnE + (Qb-1.)*QlnEInv - special.betaln(Qa,Qb) ).sum()
 
         return lb_p - lb_q
 
@@ -344,7 +336,7 @@ class Theta_Constant_Node(Constant_Variational_Node):
     """
     Dimensions of Theta_Constant_Node should be (D[m], K)
     """
-    def __init__(self, dim, value, N_cells):
+    def __init__(self, dim, value, N_cells=1):
         super(Theta_Constant_Node, self).__init__(dim, value)
         self.N_cells = N_cells
         self.precompute()
@@ -357,7 +349,7 @@ class Theta_Constant_Node(Constant_Variational_Node):
     def getExpectations(self):
         return { 'E':self.E, 'lnE':self.lnE, 'lnEInv':self.lnEInv }
 
-    def removeFactors(self, idx, axis=1):
+    def removeFactors(self, idx, axis=0):
         # Ideally we want this node to use the removeFactors defined in Node()
         # but the problem is that we also need to update the "expectations", so i need
         # to call precompute()
@@ -413,7 +405,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
                 tau[m] = ma.masked_where(ma.getmask(Y[m]), tau[m])
 
         # Collect parameters from the P and Q distributions of this node
-        Q = self.Q.getParameters()
+        Q = self.Q.getParameters().copy()
         Qmean, Qvar = Q['mean'], Q['var']
 
         # Concatenate multi-view nodes to avoid looping over M (maybe its not a good idea)
@@ -473,7 +465,8 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         tmp2 = 0.5*Alpha["lnE"].sum()
 
         lb_p = tmp1 + tmp2
-        lb_q = -(s.log(Qvar).sum() + self.N*self.dim[1])/2.
+        # lb_q = -(s.log(Qvar).sum() + self.N*self.dim[1])/2. # I THINK THIS IS WRONG BECAUSE SELF.DIM[1] ICNLUDES COVARIATES
+        lb_q = -(s.log(Qvar).sum() + self.N*len(latent_variables))/2.
 
         return lb_p-lb_q
 
@@ -525,7 +518,7 @@ class AlphaZ_Node(Gamma_Unobserved_Variational_Node):
 
         # Do the calculations
         # lb_p = s.nansum( self.P.params['a']*s.log(self.P.params['b']) - special.gammaln(self.P.params['a']) ) + s.nansum((Pa-1)*QlnE) - s.nansum(Pb*QE)
-        lb_p = (Pa*s.log(Pb) - special.gammaln(Pa)).sum() + ((Pa-1)*QlnE).sum() - (Pb*QE).sum()
+        lb_p = (Pa*s.log(Pb)).sum() - (special.gammaln(Pa)).sum() + ((Pa-1)*QlnE).sum() - (Pb*QE).sum()
         lb_q = (Qa*s.log(Qb)).sum() + ((Qa-1)*QlnE).sum() - (Qb*QE).sum() - special.gammaln(Qa).sum()
 
         return lb_p - lb_q

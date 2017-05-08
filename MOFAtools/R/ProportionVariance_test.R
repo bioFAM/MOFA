@@ -46,71 +46,33 @@ CalculateVariance_Views <- function(object, views="all", factors="all", method=N
   Y <- getExpectations(object,"Y","E")
   
   # Regress out mean 
-  if (model@ModelOpts$learnMean == TRUE) {
-    means <- lapply(SW, function(x) x[,1])
-    Y <- lapply(views, function(m) sweep(Y[[m]],2,means[[m]],"-")); names(Y) <- views
-    SW <- lapply(views, function(m) SW[[m]][,-1]); names(SW) <- views
-    Z <- Z[,-1]
-    factors <- factors[-1]
+  stopifnot(model@ModelOpts$learnMean==F)
+  
+  # Calculate observed and predicted variance
+  obs_var <- lapply(views, function(m) apply(Y[[m]],2,var,na.rm=T)); names(obs_var) <- views
+  pred_var <- getExpectations(model,"Tau","E")[views]
+  for (m in 1:M) {
+    obs_var[[m]] <- matrix(rep(obs_var[[m]], model@Dimensions["N"]), nr=model@Dimensions[["N"]], nc=model@Dimensions[["D"]][m])
+    if (model@ModelOpts$likelihood[m] != "bernoulli") {
+      pred_var[[m]] <- matrix(rep(pred_var[[m]], model@Dimensions["N"]), nr=model@Dimensions[["N"]], nc=model@Dimensions[["D"]][m])
+    }
   }
-  
-  # Calculate observed variance
-  obs_var <- sapply(names(Y), function(m) apply(Y[[m]],2,var,na.rm=T))
-  
-  # Non-Bayesian approach 1
-  # V_expl_k = var(Ypred_k)/var(Y) = var((E[W_k]*E[S_k])*E[Z_k])/var(Y)
-  # According to Damien, this is not correct  because the variance might be just bullshit signal
-  # fvar_m <- sapply(names(Y), function(m) sum(apply(Y[[m]],2,var) - 1/object@Expectations$Tau[[m]]$E) / sum(apply(Y[[m]],2,var)))
-  
-  # Non-Bayesian approach 2: coefficient of determination
-  #   R2 = 1 - SSres/SStot
-  #     SSres (residual sum of squares): \sum_n (y_n - ypred_n)^2
-  #     SStot (total sum of squares): \sum_n (y_n - ymean)^2
-  # This is better because it is dependent on how well our object fits the data
+
+    
   Ypred_m <- lapply(views, function(m) Z%*%t(SW[[m]])); names(Ypred_m) <- views
-  fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2, na.rm=T) / sum(sweep(Y[[m]],2,apply(Y[[m]],2,mean,na.rm=T),"-")**2, na.rm=T))
+  fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2, na.rm=T) / sum(Y[[m]]**2, na.rm=T) )
   
-  Ypred_mk <- lapply(views, function(m) lapply(1:K, function(k) Z[,k]%*%t(SW[[m]][,k]) ) ); names(Ypred_mk) <- views
-  fvar_mk <- sapply(views, function(m) sapply(1:K, function(k) 1 - sum((Y[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(sweep(Y[[m]],2,apply(Y[[m]],2,mean,na.rm=T),"-")**2, na.rm=T) ))
+  Ypred_mk <- lapply(1:M, function(m) lapply(1:K, function(k) Z[,k]%*%t(SW[[m]][,k]) ) ); names(Ypred_mk) <- views
+  fvar_mk <- sapply(1:M, function(m) sapply(1:K, function(k) 1 - sum((Ypred_m[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(Ypred_m[[m]]**2, na.rm=T) ))
+  # THE SECOND OPERATION IS JUST THE SUM OF SQUARED RIGHT, CAN WE OPTIMIS EHTIS?
   
   # Set matrix names
   colnames(fvar_mk) <- views
   rownames(fvar_mk) <- factors
   
-  # Bar plot with the residual variance for each view and factor
-  # tmp <- as.data.frame(fvar_mk)
-  # tmp$K <- as.factor(1:K)
-  # tmp <- tidyr::gather(tmp, key="view", value="fvar", -K)
-  # p <- ggplot2::ggplot(tmp, aes(x=view,y=fvar,fill=K)) +
-  #   geom_bar(stat="identity", position="stack") +
-  #   ylab("Variance explained") + xlab("") +
-  #   # ylim(c(0,0.5)) + 
-  #   guides(fill=guide_legend(title="Latent variable", title.position="top", title.hjust=0.5)) +
-  #   coord_flip() +
-  #   theme(
-  #     plot.margin=margin(20,20,20,20),
-  #     axis.text.x=element_text(size=rel(1.5), color='black', margin=margin(7,0,0,0)),
-  #     axis.text.y=element_text(size=rel(1.5), color='black', margin=margin(0,7,0,0)),
-  #     axis.title.x=element_text(size=rel(1.3), margin=margin(10,0,0,0)),
-  #     axis.title.y=element_blank(),
-  #     axis.line = element_line(colour="black"),
-  #     axis.ticks.x = element_line(colour="black", size=0.5),
-  #     axis.ticks.y = element_blank(),
-  #     legend.position='top',
-  #     legend.direction="horizontal",
-  #     legend.title=element_text(size=rel(1.4)),
-  #     legend.text=element_text(size=rel(1.2)),
-  #     legend.key=element_rect(fill='transparent'),
-  #     panel.border=element_blank(),
-  #     panel.grid.major = element_blank(),
-  #     panel.grid.minor = element_blank(),
-  #     panel.background = element_blank()
-  #   )
-  # print(p)
   
   # Barplot with the residual variance for each view
   tmp <- data.frame(view=names(fvar_m), fvar=round(fvar_m,2))
-  
   p <- ggplot(tmp, aes(x=view,y=fvar)) +
     geom_bar(stat="identity", fill="steelblue") +
     ylab("Coefficient of determination") +

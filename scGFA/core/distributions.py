@@ -523,6 +523,7 @@ class Beta(Distribution):
         E = s.divide(a,a+b)
         lnE = special.digamma(a) - special.digamma(a+b)
         lnEInv = special.digamma(b) - special.digamma(a+b) # expectation of ln(1-X)
+        lnEInv[s.isinf(lnEInv)] = -s.inf # there is a numerical error in lnEInv if E=1
         self.expectations = { 'E':E, 'lnE':lnE, 'lnEInv':lnEInv }
 
 if __name__ == "__main__":

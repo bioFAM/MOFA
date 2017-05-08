@@ -186,6 +186,7 @@ def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, ve
     ## Run parallel trials ##
     #########################
 
+    # trained_models = Parallel(n_jobs=train_opts['cores'], backend="threading")(
     trained_models = Parallel(n_jobs=train_opts['cores'])(
         delayed(runSingleTrial)(data,data_opts,model_opts,train_opts,None,i) for i in xrange(1,train_opts['trials']+1))
 

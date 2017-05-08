@@ -32,7 +32,7 @@ p.add_argument( '--initTheta',         type=float, default=0.5 ,                
 p.add_argument( '--tolerance',         type=float, default=0.1 ,                            help='tolerance for convergence (deltaELBO)')
 p.add_argument( '--startDrop',         type=int, default=5 ,                                help='First iteration to start dropping factors')
 p.add_argument( '--freqDrop',          type=int, default=1 ,                                help='Frequency for dropping factors')
-p.add_argument( '--maskAtRandom',  	   type=float,nargs="+", default=None,                  help='Fraction of data to mask per view')
+p.add_argument( '--maskAtRandom',      type=float,nargs="+", default=None,                  help='Fraction of data to mask per view')
 p.add_argument( '--maskNSamples',      type=int,nargs="+", default=None,                    help='Number of patients to mask per view')
 p.add_argument( '--nostop',            action='store_true',                                 help='Do not stop even when convergence criterion is met?' )
 p.add_argument( '--ardZ',              action='store_true',                                 help='Automatic Relevance Determination on the latent variables?' )
@@ -55,8 +55,10 @@ data_opts = {}
 data_opts['input_files'] = args.inFiles
 data_opts['outfile'] = args.outFile
 data_opts['view_names'] = args.views
-data_opts['center'] = [True if l=="gaussian" else False for l in args.likelihoods]
-# data_opts['center'] = [False for l in args.likelihoods]
+if args.learnMean:
+  data_opts['center'] = [False for l in args.likelihoods]
+else:
+  data_opts['center'] = [True if l=="gaussian" else False for l in args.likelihoods]
 data_opts['rownames'] = 0
 data_opts['colnames'] = 0
 data_opts['delimiter'] = " "
@@ -64,9 +66,9 @@ data_opts['delimiter'] = " "
 M = len(data_opts['input_files'])
 
 if args.maskAtRandom is not None:
-	data_opts['maskAtRandom'] = args.maskAtRandom
+  data_opts['maskAtRandom'] = args.maskAtRandom
 else:
-	data_opts['maskAtRandom'] = [0]*M	
+  data_opts['maskAtRandom'] = [0]*M 
 
 if args.maskNSamples is not None:
   data_opts['maskNSamples'] = args.maskNSamples
@@ -88,14 +90,15 @@ D = [data[m].shape[1] for m in xrange(M)]
 
 # Load covariates
 if args.covariatesFile is not None:
-    data_opts['covariates'] = pd.read_csv(args.covariatesFile, delimiter=" ", header=0, index_col=0)
+    data_opts['covariates'] = pd.read_csv(args.covariatesFile, delimiter=" ", header=0)
     args.factors += data_opts['covariates'].shape[1]
 else:
     data_opts['covariates'] = None
 
+
 if args.learnMean:
   if data_opts['covariates'] is not None:
-    exit()
+    data_opts['covariates'].insert(0, "mean", s.ones(N,))
   else:
     data_opts['covariates'] = s.ones((N,1))
   args.factors += 1
@@ -121,7 +124,6 @@ model_opts["learnMean"] = args.learnMean
 # Define the sparsity levels
 model_opts['ardZ'] = args.ardZ
 model_opts['ardW'] = args.ardW
-
 if args.learnTheta:
   model_opts['learnTheta'] = s.ones((M,K))
 else:
@@ -140,21 +142,22 @@ else:
 ####################################
 
 # Latent Variables
+model_opts["priorZ"] = { 'mean':s.zeros((N,K)) }
 if model_opts['ardZ']:
-  model_opts["priorZ"] = { 'mean':s.zeros((N,K)), 'var':s.nan }
-  model_opts["priorAlphaZ"] = { 'a':s.ones(K)*1e-5, 'b':s.ones(K)*1e-5 }
+  model_opts["priorZ"]['var'] = s.ones((N,K))*s.nan
+  model_opts["priorAlphaZ"] = { 'a':s.ones(K)*1e-14, 'b':s.ones(K)*1e-14 }
 else:
-  model_opts["priorZ"] = { 'mean':s.zeros((N,K)), 'var':s.ones((N,K)) }
+  model_opts["priorZ"]['var'] = s.ones((N,K))*1. 
 
 # Weights
 model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M } # Not required
 if model_opts['ardW'] == "basic":
-  model_opts["priorAlphaW"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
+  model_opts["priorAlphaW"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
 elif model_opts['ardW'] == "extended":
-  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-5]*M, 'b':[s.ones(K)*1e-5]*M }
+  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-14]*M, 'b':[s.ones(K)*1e-14]*M }
 
 # Theta
-model_opts["priorTheta"] = { 'a':[s.ones(K) for m in xrange(M)], 'b':[s.ones(K) for m in xrange(M)] }
+model_opts["priorTheta"] = { 'a':[s.ones(K)*1e-14 for m in xrange(M)], 'b':[s.ones(K)*1e-14 for m in xrange(M)] }
 for m in xrange(M):
   for k in xrange(K):
     if model_opts['learnTheta'][m,k]==0:
@@ -162,44 +165,46 @@ for m in xrange(M):
       model_opts["priorTheta"]["b"][m][k] = s.nan
 
 # Noise
-model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-5 for m in xrange(M)], 'b':[s.ones(D[m])*1e-5 for m in xrange(M)] }
+model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-14 for m in xrange(M)], 'b':[s.ones(D[m])*1e-14 for m in xrange(M)] }
 
 
-#############################################
-## Define initialisations (Q distribution) ##
-#############################################
+##############################################
+## Define initialisations of Q distribution ##
+##############################################
 
 # Latent variables 
-model_opts["initZ"] = { 'mean':"orthogonal", 'var':s.ones((N,K)), 'E':None, 'E2':None }
-# model_opts["initZ"] = { 'mean':"random", 'var':s.ones((N,K)), 'E':None, 'E2':None }
+# model_opts["initZ"] = { 'mean':"orthogonal", 'var':s.ones((N,K)), 'E':None, 'E2':None }
+model_opts["initZ"] = { 'mean':"random", 'var':s.ones((N,K)), 'E':None, 'E2':None }
 if model_opts['ardZ']:
-  # model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*2500 }
-  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*500 }
-
-
-# Weights
-model_opts["initSW"] = { 
-  'Theta':[s.ones((D[m],K))*.5 for m in xrange(M)],
-  'mean_S0':[s.zeros((D[m],K))*.5 for m in xrange(M)],
-  'var_S0':[s.ones((D[m],K)) for m in xrange(M)],
-  # 'mean_S1':[s.zeros((D[m],K)) for m in xrange(M)], # (TO-DO) allow also random
-  'mean_S1':["random" for m in xrange(M)],
-  'var_S1':[s.ones((D[m],K)) for m in xrange(M)],
-  'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M 
-}
+  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*1e5 }
+  # model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*1 }
 
 # Noise
-model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(D[m])*1000 for m in xrange(M)] }
+model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(D[m])*100 for m in xrange(M)] }
 
 # ARD
 if model_opts['ardW'] == "basic":
-  # model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M } # TO-DO: INITIALISE THIS WITH OBSERVED VARIANCE
-  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[ K*(data[m].std(axis=0)**2 - 1./model_opts["initTau"]["E"][m]).sum() for m in xrange(M) ] } 
+  # model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
+  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[ K*D[m]/(data[m].std(axis=0)**2 - 1./model_opts["initTau"]["E"][m]).sum() for m in xrange(M) ] } 
 else:
   model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*1. for m in xrange(M)] }
 
+# Weights
+model_opts["initSW"] = { 
+  # 'Theta':[0.5*s.ones((D[m],K)) for m in xrange(M)],
+  'Theta':[args.initTheta*s.ones((D[m],K)) for m in xrange(M)],
+  'mean_S0':[s.zeros((D[m],K)) for m in xrange(M)],
+  # 'var_S0':[s.ones((D[m],K))*model_opts["initAlphaW"]['E'][m] for m in xrange(M)], # IS THIS ACTUALLY USED?
+  'var_S0':[s.nan*s.ones((D[m],K)) for m in xrange(M)], # IS THIS ACTUALLY USED?
+  'mean_S1':[s.zeros((D[m],K)) for m in xrange(M)], # (TO-DO) allow also random
+  # 'mean_S1':[stats.norm.rvs(loc=0, scale=1, size=(D[m],K)) for m in xrange(M)],
+  'var_S1':[s.ones((D[m],K)) for m in xrange(M)],
+  'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M # It will be calculated from the parameters
+}
+
 # Theta
-model_opts["initTheta"] = { 'a':[s.ones(K) for m in xrange(M)], 'b':[s.ones(K) for m in xrange(M)], 'E':[s.zeros(K)*s.nan for m in xrange(M)] }
+# model_opts["initTheta"] = { 'a':[s.ones(K)*1e-5 for m in xrange(M)], 'b':[s.ones(K)*1e-5 for m in xrange(M)], 'E':[s.nan*s.zeros(K) for m in xrange(M)] } # NOT SURE HOW TO INITIALISE THIS, WHY IS EXPECTATION NOT INITIALISED?
+model_opts["initTheta"] = { 'a':[s.ones(K) for m in xrange(M)], 'b':[s.ones(K) for m in xrange(M)], 'E':[s.nan*s.zeros(K) for m in xrange(M)] } # NOT SURE HOW TO INITIALISE THIS, WHY IS EXPECTATION NOT INITIALISED?
 for m in xrange(M):
   for k in xrange(K):
     if model_opts['learnTheta'][m,k]==0.:
@@ -207,44 +212,45 @@ for m in xrange(M):
       model_opts["initTheta"]["b"][m][k] = s.nan
       model_opts["initTheta"]["E"][m][k] = args.initTheta
 
-
 ##############################
 ## Learn feature-wise means ##
 ##############################
 
-if model_opts["learnMean"]:
+if data_opts['covariates'] is not None:
+  idx = xrange(data_opts['covariates'].shape[1])
 
-  ## Remove sparsities on the latent variables ##
-
-  # Prior distribution of latent variables
+  ## Prior distributions (P) ##
+  # Latent variables
   if model_opts['ardZ']:
-    model_opts["priorZ"]["mean"][:,0] = s.nan
-    model_opts["priorAlphaZ"]["a"][0] = s.nan
-    model_opts["priorAlphaZ"]["b"][0] = s.nan
+    model_opts["priorZ"]["mean"][:,idx] = s.nan
+    model_opts["priorAlphaZ"]["a"][idx] = s.nan
+    model_opts["priorAlphaZ"]["b"][idx] = s.nan
   else:
-    model_opts["priorZ"]["var"][:,0] = s.nan
+    model_opts["priorZ"]["var"][:,idx] = s.nan
 
-  # Variational distribution of latent variables
+  ## Variational distributions (Q) ##
+  # Latent variables
   # model_opts["initZ"]["mean"][:,idx] = model_opts["covariates"]
-  model_opts["initZ"]["var"][:,0] = 0.
+  model_opts["initZ"]["var"][:,idx] = 0.
   if model_opts['ardZ']:
-        model_opts["initAlphaZ"]["E"][0] = s.nan
+        model_opts["initAlphaZ"]["E"][idx] = s.nan
 
-  ## Remove sparsities on the weights ##
-  # for m in range(M): 
 
-    # Prior distribution of Theta
-    # model_opts['learnTheta'][:,0] = 0.
-    # model_opts["priorTheta"]['a'][m][0] = s.nan
-    # model_opts["priorTheta"]['b'][m][0] = s.nan
+if model_opts["learnMean"]:
+  model_opts['learnTheta'][:,0] = 0.
 
-    # Variational distribution of weights
-    # model_opts["initSW"]["Theta"][m][:,0] = 1.
-
-    # Variational distribution of Theta
-    # model_opts["initTheta"]["a"][m][0] = s.nan
-    # model_opts["initTheta"]["b"][m][0] = s.nan
-    # model_opts["initTheta"]["E"][m][0] = 1. 
+  for m in range(M): 
+    # Weights
+    if args.likelihoods[m]=="gaussian":
+      model_opts["initSW"]["mean_S1"][m][:,0] = data[m].mean(axis=0)
+      model_opts["initSW"]["var_S1"][m][:,0] = 1e-5
+    # Theta
+    model_opts["initSW"]["Theta"][m][:,0] = 1.
+    model_opts["priorTheta"]['a'][m][0] = s.nan
+    model_opts["priorTheta"]['b'][m][0] = s.nan
+    model_opts["initTheta"]["a"][m][0] = s.nan
+    model_opts["initTheta"]["b"][m][0] = s.nan
+    model_opts["initTheta"]["E"][m][0] = 1.
 
 #################################
 ## Define the training options ##

@@ -117,7 +117,7 @@ if data_opts['covariates'] is not None:
   K = dim["K"]
 
 # Define whether to learn means
-model_opts["learnMean"] = True
+model_opts["learnMean"] = False
 if model_opts["learnMean"]:
   # MODIFY THIS
   data_opts['covariates'] = s.ones((dim["N"],1))
@@ -133,7 +133,7 @@ model_opts['likelihood'] = ['gaussian']* M
 model_opts['k'] = K
 
 # Define sparsities
-model_opts['ardZ'] = True
+model_opts['ardZ'] = False
 model_opts['ardW'] = "extended"
 
 # Define for which factors to learn Theta
@@ -141,7 +141,7 @@ model_opts['learnTheta'] = s.ones((M,K))
 
 # Define schedule of updates
 # model_opts['schedule'] = ("Y","Tau","SW", "Z", "Clusters", "Theta", "Alpha")
-model_opts['schedule'] = ["SW","Z","AlphaZ","AlphaW","Tau","Theta"]
+model_opts['schedule'] = ["Y","SW","Z","AlphaZ","AlphaW","Tau","Theta"]
 # model_opts['schedule'] = ("SW","Z","AlphaW","Tau","Theta")
 
 ####################################

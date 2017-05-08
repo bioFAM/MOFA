@@ -65,18 +65,25 @@ class BayesNet(object):
                 drop_dic["by_norm"] = [ s.random.choice(drop_dic["by_norm"]) ]
 
         ### test ###
+        # print "correlation"
         # s.set_printoptions(precision=2)
         # r = s.absolute(corr(Z.T,Z.T))
         # s.fill_diagonal(r,0)
         # r *= s.tri(*r.shape)
         # print r.max()
-        # alpha = self.nodes["AlphaZ"].getExpectation()
+
+        # alpha = self.nodes["AlphaW"].getExpectation()
         # print (alpha)
+
+        # print "SW:"
         # SW = s.concatenate(self.nodes["SW"].getExpectation(), axis=0)
         # print (s.absolute(SW)>0.01).sum(axis=0)
         # print (s.absolute(SW)).mean(axis=0)
-        Z = self.nodes["Z"].getExpectation()
-        print (Z**2).mean(axis=0)
+        # print "Z norm:"
+        # Z = self.nodes["Z"].getExpectation()
+        # print (Z**2).mean(axis=0)
+        # print "max Z"
+        # print Z.max(axis=0)
         ### test ###
 
         # Option 2: coefficient of determination
@@ -164,11 +171,7 @@ class BayesNet(object):
 
             # Update node by node, with E and M step merged
             for node in self.schedule:
-                # print node
-                # start = time()
                 self.nodes[node].update()
-                # end = time()
-                # print (end - start)
 
             # Calculate Evidence Lower Bound
             if (i+1) % self.options['elbofreq'] == 0:
@@ -195,6 +198,8 @@ class BayesNet(object):
 
                     # Assess convergence
                     if (0 <= delta_elbo < self.options['tolerance']) and (not self.options['forceiter']):
+                        activeK = activeK[:(i+1)]
+                        elbo = elbo[:(i+1)]
                         if self.options['verbosity']>=0:
                             print "Converged!\n"
                         break
@@ -214,6 +219,7 @@ class BayesNet(object):
             sys.stdout.flush()
 
         # Finish by collecting the training statistics
+
         self.train_stats = { 'activeK':activeK, 'elbo':elbo["total"].values, 'elbo_terms':elbo.drop("total",1) }
         self.trained = True
 

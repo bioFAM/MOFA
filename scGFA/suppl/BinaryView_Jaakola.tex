@@ -1,0 +1,188 @@
+\documentclass[10pt, a4paper,openany]{paper}
+
+%% Load packages %%
+%\usepackage[applemac]{inputenx}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{amsmath}     % Mathematical writing
+\usepackage{amssymb}
+
+
+%% Load personalised commands %%
+\input{utils.tex}
+
+
+\begin{document}
+
+\section{Modeling binary views}
+
+\subsection{The binary model}
+In many settings, we encounter binary data as a view (e.g. gene mutations).
+In order to incorporate this type of data, we extended the Group Factor Analysis approach to non-Gaussian likelihoods.
+In the case of binary data an appropriate model is the Bernoulli likelihood, where we model the data $Y$ as 
+\begin{equation}
+Y|Z,W \sim Ber(\sigma(ZW)).
+\end{equation} Here, $\sigma(a)=(1+e^{-a})^{-1}$ is the logistic link function and $Z$ and $W$ are the latent factors and weights in our model, respectively.
+
+In order to make the inference explicit as in the Gaussian case, we aim to approximate the Bernoulli likelihood by a Gaussian likelihood  as it has been proposed in \cite{Seeger}. This allows to recycle all the updates from the model with Gaussian views. To make the approximation justifiable we need to introduce variational parameters that are adjusted alongside the updates to improve the fit. While \cite[]{Seeger} assumes a homoscedastic approximation with a spherical Gaussian, we adopt an approach following \cite{Jaakkola}, which allows for heteroscedaticity and provides a tighter bound on the Bernoulli likelihood.
+
+Denoting $x_{ij}=(ZW)_{ij}$ the Jaakolo upper bound \cite{Jaakkola} on the negative log-likelihood is given by
+\begin{align}
+	-\log\left(p(y_{ij}|x_{ij})\right) &= -\log\left(\sigma\left((2y_{ij}-1)  x_{ij}\right)\right)\\
+	& \leq -\log(\zeta_{ij})-\frac{(2y_{ij}-1)x_{ij}-\zeta_{ij})}{2} +\lambda(\zeta_{ij})\left(x_{ij}^2 -\zeta_{ij}^2 \right)\\
+	& =: b_J(\zeta_{ij}, x_{ij},y_{ij} )
+	\label{jaakkola}
+\end{align}
+with $\lambda$ given by $\lambda(\zeta)=\frac{1}{4\zeta}\tanh\left(\frac{\zeta}{2}\right)$.
+
+This can be derived easily from a first-order Taylor expansion on the function $f(x) = - \log(e^{\frac{x}{2}}+e^{-\frac{x}{2}}) = \frac{x}{2}-\log(\sigma(x))$ in $x^2$ and by the convexity of 
+$f$ in $x^2$ this bound is global as discussed in \cite[]{Jaakkola}.
+
+In order to make use of this bound but still be able to handle the updates as in the Gaussian case we re-formulate the bound as a Gaussian likelihood on pseudo-data $\tilde{Y}$.
+
+In the variational framework we want to update the variational distribution q(Z,W) in order to minimize 
+\begin{equation}
+	\mathbb{E}_q\left(-\log p(Y|Z,W)\right)
+\end{equation}
+Using the upper bound in (\ref{jaakkola})
+\begin{align}
+	\min_{q(Z,W)}\mathbb{E}_q\left(-\log p(Y|Z,W)\right) \leq \sum_{i,j} \min_{q(x_{ij}), \zeta_{ij}} \mathbb{E}_q b_J(\zeta_{ij}, x_{ij},y_{ij} )
+\end{align}
+This is minimized iteratively in the variational parameter $\zeta_{ij}$ and the variational distribution of Z,W.
+
+
+Minimizing in the variational parameter $\zeta$ this leads to the updates given by
+\begin{equation}
+\zeta_{ij}^2 = \mathbb{E} x_{ij}^2
+\end{equation}
+as described in \cite[]{Jaakkola}, \cite[]{bishop2006pattern}.
+
+For the variational distribution $q(Z,W)$ we observe that the Jaakkola bound can be re-written as 
+\begin{equation}
+	b_J(\zeta_{ij}, x_{ij},y_{ij} ) = -\log\left(\varphi\left(\tilde{y}_{ij}; x_{ij}, \frac{1}{2\lambda(\zeta_{ij})}\right)\right) + c(\zeta_{ij}),
+\end{equation}
+where $\varphi(x; \mu, \sigma^2)$ denotes the density function of a normal distribution wih mean $\mu$ and variance $\sigma^2$ and c is a term only depending on $\zeta$. This allows us to re-use the updates for $Z$ and $W$ from a setting with Gaussian likelihood by considering the Gaussian pseudo-data 
+\begin{equation}
+\tilde{y}_{ij}= \frac{2y_{ij}-1}{4 \lambda(\zeta_{ij})}
+\end{equation}
+ updating the data precision as $\tau_{ij} = 2\lambda(\zeta_{ij})$ using updates that allow for sample- and feature-wise precision parameters on the data as described in \ref{App.Samplewise}.
+
+
+
+
+\section{Appendix}
+\subsection{Extending the gaussian model to sample-wise covariances}
+\label{App.Samplewise}
+We have a data set $\bfY$ of $M$ input views with dimensionality $\bfY^m \in \R^{N \times D_m}$. The sparse group factor analysis model is defined as follows:
+\begin{align}
+&y_{nd} \approx \Ndist{y_{nd}^m}{\bfw_{d,:}^m\bfz_{n,:},1/\tau_{dn}^m} \\
+&w_{dk}^m \approx \theta\Ndist{w_{dk}}{0,1/\alpha_k^m} + (1-\theta)\delta_0(w_{dk}^m)\\
+&z_{nk} \approx \Ndist{z_{nk}}{0,1}
+\end{align}
+
+The precision of observed data is allowed to vary for samples and features to incorporate a pseudo-data view on the Jaakkola bound. This parameter is updated along with the variational parameter of the pseudo-data and is not treated as a variational node itself.
+
+
+
+
+\subsubsection{Changes to standard spike and slab}
+
+The updates affected by this change are the one of $w=s\hat{w}$ and $z$. In the ELB the Bernoulli likelihood of the truly observed data is used.
+For all other updates and terms refer to spike\_slab.tex.
+\subsubsection{Joint probability density function:}
+
+\begin{align*}
+p(\bfY,\hat{\bfW},\bfS,\bfZ) = &\prod_{m=1}^{M} \prod_{n=1}^{N} \prod_{d=1}^{D_m} \Ndist{y_{nd}^m}{\sum_{k=1}^{K} s_{dk}^m \hat{w}_{dk}^m z_{nk},1/\tau_{nd}} \times \\
+&\prod_{d=1}^{D_m}\prod_{k=1}^{K} \Ndist{\hat{w}_{dk}^m}{0,1/\alpha_k^m} \theta^{s_{dk}^m}(1-\theta)^{1-s_{dk}} \times \\
+&\prod_{n=1}^{N}\prod_{k=1}^{K} \Ndist{z_{nk}}{0,1}
+\end{align*}
+
+Full variational distribution:
+\[
+q(\hat{\bfW},\bfS,\bfZ) = \prod_{m=1}^{M} \prod_{d=1}^{D_m} \prod_{k=1}^{K} q(\hat{w}_{dk}^m,s_{dk}^m) \prod_{k=1}^{K}\prod_{n=1}^{N} q(z_{n,k})
+\]
+
+\subsubsection{Derivation of update equations}
+The optimal distribution $\hat{q}_i$ for each variable $\bfx_i$, is the following:
+\begin{equation} \label{eq:optimal_q_dist}
+\log \hat{q}_i(\bfx_i) = \E_{i \neq j} [\log p(\bfY,\bfX)] + \const
+\end{equation}
+where $\E_{i \neq j}$ denotes an expectation with respect to the $q$ distributions over all variables $\bfx_j$ except for $\bfx_i$.
+The additive constant is set by normalising the distribution $\hat{q}_i(\bfz_i)$:
+\[
+\hat{q}_i(\bfx_i) = \frac{\exp(\E_{i \neq j}[\log p(\bfY,\bfX)])}{\int \exp(\E_{i \neq j}[\log p(\bfY,\bfX)]) d\bfX}
+\]
+
+\subsubsection*{Latent variables}
+Term from the likelihood $p(\bfY|\hat{\bfW},\bfZ,\btau,\bfS)$:
+%$\sum_{n=1}^{N}\sum_{d=1}^{D} \Ndist{y_{n,d}}{\sum_{k=1}^{K}\hat{w}_{dk}s_{dk}z_{nk},\tau_d}$:
+\begin{align*}
+&\sum_{m=1}^{M} \sum_{d=1}^{D=m} \la\tau_{nd}^m\ra \la s_{dk}^m \hat{w}_{dk}^m \ra y_{nd}^m z_{nk}
+-\frac{1}{2}\sum_{m=1}^{M} \sum_{d=1}^{D_m} \la\tau_{nd}^m\ra \la (s_{dk}^m\hat{w}_{dk}^m)^2 \ra z_{nk}^2 \\
+&-\frac{1}{2}\sum_{m=1}^{M} \frac{1}{2}\sum_{d=1}^{D} \la\tau_{nd}^m\ra \sum_{j \neq k} (\la s_{dj}^m \hat{w}^m_{dj} \ra \la z_{nj} \ra) \la\hat{w}^m_{dk} s_{dk}^m \ra \la z_{nk} \ra + \const
+\end{align*}
+Term from the prior $p(z_{nk})$:
+\[
+-\frac{1}{2} z_{nk}^2 + \const
+\]
+Variational distribution:
+\[
+q(\bfZ) = \prod_{k=1}^{K} \prod_{n=1}^{N} q(z_{nk}) = \prod_{k=1}^{K} \prod_{n=1}^{N} \Ndist{z_{nk}}{\mu_{z_{nk}},\sigma_{z_{nk}}}
+\]
+where
+\[
+\sigma_{z_{nk}}^2 = \Big( \sum_{m=1}^{M} \sum_{d=1}^{D_m} \tau_{nd}^m \la (s_{dk}^m\hat{w}_{dk}^m)^2 \ra + 1 \Big)^{-1}
+\]
+\[
+\mu_{z_{nk}} = \sigma_{z_{nk}}^2 \sum_{m=1}^{M} \sum_{d=1}^{D_m} \la\tau_{nd}^m\ra \la s_{dk}^m\hat{w}_{dk}^m \ra \Big( y_{nd}^m - \sum_{j \neq k} \la s_{dj}^m \hat{w}_{dj}^m \ra \la z_{nj} \ra \Big)
+\]
+
+\subsubsection*{Spike and Slab Weights}
+Variational distribution:
+\[
+q(\hat{\bfW},\bfS) = \prod_{m=1}^{M} \prod_{d=1}^{D_m} \prod_{k=1}^{K} q(\hat{w}_{dk}^m,s_{dk}^m) = \prod_{m=1}^{M} \prod_{d=1}^{D_m} \prod_{k=1}^{K} q(\hat{w}_{dk}^m|s_{dk}^m)q(s_{dk}^m)
+\]
+Update for $q(s_{dk}^m)$:
+\[
+\gamma_{dk} = q(s_{dk}=1) = \frac{1}{1+\exp(-\lambda_{dk})} =logit^{-1}(\lambda_{dk})
+\]
+where
+\begin{align*}
+\lambda_{dk}^m &= \la \log\frac{\theta}{1-\theta} \ra + 0.5 \frac{ \Big( \sum_{n=1}^{N} y_{nd}^m \la z_{nk} \ra \tau_{nd}^m- \sum_{j \neq k} \la s_{dj}^m\hat{w}_{dj}^m\ra \sum_{n=1}^{N} \la z_{nk} \ra \la z_{nj} \ra \tau_{nd}^m\Big)^2}{\sum_{n=1}^N \tau_{nd}^m  \la z_{nk}^2\ra +\la\alpha_k^m\ra}\\
+ &+ 0.5 \log(\la\alpha_k^m\ra) - 0.5 \log(\sum_{n=1}^N \tau_{nd}^m  \la z_{nk}^2\ra +\la\alpha_k^m\ra)
+\end{align*}
+
+Update for $q(\hat{w}_{dk}^m)$:
+\begin{align*}
+q(\hat{w}_{dk}^m|s_{dk}^m=0) = \Ndist{\hat{w}_{dk}^m}{0,1/\alpha_k^m} \\
+q(\hat{w}_{dk}^m|s_{dk}^m=1) = \Ndist{\hat{w}_{dk}^m}{\mu_{w_{dk}^m},\sigma_{w_{dk}^m}^2}
+\end{align*}
+where
+\[
+\mu_{w_{dk}^m} = \sigma^2_{w_{dk}^m} \left(\sum_{n=1}^N  \tau_{nd}^m  y_{nd}^m \la z_{nk} \ra -  \sum_{j \neq k} \la s_{dj}^m\hat{w}_{dj}^m \ra\sum_{n=1}^N  \tau_{nd}^m \la z_{nk} \ra \la z_{nj} \ra \right)
+\]
+
+\[
+\sigma^2_{w_{dk}^m} = \frac{1 } { \sum_{n=1}^{N} \tau_{nd}^m \la z_{nk}^2 \ra + \la\alpha_k^m\ra}
+\]
+Taken together this means that we can update $q(\hat{w}_{dk}^m,s_{dk}^m)$ using:
+\[
+q(\hat{w}_{dk}^m|s_{dk}^m) \times q(s_{dk}^m) = \Ndist{ \hat{w}_{dk}^m } { s_{dk}^m \mu_{w_{dk}^m}, s_{dk}^m\sigma_{w_{dk}^m}^2 + (1-s_{dk}^m)/\alpha_k^m} \quad \times \quad (\lambda_{dk}^m)^{s_{dk}^m} (1-\lambda_{dk}^m)^{1-s_{dk}}
+\]
+
+
+\subsubsection{Lower bound}
+
+\paragraph{Likelihood term}
+
+\[
+\log p(y^m_{nd}|Z,W)=y^m_{nd}\sum_{k=1}^{K}\la s_{dk}^m \hat{w}_{dk}^m \ra \la z_{nk} \ra - \log\left(1+\exp\left(\sum_{k=1}^{K}\la s_{dk}^m \hat{w}_{dk}^m \ra \la z_{nk}\ra\right)\right)
+\]
+
+
+\bibliographystyle{abbrv}
+\bibliography{bibliographyMOFA}
+
+\end{document}

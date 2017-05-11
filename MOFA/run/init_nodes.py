@@ -212,12 +212,13 @@ class initModel(object):
             if self.lik[m]=="gaussian":
                 Y_list[m] = Y_Node(dim=(self.N,self.D[m]), value=self.data[m])
             elif self.lik[m]=="poisson":
+                # tmp = stats.norm.rvs(loc=0, scale=1, size=(self.N,self.D[m]))
                 Y_list[m] = Poisson_PseudoY(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
             elif self.lik[m]=="bernoulli":
                 # Y_list[m] = Bernoulli_PseudoY(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
-                tmp = stats.norm.rvs(loc=0, scale=1, size=(self.N,self.D[m]))
-                # Y_list[m] =  Bernoulli_PseudoY_Jaakkola(dim=(self.N,self.D[m]), obs=self.data[m], E=tmp)
-                Y_list[m] =  Bernoulli_PseudoY_Jaakkola(dim=(self.N,self.D[m]), obs=self.data[m], E=Y_list[m])
+                # tmp = stats.norm.rvs(loc=0, scale=1, size=(self.N,self.D[m]))
+                Y_list[m] =  Bernoulli_PseudoY_Jaakkola(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
+                # Y_list[m] =  Bernoulli_PseudoY_Jaakkola(dim=(self.N,self.D[m]), obs=self.data[m], E=self.data[m])
             elif self.lik[m]=="binomial":
                 Y_list[m] = Binomial_PseudoY(dim=(self.N,self.D[m]), tot=data["tot"][m], obs=data["obs"][m], E=None)
         self.Y = Multiview_Mixed_Node(self.M, *Y_list)

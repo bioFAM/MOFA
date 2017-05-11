@@ -62,12 +62,12 @@ class BayesNet(object):
                 drop_dic["by_norm"] = [ s.random.choice(drop_dic["by_norm"]) ]
 
         ### test ###
-        # print "correlation"
-        # s.set_printoptions(precision=2)
-        # r = s.absolute(corr(Z.T,Z.T))
-        # s.fill_diagonal(r,0)
-        # r *= s.tri(*r.shape)
-        # print r.max()
+        # print "correlation:"
+        Z = self.nodes["Z"].getExpectation()
+        r = s.absolute(corr(Z.T,Z.T))
+        s.fill_diagonal(r,0)
+        r *= s.tri(*r.shape)
+        print r.max()
 
         # alpha = self.nodes["AlphaW"].getExpectation()
         # print (alpha)
@@ -95,19 +95,19 @@ class BayesNet(object):
             Z = self.nodes['Z'].getExpectation()
             Y = self.nodes["Y"].getExpectation()
             W = self.nodes["SW"].getExpectation()
-            # compute r2 for every factor and every view
             all_r2 = s.zeros([self.dim['M'], self.dim['K']])
             for m in xrange(self.dim['M']):
-                Y_m = Y[m]
-                W_m = W[m]
+                Ypred_m = s.dot(Z, W[m].T)
                 for k in xrange(self.dim['K']):
-                    # predict with latent variable k only
-                    predictions = s.outer(Z[:,k], W_m[:, k])
-                    # compute r2
-                    Res = ((Y_m - predictions)**2.).sum()
-                    Var = ((Y_m - Y_m.mean())**2.).sum()
+                    Ypred_mk = s.outer(Z[:,k], W[m][:,k])
+                    # Res = ((Y[m] - Ypred_mk)**2.).sum()
+                    Res = ((Ypred_m - Ypred_mk)**2.).sum()
+                    # Var = ((Y[m] - Y[m].mean())**2.).sum()
+                    Var = (Ypred_m**2.).sum()
                     all_r2[m,k] = 1. - Res/Var
             drop_dic["by_r2"] = s.where( (all_r2>by_r2).sum(axis=0) == 0)[0]
+            if len(drop_dic["by_r2"]) > 0:
+                drop_dic["by_r2"] = [ s.random.choice(drop_dic["by_r2"]) ]
 
         # Shut down based on the proportion of residual variance explained by each factor
         # IT DOESNT WORK, THERE IS SOME ERROR TO BE FIXED

@@ -38,6 +38,7 @@ p.add_argument( '--nostop',            action='store_true',                     
 p.add_argument( '--ardZ',              action='store_true',                                 help='Automatic Relevance Determination on the latent variables?' )
 p.add_argument( '--ardW',              type=str, default="mk" ,                             help=' "m" = Per view, "k" = Per factor, "mk" = Per view and factor' )
 p.add_argument( '--dropNorm',          type=float, default=None ,                           help='Threshold to drop latent variables based on norm of the latent variable' )
+p.add_argument( '--dropR2',            type=float, default=None ,                           help='Threshold to drop latent variables based on coefficient of determination' )
 p.add_argument( '-n', '--ntrials',     type=int, default=1,                                 help='Number of trials' )
 p.add_argument( '-c', '--ncores',      type=int, default=1,                                 help='Number of cores' )
 p.add_argument( '-i', '--iter',        type=int, default=10,                                help='Number of iterations' )
@@ -158,7 +159,7 @@ elif model_opts['ardW'] == "k":
   model_opts["priorAlphaW"] = { 'a':s.ones(K)*1e-14, 'b':s.ones(K)*1e-14 }
 
 # Theta
-model_opts["priorTheta"] = { 'a':[s.ones(K)*1e-14 for m in xrange(M)], 'b':[s.ones(K)*1e-14 for m in xrange(M)] }
+model_opts["priorTheta"] = { 'a':[s.ones(K) for m in xrange(M)], 'b':[s.ones(K) for m in xrange(M)] }
 for m in xrange(M):
   for k in xrange(K):
     if model_opts['learnTheta'][m,k]==0:
@@ -174,11 +175,9 @@ model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-14 for m in xrange(M)], 'b':[s.o
 ##############################################
 
 # Latent variables 
-# model_opts["initZ"] = { 'mean':"orthogonal", 'var':s.ones((N,K)), 'E':None, 'E2':None }
 model_opts["initZ"] = { 'mean':"random", 'var':s.ones((N,K)), 'E':None, 'E2':None }
 if model_opts['ardZ']:
-  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*1e5 }
-  # model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*1 }
+  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*1e2 }
 
 # Noise
 model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(D[m])*100 for m in xrange(M)] }
@@ -188,9 +187,9 @@ if model_opts['ardW'] == "m":
   # model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
   model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[ K*D[m]/(data[m].std(axis=0)**2 - 1./model_opts["initTau"]["E"][m]).sum() for m in xrange(M) ] } 
 elif model_opts['ardW'] == "mk":
-  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*1. for m in xrange(M)] }
+  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*100. for m in xrange(M)] }
 elif model_opts['ardW'] == "k":
-  model_opts["initAlphaW"] = { 'a':s.nan*s.ones(K), 'b':s.nan*s.ones(K), 'E':s.ones(K)*1. }
+  model_opts["initAlphaW"] = { 'a':s.nan*s.ones(K), 'b':s.nan*s.ones(K), 'E':s.ones(K)*100. }
 
 # Weights
 model_opts["initSW"] = { 
@@ -207,7 +206,7 @@ model_opts["initSW"] = {
 
 # Theta
 # model_opts["initTheta"] = { 'a':[s.ones(K)*1e-5 for m in xrange(M)], 'b':[s.ones(K)*1e-5 for m in xrange(M)], 'E':[s.nan*s.zeros(K) for m in xrange(M)] } # NOT SURE HOW TO INITIALISE THIS, WHY IS EXPECTATION NOT INITIALISED?
-model_opts["initTheta"] = { 'a':[s.ones(K) for m in xrange(M)], 'b':[s.ones(K) for m in xrange(M)], 'E':[s.nan*s.zeros(K) for m in xrange(M)] } # NOT SURE HOW TO INITIALISE THIS, WHY IS EXPECTATION NOT INITIALISED?
+model_opts["initTheta"] = { 'a':[s.ones(K) for m in xrange(M)], 'b':[s.ones(K) for m in xrange(M)], 'E':[s.nan*s.zeros(K) for m in xrange(M)] } 
 for m in xrange(M):
   for k in xrange(K):
     if model_opts['learnTheta'][m,k]==0.:
@@ -275,7 +274,7 @@ train_opts['savefolder'] = s.nan
 train_opts['verbosity'] = 2
 
 # Criteria to drop latent variables while training
-train_opts['drop'] = { "by_norm":args.dropNorm, "by_pvar":None, "by_cor":None, "by_r2":None }
+train_opts['drop'] = { "by_norm":args.dropNorm, "by_pvar":None, "by_cor":None, "by_r2":args.dropR2 }
 train_opts['startdrop'] = args.startDrop
 train_opts['freqdrop'] = args.freqDrop
 

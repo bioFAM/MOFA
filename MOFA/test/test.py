@@ -55,7 +55,7 @@ data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
 data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
 data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
-theta = [ s.ones(K)*0.5 for m in xrange(M) ]
+theta = [ s.ones(K)*1.0 for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
 
 data['mu'] = [ s.ones(D[m])*0. for m in xrange(M)]
@@ -72,9 +72,9 @@ Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=dat
 # Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 # 	likelihood="binomial", min_trials=10, max_trials=50, missingness=missingness)
 
-data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
+# data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
 # data["Y"] = ( Y_bernoulli[0], Y_bernoulli[1], Y_bernoulli[2] )
-# data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
+data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 
 
 ##################
@@ -93,7 +93,7 @@ data_opts['covariates'] = None
 #################################
 
 # Define initial number of latent variables
-K = 20
+K = 15
 
 # Define model dimensionalities
 dim = {}
@@ -126,22 +126,22 @@ if model_opts["learnMean"]:
 
 
 # Define likelihoods
-model_opts['likelihood'] = ['gaussian']* M
-# model_opts['likelihood'] = ['gaussian','poisson','bernoulli']
+# model_opts['likelihood'] = ['gaussian']* M
+model_opts['likelihood'] = ['gaussian','poisson','bernoulli']
 
 # Define initial number of factors
 model_opts['k'] = K
 
 # Define sparsities
 model_opts['ardZ'] = False
-model_opts['ardW'] = "k"
+model_opts['ardW'] = "mk"
 
 # Define for which factors to learn Theta
 model_opts['learnTheta'] = 0.*s.ones((M,K))
 
 # Define schedule of updates
 # model_opts['schedule'] = ("Y","Tau","SW", "Z", "Clusters", "Theta", "Alpha")
-model_opts['schedule'] = ["Y","SW","Z","AlphaW","Tau","Theta"]
+model_opts['schedule'] = ["Y","SW","Z","AlphaW","Theta","Tau"]
 # model_opts['schedule'] = ("SW","Z","AlphaW","Tau","Theta")
 
 ####################################
@@ -158,11 +158,11 @@ else:
 # Weights
 model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M } # Not required
 if model_opts['ardW'] == "m":
-  model_opts["priorAlphaW"] = { 'a':[1e-5]*M, 'b':[1e-5]*M }
+  model_opts["priorAlphaW"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
 elif model_opts['ardW'] == "k":
-  model_opts["priorAlphaW"] = { 'a':s.ones(K)*1e-5, 'b':s.ones(K)*1e-5 }
+  model_opts["priorAlphaW"] = { 'a':s.ones(K)*1e-14, 'b':s.ones(K)*1e-14 }
 elif model_opts['ardW'] == "mk":
-  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-5]*M, 'b':[s.ones(K)*1e-5]*M }
+  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-14]*M, 'b':[s.ones(K)*1e-14]*M }
 
 # Theta
 model_opts["priorTheta"] = { 'a':[s.ones(K) for m in xrange(M)], 'b':[s.ones(K) for m in xrange(M)] }
@@ -174,7 +174,7 @@ for m in xrange(M):
 
   
 # Noise
-model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-5 for m in xrange(M)], 'b':[s.ones(D[m])*1e-5 for m in xrange(M)] }
+model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-14 for m in xrange(M)], 'b':[s.ones(D[m])*1e-14 for m in xrange(M)] }
 
 
 #############################################
@@ -182,8 +182,8 @@ model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-5 for m in xrange(M)], 'b':[s.on
 #############################################
 
 # Latent variables
-model_opts["initZ"] = { 'mean':"orthogonal", 'var':s.ones((N,K)), 'E':None, 'E2':None }
-# model_opts["initZ"] = { 'mean':"random", 'var':s.ones((N,K)), 'E':None, 'E2':None }
+# model_opts["initZ"] = { 'mean':"orthogonal", 'var':s.ones((N,K)), 'E':None, 'E2':None }
+model_opts["initZ"] = { 'mean':"random", 'var':s.ones((N,K)), 'E':None, 'E2':None }
 if model_opts['ardZ']:
   model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*1000 }
 
@@ -194,8 +194,8 @@ elif model_opts['ardW'] == "k":
   model_opts["initAlphaW"] = { 'a':s.nan*s.ones(K), 'b':s.nan*s.ones(K), 'E':s.ones(K) } 
 elif model_opts['ardW'] == "mk":
   model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[1.*s.ones(K) for m in xrange(M)] } 
-model_opts["initSW"] = { 'Theta':[s.ones((D[m],K))*.5 for m in xrange(M)],
-                          'mean_S0':[s.zeros((D[m],K))*.5 for m in xrange(M)],
+model_opts["initSW"] = { 'Theta':[s.ones((D[m],K)) for m in xrange(M)],
+                          'mean_S0':[s.zeros((D[m],K)) for m in xrange(M)],
                           'var_S0':[s.ones((D[m],K)) for m in xrange(M)],
                           'mean_S1':[s.zeros((D[m],K)) for m in xrange(M)], # (TO-DO) allow also random
                           # 'mean_S1':[s.ones((D[m],K)) for m in xrange(M)],
@@ -275,7 +275,7 @@ train_opts['maxiter'] = 5000
 # train_opts['tolerance'] = 1E-2
 train_opts['tolerance'] = 0.01
 train_opts['forceiter'] = True
-train_opts['drop'] = { "by_norm":0.01, "by_pvar":None, "by_cor":None, "by_r2":None }
+train_opts['drop'] = { "by_norm":None, "by_pvar":None, "by_cor":None, "by_r2":0.01 }
 train_opts['startdrop'] = 10
 train_opts['freqdrop'] = 1
 train_opts['savefreq'] = s.nan

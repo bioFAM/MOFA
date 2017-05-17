@@ -126,6 +126,11 @@ class Simulate(object):
             #     for n in xrange(self.N):
             #         for d in xrange(self.D[m]):
             #             Y[m][n,d] = s.dot(Z[n,:],W[m][d,:].T) + Mu[m][d] + norm.rvs(loc=0,scale=1/s.sqrt(Tau[m][d]))
+            
+        elif likelihood == "warp":
+            for m in xrange(self.M):
+                Y[m] = s.exp(s.dot(Z,W[m].T) + Mu[m] + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m]), size=[self.N, self.D[m]]))
+
 
         # Sample observations using a poisson likelihood
         elif likelihood == "poisson":

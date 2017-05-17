@@ -63,11 +63,11 @@ class BayesNet(object):
 
         ### test ###
         # print "correlation:"
-        Z = self.nodes["Z"].getExpectation()
-        r = s.absolute(corr(Z.T,Z.T))
-        s.fill_diagonal(r,0)
-        r *= s.tri(*r.shape)
-        print r.max()
+        # Z = self.nodes["Z"].getExpectation()
+        # r = s.absolute(corr(Z.T,Z.T))
+        # s.fill_diagonal(r,0)
+        # r *= s.tri(*r.shape)
+        # print r.max()
 
         # alpha = self.nodes["AlphaW"].getExpectation()
         # print (alpha)
@@ -193,7 +193,7 @@ class BayesNet(object):
                     if self.options['verbosity'] > 0:
                         print "Trial %d, Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, K=%d" % (self.trial, i+1, time()-t, elbo.iloc[i]["total"], delta_elbo, self.dim["K"])
                         if delta_elbo<0: print "Warning, lower bound is decreasing..."
-                        if delta_elbo<0: print '\a'
+                        # if delta_elbo<0: print '\a'
                     if self.options['verbosity'] == 2:
                         print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
 

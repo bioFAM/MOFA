@@ -10,7 +10,7 @@ import sklearn.decomposition
 
 from MOFA.core.nodes import *
 from MOFA.core.multiview_nodes import *
-from MOFA.core.seeger_nodes import *
+from MOFA.core.nongaussian_nodes import *
 from MOFA.core.updates import *
 
 
@@ -202,6 +202,8 @@ class initModel(object):
                 tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
             elif self.lik[m] == "gaussian":
                 tau_list[m] = Tau_Node(dim=(self.D[m],), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
+            elif self.lik[m] == "warp":
+                tau_list[m] = Tau_Node(dim=(self.D[m],), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
         self.Tau = Multiview_Mixed_Node(self.M,*tau_list)
         self.nodes["Tau"] = self.Tau
 
@@ -220,7 +222,11 @@ class initModel(object):
                 Y_list[m] =  Bernoulli_PseudoY_Jaakkola(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
                 # Y_list[m] =  Bernoulli_PseudoY_Jaakkola(dim=(self.N,self.D[m]), obs=self.data[m], E=self.data[m])
             elif self.lik[m]=="binomial":
-                Y_list[m] = Binomial_PseudoY(dim=(self.N,self.D[m]), tot=data["tot"][m], obs=data["obs"][m], E=None)
+                print "Not implemented"
+                exit()
+                # Y_list[m] = Binomial_PseudoY(dim=(self.N,self.D[m]), tot=data["tot"][m], obs=data["obs"][m], E=None)
+            elif self.lik[m]=="warp":
+                Y_list[m] = Warped_PseudoY_Node(dim=(self.N,self.D[m]), obs=self.data[m], func_type='tanh', I=3, E=None)
         self.Y = Multiview_Mixed_Node(self.M, *Y_list)
         self.nodes["Y"] = self.Y
 

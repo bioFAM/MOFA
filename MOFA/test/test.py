@@ -32,6 +32,7 @@ M = 3
 N = 50
 # N = 25
 D = s.asarray([500,500,500])
+# D = s.asarray([500,])
 # D = s.asarray([100,100,100])
 K = 6
 
@@ -55,7 +56,7 @@ data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
 data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
 data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
-theta = [ s.ones(K)*0.3 for m in xrange(M) ]
+theta = [ s.ones(K)*1.0 for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
 
 data['mu'] = [ s.ones(D[m])*0. for m in xrange(M)]
@@ -63,6 +64,8 @@ data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 # data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
 
 missingness = 0.0
+Y_warp = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
+  likelihood="warp", missingness=missingness)
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="gaussian", missingness=missingness)
 Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -72,10 +75,12 @@ Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=dat
 # Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 # 	likelihood="binomial", min_trials=10, max_trials=50, missingness=missingness)
 
-data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
+# data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
 # data["Y"] = ( Y_bernoulli[0], Y_bernoulli[1], Y_bernoulli[2] )
-# data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
-
+data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
+# data["Y"] = ( Y_warp[0], )
+# data["Y"] = ( Y_warp[0], Y_warp[1], Y_warp[2] )
+# data["Y"] = ( Y_gaussian[0], )
 
 ##################
 ## Data options ##
@@ -85,29 +90,30 @@ data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
 data_opts = {}
 data_opts["outfile"] = "/tmp/test.h5"
 data_opts['view_names'] = ["g","p","b"]
-data_opts['center'] = [False]*M
-data_opts['scale_views'] = [True]*M
+data_opts['center'] = [True]*M
+data_opts['scale_views'] = [False]*M
 data_opts['covariates'] = None
 
 # Center the data
 if data_opts['center'][m]: 
-  data[m] = (data[m] - data[m].mean())
+  data[m] = (data["Y"][m] - data["Y"][m].mean())
 
 # Scale the views
-if data_opts['scale_views'][m]:
-  print type(data["Y"][m])
-  print s.std(data["Y"][m], axis=0).sum()
-  print data["Y"][m] / s.std(data["Y"][m], axis=0).sum()
-  exit()
-  data["Y"][m] = data["Y"][m].multiply(1./s.std(data["Y"][m], axis=0).sum())
-  exit()
+# NOT WORKING YET
+# if data_opts['scale_views'][m]:
+#   print type(data["Y"][m])
+#   print s.std(data["Y"][m], axis=0).sum()
+#   print data["Y"][m] / s.std(data["Y"][m], axis=0).sum()
+#   exit()
+#   data["Y"][m] = data["Y"][m].multiply(1./s.std(data["Y"][m], axis=0).sum())
+#   exit()
 
 #################################
 ## Initialise Bayesian Network ##
 #################################
 
 # Define initial number of latent variables
-K = 15
+K = 10
 
 # Define model dimensionalities
 dim = {}
@@ -140,8 +146,9 @@ if model_opts["learnMean"]:
 
 
 # Define likelihoods
-model_opts['likelihood'] = ['gaussian']* M
-# model_opts['likelihood'] = ['gaussian','poisson','bernoulli']
+# model_opts['likelihood'] = ['gaussian']* M
+model_opts['likelihood'] = ['gaussian','poisson','bernoulli']
+# model_opts['likelihood'] = ['warp']*M
 
 # Define initial number of factors
 model_opts['k'] = K
@@ -155,6 +162,7 @@ model_opts['learnTheta'] = 0.*s.ones((M,K))
 
 # Define schedule of updates
 model_opts['schedule'] = ["Y","SW","Z","AlphaW","Theta","Tau"]
+# model_opts['schedule'] = ["SW","Z","AlphaW","Theta","Tau"]
 
 ####################################
 ## Define priors (P distribution) ##

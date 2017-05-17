@@ -61,6 +61,7 @@ def loadData(data_opts, verbose=True):
         # Center the data
         if data_opts['center'][m]:
             Y[m] = (Y[m] - Y[m].mean())
+
     return Y
 
 # Function to run a single trial of the model

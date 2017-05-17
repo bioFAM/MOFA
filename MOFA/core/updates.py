@@ -194,7 +194,6 @@ class AlphaW_Node_mk(Gamma_Unobserved_Variational_Node):
 
         return lb_p - lb_q
 
-
 class AlphaW_Node_k(Gamma_Unobserved_Variational_Node):
     def __init__(self, dim, pa, pb, qa, qb, qE=None):
         # Gamma_Unobserved_Variational_Node.__init__(self, dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
@@ -239,7 +238,6 @@ class AlphaW_Node_k(Gamma_Unobserved_Variational_Node):
 
         return lb_p - lb_q
 
-
 class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
     # TOO MANY ARGUMENTS, SHOULD WE USE **KWARGS AND *KARGS ONLY?
     # def __init__(self, dim, pmean_S0, pmean_S1, pvar_S0, pvar_S1, ptheta, qmean_S0, qmean_S1, qvar_S0, qvar_S1, qtheta, qEW_S0=None, qEW_S1=None, qES=None):
@@ -274,7 +272,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         # Check dimensions of Tau and and expand if necessary
         if tau.shape != Y.shape:
             tau = s.repeat(tau[None,:], Y.shape[0], axis=0)
-            tau = ma.masked_where(ma.getmask(Y), tau)
+        tau = ma.masked_where(ma.getmask(Y), tau) # I MODIFIED THIS TO CORRECT PROBLEM WITH MISSING VALUES
         # Check dimensions of Alpha and and expand if necessary
         if alpha.shape[0] == 1:
             alpha = s.repeat(alpha[:], self.dim[1], axis=0)

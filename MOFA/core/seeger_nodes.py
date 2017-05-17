@@ -83,14 +83,8 @@ class PseudoY(Unobserved_Variational_Node):
         return { 'zeta':self.Zeta }
 
     def calculateELBO(self):
-        # TODO is it ever used ??
-        # Compute Lower Bound using the Gaussian likelihood with pseudodata
-        Z = self.markov_blanket["Z"].getExpectation()
-        SW = self.markov_blanket["SW"].getExpectation()
-        tau = self.markov_blanket["Tau"].getExpectation()
-
-        lb = self.lbconst + s.sum(self.N*s.log(tau))/2 - s.sum( tau * (self.E-s.dot(Z,SW.T))**2 )/2
-        return lb
+        print "Not implemented"
+        exit()
 
 ##################
 ## Seeger nodes ##
@@ -315,5 +309,5 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY):
         Z = self.markov_blanket["Z"].getExpectation()
         SW = self.markov_blanket["SW"].getExpectation()
         tmp = s.dot(Z,SW.T)
-        lik = s.sum( self.obs*tmp - s.log(1+s.exp(tmp)) )
+        lik = ma.sum( self.obs*tmp - s.log(1+s.exp(tmp)) )
         return lik

@@ -54,7 +54,7 @@ FactorsCorPlot <- function(object, method="pearson", ...) {
   if (class(object) != "MOFAmodel")
     stop("'object' has to be an instance of MOFAmodel")
   
-  Z <- object@Expectations$Z$E
+  Z <- getExpectations(object,"Z","E")
   h <- cor(x=Z, y=Z, method=method)
   p <- corrplot::corrplot(h, tl.col="black", ...)
   return(p)
@@ -121,8 +121,10 @@ CorrplotLFvsPC <- function(model, views="all", noPCs=5, method="svd"){
   # Collect expectations
   Z <- getExpectations(model,"Z","E")
   
+  
   # Perform PCAs
   listPCs <- lapply(views, function(m) {
+    model@TrainData[[m]][is.nan(model@TrainData[[m]])] <- NA
     pc.out <- pcaMethods::pca(model@TrainData[[m]], method=method, center=TRUE, nPcs=noPCs)
     tmp <- pc.out@scores
     colnames(tmp) <- paste(m, colnames(tmp), sep="_")
@@ -134,7 +136,8 @@ CorrplotLFvsPC <- function(model, views="all", noPCs=5, method="svd"){
   corrmatrix <- cor(matPCs,Z)
   
   # Plot correlation matrix
-  corrplot::corrplot(t(corrmatrix), order="original", title="", tl.col="black", mar=c(1,1,3,1))
+  # corrplot::corrplot(t(corrmatrix), order="original", title="", tl.col="black", mar=c(1,1,3,1))
+  corrplot::corrplot(t(corrmatrix), order="original", title="", tl.col="black")
   
   return(corrmatrix)
 }

@@ -32,6 +32,7 @@ M = 3
 N = 50
 # N = 25
 D = s.asarray([500,500,500])
+# D = s.asarray([500,])
 # D = s.asarray([100,100,100])
 K = 6
 
@@ -63,6 +64,8 @@ data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 # data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
 
 missingness = 0.0
+Y_warp = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
+  likelihood="warp", missingness=missingness)
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="gaussian", missingness=missingness)
 Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -75,7 +78,9 @@ Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=dat
 # data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
 # data["Y"] = ( Y_bernoulli[0], Y_bernoulli[1], Y_bernoulli[2] )
 data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
-
+# data["Y"] = ( Y_warp[0], )
+# data["Y"] = ( Y_warp[0], Y_warp[1], Y_warp[2] )
+# data["Y"] = ( Y_gaussian[0], )
 
 ##################
 ## Data options ##
@@ -85,15 +90,30 @@ data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 data_opts = {}
 data_opts["outfile"] = "/tmp/test.h5"
 data_opts['view_names'] = ["g","p","b"]
-
+data_opts['center'] = [True]*M
+data_opts['scale_views'] = [False]*M
 data_opts['covariates'] = None
+
+# Center the data
+if data_opts['center'][m]: 
+  data[m] = (data["Y"][m] - data["Y"][m].mean())
+
+# Scale the views
+# NOT WORKING YET
+# if data_opts['scale_views'][m]:
+#   print type(data["Y"][m])
+#   print s.std(data["Y"][m], axis=0).sum()
+#   print data["Y"][m] / s.std(data["Y"][m], axis=0).sum()
+#   exit()
+#   data["Y"][m] = data["Y"][m].multiply(1./s.std(data["Y"][m], axis=0).sum())
+#   exit()
 
 #################################
 ## Initialise Bayesian Network ##
 #################################
 
 # Define initial number of latent variables
-K = 15
+K = 10
 
 # Define model dimensionalities
 dim = {}
@@ -128,21 +148,21 @@ if model_opts["learnMean"]:
 # Define likelihoods
 # model_opts['likelihood'] = ['gaussian']* M
 model_opts['likelihood'] = ['gaussian','poisson','bernoulli']
+# model_opts['likelihood'] = ['warp']*M
 
 # Define initial number of factors
 model_opts['k'] = K
 
 # Define sparsities
 model_opts['ardZ'] = False
-model_opts['ardW'] = "mk"
+model_opts['ardW'] = "k"
 
 # Define for which factors to learn Theta
 model_opts['learnTheta'] = 0.*s.ones((M,K))
 
 # Define schedule of updates
-# model_opts['schedule'] = ("Y","Tau","SW", "Z", "Clusters", "Theta", "Alpha")
 model_opts['schedule'] = ["Y","SW","Z","AlphaW","Theta","Tau"]
-# model_opts['schedule'] = ("SW","Z","AlphaW","Tau","Theta")
+# model_opts['schedule'] = ["SW","Z","AlphaW","Theta","Tau"]
 
 ####################################
 ## Define priors (P distribution) ##
@@ -158,11 +178,11 @@ else:
 # Weights
 model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M } # Not required
 if model_opts['ardW'] == "m":
-  model_opts["priorAlphaW"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
+  model_opts["priorAlphaW"] = { 'a':[1e-3]*M, 'b':[1e-3]*M }
 elif model_opts['ardW'] == "k":
-  model_opts["priorAlphaW"] = { 'a':s.ones(K)*1e-14, 'b':s.ones(K)*1e-14 }
+  model_opts["priorAlphaW"] = { 'a':s.ones(K)*1e-3, 'b':s.ones(K)*1e-3 }
 elif model_opts['ardW'] == "mk":
-  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-14]*M, 'b':[s.ones(K)*1e-14]*M }
+  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-3]*M, 'b':[s.ones(K)*1e-3]*M }
 
 # Theta
 model_opts["priorTheta"] = { 'a':[s.ones(K) for m in xrange(M)], 'b':[s.ones(K) for m in xrange(M)] }
@@ -174,7 +194,7 @@ for m in xrange(M):
 
   
 # Noise
-model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-14 for m in xrange(M)], 'b':[s.ones(D[m])*1e-14 for m in xrange(M)] }
+model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-3 for m in xrange(M)], 'b':[s.ones(D[m])*1e-3 for m in xrange(M)] }
 
 
 #############################################
@@ -185,7 +205,7 @@ model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-14 for m in xrange(M)], 'b':[s.o
 # model_opts["initZ"] = { 'mean':"orthogonal", 'var':s.ones((N,K)), 'E':None, 'E2':None }
 model_opts["initZ"] = { 'mean':"random", 'var':s.ones((N,K)), 'E':None, 'E2':None }
 if model_opts['ardZ']:
-  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*1000 }
+  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*100 }
 
 # Weights
 if model_opts['ardW'] == "m":
@@ -220,7 +240,6 @@ model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(D[m])*100 fo
 ######################################################
 ## Modify priors and initialisations for covariates ##
 ######################################################
-
 
 if data_opts['covariates'] is not None:
   idx = xrange(data_opts['covariates'].shape[1])

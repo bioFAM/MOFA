@@ -8,7 +8,7 @@
 #' @reference fill this
 #' @import pheatmap
 #' @export
-ViewFactorPlot <- function(object, views="all", factors="all") {
+ViewFactorPlot <- function(object, views="all", factors="all", ...) {
   
   # Define views
   if (paste0(views,sep="",collapse="") =="all") { 
@@ -32,8 +32,9 @@ ViewFactorPlot <- function(object, views="all", factors="all") {
   
   # Calculate proportion of residual variation explained by each factor in each view
   fvar_mk <- CalculateVariance_Views(object, views, factors)
-    
+  
   # Generate plot
-  color <- colorRampPalette(c("grey100", "grey0"))(100)
-  pheatmap::pheatmap(fvar_mk, color=color)
+  # color <- colorRampPalette(c("grey100", "grey0"))(100)
+  color = colorRampPalette(c("white","darkblue"))(100)
+  pheatmap::pheatmap(fvar_mk, color=color, cluster_rows=F, cluster_cols=T, fontsize=13, ...)
 }

@@ -6,6 +6,8 @@ from variational_nodes import Unobserved_Variational_Node
 from nodes import Node
 from utils import sigmoid, lambdafn
 
+from warp.warping_inference import Warping_inference
+
 """
 Module to define updates for non-conjugate matrix factorisation models using the Seeger approach
 Reference: 'Fast Variational Bayesian Inference for Non-Conjugate Matrix Factorisation models' by Seeger and Bouchard (2012)
@@ -20,11 +22,10 @@ class PseudoY(Unobserved_Variational_Node):
     """
     General class for pseudodata nodes
     """
-    def __init__(self, dim, obs, Zeta=None, E=None):
+    def __init__(self, dim, obs, params=None, E=None):
         # Inputs:
         #  dim (2d tuple): dimensionality of each view
         #  obs (ndarray): observed data
-        #  Zeta: parameter (see reference paper)
         #  E (ndarray): initial expected value of pseudodata
         Unobserved_Variational_Node.__init__(self, dim)
 
@@ -32,8 +33,12 @@ class PseudoY(Unobserved_Variational_Node):
         assert obs.shape == dim, "Problems with the dimensionalities"
         self.obs = obs
 
-        # Initialise Zeta
-        self.Zeta = Zeta
+        # Initialise parameters
+        if params is not None:
+            assert type(self.params) == dict
+            self.params = params
+        else:
+            self.params = {}
 
         # Create a boolean mask of the data to hidden missing values
         if type(self.obs) != ma.MaskedArray:
@@ -49,10 +54,9 @@ class PseudoY(Unobserved_Variational_Node):
         # else:
             # E = ma.masked_invalid(s.zeros(self.dim))
         self.E = E
+
     def updateParameters(self):
-        Z = self.markov_blanket["Z"].getExpectation()
-        SW = self.markov_blanket["SW"].getExpectation()
-        self.Zeta = s.dot(Z,SW.T)
+        pass
 
     def mask(self):
         # Mask the observations if they have missing values
@@ -63,9 +67,8 @@ class PseudoY(Unobserved_Variational_Node):
         pass
 
     def updateExpectations(self):
-        print "Expectation updates for pseudodata node depend on the type of likelihood. They have to be specified in a child class."
+        print "Error: expectation updates for pseudodata node depend on the type of likelihood. They have to be specified in a new class."
         exit()
-        pass
 
     def getExpectation(self):
         return self.E
@@ -80,23 +83,32 @@ class PseudoY(Unobserved_Variational_Node):
         return self.obs
 
     def getParameters(self):
-        return { 'zeta':self.Zeta }
+        return self.params
 
     def calculateELBO(self):
-        # TODO is it ever used ??
-        # Compute Lower Bound using the Gaussian likelihood with pseudodata
-        Z = self.markov_blanket["Z"].getExpectation()
-        SW = self.markov_blanket["SW"].getExpectation()
-        tau = self.markov_blanket["Tau"].getExpectation()
-
-        lb = self.lbconst + s.sum(self.N*s.log(tau))/2 - s.sum( tau * (self.E-s.dot(Z,SW.T))**2 )/2
-        return lb
+        print "Not implemented"
+        exit()
 
 ##################
 ## Seeger nodes ##
 ##################
 
-class Poisson_PseudoY(PseudoY):
+class PseudoY_Seeger(PseudoY):
+    """
+    General class for pseudodata nodes
+    """
+    def __init__(self, dim, obs, params=None, E=None):
+        # Inputs:
+        #  dim (2d tuple): dimensionality of each view
+        #  obs (ndarray): observed data
+        #  E (ndarray): initial expected value of pseudodata
+        PseudoY.__init__(self, dim=dim, obs=obs, params=params, E=E)
+
+    def updateParameters(self):
+        Z = self.markov_blanket["Z"].getExpectation()
+        SW = self.markov_blanket["SW"].getExpectation()
+        self.params["zeta"] = s.dot(Z,SW.T)
+class Poisson_PseudoY(PseudoY_Seeger):
     """
     Class for a Poisson pseudodata node with the following likelihood:
         p(y|x) \prop gamma(x) * e^{-gamma(x)}  (1)
@@ -120,11 +132,11 @@ class Poisson_PseudoY(PseudoY):
     clipping overly large counts
 
     """
-    def __init__(self, dim, obs, Zeta=None, E=None):
+    def __init__(self, dim, obs, params=None, E=None):
         # - dim (2d tuple): dimensionality of each view
         # - obs (ndarray): observed data
         # - E (ndarray): initial expected value of pseudodata
-        PseudoY.__init__(self, dim=dim, obs=obs, Zeta=Zeta, E=E)
+        PseudoY_Seeger.__init__(self, dim=dim, obs=obs, params=params, E=E)
 
         # Initialise the observed data
         assert s.all(s.mod(self.obs, 1) == 0), "Data must not contain float numbers, only integers"
@@ -141,7 +153,7 @@ class Poisson_PseudoY(PseudoY):
     def updateExpectations(self):
         # Update the pseudodata
         tau = self.markov_blanket["Tau"].getValue()
-        self.E = self.Zeta - sigmoid(self.Zeta)*(1-self.obs/self.ratefn(self.Zeta))/tau[None,:]
+        self.E = self.params["zeta"] - sigmoid(self.params["zeta"])*(1-self.obs/self.ratefn(self.params["zeta"]))/tau[None,:]
 
     def calculateELBO(self):
         # Compute Lower Bound using the Poisson likelihood with observed data
@@ -150,7 +162,7 @@ class Poisson_PseudoY(PseudoY):
         tmp = self.ratefn(s.dot(Z,SW.T))
         lb = s.sum( self.obs*s.log(tmp) - tmp)
         return lb
-class Bernoulli_PseudoY(PseudoY):
+class Bernoulli_PseudoY(PseudoY_Seeger):
     """
     Class for a Bernoulli (0,1 data) pseudodata node with the following likelihood:
         p(y|x) = (e^{yx}) / (1+e^x)  (1)
@@ -168,18 +180,18 @@ class Bernoulli_PseudoY(PseudoY):
                 = zeta_ij - 4*(sigmoid(zeta_ij) - y_ij)
 
     """
-    def __init__(self, dim, obs, Zeta=None, E=None):
+    def __init__(self, dim, obs, params=None, E=None):
         # - dim (2d tuple): dimensionality of each view
         # - obs (ndarray): observed data
         # - E (ndarray): initial expected value of pseudodata
-        PseudoY.__init__(self, dim=dim, obs=obs, Zeta=Zeta, E=E)
+        PseudoY_Seeger.__init__(self, dim=dim, obs=obs, params=params, E=E)
 
         # Initialise the observed data
         assert s.all( (self.obs==0) | (self.obs==1) ), "Data must be binary"
 
     def updateExpectations(self):
         # Update the pseudodata
-        self.E = self.Zeta - 4.*(sigmoid(self.Zeta) - self.obs)
+        self.E = self.params["zeta"] - 4.*(sigmoid(self.params["zeta"]) - self.obs)
 
     def calculateELBO(self):
         # Compute Lower Bound using the Bernoulli likelihood with observed data
@@ -188,7 +200,7 @@ class Bernoulli_PseudoY(PseudoY):
         tmp = s.dot(Z,SW.T)
         lik = s.sum( self.obs*tmp - s.log(1+s.exp(tmp)) )
         return lik
-class Binomial_PseudoY(PseudoY):
+class Binomial_PseudoY(PseudoY_Seeger):
     """
     Class for a Binomial pseudodata node with the following likelihood:
         p(x|N,theta) = p(x|N,theta) = binom(N,x) * theta**(x) * (1-theta)**(N-x)
@@ -211,7 +223,7 @@ class Binomial_PseudoY(PseudoY):
         # - dim (2d tuple): dimensionality of each view
         # - obs (ndarray): observed data
         # - E (ndarray): initial expected value of pseudodata
-        PseudoY.__init__(self, dim=dim, obs=None, Zeta=Zeta, E=E)
+        PseudoY_Seeger.__init__(self, dim=dim, obs=None, params=params, E=E)
 
         # Initialise the observed data
         assert s.all(s.mod(obs, 1) == 0) and s.all(s.mod(tot, 1) == 0), "Data must not contain float numbers, only integers"
@@ -224,7 +236,7 @@ class Binomial_PseudoY(PseudoY):
     def updateExpectations(self):
         # Update the pseudodata
         tau = self.markov_blanket["Tau"].getValue()
-        self.E = self.zeta - s.divide(self.tot*sigmoid(self.Zeta)-self.obs, tau)
+        self.E = self.params["zeta"] - s.divide(self.tot*sigmoid(self.params["zeta"])-self.obs, tau)
         pass
 
     def calculateELBO(self):
@@ -260,8 +272,7 @@ class Tau_Jaakkola(Node):
             self.value = value
 
     def updateExpectations(self):
-        Zeta = self.markov_blanket["Y"].getParameters()["zeta"]
-        self.value = 2*lambdafn(Zeta)
+        self.value = 2*lambdafn(self.markov_blanket["Y"].getParameters()["zeta"])
 
     def getValue(self):
         return self.value
@@ -274,7 +285,7 @@ class Tau_Jaakkola(Node):
 
     def removeFactors(self, idx, axis=None):
         pass
-class Bernoulli_PseudoY_Jaakkola(PseudoY):
+class Bernoulli_PseudoY_Jaakkola(PseudoY_Seeger):
     """
     Class for a Bernoulli (0,1 data) pseudodata node with the following likelihood:
         p(y|x) = (e^{yx}) / (1+e^x) 
@@ -296,24 +307,62 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY):
     NOTE: For this class to work the noise variance tau needs to be updated according to 
         tau_ij <- 2*lambadfn(xi_ij)
     """
-    def __init__(self, dim, obs, Zeta=None, E=None):
-        PseudoY.__init__(self, dim=dim, obs=obs, Zeta=Zeta, E=E)
+    def __init__(self, dim, obs, params=None, E=None):
+        PseudoY_Seeger.__init__(self, dim=dim, obs=obs, params=params, E=E)
 
         # Initialise the observed data
         assert s.all( (self.obs==0) | (self.obs==1) ), "Data must be binary"
 
     def updateExpectations(self):
-        self.E = (2.*self.obs - 1.)/(4.*lambdafn(self.Zeta))
+        self.E = (2.*self.obs - 1.)/(4.*lambdafn(self.params["zeta"]))
 
     def updateParameters(self):
         Z = self.markov_blanket["Z"].getExpectations()
         SW = self.markov_blanket["SW"].getExpectations()
-        self.Zeta = s.sqrt( s.square(Z["E"].dot(SW["E"].T)) - s.dot(s.square(Z["E"]),s.square(SW["E"].T)) + s.dot(Z["E2"], SW["ESWW"].T) )
+        self.params["zeta"] = s.sqrt( s.square(Z["E"].dot(SW["E"].T)) - s.dot(s.square(Z["E"]),s.square(SW["E"].T)) + s.dot(Z["E2"], SW["ESWW"].T) )
 
     def calculateELBO(self):
         # Compute Lower Bound using the Bernoulli likelihood with observed data
         Z = self.markov_blanket["Z"].getExpectation()
         SW = self.markov_blanket["SW"].getExpectation()
         tmp = s.dot(Z,SW.T)
-        lik = s.sum( self.obs*tmp - s.log(1+s.exp(tmp)) )
+        lik = ma.sum( self.obs*tmp - s.log(1+s.exp(tmp)) )
         return lik
+
+
+###################
+## Warping nodes ##
+###################
+
+class Warped_PseudoY_Node(PseudoY):
+    def __init__(self, dim, obs, params=None, func_type='tanh', I=3, E=None):
+        PseudoY.__init__(self, dim=dim, obs=obs, params=params, E=E)
+        self.warping = Warping_inference(func_type,I)  
+
+    def updateParameters(self):
+        tau = self.markov_blanket["Tau"].getExpectation()  
+        W = self.markov_blanket["SW"].getExpectation()
+        Z = self.markov_blanket["Z"].getExpectation()
+        self.warping.update_parameters(self.obs, Z.dot(W.T), tau, ~ma.getmask(self.obs))  
+
+        # self.params = {
+        #     'function_type': self.warping.func_type_str,
+        #     'a':self.warping.param['a'],
+        #     'b':self.warping.param['b'],
+        #     'c':self.warping.param['c']
+        # } 
+
+        self.params = {
+            'function_type': self.warping.entity.func_type_str,
+            'a':self.warping.entity.param['a'],
+            'b':self.warping.entity.param['b'],
+            'c':self.warping.entity.param['c']
+        } 
+
+    def updateExpectations(self):
+        self.E = self.warping.f(self.obs, i_not=-1) 
+
+    def calculateELBO(self):
+        lb = s.sum(s.log(self.warping.f_prime(self.obs, i_not=-1) ) )
+        # lb = numpy.nansum(self.mat_mask* (numpy.log(self.warping.f_prime(self.obs,i_not=-1) ) ) )
+        return lb

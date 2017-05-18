@@ -62,6 +62,8 @@ else:
   data_opts['center'] = [True if l=="gaussian" else False for l in args.likelihoods]
 data_opts['rownames'] = 0
 data_opts['colnames'] = 0
+# data_opts['rownames'] = None
+# data_opts['colnames'] = None
 data_opts['delimiter'] = " "
 
 M = len(data_opts['input_files'])
@@ -145,18 +147,18 @@ else:
 model_opts["priorZ"] = { 'mean':s.zeros((N,K)) }
 if model_opts['ardZ']:
   model_opts["priorZ"]['var'] = s.ones((N,K))*s.nan
-  model_opts["priorAlphaZ"] = { 'a':s.ones(K)*1e-14, 'b':s.ones(K)*1e-14 }
+  model_opts["priorAlphaZ"] = { 'a':s.ones(K)*1e-3, 'b':s.ones(K)*1e-3 }
 else:
   model_opts["priorZ"]['var'] = s.ones((N,K))*1. 
 
 # Weights
 model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M } # Not required
 if model_opts['ardW'] == "m":
-  model_opts["priorAlphaW"] = { 'a':[1e-14]*M, 'b':[1e-14]*M }
+  model_opts["priorAlphaW"] = { 'a':[1e-3]*M, 'b':[1e-3]*M }
 elif model_opts['ardW'] == "mk":
-  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-14]*M, 'b':[s.ones(K)*1e-14]*M }
+  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-3]*M, 'b':[s.ones(K)*1e-3]*M }
 elif model_opts['ardW'] == "k":
-  model_opts["priorAlphaW"] = { 'a':s.ones(K)*1e-14, 'b':s.ones(K)*1e-14 }
+  model_opts["priorAlphaW"] = { 'a':s.ones(K)*1e-3, 'b':s.ones(K)*1e-3 }
 
 # Theta
 model_opts["priorTheta"] = { 'a':[s.ones(K) for m in xrange(M)], 'b':[s.ones(K) for m in xrange(M)] }
@@ -167,7 +169,7 @@ for m in xrange(M):
       model_opts["priorTheta"]["b"][m][k] = s.nan
 
 # Noise
-model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-14 for m in xrange(M)], 'b':[s.ones(D[m])*1e-14 for m in xrange(M)] }
+model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-3 for m in xrange(M)], 'b':[s.ones(D[m])*1e-3 for m in xrange(M)] }
 
 
 ##############################################

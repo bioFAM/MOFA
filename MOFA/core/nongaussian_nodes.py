@@ -108,6 +108,7 @@ class PseudoY_Seeger(PseudoY):
         Z = self.markov_blanket["Z"].getExpectation()
         SW = self.markov_blanket["SW"].getExpectation()
         self.params["zeta"] = s.dot(Z,SW.T)
+
 class Poisson_PseudoY(PseudoY_Seeger):
     """
     Class for a Poisson pseudodata node with the following likelihood:
@@ -363,6 +364,8 @@ class Warped_PseudoY_Node(PseudoY):
         self.E = self.warping.f(self.obs, i_not=-1) 
 
     def calculateELBO(self):
+        # print "check if this has missing values implemented"
+        # exit()
         lb = s.sum(s.log(self.warping.f_prime(self.obs, i_not=-1) ) )
         # lb = numpy.nansum(self.mat_mask* (numpy.log(self.warping.f_prime(self.obs,i_not=-1) ) ) )
         return lb

@@ -57,9 +57,9 @@ histPlot <- function(object, id, xlabel = NULL, groups = NULL, alpha=1.0, binwid
 #' @reference fill this
 #' @import ggplot2
 #' @export
-scatterPlot<-function (object, idx, idy, title = "", titlesize = 16, xlabel = NULL, 
-    ylabel = NULL, xlim_down = NA, xlim_up = NA, ylim_down = NA, 
-    ylim_up = NA, dotsize = 2.5, colour_by = NULL, shape_by = NULL, name_colour="", name_shape="") 
+  scatterPlot<-function (object, idx, idy, title = "", titlesize = 16, xlabel = NULL, 
+      ylabel = NULL, xlim_down = NA, xlim_up = NA, ylim_down = NA, 
+      ylim_up = NA, dotsize = 2.5, colour_by = NULL, shape_by = NULL, name_colour="", name_shape="") 
 {
     if (class(object) != "MOFAmodel") 
         stop("'object' has to be an instance of MOFAmodel")

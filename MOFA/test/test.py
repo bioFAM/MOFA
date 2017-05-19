@@ -15,7 +15,7 @@ import numpy.linalg  as linalg
 from MOFA.core.simulate import Simulate
 from MOFA.core.BayesNet import BayesNet
 from MOFA.core.multiview_nodes import *
-from MOFA.core.seeger_nodes import *
+from MOFA.core.nongaussian_nodes import *
 from MOFA.core.nodes import *
 from MOFA.core.updates import *
 from MOFA.core.utils import *
@@ -28,11 +28,11 @@ from MOFA.run.run_utils import *
 # import numpy; numpy.random.seed(4)
 
 # Define dimensionalities
-M = 3
+M = 1
 N = 50
 # N = 25
-D = s.asarray([500,500,500])
-# D = s.asarray([500,])
+# D = s.asarray([500,500,500])
+D = s.asarray([500,])
 # D = s.asarray([100,100,100])
 K = 6
 
@@ -53,8 +53,8 @@ data['Z'] = stats.norm.rvs(loc=0, scale=1, size=(N,K))
 
 data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
 data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
-data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
-data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
+# data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
+# data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
 theta = [ s.ones(K)*1.0 for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
@@ -77,10 +77,10 @@ Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=dat
 
 # data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
 # data["Y"] = ( Y_bernoulli[0], Y_bernoulli[1], Y_bernoulli[2] )
-data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
+# data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 # data["Y"] = ( Y_warp[0], )
 # data["Y"] = ( Y_warp[0], Y_warp[1], Y_warp[2] )
-# data["Y"] = ( Y_gaussian[0], )
+data["Y"] = ( Y_bernoulli[0], )
 
 ##################
 ## Data options ##
@@ -147,7 +147,8 @@ if model_opts["learnMean"]:
 
 # Define likelihoods
 # model_opts['likelihood'] = ['gaussian']* M
-model_opts['likelihood'] = ['gaussian','poisson','bernoulli']
+model_opts['likelihood'] = ['bernoulli']* M
+# model_opts['likelihood'] = ['gaussian','poisson','bernoulli']
 # model_opts['likelihood'] = ['warp']*M
 
 # Define initial number of factors
@@ -155,7 +156,7 @@ model_opts['k'] = K
 
 # Define sparsities
 model_opts['ardZ'] = False
-model_opts['ardW'] = "k"
+model_opts['ardW'] = "mk"
 
 # Define for which factors to learn Theta
 model_opts['learnTheta'] = 0.*s.ones((M,K))

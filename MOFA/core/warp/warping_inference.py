@@ -56,12 +56,15 @@ class Warping_inference(object):
         """
         Update parameters
         X ~ N(X|F,tau) where F = UV' + ...
+
+        NOTE: PARTIAL_F_VAL AND PRIME_VAL NOT SURE IF ITS IN THE LOOP OR NOT
         """
         for i in xrange(self.entity.I):
             partial_f_val = self.f(X,i_not=i)
             partial_f_prime_val = self.f_prime(X,i_not=i)
             for warp_var in self.entity.param.keys():
-                self._optimise_parameter(warp_var,i,X,F,tau,mat_mask,partial_f_val,partial_f_prime_val) 
+                if warp_var == "a":
+                    self._optimise_parameter(warp_var,i,X,F,tau,mat_mask,partial_f_val,partial_f_prime_val) 
                 
     def _optimise_parameter(self,warp_var,i,X,F,tau,mat_mask,partial_f_val,partial_f_prime_val):
         a_i_old = self.entity.param['a'][i].x
@@ -72,7 +75,8 @@ class Warping_inference(object):
 
         if res.success and (res.nit > 0) and (res.jac < 1E-4):
             pass
-            # print warp_var + ' = ' + str(self.entity.param[warp_var][i].x)
+            print warp_var + ' = ' + str(self.entity.param[warp_var][i].x)
+            print self._f_ELBO_d_param(self.entity.param['a'][i].x, "a", i, X, F, tau, mat_mask,partial_f_val,partial_f_prime_val)
         else:
             if warp_var == 'a':
                 self.entity.param['a'][i].x = a_i_old                
@@ -80,7 +84,8 @@ class Warping_inference(object):
                 self.entity.param['b'][i].x = b_i_old            
             elif warp_var == 'c':   
                 self.entity.param['c'][i].x = c_i_old
-            # print warp_var
+            print warp_var
+
 
     def _f_ELBO(self,param,param_opt,i,X,F,tau,mat_mask,partial_f_val,partial_f_prime_val):
 

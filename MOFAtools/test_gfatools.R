@@ -1,12 +1,22 @@
 
 library(MOFAtools)
 
-file = "/tmp/test.h5"
+file = "/Users/ricard/data/CLL/out/imputation/missingAtRandom/commonPats_small_0.5_drug_ArdWbasic_k10_nomean_2.hdf5"
 # file = "/Users/ricard/test.hdf5"
 model <- loadModel(file)
 
-showWeights(model,view="mRNA", factors="all", main=NULL, cluster_rows=F, cluster_cols=F, show_rownames=F)
+showWeights(model, view="mut", features="all", factors="all", main=NULL)
+showWeights(model, view="mut", features="all", factors=14:15, main=NULL)
   
+mut <- read.table("/Users/ricard/data/CLL/views/commonPats_small/mut.txt", sep=" ", header=T)
+scatterPlot(model, 2, 5, colour_by = as.factor(mut$TP53))
+
+sex <- read.table("/Users/ricard/data/CLL/views/commonPats_small/covariates.txt", header=T)[,1]
+scatterPlot(model, 2, 5, colour_by = as.factor(sex))
+
+cor(model@Expectations$SW$viab$E[,1], colMeans(model@TrainData$viab))
+cor(model@Expectations$SW$mRNA$E[,1], colMeans(model@TrainData$mRNA))
+
 CalculateVariance_Views(model, views="all", factors="all")
 
 ViewFactorPlot(model)

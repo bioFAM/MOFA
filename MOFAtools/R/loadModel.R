@@ -48,7 +48,7 @@ loadModel <- function(file) {
     featureNames(model) <- lapply(model@TrainData,colnames)
     factorNames(model) <- as.character(1:model@Dimensions[["K"]])
     # K=tail(training_stats$activeK[!is.nan(training_stats$activeK)],n=1)
-    }, error = function(x) { print("Training data not found, not loading it...") })
+    }, error = function(x) { print("Error loading the data...") })
 
     
   return(model)

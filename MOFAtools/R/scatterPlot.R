@@ -9,7 +9,6 @@
 #' @reference fill this
 #' @import ggplot2
 #' @export
-#' 
 histPlot <- function(object, id, xlabel = NULL, groups = NULL, alpha=1.0, binwidth=NULL) {
   
   if (class(object) != "MOFAmodel") 
@@ -58,9 +57,9 @@ histPlot <- function(object, id, xlabel = NULL, groups = NULL, alpha=1.0, binwid
 #' @reference fill this
 #' @import ggplot2
 #' @export
-scatterPlot<-function (object, idx, idy, title = "", titlesize = 16, xlabel = NULL, 
-    ylabel = NULL, xlim_down = NA, xlim_up = NA, ylim_down = NA, 
-    ylim_up = NA, dotsize = 2.5, colour_by = NULL, shape_by = NULL, name_colour="", name_shape="") 
+  scatterPlot<-function (object, idx, idy, title = "", titlesize = 16, xlabel = NULL, 
+      ylabel = NULL, xlim_down = NA, xlim_up = NA, ylim_down = NA, 
+      ylim_up = NA, dotsize = 2.5, colour_by = NULL, shape_by = NULL, name_colour="", name_shape="") 
 {
     if (class(object) != "MOFAmodel") 
         stop("'object' has to be an instance of MOFAmodel")
@@ -72,8 +71,7 @@ scatterPlot<-function (object, idx, idy, title = "", titlesize = 16, xlabel = NU
         if (length(colour_by) != N) 
             stop("'colour_by' has to be a vector of length N")
         colorLegend<-T
-    }
-    else {
+    } else {
         colour_by <- rep(TRUE, N)
         colorLegend<-F
     }
@@ -81,13 +79,12 @@ scatterPlot<-function (object, idx, idy, title = "", titlesize = 16, xlabel = NU
         if (length(shape_by) != N) 
             stop("'shape_by' has to be a vector of length N")
         shapeLegend<-T
-    }
-    else {
+    } else {
         shape_by <- rep(TRUE, N)
         shapeLegend<-F
     }
-    if(is.null(xlabel)) xlabel <- paste("Latent factor", idx)
-    if(is.null(ylabel)) ylabel <- paste("Latent factor", idy)
+    if (is.null(xlabel)) xlabel <- paste("Latent factor", idx)
+    if (is.null(ylabel)) ylabel <- paste("Latent factor", idy)
 
     df = data.frame(x = Z[, idx], y = Z[, idy], shape = shape_by, colour = colour_by)
     
@@ -111,7 +108,7 @@ scatterPlot<-function (object, idx, idy, title = "", titlesize = 16, xlabel = NU
                 panel.background = element_blank(),
                 legend.key = element_rect(fill = "white"),
                 legend.text = element_text(size = titlesize),
-                legend.title = element_text(size =titlesize)) + 
+                legend.title = element_text(size =titlesize))
          guides(color=guide_legend(title=name_colour), shape=guide_legend(title=name_shape))
     if(!colorLegend) p <- p + guides(color = FALSE)
     if(!shapeLegend) p <- p + guides(shape = FALSE)

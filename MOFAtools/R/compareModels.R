@@ -14,7 +14,7 @@
 #' @import pheatmap
 #' @export
 
-compareModels <- function(ModelList, comparison="all") {
+compareModels <- function(ModelList, comparison="all", interceptLF = F) {
   #check inputs
   if(class(ModelList)!="list")
     stop("'ModelList' has to be a list")
@@ -22,13 +22,18 @@ compareModels <- function(ModelList, comparison="all") {
     stop("List elements of 'ModelList' have to be an instance of MOFAmodel")
   if (!comparison %in% c("all", "pairwise"))
     stop("'comparison' has to be either 'all' or 'pairwise'")
+  if(length(interceptLF) != 1 & length(interceptLF) != length(ModelList) )
+    stop("'interceptLF' has to be either a single boolean value or of same lenght as ModelList")
+  if(length(interceptLF) == 1) interceptLF <- rep(interceptLF, length(ModelList))
   
   # give generic names if no names present
   if(is.null(names(ModelList))) names(ModelList) <- paste("model", 1: length(ModelList), sep="")
   
   #get latent factors
-  LFs <- lapply(ModelList, function(model){
+  LFs <- lapply(seq_along(ModelList), function(modelidx){
+    model <- ModelList[[modelidx]]
     Z <- getExpectations(model, 'Z', 'E')
+    if(interceptLF[modelidx]) Z <- Z[,-1]
     if(is.null(rownames(Z))) rownames(Z) <- rownames(model@TrainData[[1]])
     if(is.null(colnames(Z))) colnames(Z) <- paste("LF", 1:ncol(Z), sep="")
     Z
@@ -53,9 +58,9 @@ compareModels <- function(ModelList, comparison="all") {
     rownames(modelAnnot) <- colnames(LFscommon)
     
     #plot heatmap
-    pheatmap(abs(corLFs), show_colnames = F,
+    pheatmap(abs(corLFs), show_rownames = F,
              color=colorRampPalette(c("white", "orange" ,"red"))(100), 
-             annotation_row = modelAnnot, main= "Absolute correlation between latent factors")
+             annotation_col = modelAnnot, main= "Absolute correlation between latent factors")
     
     return(corLFs)
     }

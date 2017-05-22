@@ -59,7 +59,8 @@ histPlot <- function(object, id, xlabel = NULL, groups = NULL, alpha=1.0, binwid
 #' @export
   scatterPlot<-function (object, idx, idy, title = "", titlesize = 16, xlabel = NULL, 
       ylabel = NULL, xlim_down = NA, xlim_up = NA, ylim_down = NA, 
-      ylim_up = NA, dotsize = 2.5, colour_by = NULL, shape_by = NULL, name_colour="", name_shape="") 
+      ylim_up = NA, dotsize = 2.5, colour_by = NULL, shape_by = NULL, name_colour="", name_shape="",
+      showMissing = T) 
 {
     if (class(object) != "MOFAmodel") 
         stop("'object' has to be an instance of MOFAmodel")
@@ -86,8 +87,11 @@ histPlot <- function(object, id, xlabel = NULL, groups = NULL, alpha=1.0, binwid
     if (is.null(xlabel)) xlabel <- paste("Latent factor", idx)
     if (is.null(ylabel)) ylabel <- paste("Latent factor", idy)
 
-    df = data.frame(x = Z[, idx], y = Z[, idy], shape = shape_by, colour = colour_by)
+    df = data.frame(x = Z[, idx], y = Z[, idy], shape_by = shape_by, colour_by = colour_by)
     
+    #remove values missing color or shape annotation
+    if(!showMissing) df <- filter(df, !(shape_by=="NaN") & !(colour_by=="NaN"))
+                                  
     p <- ggplot(df, aes(x, y, color = colour_by, shape = shape_by)) + 
         geom_point(size = dotsize) + 
         ggtitle(title) + 
@@ -108,8 +112,9 @@ histPlot <- function(object, id, xlabel = NULL, groups = NULL, alpha=1.0, binwid
                 panel.background = element_blank(),
                 legend.key = element_rect(fill = "white"),
                 legend.text = element_text(size = titlesize),
-                legend.title = element_text(size =titlesize))
-         guides(color=guide_legend(title=name_colour), shape=guide_legend(title=name_shape))
+                legend.title = element_text(size =titlesize))+
+         guides(color=guide_legend(title=name_colour), shape=guide_legend(title=name_shape))+
+         scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))])+
     if(!colorLegend) p <- p + guides(color = FALSE)
     if(!shapeLegend) p <- p + guides(shape = FALSE)
     return(p)

@@ -27,10 +27,13 @@ compareModels <- function(ModelList, comparison="all") {
   if(is.null(names(ModelList))) names(ModelList) <- paste("model", 1: length(ModelList), sep="")
   
   #get latent factors
-  LFs <- lapply(ModelList, function(model){
+  LFs <- lapply(seq_along(ModelList), function(modelidx){
+    model <- ModelList[[modelidx]]
     Z <- getExpectations(model, 'Z', 'E')
+    if(model@ModelOpts$learnMean) Z <- Z[,-1]
     if(is.null(rownames(Z))) rownames(Z) <- rownames(model@TrainData[[1]])
-    if(is.null(colnames(Z))) colnames(Z) <- paste("LF", 1:ncol(Z), sep="")
+    if(is.null(colnames(Z))) 
+      if(model@ModelOpts$learnMean) colnames(Z) <- paste("LF", 2:(ncol(Z)+1), sep="") else colnames(Z) <- paste("LF", 1:ncol(Z), sep="")
     Z
     })
   for(i in seq_along(LFs)) 
@@ -53,9 +56,9 @@ compareModels <- function(ModelList, comparison="all") {
     rownames(modelAnnot) <- colnames(LFscommon)
     
     #plot heatmap
-    pheatmap(abs(corLFs), show_colnames = F,
+    pheatmap(abs(corLFs), show_rownames = F,
              color=colorRampPalette(c("white", "orange" ,"red"))(100), 
-             annotation_row = modelAnnot, main= "Absolute correlation between latent factors")
+             annotation_col = modelAnnot, main= "Absolute correlation between latent factors")
     
     return(corLFs)
     }

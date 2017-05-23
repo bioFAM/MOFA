@@ -19,7 +19,7 @@
 #' @import pheatmap gridExtra ggplot2
 #' @export
 
-getGoodnessOfFit <- function(object, views="all", factors="all", plotit=T, perFeature=F) {
+getGoodnessOfFit <- function(object, views="all", factors="all", plotit=T, perFeature=F, interceptLF=F, allAsGaussian=T) {
   
   # Define views
   if (paste0(views,sep="",collapse="") =="all") { 
@@ -37,6 +37,7 @@ getGoodnessOfFit <- function(object, views="all", factors="all", plotit=T, perFe
   }
   
   # Only gaussian and bernoulli views included so far
+  if(allAsGaussian) FamilyPerView <- rep("gaussian", M)
   stopifnot(all(FamilyPerView %in% c("gaussian", "bernoulli")))
   
   # Define factors
@@ -52,8 +53,9 @@ getGoodnessOfFit <- function(object, views="all", factors="all", plotit=T, perFe
   # Collect relevant expectations
   SW <- getExpectations(object,"SW","E")
   Z <- getExpectations(object,"Z","E")
-  # Y <- getExpectations(object,"Y","E")
-  Y <- object@TrainData
+  Y <- getExpectations(object,"Y","E")
+  if(!allAsGaussian) stop("Based on pseudodata, use Gaussian goodness of fit")
+  #Y <- object@TrainData
   
   # List of goodnes of fit measures by liklihood family
   GoodnessFitList <- c()
@@ -68,17 +70,22 @@ getGoodnessOfFit <- function(object, views="all", factors="all", plotit=T, perFe
     
     # Calculate coefficient of determination
     #   per view
-    fvar_m <- sapply(views[gaussianViews], function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2, na.rm=T) / sum(sweep(Y[[m]],2,apply(Y[[m]],2,mean,na.rm=T),"-")**2, na.rm=T))
+    NullModel <- lapply(views[gaussianViews], function(m)  if(interceptLF) unique(Ypred_mk[[m]][,1]) else apply(Y[[m]],2,mean,na.rm=T))
+    names(NullModel) <- views[gaussianViews]
+    
+    resNullModel <- lapply(views[gaussianViews], function(m) sweep(Y[[m]],2,NullModel[[m]],"-"))
+    names(resNullModel) <- views[gaussianViews]
+    
+     fvar_m <- sapply(views[gaussianViews], function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T))
     #   per view and feature
     if(perFeature)
-      fvar_md <- lapply(views[gaussianViews], function(m) 1 - colSums((Y[[m]]-Ypred_m[[m]])**2,na.rm=T) / colSums(sweep(Y[[m]],2,apply(Y[[m]],2,mean,na.rm=T),"-")**2,na.rm=T))
+      fvar_md <- lapply(views[gaussianViews], function(m) 1 - colSums((Y[[m]]-Ypred_m[[m]])**2,na.rm=T) / colSums(resNullModel[[m]]**2,na.rm=T))
     #   per factor and view
-    # fvar_mk <- sapply(views[gaussianViews], function(m) sapply( seq_along(factors), function(k) 1 - sum((Y[[m]]-Ypred_mk[[m]][,k])**2) / sum(sweep(Y[[m]],2,apply(Y[[m]],2,mean),"-")**2)))
-    fvar_mk <- sapply(views[gaussianViews], function(m) sapply(factors, function(k) 1 - sum((Y[[m]]-Ypred_mk[[m]][,k])**2, na.rm=T) / sum(sweep(Y[[m]],2,apply(Y[[m]],2,mean,na.rm=T),"-")**2, na.rm=T) ))
+    if(interceptLF) factorsNonconst <- factors[-1] else  factorsNonconst <- factors
+    fvar_mk <- sapply(views[gaussianViews], function(m) sapply(factorsNonconst, function(k) 1 - sum((resNullModel[[m]]-Ypred_mk[[m]][,k])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) ))
     #   per factor and view and feature
     if(perFeature)
-      # fvar_mdk <- lapply(views[gaussianViews], function(m) sapply( seq_along(factors), function(k) 1 - colSums((Y[[m]]-Ypred_mk[[m]][,k])**2) / colSums(sweep(Y[[m]],2,apply(Y[[m]],2,mean),"-")**2)))
-      fvar_mdk <- lapply(views[gaussianViews], function(m) sapply(factors, function(k) 1 - colSums((Y[[m]]-Ypred_mk[[m]][,k])**2,na.rm=T) / colSums(sweep(Y[[m]],2,apply(Y[[m]],2,mean,na.rm=T),"-")**2,na.rm=T)))
+      fvar_mdk <- lapply(views[gaussianViews], function(m) sapply(factorsNonconst, function(k) 1 - colSums((resNullModel[[m]]-Ypred_mk[[m]][,k])**2,na.rm=T) / colSums(resNullModel[[m]]**2,na.rm=T)))
     
     # Set names
     names(fvar_m) <- views[gaussianViews]
@@ -89,7 +96,7 @@ getGoodnessOfFit <- function(object, views="all", factors="all", plotit=T, perFe
       for(i in names(fvar_mdk)) rownames(fvar_mdk[[i]]) <- colnames(object@TrainData[[i]])
     }
     colnames(fvar_mk) <- views[gaussianViews]
-    rownames(fvar_mk) <- factors 
+    rownames(fvar_mk) <- factorsNonconst 
   
     # Heatmap with coefficient of determination (R2) per factor and view
     hm_gaussian <- pheatmap::pheatmap(fvar_mk, main= "", silent=T,
@@ -128,29 +135,67 @@ getGoodnessOfFit <- function(object, views="all", factors="all", plotit=T, perFe
     Yprob_m <- lapply(views[bernoulliViews], function(m) 1/(1+exp(-Z%*%t(SW[[m]])))); names(Yprob_m) <- views[bernoulliViews]
     Yprob_mk <- lapply(views[bernoulliViews], function(m) sapply(seq_along(factors), function(k) 1/(1+exp(-Z[,k]%*%t(SW[[m]][,k]))))); names(Yprob_mk) <- views[bernoulliViews]
     
-    # Calculate Brier score     
-    #   per view
-    BS_m <- sapply(views[bernoulliViews], function(m) 1/sum(!is.na(Y[[m]]))*sum((Yprob_m[[m]]-Y[[m]])^2, na.rm=T))
+    NullModel <- lapply(views[bernoulliViews], function(m)  if(interceptLF) unique(Yprob_mk[[m]][,1]) else apply(Y[[m]],2,mean,na.rm=T))
+    names(NullModel) <- views[bernoulliViews]
+    
+    resNullModel <- lapply(views[bernoulliViews], function(m) sweep(Y[[m]],2,NullModel[[m]],"-"))
+    names(resNullModel) <- views[bernoulliViews]
+    
+    
+    
+    # Calculate R2 based on MSE to predicted probabilities  
+    fvar_m <- sapply(views[bernoulliViews], function(m) 1 - sum((Y[[m]]-Yprob_m[[m]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T))
     #   per view and feature
     if(perFeature)
-      BS_md <- lapply(views[bernoulliViews], function(m) 1/colSums(!is.na(Y[[m]]))*colSums((Yprob_m[[m]]-Y[[m]])^2, na.rm=T))
-    #   per view and factor
-    BS_mk <- sapply(views[bernoulliViews], function(m) sapply( seq_along(factors), function(k) 1/sum(!is.na(Y[[m]]))*sum((Yprob_mk[[m]][,k]-Y[[m]])^2, na.rm=T)))
-    #   per view, feature and factor
+      fvar_md <- lapply(views[bernoulliViews], function(m) 1 - colSums((Y[[m]]-Yprob_m[[m]])**2,na.rm=T) / colSums(resNullModel[[m]]**2,na.rm=T))
+    #   per factor and view
+    if(interceptLF) factorsNonconst <- factors[-1] else  factorsNonconst <- factors
+    fvar_mk <- sapply(views[bernoulliViews], function(m) sapply(factorsNonconst, function(k) 1 - sum((resNullModel[[m]]-Yprob_mk[[m]][,k])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) ))
+    #   per factor and view and feature
     if(perFeature)
-      BS_mdk <- lapply(views[bernoulliViews], function(m) sapply( seq_along(factors), function(k) 1/colSums(!is.na(Y[[m]]))*colSums((Yprob_mk[[m]][,k]-Y[[m]])^2, na.rm=T)))
+      fvar_mdk <- lapply(views[bernoulliViews], function(m) sapply(factorsNonconst, function(k) 1 - colSums((resNullModel[[m]]-Yprob_mk[[m]][,k])**2,na.rm=T) / colSums(resNullModel[[m]]**2,na.rm=T)))
     
     # Set names
-    names(BS_m) <- views[bernoulliViews]
+    names(fvar_m) <- views[bernoulliViews]
     if(perFeature){
-      names(BS_md) <- views[bernoulliViews]
-      names(BS_mdk) <- views[bernoulliViews]
-      for(i in names(BS_md)) names(BS_md[[i]])<-colnames(object@TrainData[[i]])
-      for(i in names(BS_mdk)) rownames(BS_mdk[[i]])<-colnames(object@TrainData[[i]])
+      names(fvar_md) <- views[bernoulliViews]
+      names(fvar_mdk) <- views[bernoulliViews]
+      for(i in names(fvar_md)) names(fvar_md[[i]]) <- colnames(object@TrainData[[i]])
+      for(i in names(fvar_mdk)) rownames(fvar_mdk[[i]]) <- colnames(object@TrainData[[i]])
     }
-    colnames(BS_mk) <- views[bernoulliViews]
-    rownames(BS_mk) <- factors 
+    colnames(fvar_mk) <- views[bernoulliViews]
+    rownames(fvar_mk) <- factorsNonconst 
     
+    # 
+    # # Calculate Brier score     
+    # #   per view
+    # BS_m <- sapply(views[bernoulliViews], function(m) 1/sum(!is.na(Y[[m]]))*sum((Yprob_m[[m]]-Y[[m]])^2, na.rm=T))
+    # #   per view and feature
+    # if(perFeature)
+    #   BS_md <- lapply(views[bernoulliViews], function(m) 1/colSums(!is.na(Y[[m]]))*colSums((Yprob_m[[m]]-Y[[m]])^2, na.rm=T))
+    # #   per view and factor
+    # BS_mk <- sapply(views[bernoulliViews], function(m) sapply( seq_along(factors), function(k) 1/sum(!is.na(Y[[m]]))*sum((Yprob_mk[[m]][,k]-Y[[m]])^2, na.rm=T)))
+    # #   per view, feature and factor
+    # if(perFeature)
+    #   BS_mdk <- lapply(views[bernoulliViews], function(m) sapply( seq_along(factors), function(k) 1/colSums(!is.na(Y[[m]]))*colSums((Yprob_mk[[m]][,k]-Y[[m]])^2, na.rm=T)))
+    # 
+    # Set names
+    # names(BS_m) <- views[bernoulliViews]
+    # if(perFeature){
+    #   names(BS_md) <- views[bernoulliViews]
+    #   names(BS_mdk) <- views[bernoulliViews]
+    #   for(i in names(BS_md)) names(BS_md[[i]])<-colnames(object@TrainData[[i]])
+    #   for(i in names(BS_mdk)) rownames(BS_mdk[[i]])<-colnames(object@TrainData[[i]])
+    # }
+    # colnames(BS_mk) <- views[bernoulliViews]
+    # rownames(BS_mk) <- factors 
+    
+    BS_mk <- fvar_mk
+    BS_m <- fvar_m
+    if(perFeature){
+    BS_mdk <- fvar_mdk
+    BS_md <- fvar_md
+    }
     # Heatmap with Brier score per factor and view
     hm_bernoulli <- pheatmap::pheatmap(BS_mk, main="", silent=T,
                           color=colorRampPalette(c("orange","white"))(100), 

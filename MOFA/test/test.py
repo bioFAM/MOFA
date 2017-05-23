@@ -310,5 +310,5 @@ train_opts['cores'] = 1
 ####################
 
 keep_best_run = False
-runMultipleTrials(data["Y"], data_opts, model_opts, train_opts, keep_best_run)
-# runSingleTrial(data["Y"], data_opts, model_opts, train_opts)
+# runMultipleTrials(data["Y"], data_opts, model_opts, train_opts, keep_best_run)
+model = runSingleTrial(data["Y"], data_opts, model_opts, train_opts)

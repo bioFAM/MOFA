@@ -15,7 +15,7 @@ import numpy.linalg  as linalg
 from MOFA.core.simulate import Simulate
 from MOFA.core.BayesNet import BayesNet
 from MOFA.core.multiview_nodes import *
-from MOFA.core.seeger_nodes import *
+from MOFA.core.nongaussian_nodes import *
 from MOFA.core.nodes import *
 from MOFA.core.updates import *
 from MOFA.core.utils import *
@@ -29,9 +29,9 @@ from MOFA.run.run_utils import *
 
 # Define dimensionalities
 M = 3
-N = 50
+N = 500
 # N = 25
-D = s.asarray([500,500,500])
+D = s.asarray([300,300,300])
 # D = s.asarray([500,])
 # D = s.asarray([100,100,100])
 K = 6
@@ -64,20 +64,22 @@ data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 # data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
 
 missingness = 0.0
+missing_view=.4
 Y_warp = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
-  likelihood="warp", missingness=missingness)
+  likelihood="warp", missingness=missingness, missing_view=missing_view)
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
-	likelihood="gaussian", missingness=missingness)
+	likelihood="gaussian", missingness=missingness, missing_view=missing_view)
 Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
-	likelihood="poisson", missingness=missingness)
+	likelihood="poisson", missingness=missingness, missing_view=missing_view)
 Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
-	likelihood="bernoulli", missingness=missingness)
+	likelihood="bernoulli", missingness=missingness, missing_view=missing_view)
 # Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 # 	likelihood="binomial", min_trials=10, max_trials=50, missingness=missingness)
 
 # data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
+data["Y"] = ( Y_gaussian[0], Y_bernoulli[1], Y_bernoulli[2] )
 # data["Y"] = ( Y_bernoulli[0], Y_bernoulli[1], Y_bernoulli[2] )
-data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
+# data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 # data["Y"] = ( Y_warp[0], )
 # data["Y"] = ( Y_warp[0], Y_warp[1], Y_warp[2] )
 # data["Y"] = ( Y_gaussian[0], )
@@ -95,7 +97,7 @@ data_opts['scale_views'] = [False]*M
 data_opts['covariates'] = None
 
 # Center the data
-if data_opts['center'][m]: 
+if data_opts['center'][m]:
   data[m] = (data["Y"][m] - data["Y"][m].mean())
 
 # Scale the views
@@ -147,7 +149,8 @@ if model_opts["learnMean"]:
 
 # Define likelihoods
 # model_opts['likelihood'] = ['gaussian']* M
-model_opts['likelihood'] = ['gaussian','poisson','bernoulli']
+# model_opts['likelihood'] = ['gaussian','poisson','bernoulli']
+model_opts['likelihood'] = ['gaussian','bernoulli','bernoulli']
 # model_opts['likelihood'] = ['warp']*M
 
 # Define initial number of factors
@@ -155,7 +158,7 @@ model_opts['k'] = K
 
 # Define sparsities
 model_opts['ardZ'] = False
-model_opts['ardW'] = "k"
+model_opts['ardW'] = "mk"
 
 # Define for which factors to learn Theta
 model_opts['learnTheta'] = 0.*s.ones((M,K))
@@ -192,7 +195,7 @@ for m in xrange(M):
       model_opts["priorTheta"]["a"][m][k] = s.nan
       model_opts["priorTheta"]["b"][m][k] = s.nan
 
-  
+
 # Noise
 model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-3 for m in xrange(M)], 'b':[s.ones(D[m])*1e-3 for m in xrange(M)] }
 
@@ -209,11 +212,11 @@ if model_opts['ardZ']:
 
 # Weights
 if model_opts['ardW'] == "m":
-  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[1.]*M } 
+  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[1.]*M }
 elif model_opts['ardW'] == "k":
-  model_opts["initAlphaW"] = { 'a':s.nan*s.ones(K), 'b':s.nan*s.ones(K), 'E':s.ones(K) } 
+  model_opts["initAlphaW"] = { 'a':s.nan*s.ones(K), 'b':s.nan*s.ones(K), 'E':s.ones(K) }
 elif model_opts['ardW'] == "mk":
-  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[1.*s.ones(K) for m in xrange(M)] } 
+  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[1.*s.ones(K) for m in xrange(M)] }
 model_opts["initSW"] = { 'Theta':[s.ones((D[m],K)) for m in xrange(M)],
                           'mean_S0':[s.zeros((D[m],K)) for m in xrange(M)],
                           'var_S0':[s.ones((D[m],K)) for m in xrange(M)],
@@ -276,7 +279,7 @@ if data_opts['covariates'] is not None:
     model_opts["priorTheta"]['b'][m][idx] = s.nan
 
     ## Variational distributions (Q) ##
-    for m in range(M): 
+    for m in range(M):
       # Weights
       model_opts["initSW"]["Theta"][m][:,idx] = 1.
       # Theta
@@ -290,7 +293,7 @@ if data_opts['covariates'] is not None:
 
 train_opts = {}
 train_opts['elbofreq'] = 1
-train_opts['maxiter'] = 5000
+train_opts['maxiter'] = 1000
 # train_opts['tolerance'] = 1E-2
 train_opts['tolerance'] = 0.01
 train_opts['forceiter'] = True

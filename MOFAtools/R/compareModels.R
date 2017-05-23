@@ -14,7 +14,7 @@
 #' @import pheatmap
 #' @export
 
-compareModels <- function(ModelList, comparison="all", interceptLF = F) {
+compareModels <- function(ModelList, comparison="all") {
   #check inputs
   if(class(ModelList)!="list")
     stop("'ModelList' has to be a list")
@@ -22,9 +22,6 @@ compareModels <- function(ModelList, comparison="all", interceptLF = F) {
     stop("List elements of 'ModelList' have to be an instance of MOFAmodel")
   if (!comparison %in% c("all", "pairwise"))
     stop("'comparison' has to be either 'all' or 'pairwise'")
-  if(length(interceptLF) != 1 & length(interceptLF) != length(ModelList) )
-    stop("'interceptLF' has to be either a single boolean value or of same lenght as ModelList")
-  if(length(interceptLF) == 1) interceptLF <- rep(interceptLF, length(ModelList))
   
   # give generic names if no names present
   if(is.null(names(ModelList))) names(ModelList) <- paste("model", 1: length(ModelList), sep="")
@@ -33,9 +30,10 @@ compareModels <- function(ModelList, comparison="all", interceptLF = F) {
   LFs <- lapply(seq_along(ModelList), function(modelidx){
     model <- ModelList[[modelidx]]
     Z <- getExpectations(model, 'Z', 'E')
-    if(interceptLF[modelidx]) Z <- Z[,-1]
+    if(model@ModelOpts$learnMean) Z <- Z[,-1]
     if(is.null(rownames(Z))) rownames(Z) <- rownames(model@TrainData[[1]])
-    if(is.null(colnames(Z))) colnames(Z) <- paste("LF", 1:ncol(Z), sep="")
+    if(is.null(colnames(Z))) 
+      if(model@ModelOpts$learnMean) colnames(Z) <- paste("LF", 2:(ncol(Z)+1), sep="") else colnames(Z) <- paste("LF", 1:ncol(Z), sep="")
     Z
     })
   for(i in seq_along(LFs)) 

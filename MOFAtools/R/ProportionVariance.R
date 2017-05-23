@@ -46,8 +46,8 @@ CalculateVariance_Views <- function(object, views="all", factors="all", method=N
   Y <- getExpectations(object,"Y","E")
   
   # Regress out mean 
-  # stopifnot(model@ModelOpts$learnMean==F)
-  if (model@ModelOpts$learnMean == TRUE) {
+  # stopifnot(object@ModelOpts$learnMean==F)
+  if (object@ModelOpts$learnMean == TRUE) {
     means <- lapply(SW, function(x) x[,1])
     Y <- lapply(views, function(m) sweep(Y[[m]],2,means[[m]],"-")); names(Y) <- views
     SW <- lapply(views, function(m) SW[[m]][,-1]); names(SW) <- views
@@ -58,11 +58,11 @@ CalculateVariance_Views <- function(object, views="all", factors="all", method=N
   
   # Calculate observed and predicted variance
   obs_var <- lapply(views, function(m) apply(Y[[m]],2,var,na.rm=T)); names(obs_var) <- views
-  pred_var <- getExpectations(model,"Tau","E")[views]
+  pred_var <- getExpectations(object,"Tau","E")[views]
   for (m in 1:M) {
-    obs_var[[m]] <- matrix(rep(obs_var[[m]], model@Dimensions["N"]), nr=model@Dimensions[["N"]], nc=model@Dimensions[["D"]][m])
-    if (model@ModelOpts$likelihood[m] != "bernoulli") {
-      pred_var[[m]] <- matrix(rep(pred_var[[m]], model@Dimensions["N"]), nr=model@Dimensions[["N"]], nc=model@Dimensions[["D"]][m])
+    obs_var[[m]] <- matrix(rep(obs_var[[m]], object@Dimensions["N"]), nr=object@Dimensions[["N"]], nc=object@Dimensions[["D"]][m])
+    if (object@ModelOpts$likelihood[m] != "bernoulli") {
+      pred_var[[m]] <- matrix(rep(pred_var[[m]], object@Dimensions["N"]), nr=object@Dimensions[["N"]], nc=object@Dimensions[["D"]][m])
     }
   }
   
@@ -155,7 +155,7 @@ CalculateVariance_Views <- function(object, views="all", factors="all", method=N
 #'   Y <- getExpectations(object,"Y","E")
 #'   
 #'   # Regress out mean 
-#'   if (model@ModelOpts$learnMean == TRUE) {
+#'   if (object@ModelOpts$learnMean == TRUE) {
 #'     means <- lapply(SW, function(x) x[,1])
 #'     Y <- lapply(views, function(m) sweep(Y[[m]],2,means[[m]],"-")); names(Y) <- views
 #'     SW <- lapply(views, function(m) SW[[m]][,-1]); names(SW) <- views

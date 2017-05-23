@@ -53,8 +53,8 @@ data['Z'] = stats.norm.rvs(loc=0, scale=1, size=(N,K))
 
 data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
 data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
-data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
-data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
+# data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
+# data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
 theta = [ s.ones(K)*1.0 for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
@@ -82,7 +82,7 @@ data["Y"] = ( Y_gaussian[0], Y_bernoulli[1], Y_bernoulli[2] )
 # data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 # data["Y"] = ( Y_warp[0], )
 # data["Y"] = ( Y_warp[0], Y_warp[1], Y_warp[2] )
-# data["Y"] = ( Y_gaussian[0], )
+data["Y"] = ( Y_bernoulli[0], )
 
 ##################
 ## Data options ##

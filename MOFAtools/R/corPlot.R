@@ -55,6 +55,7 @@ FactorsCorPlot <- function(object, method="pearson", ...) {
     stop("'object' has to be an instance of MOFAmodel")
   
   Z <- getExpectations(object,"Z","E")
+  if(object@ModelOpts$learnMean) Z <- Z[,-1]
   h <- cor(x=Z, y=Z, method=method)
   p <- corrplot::corrplot(h, tl.col="black", ...)
   return(p)

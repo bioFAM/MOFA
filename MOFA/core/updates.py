@@ -25,7 +25,7 @@ Current nodes:
     Theta_Constant_Node: fixed sparsity parameter of the spike and slab
     MuZ_Node: learning mean for latent variables, allowing cluster-specific
 
-All nodes belong to the 'Variational_Node' class. They share the following 
+All nodes belong to the 'Variational_Node' class. They share the following
     methods:
     - precompute: precompute some terms to speed up the calculations
     - calculateELBO: calculate evidence lower bound using current estimates of expectations/params
@@ -63,8 +63,8 @@ class Y_Node(Constant_Variational_Node):
         self.value = ma.masked_invalid(self.value)
 
     def calculateELBO(self):
-        # Calculate evidence lower bound 
-        # We use the trick that the update of Tau already contains the Gaussian likelihod. 
+        # Calculate evidence lower bound
+        # We use the trick that the update of Tau already contains the Gaussian likelihod.
         # However, it is important that the lower bound is calculated after the update of Tau is performed
         tauQ_param = self.markov_blanket["Tau"].getParameters("Q")
         tauP_param = self.markov_blanket["Tau"].getParameters("P")
@@ -402,6 +402,7 @@ class Theta_Constant_Node(Constant_Variational_Node):
 
     def precompute(self):
         self.E = self.value
+        # TODO this is wrong with missing values -> need to correct N_cells to account for the cells in which a given gene is missing 
         self.lnE = self.N_cells * s.log(self.value)
         self.lnEInv = self.N_cells * s.log(1.-self.value)
 
@@ -501,7 +502,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
             PE, PE2 = self.markov_blanket['Mu'].getExpectations()['E'], self.markov_blanket['Mu'].getExpectations()['E2']
         else:
             PE, PE2 = self.P.getParameters()["mean"], s.zeros((self.N,self.dim[1]))
-            
+
         if "Alpha" in self.markov_blanket:
             Alpha = self.markov_blanket['Alpha'].getExpectations().copy() # Notice that this Alpha is the ARD prior on Z, not on W.
             Alpha["E"] = s.repeat(Alpha["E"][None,:], self.N, axis=0)

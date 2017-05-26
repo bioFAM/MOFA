@@ -12,7 +12,7 @@
 #' @import ggplot2
 #' @export
 
-showWeights <- function(model, view, factor, ntop = 5, ntail =5) {
+showWeights <- function(model, view, factor, ntop = 5, ntail =5, manual = NULL) {
   
   # Sanity checks
   if (class(model) != "MOFAmodel")
@@ -28,6 +28,8 @@ showWeights <- function(model, view, factor, ntop = 5, ntail =5) {
   df_W$imp <- F
   if(ntop>0) df_W$imp[df_W$loading >= sort(df_W$loading, decreasing = T)[ntop]] <- T
   if(ntail>0) df_W$imp[df_W$loading <= sort(df_W$loading, decreasing = F)[ntail]] <- T
+  if(!is.null(manual)) df_W$imp[df_W$FeatureName %in% manual] <-T
+  
   df_W %<>% arrange(loading)
   df_W$FeatureName <- factor(df_W$FeatureName, levels=df_W$FeatureName)
   

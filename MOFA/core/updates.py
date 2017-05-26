@@ -2,6 +2,8 @@ from __future__ import division
 import numpy.ma as ma
 import numpy as np
 
+from time import time
+
 # Import manually defined functions
 from variational_nodes import *
 from utils import *
@@ -95,11 +97,11 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         Pa, Pb = P['a'], P['b']
 
         # Calculate terms for the update
-        term1 = (Y**2.).sum(axis=0).data
-        term2 = (2.*Y*s.dot(Z,SW.T)).sum(axis=0).data
+        term1 = s.square(Y).sum(axis=0).data
+        term2 = 2*(Y*s.dot(Z,SW.T)).sum(axis=0).data
         term3 = ma.array(ZZ.dot(SWW.T), mask=ma.getmask(Y)).sum(axis=0)
         SWZ = ma.array(SW.dot(Z.T), mask=ma.getmask(Y).T)
-        term4 = dotd(SWZ, SWZ.T) - ma.array(s.dot(Z**2,(SW**2).T),mask=ma.getmask(Y)).sum(axis=0)
+        term4 = dotd(SWZ, SWZ.T) - ma.array(s.dot(s.square(Z),s.square(SW).T),mask=ma.getmask(Y)).sum(axis=0)
         tmp = term1 - term2 + term3 + term4
 
         # Perform updates of the Q distribution
@@ -272,7 +274,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         # Check dimensions of Tau and and expand if necessary
         if tau.shape != Y.shape:
             tau = s.repeat(tau[None,:], Y.shape[0], axis=0)
-        tau = ma.masked_where(ma.getmask(Y), tau) # I MODIFIED THIS TO CORRECT PROBLEM WITH MISSING VALUES
+        tau = ma.masked_where(ma.getmask(Y), tau)
         # Check dimensions of Alpha and and expand if necessary
         if alpha.shape[0] == 1:
             alpha = s.repeat(alpha[:], self.dim[1], axis=0)
@@ -291,7 +293,6 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             # NOTE there could be some precision issues in S --> loads of 1s in result
             Qtheta[:,k] = 1./(1.+s.exp(-(term1+term2-term3+term4)))
             # Update W
-
             Qvar_S1[:,k] = s.divide(1,term4_tmp3)
             Qmean_S1[:,k] = Qvar_S1[:,k]*(term4_tmp1-term4_tmp2)
 
@@ -299,8 +300,8 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             SW[:,k] = Qtheta[:,k] * Qmean_S1[:,k]
 
         # Save updated parameters of the Q distribution
-        self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=s.repeat(1/alpha[None,:],self.D,0),
-                             mean_S1=Qmean_S1, var_S1=Qvar_S1, theta=Qtheta )
+        # self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=s.repeat(1/alpha[None,:],self.D,0), mean_S1=Qmean_S1, var_S1=Qvar_S1, theta=Qtheta )
+        self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=0., mean_S1=Qmean_S1, var_S1=Qvar_S1, theta=Qtheta )
 
     def calculateELBO(self):
 
@@ -446,6 +447,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         Y = self.markov_blanket["Y"].getExpectation()
         SWtmp = self.markov_blanket["SW"].getExpectations()
         tau = self.markov_blanket["Tau"].getExpectation()
+        latent_variables = self.getLvIndex() # excluding covariates from the list of latent variables
 
         if "Mu" in self.markov_blanket:
             Mu = self.markov_blanket['Mu'].getExpectation()
@@ -453,7 +455,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
             Mu = self.P.getParameters()["mean"]
 
         if "Alpha" in self.markov_blanket:
-            Alpha = self.markov_blanket['Alpha'].getExpectation().copy() # Notice that this Alpha is the ARD prior on Z, not on W.
+            Alpha = self.markov_blanket['Alpha'].getExpectation()
             Alpha = s.repeat(Alpha[None,:], self.N, axis=0)
         else:
             Alpha = 1./self.P.getParameters()["var"]
@@ -468,26 +470,47 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         Q = self.Q.getParameters().copy()
         Qmean, Qvar = Q['mean'], Q['var']
 
-        # Concatenate multi-view nodes to avoid looping over M (maybe its not a good idea)
-        M = len(Y)
-        Y = ma.concatenate([Y[m] for m in xrange(M)],axis=1)
-        SW = s.concatenate([SWtmp[m]["E"]for m in xrange(M)],axis=0)
-        SWW = s.concatenate([SWtmp[m]["ESWW"] for m in xrange(M)],axis=0)
-        tau = ma.concatenate([tau[m] for m in xrange(M)],axis=1)
-
-        # Update variance
         Qvar_copy = Qvar.copy()
-        Qvar = 1./(Alpha + ma.dot(tau,SWW))
+        Qmean_copy = Qmean.copy()
 
-        # restoring values of the variance for the covariates
-        if any(self.covariates):
-            Qvar[:, self.covariates] = Qvar_copy[:, self.covariates]
-
-        # Update mean
-        latent_variables = self.getLvIndex() # excluding covariates from the list of latent variables
+        ### START LOOP ###
+        M = len(Y)
         for k in latent_variables:
-            Qmean[:,k] = Qvar[:,k] * (  Alpha[:,k]*Mu[:,k] +
-                                        ma.dot(tau*(Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )), SW[:,k])  )
+            tmp = s.zeros((self.N,))
+            for m in xrange(M):
+                if k in latent_variables:
+                    Qvar[:,k] += ma.dot(tau[m],SWtmp[m]["ESWW"][:,k])
+                tmp += ma.dot(tau[m]*(Y[m] - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SWtmp[m]["E"][:,s.arange(self.dim[1])!=k].T )), SWtmp[m]["E"][:,k])
+            if k in latent_variables:
+                Qvar[:,k] = 1./(Alpha[:,k]+Qvar[:,k])
+            Qmean[:,k] = Qvar[:,k] * (  Alpha[:,k]*Mu[:,k] + tmp )
+        ### END LOOP ###
+
+        # ### START CONCATENATE ###
+        # # Qvar = Qvar_copy
+        # # Qmean = Qmean_copy
+        # # Concatenate multi-view nodes to avoid looping over M (maybe its not a good idea)
+        # M = len(Y)
+        # Y = ma.concatenate([Y[m] for m in xrange(M)],axis=1)
+        # SW = s.concatenate([SWtmp[m]["E"]for m in xrange(M)],axis=0)
+        # SWW = s.concatenate([SWtmp[m]["ESWW"] for m in xrange(M)],axis=0)
+        # tau = ma.concatenate([tau[m] for m in xrange(M)],axis=1)
+
+
+        # # Update variance
+        # # Qvar_copy = Qvar.copy()
+        # CHECK THAT HTIS IS CORRECT WITH ALPHA BEING A K-VECTOR
+        # Qvar = 1./(Alpha + ma.dot(tau,SWW))
+
+        # # restoring values of the variance for the covariates
+        # if any(self.covariates):
+        #     Qvar[self.covariates] = Qvar_copy[self.covariates]
+
+        # # Update mean
+        # for k in latent_variables:
+        #     Qmean[:,k] = Qvar[:,k] * (  Alpha*Mu[:,k] +
+        #                                 ma.dot(tau*(Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )), SW[:,k])  )
+        # ### END CONCATENATE ###
 
         # Save updated parameters of the Q distribution
         self.Q.setParameters(mean=Qmean, var=Qvar)

@@ -29,11 +29,11 @@ from MOFA.run.run_utils import *
 
 # Define dimensionalities
 M = 3
-N = 500
-# N = 25
-D = s.asarray([300,300,300])
+# N = 3000
+N = 100
+# D = s.asarray([10000,10000,10000])
 # D = s.asarray([500,])
-# D = s.asarray([100,100,100])
+D = s.asarray([200,200,200])
 K = 6
 
 
@@ -53,8 +53,8 @@ data['Z'] = stats.norm.rvs(loc=0, scale=1, size=(N,K))
 
 data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
 data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
-# data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
-# data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
+data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
+data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
 theta = [ s.ones(K)*1.0 for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
@@ -64,25 +64,25 @@ data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 # data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
 
 missingness = 0.0
-missing_view=.4
-Y_warp = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
-  likelihood="warp", missingness=missingness, missing_view=missing_view)
+missing_view = 0.0
+# Y_warp = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
+#   likelihood="warp", missingness=missingness, missing_view=missing_view)
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 	likelihood="gaussian", missingness=missingness, missing_view=missing_view)
-Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
-	likelihood="poisson", missingness=missingness, missing_view=missing_view)
-Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
-	likelihood="bernoulli", missingness=missingness, missing_view=missing_view)
+# Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
+# 	likelihood="poisson", missingness=missingness, missing_view=missing_view)
+# Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
+# 	likelihood="bernoulli", missingness=missingness, missing_view=missing_view)
 # Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 # 	likelihood="binomial", min_trials=10, max_trials=50, missingness=missingness)
 
-# data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
-data["Y"] = ( Y_gaussian[0], Y_bernoulli[1], Y_bernoulli[2] )
+data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
+# data["Y"] = ( Y_gaussian[0], Y_bernoulli[1], Y_bernoulli[2] )
 # data["Y"] = ( Y_bernoulli[0], Y_bernoulli[1], Y_bernoulli[2] )
 # data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 # data["Y"] = ( Y_warp[0], )
 # data["Y"] = ( Y_warp[0], Y_warp[1], Y_warp[2] )
-data["Y"] = ( Y_bernoulli[0], )
+# data["Y"] = ( Y_gaussian[0], )
 
 ##################
 ## Data options ##
@@ -148,9 +148,9 @@ if model_opts["learnMean"]:
 
 
 # Define likelihoods
-# model_opts['likelihood'] = ['gaussian']* M
+model_opts['likelihood'] = ['gaussian']* M
 # model_opts['likelihood'] = ['gaussian','poisson','bernoulli']
-model_opts['likelihood'] = ['gaussian','bernoulli','bernoulli']
+# model_opts['likelihood'] = ['gaussian','bernoulli','bernoulli']
 # model_opts['likelihood'] = ['warp']*M
 
 # Define initial number of factors
@@ -164,8 +164,8 @@ model_opts['ardW'] = "mk"
 model_opts['learnTheta'] = 0.*s.ones((M,K))
 
 # Define schedule of updates
-model_opts['schedule'] = ["Y","SW","Z","AlphaW","Theta","Tau"]
-# model_opts['schedule'] = ["SW","Z","AlphaW","Theta","Tau"]
+# model_opts['schedule'] = ["Y","SW","Z","AlphaW","Theta","Tau"]
+model_opts['schedule'] = ["SW","Z","AlphaW","Theta","Tau"]
 
 ####################################
 ## Define priors (P distribution) ##
@@ -176,7 +176,7 @@ if model_opts['ardZ']:
   model_opts["priorZ"] = { 'mean':s.zeros((N,K)), 'var':s.nan }
   model_opts["priorAlphaZ"] = { 'a':s.ones(K)*1e-5, 'b':s.ones(K)*1e-5 }
 else:
-  model_opts["priorZ"] = { 'mean':s.zeros((N,K)), 'var':s.ones((N,K)) }
+  model_opts["priorZ"] = { 'mean':s.zeros((N,K)), 'var':s.ones((K,)) }
 
 # Weights
 model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M } # Not required
@@ -312,5 +312,5 @@ train_opts['cores'] = 1
 ####################
 
 keep_best_run = False
-runMultipleTrials(data["Y"], data_opts, model_opts, train_opts, keep_best_run)
-# runSingleTrial(data["Y"], data_opts, model_opts, train_opts)
+# runMultipleTrials(data["Y"], data_opts, model_opts, train_opts, keep_best_run)
+runSingleTrial(data["Y"], data_opts, model_opts, train_opts)

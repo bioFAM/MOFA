@@ -264,7 +264,12 @@ pcgseViaTTest = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene
 # associated with a linear regression of the PC on the genomic variables.
 #-------------------------------------------------------------------------------------------------------------------------------
 
-setGeneric("local.GeneStatistics", function(X.mat, y.vec,...) {standardGeneric("local.GeneStatistics")})
+#' @rdname asd
+#' @param asd
+#' @rdname asd
+#' @return asd
+#' @export
+setGeneric("local.GeneStatistics", function(X.mat, y.vec,...) { standardGeneric("local.GeneStatistics") } )
 setMethod("local.GeneStatistics",
           c(X.mat = "matrix", y.vec = "numeric"),
           function(X.mat, y.vec, ...) {
@@ -376,7 +381,7 @@ pcgseViaSAFE = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene.
       global="Wilcoxon"
     } else {
       # global="StandAveDiff"
-      global="AveDiff"
+      global="AveDiff" 
     }
     safe.results = safe::safe(X.mat=t(data), y.vec=pc, C.mat=t(gene.set.indexes), local="GeneStatistics", global=global, Pi.mat=nperm,
                         args.global=list(one.sided=T), args.local=list(gene.statistic=gene.statistic, transformation=transformation), alpha=1.01, print.it = FALSE)

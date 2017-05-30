@@ -1,6 +1,7 @@
 import numpy as np
+import os
 
-res_dir = ''
+res_dir = '/homes/arnol/test/'
 
 
 K_vals = np.linspace(5.0, 150.0, num=20, dtype=int)
@@ -13,9 +14,10 @@ M_vals = np.linspace(2.0, 20.0, num=20, dtype=int)
 it_ix = 0
 for val in K_vals:
     for i in range(3):
-        command = 'bsub -q research-rh7  -o tmp_log2_kin -M 8000 python multiple_tests.py' + ' ' + \
+        command = 'bsub  -o tmp_log -M 8000 python multiple_tests.py' + ' ' + \
                     'K' + ' ' + \
                     res_dir + ' ' + \
-                    val + ' ' + \
-                    it_ix
+                    str(val) + ' ' + \
+                    str(it_ix)
+        os.system(command)
         it_ix+=1

@@ -21,3 +21,39 @@ for val in K_vals:
                     str(it_ix)
         os.system(command)
         it_ix+=1
+
+# test D
+it_ix = 0
+for val in D_vals:
+    for i in range(3):
+        command = 'bsub  -o tmp_log -M 8000 python multiple_tests.py' + ' ' + \
+                    'D' + ' ' + \
+                    res_dir + ' ' + \
+                    str(val) + ' ' + \
+                    str(it_ix)
+        os.system(command)
+        it_ix+=1
+
+# test N
+it_ix = 0
+for val in N_vals:
+    for i in range(3):
+        command = 'bsub  -o tmp_log -M 8000 python multiple_tests.py' + ' ' + \
+                    'N' + ' ' + \
+                    res_dir + ' ' + \
+                    str(val) + ' ' + \
+                    str(it_ix)
+        os.system(command)
+        it_ix+=1
+
+# test K
+it_ix = 0
+for val in M_vals:
+    for i in range(3):
+        command = 'bsub  -o tmp_log -M 8000 python multiple_tests.py' + ' ' + \
+                    'M' + ' ' + \
+                    res_dir + ' ' + \
+                    str(val) + ' ' + \
+                    str(it_ix)
+        os.system(command)
+        it_ix+=1

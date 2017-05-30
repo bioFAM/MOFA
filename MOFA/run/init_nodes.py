@@ -77,7 +77,8 @@ class initModel(object):
         # self.Z = Constant_Node(dim=(self.N,self.K), value=qmean)
         self.Z = Z_Node(dim=(self.N,self.K),
                         pmean=s.ones((self.N,self.K))*pmean,
-                        pvar=s.ones((self.N,self.K))*pvar,
+                        # pvar=s.ones((self.N,self.K))*pvar,
+                        pvar=s.ones((self.K,))*pvar,
                         qmean=s.ones((self.N,self.K))*qmean,
                         qvar=s.ones((self.N,self.K))*qvar,
                         qE=qE, qE2=qE2,

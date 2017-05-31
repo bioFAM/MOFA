@@ -39,7 +39,8 @@ showWeights <- function(model, view, factor, ntop = 5, ntail =5, manual = NULL) 
           axis.ticks.x=element_blank())+
     ggrepel::geom_text_repel(data = filter(df_W, imp), aes(label = FeatureName),
                     segment.alpha=0.2, box.padding = unit(0.5, "lines")) +scale_color_manual(values=c("black", "red")) +
-    ggtitle(paste("Weigths on LF", factor, "on view", view)) +guides(color=F)
+    ggtitle(paste("Weigths on LF", factor, "on view", view)) +
+    guides(color=F) 
   print(gg_W)
   
   return(df_W)

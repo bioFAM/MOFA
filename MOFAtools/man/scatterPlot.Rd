@@ -7,7 +7,7 @@
 scatterPlot(object, idx, idy, title = "", titlesize = 16, xlabel = NULL,
   ylabel = NULL, xlim_down = NA, xlim_up = NA, ylim_down = NA,
   ylim_up = NA, dotsize = 2.5, colour_by = NULL, shape_by = NULL,
-  name_colour = "", name_shape = "")
+  name_colour = "", name_shape = "", showMissing = T)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}

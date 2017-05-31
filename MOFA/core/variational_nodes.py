@@ -104,7 +104,6 @@ class UnivariateGaussian_Unobserved_Variational_Node(Unobserved_Variational_Node
 	    # qvar (nd array): the variance parameter of the Q distribution
 	    # qE (nd array): the initial first moment of the Q distribution
         Unobserved_Variational_Node.__init__(self, dim)
-
         # Initialise the P and Q distributions
         self.P = UnivariateGaussian(dim=dim, mean=pmean, var=pvar)
         self.Q = UnivariateGaussian(dim=dim, mean=qmean, var=qvar, E=qE, E2=qE2)

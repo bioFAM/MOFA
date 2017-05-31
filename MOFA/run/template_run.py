@@ -146,10 +146,10 @@ else:
 # Latent Variables
 model_opts["priorZ"] = { 'mean':s.zeros((N,K)) }
 if model_opts['ardZ']:
-  model_opts["priorZ"]['var'] = s.ones((N,K))*s.nan
+  model_opts["priorZ"]['var'] = s.ones((K,))*s.nan
   model_opts["priorAlphaZ"] = { 'a':s.ones(K)*1e-3, 'b':s.ones(K)*1e-3 }
 else:
-  model_opts["priorZ"]['var'] = s.ones((N,K))*1. 
+  model_opts["priorZ"]['var'] = s.ones((K,))*1. 
 
 # Weights
 model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M } # Not required
@@ -177,7 +177,7 @@ model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-3 for m in xrange(M)], 'b':[s.on
 ##############################################
 
 # Latent variables 
-model_opts["initZ"] = { 'mean':"random", 'var':s.ones((N,K)), 'E':None, 'E2':None }
+model_opts["initZ"] = { 'mean':"random", 'var':s.ones((K,)), 'E':None, 'E2':None }
 if model_opts['ardZ']:
   model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*1e2 }
 
@@ -230,12 +230,12 @@ if data_opts['covariates'] is not None:
     model_opts["priorAlphaZ"]["a"][idx] = s.nan
     model_opts["priorAlphaZ"]["b"][idx] = s.nan
   else:
-    model_opts["priorZ"]["var"][:,idx] = s.nan
+    model_opts["priorZ"]["var"][idx] = s.nan
 
   ## Variational distributions (Q) ##
   # Latent variables
   # model_opts["initZ"]["mean"][:,idx] = model_opts["covariates"]
-  model_opts["initZ"]["var"][:,idx] = 0.
+  model_opts["initZ"]["var"][idx] = 0.
   if model_opts['ardZ']:
         model_opts["initAlphaZ"]["E"][idx] = s.nan
 

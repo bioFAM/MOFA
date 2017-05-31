@@ -60,11 +60,11 @@ class Distribution(object):
 
     def CheckDimensionalities(self):
         # Method to do a sanity check on the dimensionalities
-        p_dim = set(map(s.shape, self.params.values()))
+        # p_dim = set(map(s.shape, self.params.values()))
         e_dim = set(map(s.shape, self.expectations.values()))
-        assert len(p_dim) == 1, "Parameters have different dimensionalities"
+        # assert len(p_dim) == 1, "Parameters have different dimensionalities"
         assert len(e_dim) == 1, "Expectations have different dimensionalities"
-        assert e_dim == p_dim, "Parameters and Expectations have different dimensionality"
+        # assert e_dim == p_dim, "Parameters and Expectations have different dimensionality"
 
     def removeDimensions(self, axis, idx):
         # Method to remove undesired dimensions
@@ -419,9 +419,9 @@ class BernoulliGaussian(Distribution):
         ES = self.S.getExpectation()
         EW = self.W_S1.getExpectation()
         E = ES * EW
-        ESWW = ES * (EW**2 + self.params["var_S1"])
+        ESWW = ES * (s.square(EW) + self.params["var_S1"])
         # ESWW = self.params["theta"] * (self.params["mean_S1"]**2 + self.params["var_S1"])
-        EWW = ES*(EW**2+self.params["var_S1"]) + (1-ES)*self.params["var_S0"]
+        EWW = ES*(s.square(EW)+self.params["var_S1"]) + (1-ES)*self.params["var_S0"]
         # EWW = self.params["theta"]*(self.params["mean_S1"]**2+self.params["var_S1"]) + (1-self.params["theta"])*self.params["var_S0"]
 
         # Collect expectations

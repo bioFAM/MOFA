@@ -346,18 +346,11 @@ class Warped_PseudoY_Node(PseudoY):
         Z = self.markov_blanket["Z"].getExpectation()
         self.warping.update_parameters(self.obs, Z.dot(W.T), tau, ~ma.getmask(self.obs))  
 
-        # self.params = {
-        #     'function_type': self.warping.func_type_str,
-        #     'a':self.warping.param['a'],
-        #     'b':self.warping.param['b'],
-        #     'c':self.warping.param['c']
-        # } 
-
         self.params = {
-            'function_type': self.warping.entity.func_type_str,
-            'a':self.warping.entity.param['a'],
-            'b':self.warping.entity.param['b'],
-            'c':self.warping.entity.param['c']
+            # 'function_type': self.warping.entity.func_type_str,
+            'a':s.array([self.warping.entity.param['a'][i].x for i in xrange(self.warping.entity.I)]),
+            'b':s.array([self.warping.entity.param['b'][i].x for i in xrange(self.warping.entity.I)]),
+            'c':s.array([self.warping.entity.param['c'][i].x for i in xrange(self.warping.entity.I)]),
         } 
 
     def updateExpectations(self):

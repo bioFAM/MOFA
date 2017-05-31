@@ -15,11 +15,12 @@
 #' @param nperm Number of permutations to perform. Only relevant if statistical.test is "permutation".
 #' @details fill this
 #' @return a list with two matrices, one for statistics and one for pvalues. The rows are the different gene sets and the columns are the latent variables.
-#' @import safe
+#' @import safe doParallel
 #' @export
 
 GSEA <- function(model, view, factor.indexes, gene.sets, local.statistic="loading",
-                  transformation="none", global.statistic="mean.diff", statistical.test="cor.adj.parametric", nperm=1, min_size=10) {
+                 transformation="none", global.statistic="mean.diff", statistical.test="cor.adj.parametric", 
+                 nperm=1, min_size=10, cores=1) {
   
   if (paste0(factor.indexes,sep="",collapse="") == "all") { 
     factor.indexes <- 1:model@Dimensions[["K"]]
@@ -28,7 +29,7 @@ GSEA <- function(model, view, factor.indexes, gene.sets, local.statistic="loadin
   # Collect expectations
   data <- model@TrainData[[view]]
   W <- getExpectations(model,"SW","E")[[view]]; rownames(W) <- colnames(data)
-  Z <- getExpectations(model,"Z","E");          rownames(Z) <- rownames(data)
+  Z <- getExpectations(model,"Z","E")[,factor.indexes];          rownames(Z) <- rownames(data)
   
   # Remove genes that are not present in either the data or the annotation file
   genes <- intersect(colnames(data),colnames(gene.sets))
@@ -39,7 +40,9 @@ GSEA <- function(model, view, factor.indexes, gene.sets, local.statistic="loadin
   # Filter gene sets with small number of genes
   gene.sets <- gene.sets[rowSums(gene.sets)>=min_size,]
   
-
+  # Check that there is no constant factor
+  stopifnot( all(apply(Z,2,var)>0) )
+  
   cat("Doing Gene Ontology Enrichment Analysis with the following options...\n")
   cat(sprintf("View: %s\n", view))
   cat(sprintf("Latent variables: %s\n", paste(as.character(factor.indexes),collapse=" ")))
@@ -48,13 +51,56 @@ GSEA <- function(model, view, factor.indexes, gene.sets, local.statistic="loadin
   cat(sprintf("Transformation: %s\n", transformation))
   cat(sprintf("Global statistic: %s\n", global.statistic))
   cat(sprintf("Statistical test: %s\n", statistical.test))
+  if (statistical.test=="permutation") {
+    cat(sprintf("Cores: %d\n", cores))
+    cat(sprintf("Number of permutations: %d\n", nperm))
+  }
   
-  p <- pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=factor.indexes, gene.sets=gene.sets, gene.statistic=local.statistic,
-        transformation=transformation, gene.set.statistic=global.statistic, gene.set.test=statistical.test, nperm=nperm)$p.values
-  colnames(p) <- factorNames(model)[factor.indexes]
-  rownames(p) <- rownames(gene.sets)
+  if (statistical.test == "permutation") {
+    doParallel::registerDoParallel(cores=cores)
+    # null_dist <- matrix(NA,nr=nperm, nc=length(factor.indexes))
+    null_dist_tmp <- foreach(rnd=1:nperm) %dopar% {
+    # for (rnd in 1:nperm) {
+      # cat(sprintf("Random trial %d\n",rnd))
+      
+      # Permute rows of the weight matrix to obtain a null distribution
+      W_null <- apply(W, 2, function(w) w[sample(length(w))])
+      rownames(W_null) <- rownames(W); colnames(W_null) <- colnames(W)
+      
+      data_null <- data[sample(nrow(data)),]
+      rownames(data_null) <- rownames(data)
+      
+      # Compute null statistic
+      s.null <- pcgse(data=data_null, prcomp.output=list(rotation=W_null, x=Z), pc.indexes=factor.indexes, gene.sets=gene.sets, gene.statistic=local.statistic,
+                      transformation=transformation, gene.set.statistic=global.statistic, gene.set.test="parametric", nperm=NA)$statistic
+      # null_dist[rnd,] = apply(abs(s.null), 2, max)
+      tmp <- apply(abs(s.null), 2, max)
+      tmp
+    }
+    null_dist <- do.call("rbind", null_dist_tmp)
+    
+    # Compute true statistics
+    s.true <- pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=factor.indexes, gene.sets=gene.sets, gene.statistic=local.statistic,
+               transformation=transformation, gene.set.statistic=global.statistic, gene.set.test="parametric", nperm=NA)$statistic
+    colnames(s.true) <- factorNames(model)[factor.indexes]
+    rownames(s.true) <- rownames(gene.sets)
+    
+    # Compute p.values
+    p.values <- matrix(NA, nr=nrow(s.true), nc=ncol(s.true));
+    rownames(p.values) <- rownames(s.true); colnames(p.values) <- factorNames(model)[factor.indexes]
+    for (j in 1:length(factor.indexes)) {
+      p.values[,j] <- sapply(s.true[,j], function(x) mean(null_dist[,j] > abs(x)) )
+    }
+    p.values
+    
+  } else {
+    p.values <- pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=factor.indexes, gene.sets=gene.sets, gene.statistic=local.statistic,
+          transformation=transformation, gene.set.statistic=global.statistic, gene.set.test=statistical.test, nperm=nperm)$p.values
+    colnames(p.values) <- factorNames(model)[factor.indexes]
+    rownames(p.values) <- rownames(gene.sets)
+  }
   
-  return(p)
+  return(p.values)
 }
 
 
@@ -100,10 +146,10 @@ pcgse = function(data,
   if (!is.matrix(gene.sets) & gene.set.test == "permutation") {
     stop("gene.sets must be specified as a binary membership matrix if gene.set.test is set to 'permutation'") 
   }  
-  if (gene.set.test == "parametric") {
-    warning("The 'parametric' test option ignores the correlation between gene-level test statistics and therefore has an inflated type I error rate. ",
-            "This option should only be used for evaluation purposes.")    
-  }  
+  # if (gene.set.test == "parametric") {
+  #   warning("The 'parametric' test option ignores the correlation between gene-level test statistics and therefore has an inflated type I error rate. ",
+  #           "This option should only be used for evaluation purposes.")    
+  # }  
   # if (gene.set.test == "permutation") {
   #   warning("The 'permutation' test option can be extremely computationally expensive given the required modifications to the safe() function. ",
   #           "For most applications, it is recommended that gene.set.test is set to 'cor.adj.parametric'.")
@@ -111,12 +157,12 @@ pcgse = function(data,
   
   # Turn the gene set matrix into list form if gene.set.test is not "permutation"
   gene.set.indexes = gene.sets  
-  if (is.matrix(gene.sets) & gene.set.test != "permutation") {
+  if (is.matrix(gene.sets)) {
     gene.set.indexes = createVarGroupList(var.groups=gene.sets)  
   }
   
   # Compute PCA if necessary
-  if (is.na(prcomp.output)) {
+  if (all(is.na(prcomp.output))) {
     # Center and scale so that PCA is performed on correlation matrix
     prcomp.output=prcomp(data, scale=T)
   }
@@ -124,15 +170,11 @@ pcgse = function(data,
   n = nrow(data)
   p = ncol(data)
   
-  # If gene.set.test is not "permutation", compute the gene-level statistics.
-  if (gene.set.test == "permutation") {
-    gene.statistics = NA
-  } else {
-    gene.statistics = matrix(0, nrow=p, ncol=length(pc.indexes))
-    for (i in 1:length(pc.indexes)) {
-      pc.index = pc.indexes[i]
-      gene.statistics[,i] = computeGeneStatistics(data=data, prcomp.output=prcomp.output, pc.index=pc.index, gene.statistic, transformation)
-    }
+  # Compute the gene-level statistics.
+  gene.statistics = matrix(0, nrow=p, ncol=length(pc.indexes))
+  for (i in 1:length(pc.indexes)) {
+    pc.index = pc.indexes[i]
+    gene.statistics[,i] = computeGeneStatistics(data=data, prcomp.output=prcomp.output, pc.index=pc.index, gene.statistic, transformation)
   }
   
   # Perform the specified gene set test for each gene set on each specified PC using the gene-level statistics
@@ -145,12 +187,77 @@ pcgse = function(data,
                             gene.statistics=gene.statistics, cor.adjustment=(gene.set.test == "cor.adj.parametric"))
     }     
   } else if (gene.set.test == "permutation") {
-    results = pcgseViaSAFE(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, gene.set.indexes=gene.set.indexes, 
-                           gene.statistic=gene.statistic, transformation=transformation, gene.set.statistic=gene.set.statistic, nperm=nperm)        
+    # results = pcgseViaSAFE(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, gene.set.indexes=gene.set.indexes, 
+    #                        gene.statistic=gene.statistic, transformation=transformation, gene.set.statistic=gene.set.statistic, nperm=nperm)
+    results = pcgseViaPermutation(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, gene.set.indexes=gene.set.indexes, 
+                           gene.statistics=gene.statistics, gene.set.statistic=gene.set.statistic, nperm=nperm)        
   }
   
   return (results) 
 }
+
+
+# pcgseViaPermutation = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene.statistic, transformation, gene.set.statistic, nperm=999) {
+#   
+#   num.gene.sets <- length(gene.set.indexes)
+#   # n <-  nrow(data)
+#   p.values <- matrix(0, nrow=num.gene.sets, ncol=length(pc.indexes))
+#   rownames(p.values) = names(gene.set.indexes)
+#   gene.set.statistics = matrix(T, nrow=num.gene.sets, ncol=length(pc.indexes))    
+#   rownames(gene.set.statistics) = names(gene.set.indexes)  
+#   
+#   null_dist <- matrix(NA, nrow=nperm, ncol=length(pc.indexes))
+#   for (i in 1:nperm) {
+#     # Shuffle gene statistics to obtain a null distribution
+#     gene.statistics.null <- gene.statistics[sample(nrow(gene.statistics)),]
+#     
+#     for (j in 1:length(pc.indexes)) {
+#       pc.index <- pc.indexes[j]
+#       pc <- prcomp.output$x[,pc.index]
+#       
+#       gene.set.statistics = rep(NA, num.gene.sets)
+#       if (gene.set.statistic == "rank.sum") {
+#         stop()
+#       } else if (gene.set.statistic == "mean_diff") {
+#         for (k in 1:num.gene.sets) {
+#           m1 = length(gene.set.indexes[[k]])
+#           not.gene.set.indexes = which(!(1:num.gene.sets %in% gene.set.indexes[[k]]))
+#           m2 = length(not.gene.set.indexes)
+#           # compute the mean difference of the gene-level statistics
+#           mean.diff = mean(gene.statistics.null[gene.set.indexes[[k]],j]) - mean(gene.statistics.null[not.gene.set.indexes])
+#           # compute the pooled standard deviation
+#           pooled.sd = sqrt(((m1-1)*var(gene.statistics.null[gene.set.indexes[[k]],j]) + (m2-1)*var(gene.statistics.null[not.gene.set.indexes,j]))/(m1+m2-2))
+#           # compute the t-statistic
+#           gene.set.statistics[k] = mean.diff/(pooled.sd*sqrt(1/m1 + 1/m2))
+#         }
+#       }
+#       null_dist[i,j] = max(abs(gene.set.statistics))
+#     }
+#   }
+#   
+#   # Compute the true statistics and obtain a p.value
+#   if (gene.set.statistic == "mean_diff") {
+#     for (k in 1:num.gene.sets) {
+#       m1 = length(gene.set.indexes[[k]])
+#       not.gene.set.indexes = which(!(1:num.gene.sets %in% gene.set.indexes[[k]]))
+#       m2 = length(not.gene.set.indexes)
+#       # compute the mean difference of the gene-level statistics
+#       mean.diff = mean(gene.statistics.null[gene.set.indexes[[k]],j]) - mean(gene.statistics.null[not.gene.set.indexes])
+#       # compute the pooled standard deviation
+#       pooled.sd = sqrt(((m1-1)*var(gene.statistics.null[gene.set.indexes[[k]],j]) + (m2-1)*var(gene.statistics.null[not.gene.set.indexes,j]))/(m1+m2-2))
+#       # compute the t-statistic
+#       gene.set.statistics[k] = mean.diff/(pooled.sd*sqrt(1/m1 + 1/m2))
+#     }
+#   }
+#   p.values[,j] = mean(null_dist[,j] > abs(x))
+#   
+#   # Build the result list
+#   # results = list()
+#   # results$p.values = p.values
+#   # results$statistics = gene.set.statistics  
+#   
+#   return (results)
+# }
 
 
 
@@ -264,101 +371,57 @@ pcgseViaTTest = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene
 # associated with a linear regression of the PC on the genomic variables.
 #-------------------------------------------------------------------------------------------------------------------------------
 
-setGeneric("local.GeneStatistics", function(X.mat, y.vec,...) {standardGeneric("local.GeneStatistics")})
-setMethod("local.GeneStatistics",
-          c(X.mat = "matrix", y.vec = "numeric"),
-          function(X.mat, y.vec, ...) {
-            args.local = list(...)[[1]]
-            gene.stat = args.local$gene.statistic  
-            trans = args.local$transformation    
-            return (function(data=X.mat, vector=y.vec, gene.statistic = gene.stat, transformation = trans,...) {  
-              p = length(vector)
-              n = ncol(data) 
-              gene.statistics = rep(0, p)
-              # compute the Pearson correlation between the selected PCs and the data
-              gene.statistics = cor(t(data), vector, use = "complete.obs") 
-              if (gene.statistic == "z") {
-                # use Fisher's Z transformation to convert to Z-statisics
-                gene.statistics = sapply(gene.statistics, function(x) {
-                  return (sqrt(n-3)*atanh(x))})      
-              }    
-              # Absolute value transformation of the gene-level statistics if requested
-              if (transformation == "abs.value") {
-                gene.statistics = sapply(gene.statistics, abs)
-              }
-              return (gene.statistics)
-            })
-          }
-)
+#' @title asd
+#' @name asd
+#' @description asd
+#' @param X.mat asd
+#' @details asd
+#' @return asd
+#' @export
+local.GeneStatistics = function(X.mat, y.vec,...){
+  args.local = list(...)[[1]]
+  gene.stat = args.local$gene.statistic
+  trans = args.local$transformation
+  return (function(data=X.mat, vector=y.vec, gene.statistic = gene.stat, transformation = trans,...) {
+    p = length(vector)
+    n = ncol(data)
+    gene.statistics = rep(0, p)
+    # compute the Pearson correlation between the selected PCs and the data
+    gene.statistics = cor(t(data), vector)
+    if (gene.statistic == "z") {
+      # use Fisher's Z transformation to convert to Z-statisics
+      gene.statistics = sapply(gene.statistics, function(x) {
+        return (sqrt(n-3)*atanh(x))})
+    }
+    # Absolute value transformation of the gene-level statistics if requested
+    if (transformation == "abs.value") {
+      gene.statistics = sapply(gene.statistics, abs)
+    }
+    return (gene.statistics)
+  })
+}
 
-# local.GeneStatistics = function(X.mat, y.vec,...){ 
-#   args.local = list(...)[[1]]
-#   gene.stat = args.local$gene.statistic  
-#   trans = args.local$transformation    
-#   return (function(data=X.mat, vector=y.vec, gene.statistic = gene.stat, transformation = trans,...) {  
-#     p = length(vector)
-#     n = ncol(data) 
-#     gene.statistics = rep(0, p)
-#     # compute the Pearson correlation between the selected PCs and the data
-#     gene.statistics = cor(t(data), vector) 
-#     if (gene.statistic == "z") {
-#       # use Fisher's Z transformation to convert to Z-statisics
-#       gene.statistics = sapply(gene.statistics, function(x) {
-#         return (sqrt(n-3)*atanh(x))})      
-#     }    
-#     # Absolute value transformation of the gene-level statistics if requested
-#     if (transformation == "abs.value") {
-#       gene.statistics = sapply(gene.statistics, abs)
-#     }
-#     return (gene.statistics)
-#   })
-# }
+global.StandAveDiff = function(C.mat,local.stats,...) {
+  gene.set.mat = t(as.matrix(C.mat))
+  return (function(gene.statistics=local.stats,gene.sets=gene.set.mat,...) {
+    num.gene.sets = nrow(gene.set.mat)
+    gene.set.statistics = rep(0, num.gene.sets)
+    for (i in 1:num.gene.sets) {
+      indexes.for.gene.set = which(gene.set.mat[i,]==1)
+      m1 = length(indexes.for.gene.set)
+      not.gene.set.indexes = which(!(1:ncol(gene.set.mat) %in% indexes.for.gene.set))
+      m2 = length(not.gene.set.indexes)
+      # compute the mean difference of the gene-level statistics
+      mean.diff = mean(gene.statistics[indexes.for.gene.set]) - mean(gene.statistics[not.gene.set.indexes])
+      # compute the pooled standard deviation
+      pooled.sd = sqrt(((m1-1)*var(gene.statistics[indexes.for.gene.set]) + (m2-1)*var(gene.statistics[not.gene.set.indexes]))/(m1+m2-2))
+      # compute the t-statistic
+      gene.set.statistics[i] = mean.diff/(pooled.sd*sqrt(1/m1 + 1/m2))
+    }
+    return (gene.set.statistics)
+  })
+}
 
-setGeneric("global.StandAveDiff", function(C.mat,local.stats,...) { standardGeneric("global.StandAveDiff") })
-setMethod("global.StandAveDiff",
-          c(C.mat = "matrix", local.stats = "numeric"),
-          function(C.mat,local.stats,...) {
-            gene.set.mat = t(as.matrix(C.mat))
-            return (function(gene.statistics=local.stats,gene.sets=gene.set.mat,...) {  
-              num.gene.sets = nrow(gene.set.mat)
-              gene.set.statistics = rep(0, num.gene.sets)
-              for (i in 1:num.gene.sets) {
-                indexes.for.gene.set = which(gene.set.mat[i,]==1)
-                m1 = length(indexes.for.gene.set)
-                not.gene.set.indexes = which(!(1:ncol(gene.set.mat) %in% indexes.for.gene.set))
-                m2 = length(not.gene.set.indexes)
-                # compute the mean difference of the gene-level statistics
-                mean.diff = mean(gene.statistics[indexes.for.gene.set]) - mean(gene.statistics[not.gene.set.indexes])
-                # compute the pooled standard deviation
-                pooled.sd = sqrt(((m1-1)*var(gene.statistics[indexes.for.gene.set]) + (m2-1)*var(gene.statistics[not.gene.set.indexes]))/(m1+m2-2))      
-                # compute the t-statistic
-                gene.set.statistics[i] = mean.diff/(pooled.sd*sqrt(1/m1 + 1/m2))
-              }
-              return (gene.set.statistics)
-            })
-          }
-)
-          
-# global.StandAveDiff = function(C.mat,local.stats,...) { 
-  # gene.set.mat = t(as.matrix(C.mat))
-  # return (function(gene.statistics=local.stats,gene.sets=gene.set.mat,...) {  
-  #   num.gene.sets = nrow(gene.set.mat)
-  #   gene.set.statistics = rep(0, num.gene.sets)
-  #   for (i in 1:num.gene.sets) {
-  #     indexes.for.gene.set = which(gene.set.mat[i,]==1)
-  #     m1 = length(indexes.for.gene.set)
-  #     not.gene.set.indexes = which(!(1:ncol(gene.set.mat) %in% indexes.for.gene.set))
-  #     m2 = length(not.gene.set.indexes)
-  #     # compute the mean difference of the gene-level statistics
-  #     mean.diff = mean(gene.statistics[indexes.for.gene.set]) - mean(gene.statistics[not.gene.set.indexes])
-  #     # compute the pooled standard deviation
-  #     pooled.sd = sqrt(((m1-1)*var(gene.statistics[indexes.for.gene.set]) + (m2-1)*var(gene.statistics[not.gene.set.indexes]))/(m1+m2-2))      
-  #     # compute the t-statistic
-  #     gene.set.statistics[i] = mean.diff/(pooled.sd*sqrt(1/m1 + 1/m2))
-  #   }
-  #   return (gene.set.statistics)
-  # })
-# }
 
 pcgseViaSAFE = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene.statistic, transformation, gene.set.statistic, nperm=999) {
   num.gene.sets = nrow(gene.set.indexes)
@@ -376,10 +439,11 @@ pcgseViaSAFE = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene.
       global="Wilcoxon"
     } else {
       # global="StandAveDiff"
-      global="AveDiff"
+      global="AveDiff" 
     }
     safe.results = safe::safe(X.mat=t(data), y.vec=pc, C.mat=t(gene.set.indexes), local="GeneStatistics", global=global, Pi.mat=nperm,
-                        args.global=list(one.sided=T), args.local=list(gene.statistic=gene.statistic, transformation=transformation), alpha=1.01, print.it = FALSE)
+                        args.global=list(one.sided=T), args.local=list(gene.statistic=gene.statistic, transformation=transformation), alpha=1.01, print.it = FALSE,
+                        parallel = TRUE)
     p.values[,j] = slot(safe.results, "global.pval")
     gene.set.statistics[,j] = slot(safe.results, "global.stat")    
   }

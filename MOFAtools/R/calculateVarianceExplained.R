@@ -12,7 +12,7 @@
 #' @param perFeature boolean, whether to calculate in addition variance explained per feature (and factor) (default FALSE)
 #' @details fill this
 #' @return a list containing list of R2 for all gaussian views and list of BS for all binary views
-#' @import pheatmap gridExtra ggplot2 gtable
+#' @import pheatmap gridExtra ggplot2
 #' @export
 
 calculateVarianceExplained <- function(object, views="all", factors="all", plotit=T, perFeature=F, InterceptLFasNull=T, 

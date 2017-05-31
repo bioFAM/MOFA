@@ -58,7 +58,7 @@ class Simulate(object):
     def initW_spikeslab(self, theta, alpha=None, annotation=False):
         # checking there is no zero in alpha input
         if alpha is not None:
-            assert not any([0 in toto for toto in alpha]), 'alpha cannot be zero'
+            assert not any([0 in a for a in alpha]), 'alpha cannot be zero'
 
         # Simulate bernoulli variable S
         S = [ s.zeros((self.D[m],self.K)) for m in xrange(self.M) ]
@@ -104,7 +104,7 @@ class Simulate(object):
         # Means are initialised to zero by default
         return [ s.zeros(self.D[m]) for m in xrange(self.M) ]
 
-    def generateData(self, W, Z, Tau, Mu, likelihood, min_trials=None, max_trials=None, missingness=0.0):
+    def generateData(self, W, Z, Tau, Mu, likelihood, min_trials=None, max_trials=None, missingness=0.0, missing_view=False):
         # W (list of length M where each element is a np array with shape (Dm,K)): weights
         # Z (np array with shape (N,K): latent variables
         # Tau (list of length M where each element is a np array with shape (Dm,)): precision of the normally-distributed noise
@@ -126,7 +126,7 @@ class Simulate(object):
             #     for n in xrange(self.N):
             #         for d in xrange(self.D[m]):
             #             Y[m][n,d] = s.dot(Z[n,:],W[m][d,:].T) + Mu[m][d] + norm.rvs(loc=0,scale=1/s.sqrt(Tau[m][d]))
-            
+
         elif likelihood == "warp":
             for m in xrange(self.M):
                 Y[m] = s.exp(s.dot(Z,W[m].T) + Mu[m] + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m]), size=[self.N, self.D[m]]))
@@ -196,6 +196,12 @@ class Simulate(object):
                 tmp = Y[m].flatten()
                 tmp[nas] = s.nan
                 Y[m] = tmp.reshape((self.N,self.D[m]))
+
+        if missing_view > 0.0:   # percentage of samples missing a view
+            # select samples missing one view
+            n_missing = s.random.choice(range(self.N), int(missing_view * self.N), replace=False)
+            Y[0][n_missing,:] = s.nan
+
 
         # Create a mask
         # for m in xrange(self.M):

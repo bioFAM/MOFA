@@ -301,7 +301,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
 
         # Save updated parameters of the Q distribution
         # self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=s.repeat(1/alpha[None,:],self.D,0), mean_S1=Qmean_S1, var_S1=Qvar_S1, theta=Qtheta )
-        self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=0., mean_S1=Qmean_S1, var_S1=Qvar_S1, theta=Qtheta )
+        self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=s.zeros((1,)), mean_S1=Qmean_S1, var_S1=Qvar_S1, theta=Qtheta )
 
     def calculateELBO(self):
 

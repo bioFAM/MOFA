@@ -14,10 +14,10 @@ class Identity(object):
     def f(self):
         return self.x
     def f_prime(self):
-        return 1.0
+        # return 1.0
+        return numpy.ones((1,))
     def __str__(self):
         return ''
-
 
         
 class Log_exp(object):

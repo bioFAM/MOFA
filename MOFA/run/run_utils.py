@@ -60,7 +60,7 @@ def loadData(data_opts, verbose=True):
 
         # Center the data
         if data_opts['center'][m]:
-            Y[m] = (Y[m] - Y[m].mean())
+			Y[m] = (Y[m] - Y[m].mean(axis=0))
 
     return Y
 

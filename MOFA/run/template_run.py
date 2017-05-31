@@ -230,12 +230,12 @@ if data_opts['covariates'] is not None:
     model_opts["priorAlphaZ"]["a"][idx] = s.nan
     model_opts["priorAlphaZ"]["b"][idx] = s.nan
   else:
-    model_opts["priorZ"]["var"][:,idx] = s.nan
+    model_opts["priorZ"]["var"][idx] = s.nan
 
   ## Variational distributions (Q) ##
   # Latent variables
   # model_opts["initZ"]["mean"][:,idx] = model_opts["covariates"]
-  model_opts["initZ"]["var"][:,idx] = 0.
+  model_opts["initZ"]["var"][idx] = 0.
   if model_opts['ardZ']:
         model_opts["initAlphaZ"]["E"][idx] = s.nan
 

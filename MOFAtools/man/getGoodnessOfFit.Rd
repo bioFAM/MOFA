@@ -4,7 +4,8 @@
 \alias{getGoodnessOfFit}
 \title{Get a goodness of fit measure for the model in each view and for each LF}
 \usage{
-getGoodnessOfFit(object, views = "all", factors = "all", plotit = T)
+getGoodnessOfFit(object, views = "all", factors = "all", plotit = T,
+  perFeature = F, interceptLF = F, allAsGaussian = T)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
@@ -14,6 +15,8 @@ getGoodnessOfFit(object, views = "all", factors = "all", plotit = T)
 \item{factors}{Latent variables or factores to use, default is "all"}
 
 \item{plotit}{boolean, wether to produce a plot (default true)}
+
+\item{perFeature}{boolean, whether to calculate in addition variance explained per feature (and factor) (default FALSE)}
 }
 \value{
 a list containing list of R2 for all gaussian views and list of BS for all binary views

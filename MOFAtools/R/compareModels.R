@@ -1,7 +1,7 @@
 
 #' @title Compare the latent factors of different \code{\link{MOFAmodel}} 
 #' @name compareModels
-#' @description Different objects of \code{\link{MOFAmodel} are compared in terms of correlation between 
+#' @description Different objects of \code{\link{MOFAmodel}} are compared in terms of correlation between 
 #' their latent factors. The correlation is calculated only on those samples which are present in all models 
 #' used for a comparison. 
 #' @param ModelList a list containing \code{\link{MOFAmodel}} objects.

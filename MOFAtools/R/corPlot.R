@@ -6,7 +6,7 @@
 #' @details asd
 #' @return fill this
 #' @reference fill this
-#' @import pheatmap
+#' @import pheatmap RColorBrewer
 #' @export
 FeaturesCorPlot <- function(object, view, method="pearson", regress_factors=NULL, top=500, ...) {
   if (class(object) != "MOFAmodel")

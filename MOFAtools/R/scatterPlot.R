@@ -130,7 +130,7 @@ histPlot <- function(object, id, xlabel = NULL, groups = NULL, alpha=1.0, binwid
   #' @details asd
   #' @return fill this
   #' @reference fill this
-  #' @import ggplot2, GGally
+  #' @import GGally
   #' @export
   #' 
   
@@ -179,7 +179,7 @@ histPlot <- function(object, id, xlabel = NULL, groups = NULL, alpha=1.0, binwid
       main <- "Scatterplots of latent factors" 
       legend <- NULL
     }
-    ggpairs(df_pairs, columns = colnames(Z2include), lower=list(continuous="points"), upper=list(continuous="density"), 
+    GGally::ggpairs(df_pairs, columns = colnames(Z2include), lower=list(continuous="points"), upper=list(continuous="density"), 
             mapping= aes(colour=colour_by), title = main, legend =legend)
 }
   

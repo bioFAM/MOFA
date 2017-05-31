@@ -403,7 +403,7 @@ class Theta_Constant_Node(Constant_Variational_Node):
 
     def precompute(self):
         self.E = self.value
-        # TODO this is wrong with missing values -> need to correct N_cells to account for the cells in which a given gene is missing 
+        # TODO this is wrong with missing values -> need to correct N_cells to account for the cells in which a given gene is missing
         self.lnE = self.N_cells * s.log(self.value)
         self.lnEInv = self.N_cells * s.log(1.-self.value)
 

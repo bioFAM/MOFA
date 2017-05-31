@@ -30,10 +30,13 @@ compareModels <- function(ModelList, comparison="all") {
   LFs <- lapply(seq_along(ModelList), function(modelidx){
     model <- ModelList[[modelidx]]
     Z <- getExpectations(model, 'Z', 'E')
-    if(model@ModelOpts$learnMean) Z <- Z[,-1]
+    if(!is.null(model@ModelOpts$learnMean)) if(model@ModelOpts$learnMean) Z <- Z[,-1]
     if(is.null(rownames(Z))) rownames(Z) <- rownames(model@TrainData[[1]])
     if(is.null(colnames(Z))) 
-      if(model@ModelOpts$learnMean) colnames(Z) <- paste("LF", 2:(ncol(Z)+1), sep="") else colnames(Z) <- paste("LF", 1:ncol(Z), sep="")
+      if(!is.null(model@ModelOpts$learnMean)) {
+        if(model@ModelOpts$learnMean)  colnames(Z) <- paste("LF", 2:(ncol(Z)+1), sep="")
+        }else
+          colnames(Z) <- paste("LF", 1:ncol(Z), sep="")
     Z
     })
   for(i in seq_along(LFs)) 
@@ -81,6 +84,7 @@ compareModels <- function(ModelList, comparison="all") {
           }
         })
         names(sublist) <- names(ModelList)[(i+1):length(LFs)]
+        sublist
     })
     names(PairWiseCor) <- names(ModelList[-length(ModelList)])
     return(PairWiseCor)

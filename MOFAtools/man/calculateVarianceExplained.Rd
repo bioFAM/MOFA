@@ -5,7 +5,8 @@
 \title{Calculate variance explained in a MOFA model for each view and latent factor}
 \usage{
 calculateVarianceExplained(object, views = "all", factors = "all",
-  plotit = T, perFeature = F, InterceptLFasNull = F)
+  plotit = T, perFeature = F, InterceptLFasNull = T,
+  orderFactorsbyR2 = T, showtotalR2 = T)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}

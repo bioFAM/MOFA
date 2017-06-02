@@ -11,29 +11,75 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r}
+devtools::load_all("/Users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFAtools/")
+library(MultiAssayExperiment)
+```
+
+Get CLL data used for illustration in this vignette:
+```{r}
+data("CLL_views")
+covariates <- data.frame(sex= CLL_views[["covariates"]][1,], 
+                        diagnosis = CLL_views[["covariates"]][2,])
+
+# use omic data (and remove patients from experiments in which they are completly unobserved)
+CLL_omics <-  lapply( CLL_views[c("lincRNA","meth","miRNA","mRNA","mut","viab")], 
+                      function(mat) mat[,apply(mat,2, function(p) !all(is.na(p)))]) 
+                    
+#create multi-Assay Experiment
+mae_CLL <- MultiAssayExperiment(experiments = CLL_omics, 
+                       pData = covariates)
+```
+
 
 # Step 1: Initialize MOFA object from your input data
-For each data modality the input can be an ExpressionSet or a matrix where features are rows and samples are columns.
-initilaizeMOFA fills in the TrainData slot of the object
+For each data modality the input can be an SummarizedExperiment or a list of matrices where features are rows and samples are columns.
+initilaizeMOFA fills in the TrainData slot of the MOFA object.
+
+Starting from a multi-assay experiment. 'minViews' determines the number of views a sample must have been observed to be included into the MOFA object.
 ```{r}
-object <- initializeMOFA(X,Y,Z,...)
+object <- createMOFAobject(mae_CLL, minViews = 1)
 ```
+
+Altenative: Starting from a list of data matrices, MutliAssayExperiment is constructed interally and used for InputData slot
+```{r}
+# create a MOFA object starting from a list of experiment data and optional covariates on the samples
+# object <- createMOFAobjectFromList(ExpList = CLL_omics,
+#                          pData = covariates)
+```
+
 
 # Step 2: Fit the MOFA model to get latent factors and associated weights
 
 ## Python - based
 Generate text files used as input for the Pyhton code, run Python and read model back in
 ```{r}
-writeMOFADatafiles(object, dir)
+# Define Model options as CLL views are not all gaussian (otherwise prepareMOFA can be used without ModelOptions argument to obtain defaults)
+ModelOptions <- getDefaultModelOpts(object)
+ModelOptions$likelihood[viewNames(object)=="mut"] <- "bernoulli"
+
+# The following function creates the txt files which can be directly used as input for Python-MOFA and sets the model and training options
+# Alternatively this can all directly be done using Python
+outFile <- file.path(dir, "MOFAout.hdf5")
+object_untrained <- prepareMOFA(object, dir = "~/Documents/MOFA/CLL_MOFA_data/testPipeline", 
+                                ModelOptions = ModelOptions, TrainOptions = NULL,
+                                outFile=outFile, k=10, MOFAdir = "/Users/bvelten/Documents/MOFApackage/scGFA/scGFA/run")
+# for default options just use: object <- prepareMOFA(object, dir = "~/Documents/MOFA/CLL_MOFA_data/testPipeline")
+
 # ... run python code, need a seperate documentation for this
-object <- loadModel(outfile)
-object
+
+# load fitted model from the output object created in Python
+object_trained <- loadModel(outFile, object_untrained)
+
+#print object
+object_trained
 ```
 
 ## R - based
 Ideally this should be replace by an interal function (C++ based?)
 ```{r}
-object <- runMOFA(object)
+# NOT YET AVAILABLE
+# object <- runMOFA(object)
 ```
 
 

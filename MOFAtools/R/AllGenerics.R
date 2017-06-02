@@ -60,6 +60,20 @@ setGeneric("viewNames", function(object) {standardGeneric("viewNames")})
 #' @export
 setGeneric("viewNames<-", function(object, value) {standardGeneric("viewNames<-")})
 
+
+################
+## Input Data ##
+################
+
+#' @title InputData: set and retrieve training data
+#' @name InputData
+#' @rdname InputData
+#' @export
+setGeneric("InputData", function(object) {standardGeneric("InputData")})
+
+setGeneric(".InputData<-", function(object, value) {standardGeneric(".InputData<-")})
+
+
 ################
 ## Train Data ##
 ################

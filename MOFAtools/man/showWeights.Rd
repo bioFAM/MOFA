@@ -4,11 +4,7 @@
 \alias{showWeights}
 \title{showWeights: plot weights for a certain factor and view}
 \usage{
-<<<<<<< HEAD
-showWeights(model, view, factor, ntop = 5, ntail = 5)
-=======
 showWeights(model, view, factor, ntop = 5, ntail = 5, manual = NULL)
->>>>>>> 8df11806a435b90c686b0f8e54663a3f09e2c9e9
 }
 \arguments{
 \item{model}{a fitted MOFA model}

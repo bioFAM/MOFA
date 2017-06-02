@@ -9,7 +9,7 @@
 #' @param ntail number of lowest negative weights to label
 #' @details fill this
 #' @return a dataframe with of d_m rows (feautres) with weights per feature on the sepcified factor and view
-#' @import ggplot2
+#' @import ggplot2 ggrepel
 #' @export
 
 showWeights <- function(model, view, factor, ntop = 5, ntail =5, manual = NULL) {
@@ -33,13 +33,14 @@ showWeights <- function(model, view, factor, ntop = 5, ntail =5, manual = NULL) 
   df_W %<>% arrange(loading)
   df_W$FeatureName <- factor(df_W$FeatureName, levels=df_W$FeatureName)
   
-  gg_W <- ggplot(df_W, aes(x=FeatureName, y=loading, col=imp)) + geom_point()  +
+  gg_W <- ggplot2::ggplot(df_W, aes(x=FeatureName, y=loading, col=imp)) + geom_point()  +
     theme(axis.title.x=element_blank(),
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank())+
     ggrepel::geom_text_repel(data = filter(df_W, imp), aes(label = FeatureName),
                     segment.alpha=0.2, box.padding = unit(0.5, "lines")) +scale_color_manual(values=c("black", "red")) +
-    ggtitle(paste("Weigths on LF", factor, "on view", view)) +guides(color=F)
+    ggtitle(paste("Weigths on LF", factor, "on view", view)) +
+    guides(color=F) 
   print(gg_W)
   
   return(df_W)

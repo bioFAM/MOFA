@@ -1,0 +1,88 @@
+---
+title: " Vignette illustrating the use of MOFA on the CLL data"
+author: "Britta Velten"
+date: "`r Sys.Date()`"
+output:
+  BiocStyle::html_document:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Example_CLL}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+# Step 1: Initialize MOFA object from your input data
+For each data modality the input can be an ExpressionSet or a matrix where features are rows and samples are columns.
+initilaizeMOFA fills in the TrainData slot of the object
+```{r}
+object <- initializeMOFA(X,Y,Z,...)
+```
+
+# Step 2: Fit the MOFA model to get latent factors and associated weights
+
+## Python - based
+Generate text files used as input for the Pyhton code, run Python and read model back in
+```{r}
+writeMOFADatafiles(object, dir)
+# ... run python code, need a seperate documentation for this
+object <- loadModel(outfile)
+object
+```
+
+## R - based
+Ideally this should be replace by an interal function (C++ based?)
+```{r}
+object <- runMOFA(object)
+```
+
+
+# Step 3: Label Factors
+Use feature sets (e.g. gene sets) to test for enrichment and show top weights -> arrive at lables for each factor
+```{r}
+setFactornames(object, names)
+```
+
+
+# Show variance explained
+```{r}
+calculateVarianceExplained(object)
+```
+
+# Show LF scatterplots
+```{r}
+scatterPairs(object)
+sctterPlot(object, facotr)
+```
+
+# Show top weights per view and factor
+```{r}
+showWeightHeatmap(object, "view")
+showWeights(object, "view", factor, ntop, ntail, manual)
+
+```
+
+
+# Show enriched gene sets per factor
+```{r}
+GSEA(object, ...)
+```
+
+#Show real data
+```{r}
+showHeatmap4topFeautres(object, view, factor)
+showScatter(object, factor, feature)
+```
+
+
+# Impute Missing
+```{r}
+imputeMissing(object)
+```
+
+
+# Cluster samples
+```{r}
+clusterMOFA(object, factors)
+```
+

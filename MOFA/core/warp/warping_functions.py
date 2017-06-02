@@ -30,7 +30,6 @@ class Warping_functions(object):
             self.func_type = _Sigmoid
             self.func_type_str = 'logistic'
 
-
     def f(self,x,i,partial = None):
         linear = _Linear.f(x,self.param['b'][i].f(),self.param['c'][i].f())
         if partial is None:

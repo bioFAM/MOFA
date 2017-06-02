@@ -2,25 +2,30 @@
 % Please edit documentation in R/showWeights.R
 \name{showWeights}
 \alias{showWeights}
-\title{showWeights: get the loadings in a specific view}
+\title{showWeights: plot weights for a certain factor and view}
 \usage{
-showWeights(model, view, features = "all", factors = "all", main = NULL,
-  ...)
+<<<<<<< HEAD
+showWeights(model, view, factor, ntop = 5, ntail = 5)
+=======
+showWeights(model, view, factor, ntop = 5, ntail = 5, manual = NULL)
+>>>>>>> 8df11806a435b90c686b0f8e54663a3f09e2c9e9
 }
 \arguments{
 \item{model}{a fitted MOFA model}
 
-\item{...}{further arguments that can be passed to pheatmap}
+\item{view}{name of view from which to get the corresponding weights}
 
-\item{viewnm}{name of view from which to get the corresponding weights}
+\item{factor}{factor to plot weights for}
 
-\item{showHeatmap}{boolean, wether to plot a heatmap of the weights (default: True)}
+\item{ntop}{number of highest positive weights to label}
+
+\item{ntail}{number of lowest negative weights to label}
 }
 \value{
-a weight matrix of dimension d (feautres) x k (number of latent factors)
+a dataframe with of d_m rows (feautres) with weights per feature on the sepcified factor and view
 }
 \description{
-Function to extract the weights that each feautre has on a factor in the view specified and visualize it as a heatmap.
+Function to visualize weights in a dotplot highlighting top positive and neagtive featurs
 }
 \details{
 fill this

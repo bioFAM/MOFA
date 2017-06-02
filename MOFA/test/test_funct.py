@@ -30,7 +30,7 @@ from MOFA.run.run_utils import *
 def test(M=3, N=100, K=10, D=None):
     if D is None:
         D = s.asarray([1000]*M)
-    elif type(D)==int or type(D) == float:
+    elif isinstance(D, (int, long, float)):
         D = s.array([D]*M)
     else:
         assert len(D) == M, 'wrong shape for D'

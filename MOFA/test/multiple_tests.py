@@ -15,7 +15,7 @@ def multiple_tests(res_dir, to_test='K', val=None,  it_ix=0):
         elif to_test =='N':
             pass
 
-    elif type(val) == float or type(val) == int:
+    elif isinstance(val, (int, long, float)):
         val = np.array([val])
 
     # varry K
@@ -61,5 +61,10 @@ if __name__ == '__main__':
     res_dir = sys.argv[2]
     val = int(sys.argv[3])
     it = int(sys.argv[4])
+
+    # to_test= 'D'
+    # res_dir = '/tmp/tests/'
+    # val = 200
+    # it = 0
 
     multiple_tests(res_dir=res_dir, to_test=to_test, val=val, it_ix=it)

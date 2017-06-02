@@ -4,7 +4,7 @@ import os
 res_dir = '/homes/arnol/test/'
 
 
-K_vals = np.linspace(5.0, 150.0, num=20, dtype=int)
+K_vals = np.linspace(5.0, 99.0, num=20, dtype=int)
 D_vals = np.linspace(500.0, 10000.0, num=20, dtype=int)
 N_vals = np.linspace(100.0, 2000.0, num=20, dtype=int)
 M_vals = np.linspace(2.0, 20.0, num=20, dtype=int)
@@ -46,7 +46,7 @@ for val in N_vals:
         os.system(command)
         it_ix+=1
 
-# test K
+# test M
 it_ix = 0
 for val in M_vals:
     for i in range(3):

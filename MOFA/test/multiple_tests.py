@@ -23,7 +23,6 @@ def multiple_tests(res_dir, to_test='K', val=None,  it_ix=0):
         time_K = np.zeros(len(val))
         for i in range(len(val)):
             time_K[i] = test(K=val[i])
-        import pdb; pdb.set_trace()
         res = np.concatenate((val[:,None], time_K[:,None]), axis=1)
 
     # varry D

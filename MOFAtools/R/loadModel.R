@@ -1,5 +1,5 @@
 
-#' @title LoadModel: loading a trained MOFA model from python output
+#' @title loadModel: loading a trained MOFA model from python output
 #' @name loadModel
 #' @description Method to load a trained MOFA model from a hdf5 file. \cr
 #' Models have to be trained and saved using the corresponding Python package.
@@ -11,10 +11,12 @@
 
 loadModel <- function(file, model=NULL) {
   
+  message(paste0("Loading the following trained MOFA model: ", file))
+  
   if(is.null(model)) model <- new("MOFAmodel")
   
-  if(.hasSlot(model,"Status") & length(model@Status) !=0)
-    if (model@Status == "trained") warning("The specified model is already trained, over-writing training output with new results!")
+  # if(.hasSlot(model,"Status") & length(model@Status) !=0)
+  #   if (model@Status == "trained") warning("The specified model is already trained, over-writing training output with new results!")
   
   # Load expectations and parameters
   model@Expectations <- rhdf5::h5read(file,"expectations")
@@ -29,22 +31,20 @@ loadModel <- function(file, model=NULL) {
 
   
   # Load training options
-  if(.hasSlot(model,"TrainOpts") & length(model@TrainOpts) == 0){
-    if(!all(model@TrainOpts == as.list(rhdf5::h5read(file, 'training_opts',read.attributes=T)))) 
-      warning("TrainOpts already defined in the model but not in agreement with trained model, over-writting pre-defined TrainOpts")
-  }
+  # if(.hasSlot(model,"TrainOpts") & length(model@TrainOpts) == 0){
+  #   if(!all(model@TrainOpts == as.list(rhdf5::h5read(file, 'training_opts',read.attributes=T)))) 
+  #     warning("TrainOpts already defined in the model but not in agreement with trained model, over-writting pre-defined TrainOpts")
+  # }
   tryCatch(model@TrainOpts <- as.list(rhdf5::h5read(file, 'training_opts',read.attributes=T)), error = function(x) { print("Training opts not found, not loading it...") })
   
   # Load model options
-  if(.hasSlot(model,"ModelOpts") & length(model@ModelOpts) == 0){
-    if(!all(model@ModelOpts == as.list(rhdf5::h5read(file, 'model_opts',read.attributes=T)))) 
-      warning("ModelOpts already defined in the model but not in agreement with trained model, over-writting pre-defined ModelOpts")
-  }
+  # if(.hasSlot(model,"ModelOpts") & length(model@ModelOpts) == 0){
+  #   if(!all(model@ModelOpts == as.list(rhdf5::h5read(file, 'model_opts',read.attributes=T)))) 
+  #     warning("ModelOpts already defined in the model but not in agreement with trained model, over-writting pre-defined ModelOpts")
+  # }
   tryCatch(model@ModelOpts <- as.list(rhdf5::h5read(file, 'model_opts',read.attributes=T)), error = function(x) { print("Model opts not found, not loading it...") })
   
   # Load training data
-
-
   tryCatch( {
     TrainingData <- rhdf5::h5read(file,"data")
     featuredata <- rhdf5::h5read(file,"features")
@@ -54,10 +54,10 @@ loadModel <- function(file, model=NULL) {
       colnames(TrainingData[[m]]) <- featuredata[[m]]
     }
     TrainingData <- lapply(TrainingData, t)
-    if(.hasSlot(model,"TrainData") & length(model@TrainData) != 0){
-      if(!identical(TrainingData, model@TrainData)) 
-        warning("TrainData already defined in the model but not in agreement with trained model, over-writting pre-defined TrainData and Dimensions")
-    }
+    # if(.hasSlot(model,"TrainData") & length(model@TrainData) != 0){
+    #   if(!identical(TrainingData, model@TrainData)) 
+    #     warning("TrainData already defined in the model but not in agreement with trained model, over-writting pre-defined TrainData and Dimensions")
+    # }
     model@TrainData <- TrainingData
     model@Dimensions[["M"]] <- length(model@TrainData)
     model@Dimensions[["N"]] <- ncol(model@TrainData[[1]])

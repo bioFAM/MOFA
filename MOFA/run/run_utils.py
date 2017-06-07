@@ -9,60 +9,11 @@ from joblib import Parallel, delayed
 from init_nodes import *
 from MOFA.run.init_nodes import *
 from MOFA.core.BayesNet import BayesNet
+from MOFA.core.utils import *
 
 """
 To-do: initialuse MuZ
 """
-
-# Function to mask the data, mainly to test missing values and imputation
-def maskData(data, data_opts):
-    print "Masking data..."
-
-    for m in xrange(len(data)):
-
-        # Mask values at random
-        D = data[m].shape[1]
-        N = data[m].shape[0]
-        p2Mask = data_opts['maskAtRandom'][m]
-        if p2Mask != 0:
-            idxMask = np.zeros(N*D)
-            idxMask[:int(round(N*D*p2Mask))]  = 1
-            np.random.shuffle(idxMask)
-            idxMask=np.reshape(idxMask, [N, D])
-            data[m] = data[m].mask(idxMask==1)
-
-        # Mask samples in a complete view
-        Nsamples2Mask = data_opts['maskNSamples'][m]
-        if Nsamples2Mask != 0:
-            idxMask = np.random.choice(N, size=Nsamples2Mask, replace = False)
-            tmp = data[m].copy()
-            tmp.ix[idxMask, :] = pd.np.nan
-            data[m] = tmp
-
-    return data
-
-# Function to load the data
-def loadData(data_opts, verbose=True):
-
-    print "\n"
-    print "#"*18
-    print "## Loading data ##"
-    print "#"*18
-    print "\n"
-
-    Y = list()
-    for m in xrange(len(data_opts['input_files'])):
-        file = data_opts['input_files'][m]
-
-        # Read file (with row and column names)
-        Y.append( pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"]) )
-        print "Loaded %s with dim (%d,%d)..." % (file, Y[m].shape[0], Y[m].shape[1])
-
-        # Center the data
-        if data_opts['center'][m]:
-			Y[m] = (Y[m] - Y[m].mean(axis=0))
-
-    return Y
 
 # Function to run a single trial of the model
 def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, verbose=False):

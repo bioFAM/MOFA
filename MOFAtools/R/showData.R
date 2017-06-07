@@ -31,8 +31,11 @@ showDataHeatmap <- function(model, view, factor, nfeatures=50, ...) {
   features <- names(tail(sort(abs(W)), n=nfeatures))
   stopifnot(all(features %in% featureNames(model)[[view]]))
   
+  # Ignore samples with full missing views
+  tmp <- model@TrainData[[view]][,apply(model@TrainData[[view]],2, function(x) !all(is.na(x)))]
+  
   # Plot heatmap
-  pheatmap::pheatmap(model@TrainData[[view]][,features], fontsize = 8, show_rownames = F, ...)
+  pheatmap::pheatmap(t(tmp[features,]), fontsize = 8, show_rownames = F, ...)
 }
 
 
@@ -132,22 +135,4 @@ showDataScatter <- function(model, view, factor, nfeatures=50, colour_by=NULL, s
   if(!shapeLegend) p <- p + guides(shape = FALSE)
   return(p)
 }
-  
-  # Sanity checks
-  if (class(model) != "MOFAmodel")
-    stop("'model' has to be an instance of MOFAmodel")
-  stopifnot(view %in% viewNames(model))
-  stopifnot(factor %in% factorNames(model)) 
-  
-  # Collect relevant expectations
-  W <- getExpectations(model,"SW","E")[[view]][,factor]
-  
-  # Define features
-  features <- names(tail(sort(abs(W)), n=nfeatures))
-  stopifnot(all(features %in% featureNames(model)[[view]]))
-  
-  # Plot heatmap
-  pheatmap::pheatmap(model@TrainData[[view]][,features], fontsize = 8, show_rownames = F, ...)
-}
-
 

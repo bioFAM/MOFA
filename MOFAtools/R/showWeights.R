@@ -1,6 +1,3 @@
-
-<<<<<<< HEAD
-=======
 ########################################
 ## Functions to visualise the weights ##
 ########################################
@@ -57,7 +54,6 @@ showWeightHeatmap <- function(model, view, features="all", factors="all", main=N
 
 
 
->>>>>>> automating R package
 #' @title showWeights: plot weights for a certain factor and view
 #' @name showWeights
 #' @description Function to visualize weights in a dotplot highlighting top positive and neagtive featurs
@@ -104,9 +100,3 @@ showWeights <- function(model, view, factor, ntop = 5, ntail =5, manual = NULL) 
   
   return(df_W)
 }
-
-<<<<<<< HEAD
-=======
-
-
->>>>>>> automating R package

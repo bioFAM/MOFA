@@ -12,135 +12,147 @@ vignette: >
 ---
 
 ```{r}
-devtools::load_all("/Users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFAtools/")
+# devtools::load_all("/Users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFAtools/")
+devtools::load_all("/Users/ricard/mofa/MOFAtools")
 library(MultiAssayExperiment)
 ```
 
-Get CLL data used for illustration in this vignette:
+# Step 1: Initialize MOFA object
+
+## Load data
+There are two ways to load the data into MOFA: 
+(1) A list of matrices where features are rows and samples are columns: MutliAssayExperiment is constructed internally
+(2) A MultiAssayExperiment object.
+I WOULD INCLUDE HERE THE FILTERING MINVIEWS. 
 ```{r}
 data("CLL_views")
-covariates <- data.frame(sex= CLL_views[["covariates"]][1,], 
-                        diagnosis = CLL_views[["covariates"]][2,])
 
-# use omic data (and remove patients from experiments in which they are completly unobserved)
+# Remove patients from experiments in which they are completly unobserved
 CLL_omics <-  lapply( CLL_views[c("lincRNA","meth","miRNA","mRNA","mut","viab")], 
                       function(mat) mat[,apply(mat,2, function(p) !all(is.na(p)))]) 
-                    
-#create multi-Assay Experiment
-mae_CLL <- MultiAssayExperiment(experiments = CLL_omics, 
-                       pData = covariates)
+
+# Define pData
+covariates <- data.frame(
+  sex = CLL_views[["covariates"]][1,], 
+  diagnosis = CLL_views[["covariates"]][2,]
+)
+
+# Define sampleMap
+# (...)
+
+# Create MultiAssayExperiment object
+mae_CLL <- MultiAssayExperiment(experiments = CLL_omics, pData = covariates)
 ```
 
-
-# Step 1: Initialize MOFA object from your input data
-For each data modality the input can be an SummarizedExperiment or a list of matrices where features are rows and samples are columns.
-initilaizeMOFA fills in the TrainData slot of the MOFA object.
-
-Starting from a multi-assay experiment. 'minViews' determines the number of views a sample must have been observed to be included into the MOFA object.
+## Create MOFA object
+The input data is stored in the InputData slot of the MOFA object.
 ```{r}
-object <- createMOFAobject(mae_CLL, minViews = 1)
+object <- createMOFAobject(mae_CLL)
+# object <- createMOFAobjectFromList(ExpList = CLL_omics, pData = covariates)
 ```
 
-Altenative: Starting from a list of data matrices, MutliAssayExperiment is constructed interally and used for InputData slot
+# Step 2: Fit the MOFA model
+
+## Define options
+
+### Define I/O options
+Important:
+- tmpDir: Temporary folder to store the input matrices
+- outFile: Output file for the model
+- mofaDir: directory of the MOFA package
 ```{r}
-# create a MOFA object starting from a list of experiment data and optional covariates on the samples
-# object <- createMOFAobjectFromList(ExpList = CLL_omics,
-#                          pData = covariates)
+DirOptions <- list(
+  "tmpDir" = "/tmp",
+  "outFile" = "/Users/ricard/test.hdf5",
+  "mofaDir" = "/Users/ricard/mofa/MOFA"
+)
 ```
 
-
-# Step 2: Fit the MOFA model to get latent factors and associated weights
-
-## Python - based
-Generate text files used as input for the Pyhton code, run Python and read model back in
+### Define model options
+Important:
+- Initial number of latent variables
+- Likelihoods
+- Schedule of updates
 ```{r}
-# Define Model options as CLL views are not all gaussian (otherwise prepareMOFA can be used without ModelOptions argument to obtain defaults)
 ModelOptions <- getDefaultModelOpts(object)
-ModelOptions$likelihood[viewNames(object)=="mut"] <- "bernoulli"
-
-# The following function creates the txt files which can be directly used as input for Python-MOFA and sets the model and training options
-# Alternatively this can all directly be done using Python
-outFile <- file.path(dir, "MOFAout.hdf5")
-object_untrained <- prepareMOFA(object, dir = "~/Documents/MOFA/CLL_MOFA_data/testPipeline", 
-                                ModelOptions = ModelOptions, TrainOptions = NULL,
-                                outFile=outFile, k=10, MOFAdir = "/Users/bvelten/Documents/MOFApackage/scGFA/scGFA/run")
-# for default options just use: object <- prepareMOFA(object, dir = "~/Documents/MOFA/CLL_MOFA_data/testPipeline")
-
-# ... run python code, need a seperate documentation for this
-
-# load fitted model from the output object created in Python
-object_trained <- loadModel(outFile, object_untrained)
-
-#print object
-object_trained
+# ModelOptions$likelihood[viewNames(object)=="mut"] <- "bernoulli"
+ModelOptions$initialK <- 10
 ```
 
-## R - based
-Ideally this should be replace by an interal function (C++ based?)
+### Define training options
+Important:
+- Number of trials
+- Maximum number of iterations
+- Dropping options of latent factors
 ```{r}
-# NOT YET AVAILABLE
-# object <- runMOFA(object)
+TrainOptions <- getDefaultTrainOpts()
+TrainOptions$maxiter <- 5
+TrainOptions$drop_by_norm <- 0.00
+TrainOptions$drop_by_r2 <- 0.00
 ```
 
-
-# Step 3: Label Factors
-Use feature sets (e.g. gene sets) to test for enrichment and show top weights -> arrive at lables for each factor
+## Prepare MOFA
+Internally, prepareMOFA performs a set of sanity checks, fills the TrainOpts and ModelOpts slots of the MOFAmodel object and it also creates a set of temporary .txt files with the input matrices that will be loaded by the Python core implementation
 ```{r}
-setFactornames(object, names)
+object <- prepareMOFA(object, 
+                      DirOptions = DirOptions,
+                      ModelOptions = ModelOptions,
+                      TrainOptions = TrainOptions
+)
 ```
 
+## Run MOFA
+This step can take some time , it is recommended to run it from the Python-based module
+```{r}
+model <- runMOFA(object, DirOptions)
+```
 
-# Show variance explained
+# Step 3: Analyse a trained MOFA model
+
+## Show the variance explained for each factor in each view
 ```{r}
 calculateVarianceExplained(object)
 ```
 
-# Show LF scatterplots
+## Scatterplots of pairs of latent variables
 ```{r}
-scatterPairs(object)
+# scatterPairs(object)
 sctterPlot(object, facotr)
 ```
 
-# Show top weights per view and factor
+## Characterisation of specific latent factors
+
+### Show weights and identify most relevant features
 ```{r}
 showWeightHeatmap(object, "view")
 showWeights(object, "view", factor, ntop, ntail, manual)
-
 ```
 
-=======
-# Plot the observed values of relevant features
-
-## Heatmap 
+### Show original data for the genes with top weights
 ```{r}
+view <- "mRNA"
+factor <- "2"
 showDataHeatmap(model, view, factor, nfeatures=50)
+
+# The X axis is the latent variable and the Y axis is the observed value of the feature
+# showDataScatter(model, view, factor, nfeatures=50, colour_by=NULL, shape_by=NULL)
 ```
 
-## Scatterplot
-The X axis is the latent variable and the Y axis is the observed value of the feature
-```{r}
-showDataScatter(model, view, factor, nfeatures=50, colour_by=NULL, shape_by=NULL)
-```
 
-# Feature set enrichment analysis
-
+### Feature set enrichment analysis
 The characterisation of factors usually requires the inspection of the corresponding weights to identify features with strong influence. However, looking at single features can be challenging and often the combination of signal from functionally related sets of features (i.e. gene ontologies) is required.
 Here we implemented a feature set enrichment analysis method (FeatureSetEnrichmentAnalysis) derived from the PCGSE package (REF).
 The input of these function is a MOFA trained model (MOFAmodel), the factors for which to perform feature set enrichment (character vector), the feature sets (matrix) and a set of options regarding how the analysis should be performed. For more information see ...
 
 Here we are going to perform feature set enrichment analysis on the mRNA view.
-
-## Load feature sets
-The input format for feature sets has to be a binary matrix where the rows represent feature sets and the columns are features where a value of 1 indicates that the feature belongs to the corresponding feature set.
-```{r}
-
-```
-
-The next step is to define the options for the analysis.
 Here we are going to use the absolute value of the weight (or loading) as feature statistic, the mean difference between the features in the gene set and the features outside the gene set as a feature set statistic and the correlation-adjusted parametric statistical test.
-
-## Perform Feature Set Enrichment Analysis
 ```{r}
+# The input format for feature sets has to be a binary matrix where the rows represent feature sets and the columns are features where a value of 1 indicates that the feature belongs to the corresponding feature set.
+
+# Load reactome annotations
+reactome <- readRDS("/Users/ricard/data/reactome/v59/homo_sapiens/out/human_reactome.rds")
+
+# Run Feature Set Enrichment Analysis
 p.values <- FeatureSetEnrichmentAnalysis(
   model,
   view = "mRNA", 
@@ -154,33 +166,32 @@ p.values <- FeatureSetEnrichmentAnalysis(
   min.size=10,
   cores=1
 )
-```
 
-## Correct for multiple testing
-```{r}
+# Rename pathways
+# tmp <- read.table("/Users/ricard/data/reactome/v59/homo_sapiens/AllPathways.txt", header=F, quote="", sep="\t", stringsAsFactors=F)[,c(1,2)]
+# reactome_meta <- tmp[,2]; names(reactome_meta) <- tmp[,1]
+# rownames(p.values) <- stringr::str_replace_all(rownames(gsea.out_reactome), reactome_meta)
+
+# Correct for multiple testing
 p.values_adj <- apply(p.values, 2,function(lfw) p.adjust(lfw, method = "BH"))
+
+
+# Visualise the results 
+# all factors
+Heatmap_FeatureSetEnrichmentAnalysis(p.values_adj, threshold=0.1)
+
+# individual factors
+LinePlot_FeatureSetEnrichmentAnalysis(p.values_adj, view, factor, threshold=0.1, max.pathways=25)
 ```
 
-## Visualise the results
-
-### All factors 
-```{r}
-Heatmap_FeatureSetEnrichmentAnalysis(gsea.out.adj_reactome, threshold=0.1)
-```
-
-### Individual factors
-```{r}
-LinePlot_FeatureSetEnrichmentAnalysis(gsea.out.adj_reactome, view, factor, threshold=0.1, max.pathways=25)
-```
-
-# Impute Missing
+# Step 4: Impute Missing observations
 ```{r}
 imputeMissing(object)
 ```
 
 
-# Cluster samples
-```{r}
-clusterMOFA(object, factors)
-```
+<!-- # Cluster samples -->
+<!-- ```{r} -->
+<!-- clusterMOFA(object, factors) -->
+<!-- ``` -->
 

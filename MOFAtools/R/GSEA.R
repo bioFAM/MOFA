@@ -1,52 +1,135 @@
-
-#' @title Gene Set Enrichment Analysis
-#' @name GSEA
-#' @description Method to perform gene ontology enrichment for a gene sets in a given view  \cr
-#' Here we use the PCGSE package.
-#' @param model a \code{\link{MOFAmodel}} object.
-#' @param view name (character) or index (integer) of the view of interest
-#' @param factor.indexes numeric vector with the indices of the latent variables for which enrichment should be computed.
-#' @param gene.sets Data structure that holds gene set membership information. Must be either a binary membership matrix (rows are gene sets and columns are genes) or a list of gene set member indexes.
-#' @param local.statistic The gene-level statistic used to quantify the association between each genomic variable and each PC. Must be one of the following: loading (default), cor, z.
-#' @param global.statistic The gene set statisic computed from the gene-level statistics. Must be one of the following: "mean_diff" (default) or "rank.sum".
-#' @param transformation Optional transformation to apply to the gene-level statistics. Must be one of the following "none" (default) or "abs.value".
-#' @param statistical.test The statistical test used to compute the significance of the gene set statistics under a competitive null hypothesis.  
-#' Must be one of the following: "parametric", "cor.adj.parametric" (default), "permutation".
-#' @param nperm Number of permutations to perform. Only relevant if statistical.test is "permutation".
+#' @title Line plot of Feature Set Enrichment Analysis results
+#' @name LinePlot_FeatureSetEnrichmentAnalysis
+#' @description Line plot of the Feature Set Enrichment Analyisis results for a specific latent variable
+#' @param p.values output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are feature sets and columns are latent variables
+#' @param threshold p.value threshold to filter out feature sets
+#' @param max.pathways maximum number of enriched pathways to display
 #' @details fill this
-#' @return a list with two matrices, one for statistics and one for pvalues. The rows are the different gene sets and the columns are the latent variables.
-#' @import safe doParallel
+#' @return nothing
+#' @import ggplot2
+#' @export
+LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, view, factor, threshold=0.1, max.pathways=25, ...) {
+  
+  # Sanity checks
+  # (...)
+  
+  # Get data  
+  tmp <- as.data.frame(p.values[,factor, drop=F])
+  tmp$pathway <- rownames(tmp)
+  colnames(tmp) <- c("pvalue")
+  
+  # Filter out pathways
+  tmp <- tmp[tmp$pvalue<=threshold,,drop=F]
+  
+  # If there are too many pathways enriched, just keep the 'max_pathways' more significant
+  if (nrow(tmp) > max.pathways)
+    tmp <- head(tmp,n=max.pathways)
+  
+  # Convert pvalues to log scale (add a small regulariser to avoid numerical errors)
+  tmp$log <- -log10(tmp$pvalue + 1e-6)
+  
+  # Annotate significcant pathways
+  # tmp$sig <- factor(tmp$pvalue<threshold)
+  
+  p <- ggplot2::ggplot(tmp, aes(x=pathway, y=log)) +
+    ggtitle("") +
+    geom_point(size=5) +
+    geom_hline(yintercept=-log10(threshold), linetype="longdash") +
+    scale_y_continuous(limits=c(0,7)) +
+    scale_color_manual(values=c("black","red")) +
+    geom_segment(aes(xend=pathway, yend=0)) +
+    ylab("-log pvalue") +
+    coord_flip() +
+    theme(
+      axis.text.y = element_text(size=rel(1.2), hjust=1, color='black'),
+      axis.title.y=element_blank(),
+      legend.position='none',
+      panel.background = element_blank()
+    )
+  print(p)
+}
+
+#' @title Heatmap of Feature Set Enrichment Analysis results
+#' @name Heatmap_FeatureSetEnrichmentAnalysis
+#' @description Heatmap of the Feature Set Enrichment Analyisis results
+#' @param p.values output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are gene sets and columns are latent variables
+#' @param threshold p.value threshold to filter out feature sets. If a feature set has a p.value lower than 'threshold'
+#' @param ... Parameters to be passed to pheatmap function
+#' @details fill this
+#' @return nothing
+#' @import pheatmap
+#' @export
+Heatmap_FeatureSetEnrichmentAnalysis <- function(p.values, threshold=0.05, ...) {
+  p.values <- p.values[!apply(p.values, 1, function(x) sum(x>=threshold)) == ncol(p.values),]
+  pheatmap::pheatmap(p.values, cluster_rows = T, cluster_cols = F, show_rownames = F, show_colnames = T,
+                     color = colorRampPalette(c("red", "lightgrey"))(n=5))
+}
+
+
+#' @title Feature Set Enrichment Analysis
+#' @name FeatureSetEnrichmentAnalysis 
+#' @description Method to perform enrichment analysis for feature sets from a given view in the latent factors  \cr
+#' Here we use a slightly modified version of the \link{PCGSE} package.
+#' @param model a \code{\link{MOFAmodel}} object.
+#' @param view name of the view
+#' @param factors either name (character vector) or indices (numeric vector) of the latent variables for which enrichment should be computed (default="all")
+#' @param feature.sets Data structure that holds feature set membership information. Must be either a binary membership matrix (rows are feature sets and columns are features) or a list of feature set member indexes (see vignette).
+#' @param local.statistic The feature statistic used to quantify the association between each genomic variable and each PC. Must be one of the following: loading (default), cor, z.
+#' @param global.statistic The feature set statisic computed from the feature statistics. Must be one of the following: "mean.diff" (default) or "rank.sum".
+#' @param transformation Optional transformation to apply to the feature-level statistics. Must be one of the following "none" or "abs.value" (default).
+#' @param statistical.test The statistical test used to compute the significance of the feature set statistics under a competitive null hypothesis.
+#' Must be one of the following: "parametric" (default), "cor.adj.parametric", "permutation".
+#' @param min.size Minimum size of a feature set
+#' @param nperm Number of permutations to perform. Only relevant if statistical.test is set to "permutation".
+#' @param cores Number of cores to run the permutation analysis in parallel. Only relevant if statistical.test is set to "permutation".
+#' @details fill this
+#' @return a list with two matrices, one for the feature set statistics and the other for the pvalues. Rows are feature sets and columns are latent variables.
+#' @import doParallel
 #' @export
 
-GSEA <- function(model, view, factor.indexes, gene.sets, local.statistic="loading",
-                 transformation="none", global.statistic="mean.diff", statistical.test="cor.adj.parametric", 
-                 nperm=1, min_size=10, cores=1) {
+
+FeatureSetEnrichmentAnalysis <- function(model, view, factors="all", feature.sets, local.statistic="loading",
+                                         transformation="abs.value", global.statistic="mean.diff", statistical.test="parametric", 
+                                         nperm=1, min.size=10, cores=1) {
   
-  if (paste0(factor.indexes,sep="",collapse="") == "all") { 
-    factor.indexes <- 1:model@Dimensions[["K"]]
+  # Collect factors
+  if (paste0(factors,sep="",collapse="") == "all") { 
+    factors <- factorNames(model)
+    if (model@ModelOpts$learnMean) { factors <- factors[-1] }
   }
   
-  # Collect expectations
+  # Collect observed data
   data <- model@TrainData[[view]]
-  W <- getExpectations(model,"SW","E")[[view]]; rownames(W) <- colnames(data)
-  Z <- getExpectations(model,"Z","E")[,factor.indexes];          rownames(Z) <- rownames(data)
+  data <- t(data)
   
-  # Remove genes that are not present in either the data or the annotation file
-  genes <- intersect(colnames(data),colnames(gene.sets))
-  data <- data[,genes]
-  W <- W[genes,]
-  gene.sets <- gene.sets[,genes]
-  
-  # Filter gene sets with small number of genes
-  gene.sets <- gene.sets[rowSums(gene.sets)>=min_size,]
+  # Collect relevant expectations
+  W <- getExpectations(model,"SW","E")[[view]][,factors, drop=FALSE]
+  Z <- getExpectations(model,"Z","E")[,factors, drop=FALSE]
+  #; rownames(W) <- colnames(data)
+  #;          rownames(Z) <- rownames(data)
   
   # Check that there is no constant factor
   stopifnot( all(apply(Z,2,var)>0) )
   
-  cat("Doing Gene Ontology Enrichment Analysis with the following options...\n")
+  # To-do: check feature.sets input format
+  # (...)
+  
+  # Check if some features do not intersect between the feature sets and the observed data and remove them
+  features <- intersect(colnames(data),colnames(feature.sets))
+  # features <- intersect(rownames(data),colnames(feature.sets))
+  data <- data[,features]
+  # data <- data[features,]
+  W <- W[features,]
+  feature.sets <- feature.sets[,features]
+  
+  # Filter feature sets with small number of features
+  feature.sets <- feature.sets[rowSums(feature.sets)>=min.size,]
+  
+  # Print options
+  cat("Doing feature Ontology Enrichment Analysis with the following options...\n")
   cat(sprintf("View: %s\n", view))
-  cat(sprintf("Latent variables: %s\n", paste(as.character(factor.indexes),collapse=" ")))
-  cat(sprintf("Number of gene sets: %d\n", nrow(gene.sets)))
+  cat(sprintf("Latent variables: %s\n", paste(as.character(factors),collapse=" ")))
+  cat(sprintf("Number of feature sets: %d\n", nrow(feature.sets)))
   cat(sprintf("Local statistic: %s\n", local.statistic))
   cat(sprintf("Transformation: %s\n", transformation))
   cat(sprintf("Global statistic: %s\n", global.statistic))
@@ -58,9 +141,11 @@ GSEA <- function(model, view, factor.indexes, gene.sets, local.statistic="loadin
   
   if (statistical.test == "permutation") {
     doParallel::registerDoParallel(cores=cores)
-    # null_dist <- matrix(NA,nr=nperm, nc=length(factor.indexes))
+    stop("Permutation test is not working properly")
+    doParallel::registerDoParallel(cores=cores)
+    
     null_dist_tmp <- foreach(rnd=1:nperm) %dopar% {
-    # for (rnd in 1:nperm) {
+      # for (rnd in 1:nperm) {
       # cat(sprintf("Random trial %d\n",rnd))
       
       # Permute rows of the weight matrix to obtain a null distribution
@@ -71,19 +156,18 @@ GSEA <- function(model, view, factor.indexes, gene.sets, local.statistic="loadin
       rownames(data_null) <- rownames(data)
       
       # Compute null statistic
-      s.null <- pcgse(data=data_null, prcomp.output=list(rotation=W_null, x=Z), pc.indexes=factor.indexes, gene.sets=gene.sets, gene.statistic=local.statistic,
-                      transformation=transformation, gene.set.statistic=global.statistic, gene.set.test="parametric", nperm=NA)$statistic
-      # null_dist[rnd,] = apply(abs(s.null), 2, max)
+      s.null <- pcgse(data=data_null, prcomp.output=list(rotation=W_null, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
+                      transformation=transformation, feature.set.statistic=global.statistic, feature.set.test="parametric", nperm=NA)$statistic
       tmp <- apply(abs(s.null), 2, max)
       tmp
     }
     null_dist <- do.call("rbind", null_dist_tmp)
     
     # Compute true statistics
-    s.true <- pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=factor.indexes, gene.sets=gene.sets, gene.statistic=local.statistic,
-               transformation=transformation, gene.set.statistic=global.statistic, gene.set.test="parametric", nperm=NA)$statistic
+    s.true <- pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
+                    transformation=transformation, feature.set.statistic=global.statistic, feature.set.test="parametric", nperm=NA)$statistic
     colnames(s.true) <- factorNames(model)[factor.indexes]
-    rownames(s.true) <- rownames(gene.sets)
+    rownames(s.true) <- rownames(feature.sets)
     
     # Compute p.values
     p.values <- matrix(NA, nr=nrow(s.true), nc=ncol(s.true));
@@ -94,71 +178,70 @@ GSEA <- function(model, view, factor.indexes, gene.sets, local.statistic="loadin
     p.values
     
   } else {
-    p.values <- pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=factor.indexes, gene.sets=gene.sets, gene.statistic=local.statistic,
-          transformation=transformation, gene.set.statistic=global.statistic, gene.set.test=statistical.test, nperm=nperm)$p.values
-    colnames(p.values) <- factorNames(model)[factor.indexes]
-    rownames(p.values) <- rownames(gene.sets)
+    p.values <- pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
+                      transformation=transformation, feature.set.statistic=global.statistic, feature.set.test=statistical.test, nperm=nperm)$p.values
+    colnames(p.values) <- factors
+    rownames(p.values) <- rownames(feature.sets)
   }
   
   return(p.values)
 }
 
 
-
-######################################################################################################
-######################################################################################################
-######################################################################################################
+######################################################################
+## From here downwards it is a modified version of the PCGSE module ##
+######################################################################
 
 pcgse = function(data, 
                  prcomp.output=NA, 
                  pc.indexes=1, 
-                 gene.sets,
-                 gene.statistic="z",
+                 feature.sets,
+                 feature.statistic="z",
                  transformation="none",
-                 gene.set.statistic="mean.diff",
-                 gene.set.test="cor.adj.parametric",
-                 nperm=9999 # for gene.set.test value of "permutation"
+                 feature.set.statistic="mean.diff",
+                 feature.set.test="cor.adj.parametric",
+                 nperm=9999 # for feature.set.test value of "permutation"
 ) {
   current.warn = getOption("warn")
   options(warn=-1)
   if (is.na(data)) {
     stop("'data must' be specified!")
   }  
-  if (is.na(gene.sets)) {
-    stop("'gene.sets' must be specified!")
+  if (is.na(feature.sets)) {
+    stop("'feature.sets' must be specified!")
   }   
   options(warn=current.warn) 
-  if (!(gene.statistic %in% c("loading", "cor", "z"))) {
-    stop("gene.statistic must be 'loading', 'cor' or 'z'")
+  if (!(feature.statistic %in% c("loading", "cor", "z"))) {
+    stop("feature.statistic must be 'loading', 'cor' or 'z'")
   }  
   if (!(transformation %in% c("none", "abs.value"))) {
     stop("transformation must be 'none' or 'abs.value'")
   }  
-  if (!(gene.set.statistic %in% c("mean.diff", "rank.sum"))) {
-    stop("gene.set.statistic must be 'mean.diff' or 'rank.sum'")
+  if (!(feature.set.statistic %in% c("mean.diff", "rank.sum"))) {
+    stop("feature.set.statistic must be 'mean.diff' or 'rank.sum'")
   }    
-  if (!(gene.set.test %in% c("parametric", "cor.adj.parametric", "permutation"))) {
-    stop("gene.set.test must be one of 'parametric', 'cor.adj.parametric', 'permutation'")
+  if (!(feature.set.test %in% c("parametric", "cor.adj.parametric", "permutation"))) {
+    stop("feature.set.test must be one of 'parametric', 'cor.adj.parametric', 'permutation'")
   }
-  if (gene.set.test == "permutation" & gene.statistic == "loading") { 
-    stop("gene.statistic cannot be set to 'loading' if gene.set.test is 'permutation'")
+  if (feature.set.test == "permutation" & feature.statistic == "loading") { 
+    stop("feature.statistic cannot be set to 'loading' if feature.set.test is 'permutation'")
   }
-  if (!is.matrix(gene.sets) & gene.set.test == "permutation") {
-    stop("gene.sets must be specified as a binary membership matrix if gene.set.test is set to 'permutation'") 
+  if (!is.matrix(feature.sets) & feature.set.test == "permutation") {
+    stop("feature.sets must be specified as a binary membership matrix if feature.set.test is set to 'permutation'") 
   }  
-  # if (gene.set.test == "parametric") {
-  #   warning("The 'parametric' test option ignores the correlation between gene-level test statistics and therefore has an inflated type I error rate. ",
+  # if (feature.set.test == "parametric") {
+  #   warning("The 'parametric' test option ignores the correlation between feature-level test statistics and therefore has an inflated type I error rate. ",
   #           "This option should only be used for evaluation purposes.")    
   # }  
-  # if (gene.set.test == "permutation") {
+  # if (feature.set.test == "permutation") {
   #   warning("The 'permutation' test option can be extremely computationally expensive given the required modifications to the safe() function. ",
-  #           "For most applications, it is recommended that gene.set.test is set to 'cor.adj.parametric'.")
+  #           "For most applications, it is recommended that feature.set.test is set to 'cor.adj.parametric'.")
   # }
   
-  # Turn the gene set matrix into list form if gene.set.test is not "permutation"
-  gene.set.indexes = gene.sets  
-  if (is.matrix(gene.sets)) {
-    gene.set.indexes = createVarGroupList(var.groups=gene.sets)  
+  # Turn the feature set matrix into list form if feature.set.test is not "permutation"
+  feature.set.indexes = feature.sets  
+  if (is.matrix(feature.sets)) {
+    feature.set.indexes = createVarGroupList(var.groups=feature.sets)  
   }
   
   # Compute PCA if necessary
@@ -170,83 +253,80 @@ pcgse = function(data,
   n = nrow(data)
   p = ncol(data)
   
-  # Compute the gene-level statistics.
-  gene.statistics = matrix(0, nrow=p, ncol=length(pc.indexes))
+  # Compute the feature-level statistics.
+  feature.statistics = matrix(0, nrow=p, ncol=length(pc.indexes))
   for (i in 1:length(pc.indexes)) {
     pc.index = pc.indexes[i]
-    gene.statistics[,i] = computeGeneStatistics(data=data, prcomp.output=prcomp.output, pc.index=pc.index, gene.statistic, transformation)
+    feature.statistics[,i] = computefeatureStatistics(data=data, prcomp.output=prcomp.output, pc.index=pc.index, feature.statistic, transformation)
   }
   
-  # Perform the specified gene set test for each gene set on each specified PC using the gene-level statistics
-  if (gene.set.test == "parametric" | gene.set.test == "cor.adj.parametric") {
-    if (gene.set.statistic == "mean.diff") {
-      results = pcgseViaTTest(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, gene.set.indexes=gene.set.indexes,
-                              gene.statistics=gene.statistics, cor.adjustment=(gene.set.test == "cor.adj.parametric"))      
-    } else if (gene.set.statistic == "rank.sum") {
-      results = pcgseViaWMW(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, gene.set.indexes=gene.set.indexes,
-                            gene.statistics=gene.statistics, cor.adjustment=(gene.set.test == "cor.adj.parametric"))
+  # Perform the specified feature set test for each feature set on each specified PC using the feature-level statistics
+  if (feature.set.test == "parametric" | feature.set.test == "cor.adj.parametric") {
+    if (feature.set.statistic == "mean.diff") {
+      results = pcgseViaTTest(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, feature.set.indexes=feature.set.indexes,
+                              feature.statistics=feature.statistics, cor.adjustment=(feature.set.test == "cor.adj.parametric"))      
+    } else if (feature.set.statistic == "rank.sum") {
+      results = pcgseViaWMW(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, feature.set.indexes=feature.set.indexes,
+                            feature.statistics=feature.statistics, cor.adjustment=(feature.set.test == "cor.adj.parametric"))
     }     
-  } else if (gene.set.test == "permutation") {
-    # results = pcgseViaSAFE(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, gene.set.indexes=gene.set.indexes, 
-    #                        gene.statistic=gene.statistic, transformation=transformation, gene.set.statistic=gene.set.statistic, nperm=nperm)
-    results = pcgseViaPermutation(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, gene.set.indexes=gene.set.indexes, 
-                           gene.statistics=gene.statistics, gene.set.statistic=gene.set.statistic, nperm=nperm)        
+  } else if (feature.set.test == "permutation") {
+    # results = pcgseViaSAFE(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, feature.set.indexes=feature.set.indexes, 
+    #                        feature.statistic=feature.statistic, transformation=transformation, feature.set.statistic=feature.set.statistic, nperm=nperm)
+    results = pcgseViaPermutation(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, feature.set.indexes=feature.set.indexes, 
+                                  feature.statistics=feature.statistics, feature.set.statistic=feature.set.statistic, nperm=nperm)        
   }
   
   return (results) 
 }
 
-
-# pcgseViaPermutation = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene.statistic, transformation, gene.set.statistic, nperm=999) {
+# pcgseViaPermutation = function(data, prcomp.output, pc.indexes, feature.set.indexes, feature.statistic, transformation, feature.set.statistic, nperm=999) {
 #   
-#   num.gene.sets <- length(gene.set.indexes)
+#   num.feature.sets <- length(feature.set.indexes)
 #   # n <-  nrow(data)
-#   p.values <- matrix(0, nrow=num.gene.sets, ncol=length(pc.indexes))
-#   rownames(p.values) = names(gene.set.indexes)
-#   gene.set.statistics = matrix(T, nrow=num.gene.sets, ncol=length(pc.indexes))    
-#   rownames(gene.set.statistics) = names(gene.set.indexes)  
+#   p.values <- matrix(0, nrow=num.feature.sets, ncol=length(pc.indexes))
+#   rownames(p.values) = names(feature.set.indexes)
+#   feature.set.statistics = matrix(T, nrow=num.feature.sets, ncol=length(pc.indexes))    
+#   rownames(feature.set.statistics) = names(feature.set.indexes)  
 #   
 #   null_dist <- matrix(NA, nrow=nperm, ncol=length(pc.indexes))
 #   for (i in 1:nperm) {
-#     # Shuffle gene statistics to obtain a null distribution
-#     gene.statistics.null <- gene.statistics[sample(nrow(gene.statistics)),]
-#     
+#     # Shuffle feature statistics to obtain a null distribution
+#     feature.statistics.null <- feature.statistics[sample(nrow(feature.statistics)),]
 #     for (j in 1:length(pc.indexes)) {
 #       pc.index <- pc.indexes[j]
 #       pc <- prcomp.output$x[,pc.index]
-#       
-#       gene.set.statistics = rep(NA, num.gene.sets)
-#       if (gene.set.statistic == "rank.sum") {
+#       feature.set.statistics = rep(NA, num.feature.sets)
+#       if (feature.set.statistic == "rank.sum") {
 #         stop()
-#       } else if (gene.set.statistic == "mean_diff") {
-#         for (k in 1:num.gene.sets) {
-#           m1 = length(gene.set.indexes[[k]])
-#           not.gene.set.indexes = which(!(1:num.gene.sets %in% gene.set.indexes[[k]]))
-#           m2 = length(not.gene.set.indexes)
-#           # compute the mean difference of the gene-level statistics
-#           mean.diff = mean(gene.statistics.null[gene.set.indexes[[k]],j]) - mean(gene.statistics.null[not.gene.set.indexes])
+#       } else if (feature.set.statistic == "mean_diff") {
+#         for (k in 1:num.feature.sets) {
+#           m1 = length(feature.set.indexes[[k]])
+#           not.feature.set.indexes = which(!(1:num.feature.sets %in% feature.set.indexes[[k]]))
+#           m2 = length(not.feature.set.indexes)
+#           # compute the mean difference of the feature-level statistics
+#           mean.diff = mean(feature.statistics.null[feature.set.indexes[[k]],j]) - mean(feature.statistics.null[not.feature.set.indexes])
 #           # compute the pooled standard deviation
-#           pooled.sd = sqrt(((m1-1)*var(gene.statistics.null[gene.set.indexes[[k]],j]) + (m2-1)*var(gene.statistics.null[not.gene.set.indexes,j]))/(m1+m2-2))
+#           pooled.sd = sqrt(((m1-1)*var(feature.statistics.null[feature.set.indexes[[k]],j]) + (m2-1)*var(feature.statistics.null[not.feature.set.indexes,j]))/(m1+m2-2))
 #           # compute the t-statistic
-#           gene.set.statistics[k] = mean.diff/(pooled.sd*sqrt(1/m1 + 1/m2))
+#           feature.set.statistics[k] = mean.diff/(pooled.sd*sqrt(1/m1 + 1/m2))
 #         }
 #       }
-#       null_dist[i,j] = max(abs(gene.set.statistics))
+#       null_dist[i,j] = max(abs(feature.set.statistics))
 #     }
 #   }
 #   
 #   # Compute the true statistics and obtain a p.value
-#   if (gene.set.statistic == "mean_diff") {
-#     for (k in 1:num.gene.sets) {
-#       m1 = length(gene.set.indexes[[k]])
-#       not.gene.set.indexes = which(!(1:num.gene.sets %in% gene.set.indexes[[k]]))
-#       m2 = length(not.gene.set.indexes)
-#       # compute the mean difference of the gene-level statistics
-#       mean.diff = mean(gene.statistics.null[gene.set.indexes[[k]],j]) - mean(gene.statistics.null[not.gene.set.indexes])
+#   if (feature.set.statistic == "mean_diff") {
+#     for (k in 1:num.feature.sets) {
+#       m1 = length(feature.set.indexes[[k]])
+#       not.feature.set.indexes = which(!(1:num.feature.sets %in% feature.set.indexes[[k]]))
+#       m2 = length(not.feature.set.indexes)
+#       # compute the mean difference of the feature-level statistics
+#       mean.diff = mean(feature.statistics.null[feature.set.indexes[[k]],j]) - mean(feature.statistics.null[not.feature.set.indexes])
 #       # compute the pooled standard deviation
-#       pooled.sd = sqrt(((m1-1)*var(gene.statistics.null[gene.set.indexes[[k]],j]) + (m2-1)*var(gene.statistics.null[not.gene.set.indexes,j]))/(m1+m2-2))
+#       pooled.sd = sqrt(((m1-1)*var(feature.statistics.null[feature.set.indexes[[k]],j]) + (m2-1)*var(feature.statistics.null[not.feature.set.indexes,j]))/(m1+m2-2))
 #       # compute the t-statistic
-#       gene.set.statistics[k] = mean.diff/(pooled.sd*sqrt(1/m1 + 1/m2))
+#       feature.set.statistics[k] = mean.diff/(pooled.sd*sqrt(1/m1 + 1/m2))
 #     }
 #   }
 #   p.values[,j] = mean(null_dist[,j] > abs(x))
@@ -254,8 +334,7 @@ pcgse = function(data,
 #   # Build the result list
 #   # results = list()
 #   # results$p.values = p.values
-#   # results$statistics = gene.set.statistics  
-#   
+#   # results$statistics = feature.set.statistics  
 #   return (results)
 # }
 
@@ -280,55 +359,55 @@ createVarGroupList = function(var.groups) {
 }
 
 # 
-# Computes the gene-level statistics
+# Computes the feature-level statistics
 #
-computeGeneStatistics = function(data, prcomp.output, pc.index, gene.statistic, transformation) {
+computefeatureStatistics = function(data, prcomp.output, pc.index, feature.statistic, transformation) {
   p = ncol(data)
   n = nrow(data)
-  gene.statistics = rep(0, p)
-  if (gene.statistic == "loading") {
+  feature.statistics = rep(0, p)
+  if (feature.statistic == "loading") {
     # get the PC loadings for the selected PCs
-    gene.statistics = prcomp.output$rotation[,pc.index]
+    feature.statistics = prcomp.output$rotation[,pc.index]
   } else {
     # compute the Pearson correlation between the selected PCs and the data
-    gene.statistics = cor(data, prcomp.output$x[,pc.index], use = "complete.obs") 
-    if (gene.statistic == "z") {
+    feature.statistics = cor(data, prcomp.output$x[,pc.index], use = "complete.obs") 
+    if (feature.statistic == "z") {
       # use Fisher's Z transformation to convert to Z-statisics
-      gene.statistics = sapply(gene.statistics, function(x) {
+      feature.statistics = sapply(feature.statistics, function(x) {
         return (sqrt(n-3)*atanh(x))})      
     }    
   }
   
-  # Absolute value transformation of the gene-level statistics if requested
+  # Absolute value transformation of the feature-level statistics if requested
   if (transformation == "abs.value") {
-    gene.statistics = sapply(gene.statistics, abs)
+    feature.statistics = sapply(feature.statistics, abs)
   }  
   
-  return (gene.statistics)
+  return (feature.statistics)
 }
 
 #-------------------------------------------------------------------------------------------------------------------------------
 # Internal methods - Enrichment via t-test or correlation-adjusted t-test
 #-------------------------------------------------------------------------------------------------------------------------------
 
-pcgseViaTTest = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene.statistics, cor.adjustment) {
+pcgseViaTTest = function(data, prcomp.output, pc.indexes, feature.set.indexes, feature.statistics, cor.adjustment) {
   
-  num.gene.sets = length(gene.set.indexes)
+  num.feature.sets = length(feature.set.indexes)
   n= nrow(data)
-  p.values = matrix(0, nrow=num.gene.sets, ncol=length(pc.indexes))  
-  rownames(p.values) = names(gene.set.indexes)
-  gene.set.statistics = matrix(T, nrow=num.gene.sets, ncol=length(pc.indexes))    
-  rownames(gene.set.statistics) = names(gene.set.indexes)    
+  p.values = matrix(0, nrow=num.feature.sets, ncol=length(pc.indexes))  
+  rownames(p.values) = names(feature.set.indexes)
+  feature.set.statistics = matrix(T, nrow=num.feature.sets, ncol=length(pc.indexes))    
+  rownames(feature.set.statistics) = names(feature.set.indexes)    
   
-  for (i in 1:num.gene.sets) {
-    indexes.for.gene.set = gene.set.indexes[[i]]
-    m1 = length(indexes.for.gene.set)
-    not.gene.set.indexes = which(!(1:ncol(data) %in% indexes.for.gene.set))
-    m2 = length(not.gene.set.indexes)
+  for (i in 1:num.feature.sets) {
+    indexes.for.feature.set = feature.set.indexes[[i]]
+    m1 = length(indexes.for.feature.set)
+    not.feature.set.indexes = which(!(1:ncol(data) %in% indexes.for.feature.set))
+    m2 = length(not.feature.set.indexes)
     
     if (cor.adjustment) {      
-      # compute sample correlation matrix for members of gene set
-      cor.mat = cor(data[,indexes.for.gene.set], use = "complete.obs")
+      # compute sample correlation matrix for members of feature set
+      cor.mat = cor(data[,indexes.for.feature.set], use = "complete.obs")
       # compute the mean pair-wise correlation 
       mean.cor = (sum(cor.mat) - m1)/(m1*(m1-1))    
       # compute the VIF, using CAMERA formula from Wu et al., based on Barry et al.
@@ -336,12 +415,12 @@ pcgseViaTTest = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene
     }
     
     for (j in 1:length(pc.indexes)) {
-      # get the gene-level statistics for this PC
-      pc.gene.stats = gene.statistics[,j]
-      # compute the mean difference of the gene-level statistics
-      mean.diff = mean(pc.gene.stats[indexes.for.gene.set]) - mean(pc.gene.stats[not.gene.set.indexes])
+      # get the feature-level statistics for this PC
+      pc.feature.stats = feature.statistics[,j]
+      # compute the mean difference of the feature-level statistics
+      mean.diff = mean(pc.feature.stats[indexes.for.feature.set]) - mean(pc.feature.stats[not.feature.set.indexes])
       # compute the pooled standard deviation
-      pooled.sd = sqrt(((m1-1)*var(pc.gene.stats[indexes.for.gene.set]) + (m2-1)*var(pc.gene.stats[not.gene.set.indexes]))/(m1+m2-2))      
+      pooled.sd = sqrt(((m1-1)*var(pc.feature.stats[indexes.for.feature.set]) + (m2-1)*var(pc.feature.stats[not.feature.set.indexes]))/(m1+m2-2))      
       # compute the t-statistic
       if (cor.adjustment) {
         t.stat = mean.diff/(pooled.sd*sqrt(vif/m1 + 1/m2))
@@ -350,7 +429,7 @@ pcgseViaTTest = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene
         t.stat = mean.diff/(pooled.sd*sqrt(1/m1 + 1/m2))
         df = m1+m2-2
       }
-      gene.set.statistics[i,j] = t.stat      
+      feature.set.statistics[i,j] = t.stat      
       # compute the p-value via a two-sided test
       lower.p = pt(t.stat, df=df, lower.tail=T)
       upper.p = pt(t.stat, df=df, lower.tail=F)        
@@ -361,7 +440,7 @@ pcgseViaTTest = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene
   # Build the result list
   results = list()
   results$p.values = p.values
-  results$statistics = gene.set.statistics  
+  results$statistics = feature.set.statistics  
   
   return (results)
 }
@@ -378,74 +457,74 @@ pcgseViaTTest = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene
 #' @details asd
 #' @return asd
 #' @export
-local.GeneStatistics = function(X.mat, y.vec,...){
+local.featureStatistics = function(X.mat, y.vec,...){
   args.local = list(...)[[1]]
-  gene.stat = args.local$gene.statistic
+  feature.stat = args.local$feature.statistic
   trans = args.local$transformation
-  return (function(data=X.mat, vector=y.vec, gene.statistic = gene.stat, transformation = trans,...) {
+  return (function(data=X.mat, vector=y.vec, feature.statistic = feature.stat, transformation = trans,...) {
     p = length(vector)
     n = ncol(data)
-    gene.statistics = rep(0, p)
+    feature.statistics = rep(0, p)
     # compute the Pearson correlation between the selected PCs and the data
-    gene.statistics = cor(t(data), vector)
-    if (gene.statistic == "z") {
+    feature.statistics = cor(t(data), vector)
+    if (feature.statistic == "z") {
       # use Fisher's Z transformation to convert to Z-statisics
-      gene.statistics = sapply(gene.statistics, function(x) {
+      feature.statistics = sapply(feature.statistics, function(x) {
         return (sqrt(n-3)*atanh(x))})
     }
-    # Absolute value transformation of the gene-level statistics if requested
+    # Absolute value transformation of the feature-level statistics if requested
     if (transformation == "abs.value") {
-      gene.statistics = sapply(gene.statistics, abs)
+      feature.statistics = sapply(feature.statistics, abs)
     }
-    return (gene.statistics)
+    return (feature.statistics)
   })
 }
 
 global.StandAveDiff = function(C.mat,local.stats,...) {
-  gene.set.mat = t(as.matrix(C.mat))
-  return (function(gene.statistics=local.stats,gene.sets=gene.set.mat,...) {
-    num.gene.sets = nrow(gene.set.mat)
-    gene.set.statistics = rep(0, num.gene.sets)
-    for (i in 1:num.gene.sets) {
-      indexes.for.gene.set = which(gene.set.mat[i,]==1)
-      m1 = length(indexes.for.gene.set)
-      not.gene.set.indexes = which(!(1:ncol(gene.set.mat) %in% indexes.for.gene.set))
-      m2 = length(not.gene.set.indexes)
-      # compute the mean difference of the gene-level statistics
-      mean.diff = mean(gene.statistics[indexes.for.gene.set]) - mean(gene.statistics[not.gene.set.indexes])
+  feature.set.mat = t(as.matrix(C.mat))
+  return (function(feature.statistics=local.stats,feature.sets=feature.set.mat,...) {
+    num.feature.sets = nrow(feature.set.mat)
+    feature.set.statistics = rep(0, num.feature.sets)
+    for (i in 1:num.feature.sets) {
+      indexes.for.feature.set = which(feature.set.mat[i,]==1)
+      m1 = length(indexes.for.feature.set)
+      not.feature.set.indexes = which(!(1:ncol(feature.set.mat) %in% indexes.for.feature.set))
+      m2 = length(not.feature.set.indexes)
+      # compute the mean difference of the feature-level statistics
+      mean.diff = mean(feature.statistics[indexes.for.feature.set]) - mean(feature.statistics[not.feature.set.indexes])
       # compute the pooled standard deviation
-      pooled.sd = sqrt(((m1-1)*var(gene.statistics[indexes.for.gene.set]) + (m2-1)*var(gene.statistics[not.gene.set.indexes]))/(m1+m2-2))
+      pooled.sd = sqrt(((m1-1)*var(feature.statistics[indexes.for.feature.set]) + (m2-1)*var(feature.statistics[not.feature.set.indexes]))/(m1+m2-2))
       # compute the t-statistic
-      gene.set.statistics[i] = mean.diff/(pooled.sd*sqrt(1/m1 + 1/m2))
+      feature.set.statistics[i] = mean.diff/(pooled.sd*sqrt(1/m1 + 1/m2))
     }
-    return (gene.set.statistics)
+    return (feature.set.statistics)
   })
 }
 
 
-pcgseViaSAFE = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene.statistic, transformation, gene.set.statistic, nperm=999) {
-  num.gene.sets = nrow(gene.set.indexes)
+pcgseViaSAFE = function(data, prcomp.output, pc.indexes, feature.set.indexes, feature.statistic, transformation, feature.set.statistic, nperm=999) {
+  num.feature.sets = nrow(feature.set.indexes)
   n= nrow(data)
-  p.values = matrix(0, nrow=num.gene.sets, ncol=length(pc.indexes))
-  rownames(p.values) = names(gene.set.indexes)
-  gene.set.statistics = matrix(T, nrow=num.gene.sets, ncol=length(pc.indexes))    
-  rownames(gene.set.statistics) = names(gene.set.indexes)  
+  p.values = matrix(0, nrow=num.feature.sets, ncol=length(pc.indexes))
+  rownames(p.values) = names(feature.set.indexes)
+  feature.set.statistics = matrix(T, nrow=num.feature.sets, ncol=length(pc.indexes))    
+  rownames(feature.set.statistics) = names(feature.set.indexes)  
   
   for (j in 1:length(pc.indexes)) {
     pc.index = pc.indexes[j]
     pc = prcomp.output$x[,pc.index]
     global="AveDiff"
-    if (gene.set.statistic == "rank.sum") {
+    if (feature.set.statistic == "rank.sum") {
       global="Wilcoxon"
     } else {
       # global="StandAveDiff"
       global="AveDiff" 
     }
-    safe.results = safe::safe(X.mat=t(data), y.vec=pc, C.mat=t(gene.set.indexes), local="GeneStatistics", global=global, Pi.mat=nperm,
-                        args.global=list(one.sided=T), args.local=list(gene.statistic=gene.statistic, transformation=transformation), alpha=1.01, print.it = FALSE,
-                        parallel = TRUE)
+    safe.results = safe::safe(X.mat=t(data), y.vec=pc, C.mat=t(feature.set.indexes), local="featureStatistics", global=global, Pi.mat=nperm,
+                              args.global=list(one.sided=T), args.local=list(feature.statistic=feature.statistic, transformation=transformation), alpha=1.01, print.it = FALSE,
+                              parallel = TRUE)
     p.values[,j] = slot(safe.results, "global.pval")
-    gene.set.statistics[,j] = slot(safe.results, "global.stat")    
+    feature.set.statistics[,j] = slot(safe.results, "global.stat")    
   }
   
   # Turn one-sided p-values into two-sided p-values
@@ -458,7 +537,7 @@ pcgseViaSAFE = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene.
   # Build the result list
   results = list()
   results$p.values = p.values
-  results$statistics = gene.set.statistics  
+  results$statistics = feature.set.statistics  
   
   return (results)
 }
@@ -467,33 +546,33 @@ pcgseViaSAFE = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene.
 # Internal methods - Enrichment via Wilcoxon Mann Whitney or correlation-adjusted WMW
 #-------------------------------------------------------------------------------------------------------------------------------
 
-pcgseViaWMW = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene.statistics, cor.adjustment) {
+pcgseViaWMW = function(data, prcomp.output, pc.indexes, feature.set.indexes, feature.statistics, cor.adjustment) {
   
-  num.gene.sets = length(gene.set.indexes)
+  num.feature.sets = length(feature.set.indexes)
   n= nrow(data)
-  p.values = matrix(0, nrow=num.gene.sets, ncol=length(pc.indexes))  
-  rownames(p.values) = names(gene.set.indexes)
-  gene.set.statistics = matrix(T, nrow=num.gene.sets, ncol=length(pc.indexes))    
-  rownames(gene.set.statistics) = names(gene.set.indexes)    
+  p.values = matrix(0, nrow=num.feature.sets, ncol=length(pc.indexes))  
+  rownames(p.values) = names(feature.set.indexes)
+  feature.set.statistics = matrix(T, nrow=num.feature.sets, ncol=length(pc.indexes))    
+  rownames(feature.set.statistics) = names(feature.set.indexes)    
   
-  for (i in 1:num.gene.sets) {
-    indexes.for.gene.set = gene.set.indexes[[i]]
-    m1 = length(indexes.for.gene.set)
-    not.gene.set.indexes = which(!(1:ncol(data) %in% indexes.for.gene.set))
-    m2 = length(not.gene.set.indexes)
+  for (i in 1:num.feature.sets) {
+    indexes.for.feature.set = feature.set.indexes[[i]]
+    m1 = length(indexes.for.feature.set)
+    not.feature.set.indexes = which(!(1:ncol(data) %in% indexes.for.feature.set))
+    m2 = length(not.feature.set.indexes)
     
     if (cor.adjustment) {            
-      # compute sample correlation matrix for members of gene set
-      cor.mat = cor(data[,indexes.for.gene.set])
+      # compute sample correlation matrix for members of feature set
+      cor.mat = cor(data[,indexes.for.feature.set])
       # compute the mean pair-wise correlation 
       mean.cor = (sum(cor.mat) - m1)/(m1*(m1-1))    
     }
     
     for (j in 1:length(pc.indexes)) {
-      # get the gene-level statistics for this PC
-      pc.gene.stats = gene.statistics[,j]
-      # compute the rank sum statistic gene-level statistics
-      wilcox.results = wilcox.test(x=pc.gene.stats[indexes.for.gene.set], y=pc.gene.stats[not.gene.set.indexes],
+      # get the feature-level statistics for this PC
+      pc.feature.stats = feature.statistics[,j]
+      # compute the rank sum statistic feature-level statistics
+      wilcox.results = wilcox.test(x=pc.feature.stats[indexes.for.feature.set], y=pc.feature.stats[not.feature.set.indexes],
                                    alternative="two.sided", exact=F, correct=F)
       rank.sum = wilcox.results$statistic                
       if (cor.adjustment) {
@@ -503,7 +582,7 @@ pcgseViaWMW = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene.s
         var.rank.sum = m1*m2*(m1+m2+1)/12
       }
       z.stat = (rank.sum - (m1*m2)/2)/sqrt(var.rank.sum)
-      gene.set.statistics[i,j] = z.stat      
+      feature.set.statistics[i,j] = z.stat      
       # compute the p-value via a two-sided z-test
       lower.p = pnorm(z.stat, lower.tail=T)
       upper.p = pnorm(z.stat, lower.tail=F)        
@@ -514,7 +593,7 @@ pcgseViaWMW = function(data, prcomp.output, pc.indexes, gene.set.indexes, gene.s
   # Build the result list
   results = list()
   results$p.values = p.values
-  results$statistics = gene.set.statistics  
+  results$statistics = feature.set.statistics  
   
   return (results)
 }

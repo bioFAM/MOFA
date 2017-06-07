@@ -20,7 +20,7 @@
 
 GSEA <- function(model, view, factor.indexes, gene.sets, local.statistic="loading",
                  transformation="none", global.statistic="mean.diff", statistical.test="cor.adj.parametric", 
-                 nperm=1, min_size=10, cores=1) {
+                 nperm=1000, min_size=10, cores=1) {
   
   if (paste0(factor.indexes,sep="",collapse="") == "all") { 
     factor.indexes <- 1:model@Dimensions[["K"]]
@@ -29,7 +29,7 @@ GSEA <- function(model, view, factor.indexes, gene.sets, local.statistic="loadin
   # Collect expectations
   data <- model@TrainData[[view]]
   W <- getExpectations(model,"SW","E")[[view]]; rownames(W) <- colnames(data)
-  Z <- getExpectations(model,"Z","E")[,factor.indexes];          rownames(Z) <- rownames(data)
+  Z <- getExpectations(model,"Z","E")[,factor.indexes, drop=F];          rownames(Z) <- rownames(data)
   
   # Remove genes that are not present in either the data or the annotation file
   genes <- intersect(colnames(data),colnames(gene.sets))

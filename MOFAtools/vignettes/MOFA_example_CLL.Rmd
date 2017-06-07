@@ -12,8 +12,8 @@ vignette: >
 ---
 
 ```{r}
-# devtools::load_all("/Users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFAtools/")
-devtools::load_all("/Users/ricard/mofa/MOFAtools")
+devtools::load_all("/Users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFAtools/")
+# devtools::load_all("/Users/ricard/mofa/MOFAtools")
 library(MultiAssayExperiment)
 ```
 
@@ -66,6 +66,12 @@ DirOptions <- list(
   "outFile" = "/Users/ricard/test.hdf5",
   "mofaDir" = "/Users/ricard/mofa/MOFA"
 )
+
+DirOptions <- list(
+  "tmpDir" = "/users/bvelten/Documents/MOFA/CLL_MOFA_data/testPipeline/",
+  "outFile" = "/users/bvelten/Documents/MOFA/CLL_MOFA_data/testPipeline/",
+  "mofaDir" = "/users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFA"
+)
 ```
 
 ### Define model options
@@ -75,7 +81,6 @@ Important:
 - Schedule of updates
 ```{r}
 ModelOptions <- getDefaultModelOpts(object)
-# ModelOptions$likelihood[viewNames(object)=="mut"] <- "bernoulli"
 ModelOptions$initialK <- 10
 ```
 
@@ -104,7 +109,7 @@ object <- prepareMOFA(object,
 ## Run MOFA
 This step can take some time , it is recommended to run it from the Python-based module
 ```{r}
-model <- runMOFA(object, DirOptions)
+object <- runMOFA(object, DirOptions)
 ```
 
 # Step 3: Analyse a trained MOFA model

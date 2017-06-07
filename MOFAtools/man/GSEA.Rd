@@ -6,7 +6,8 @@
 \usage{
 GSEA(model, view, factor.indexes, gene.sets, local.statistic = "loading",
   transformation = "none", global.statistic = "mean.diff",
-  statistical.test = "cor.adj.parametric", nperm = 1, min_size = 10)
+  statistical.test = "cor.adj.parametric", nperm = 1000, min_size = 10,
+  cores = 1)
 }
 \arguments{
 \item{model}{a \code{\link{MOFAmodel}} object.}

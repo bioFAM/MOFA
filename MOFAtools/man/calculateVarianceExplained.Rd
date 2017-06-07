@@ -18,6 +18,12 @@ calculateVarianceExplained(object, views = "all", factors = "all",
 \item{plotit}{boolean, wether to produce a plot (default true)}
 
 \item{perFeature}{boolean, whether to calculate in addition variance explained per feature (and factor) (default FALSE)}
+
+\item{InterceptLFasNull}{whether to use the intercept factor or the featureMean as null mode}
+
+\item{orderFactorsbyR2}{if T, facotrs are order according to sum of variance explained across views}
+
+\item{showtotalR2}{if FALSE, R2 with respect to total prediciton instead of observations is considered instead of total R2}
 }
 \value{
 a list containing list of R2 for all gaussian views and list of BS for all binary views

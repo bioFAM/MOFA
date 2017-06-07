@@ -10,6 +10,9 @@
 #' @param factors Latent variables or factores to use, default is "all"
 #' @param plotit boolean, wether to produce a plot (default true)
 #' @param perFeature boolean, whether to calculate in addition variance explained per feature (and factor) (default FALSE)
+#' @param InterceptLFasNull whether to use the intercept factor or the featureMean as null mode
+#' @param orderFactorsbyR2 if T, facotrs are order according to sum of variance explained across views
+#' @param showtotalR2 if FALSE, R2 with respect to total prediciton instead of observations is considered instead of total R2
 #' @details fill this
 #' @return a list containing list of R2 for all gaussian views and list of BS for all binary views
 #' @import pheatmap gridExtra ggplot2
@@ -48,13 +51,15 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
 
   # Calculate predictions under the  MOFA model using all or a single factor
     Ypred_m <- lapply(views, function(m) Z%*%t(SW[[m]])); names(Ypred_m) <- views
-    Ypred_mk <- lapply(views, function(m) sapply(factors, function(k) Z[,k]%*%t(SW[[m]][,k]) ) )
+    Ypred_mk <- lapply(views, function(m) {
+                        ltmp <- lapply(factors, function(k) Z[,k]%*%t(SW[[m]][,k]) )
+                        names(ltmp) <- factorNames(object)
+                        ltmp
+                      })
     names(Ypred_mk) <- views
-    
-    
 
   # Calculate prediction under the null model (mean only)
-    NullModel <- lapply(views, function(m)  if(InterceptLFasNull) unique(Ypred_mk[[m]][,1]) else apply(Y[[m]],2,mean,na.rm=T))
+    NullModel <- lapply(views, function(m)  if(InterceptLFasNull) unique(Ypred_mk[[m]][[1]][1,]) else apply(Y[[m]],2,mean,na.rm=T))
     names(NullModel) <- views
     resNullModel <- lapply(views, function(m) sweep(Y[[m]],2,NullModel[[m]],"-"))
     names(resNullModel) <- views
@@ -70,12 +75,12 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
       fvar_md <- lapply(views, function(m) 1 - colSums((Y[[m]]-Ypred_m[[m]])**2,na.rm=T) / colSums(resNullModel[[m]]**2,na.rm=T))
     
     # per factor and view
-     if(showtotalR2) fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((resNullModel[[m]]-Ypred_mk[[m]][,k])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) ))
-        else fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((Ypred_m[[m]]-Ypred_mk[[m]][,k]-Ypred_mk[[m]][,1])**2, na.rm=T) / sum((Ypred_m[[m]]-Ypred_mk[[m]][,1])**2, na.rm=T) ))
+     if(showtotalR2) fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((resNullModel[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) ))
+        else fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((Ypred_m[[m]]-Ypred_mk[[m]][[k]]-Ypred_mk[[m]][[1]])**2, na.rm=T) / sum((Ypred_m[[m]]-Ypred_mk[[m]][[1]])**2, na.rm=T) ))
     
     # per factor and view and feature
     if(perFeature)
-      fvar_mdk <- lapply(views, function(m) sapply(factorsNonconst, function(k) 1 - colSums((resNullModel[[m]]-Ypred_mk[[m]][,k])**2,na.rm=T) / colSums(resNullModel[[m]]**2,na.rm=T)))
+      fvar_mdk <- lapply(views, function(m) lapply(factorsNonconst, function(k) 1 - colSums((resNullModel[[m]]-Ypred_mk[[m]][[k]])**2,na.rm=T) / colSums(resNullModel[[m]]**2,na.rm=T)))
     
     # Set names
     names(fvar_m) <- views
@@ -87,76 +92,77 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
     }
     colnames(fvar_mk) <- views
     rownames(fvar_mk) <- factorsNonconst 
+    
   
-    # Heatmap with coefficient of determination (R2) per factor and view
-    # hm <- pheatmap::pheatmap(fvar_mk, silent=T,
-    #                       color = colorRampPalette(c("white","darkblue"))(100), 
-    #                       cluster_cols = T, cluster_rows = F,
-    #                       main = "Variance explained per view and factor",
-    #                       treeheight_col = 10)
-    
-    #Melting data so we can plot it with GGplot
-  
-    fvar_mk_df <- melt(fvar_mk,varnames  = c("factor","view"))
-    
-    #Resetting factors
-    fvar_mk_df$factor <- factor(fvar_mk_df$factor)
-    hc<-hclust(dist(t(fvar_mk)))
-    fvar_mk_df$view <- factor(fvar_mk_df$view, levels = colnames(fvar_mk)[hc$order])
-    if(orderFactorsbyR2) factor_order <- order(rowSums(fvar_mk), decreasing = F) else factor_order <- rev(1:length(factorsNonconst))
-    fvar_mk_df$factor <- factor(fvar_mk_df$factor, levels = factorsNonconst[factor_order])
-    
-    #Creating the plot itself
-    hm <- ggplot(fvar_mk_df,aes(view,factor)) + geom_raster(aes(fill=value)) +
-      guides(fill=guide_colorbar("R2")) +
-      # scale_y_discrete(position = "right") +
-      scale_fill_gradientn(colors=c("white","darkblue"),guide="colorbar") +
-      theme(axis.title.x = element_blank(),
-            # axis.text.x = element_blank(),
-            axis.line = element_blank(),
-            axis.ticks =  element_blank(),
-            panel.background = element_blank())
-    if(showtotalR2) hm <- hm + ggtitle("Factor-wise variance explained per view")  + 
-      guides(fill=guide_colorbar("R2")) 
-    else
-      hm <- hm + ggtitle("Factor-wise variance explained per view")  + 
-      guides(fill=guide_colorbar("Residual R2 per view")) 
+    if(plotit){
+      # Heatmap with coefficient of determination (R2) per factor and view
+      # hm <- pheatmap::pheatmap(fvar_mk, silent=T,
+      #                       color = colorRampPalette(c("white","darkblue"))(100), 
+      #                       cluster_cols = T, cluster_rows = F,
+      #                       main = "Variance explained per view and factor",
+      #                       treeheight_col = 10)
       
-    
-    fvar_m_df <- data.frame(view=names(fvar_m), R2=fvar_m)
-    fvar_m_df$view <- factor(fvar_m_df$view, levels = colnames(fvar_mk)[hc$order])
-    
-    # Barplot with coefficient of determination (R2) per view
-    bplt <- ggplot( fvar_m_df, aes(x=view, y=R2)) + 
-      geom_bar(stat="identity", fill="deepskyblue4", width=0.9) +
-      xlab("") + 
-      # scale_y_continuous(position = "right")+
-      # theme_minimal() +
-      theme(plot.margin = unit(c(1,2.4,0,0), "cm"),
-            panel.background = element_blank()) +
-      ggtitle("Total variance explained per view")
-    
-    # Join the two plots
-    # Need to fix alignment using e.g. gtable...
-    # gg_R2 <- gridExtra::arrangeGrob(hm$gtable, bplt, ncol=1, heights=c(10,5) )
-    gg_R2 <- gridExtra::arrangeGrob(hm, bplt, ncol=1, heights=c(length(factorsNonconst),7) )
-    if (plotit) grid.arrange(gg_R2)
-   
-    if (plotit){
-    #Calculate 'variance component'/contribution of each factor
-    cols  <- c(RColorBrewer::brewer.pal(9, "Set1"),RColorBrewer::brewer.pal(8, "Dark2"))
-    varcomp_mk <- sapply(views, function(m) sapply(factorsNonconst, function(l) sum(sapply(factorsNonconst, function(k) cov(Ypred_mk[[m]][,l], Ypred_mk[[m]][,k])))))
-    par(mfrow=c(1,2))
-    barplot(t(t(varcomp_mk)/colSums(varcomp_mk)), col = cols, horiz = T, main = "Variance components per view", ncol = 2)
-    plot.new()
-    legend("center", fill=cols, legend=factorsNonconst)
+      #Melting data so we can plot it with GGplot
+      fvar_mk_df <- melt(fvar_mk,varnames  = c("factor","view"))
+      
+      #Resetting factors
+      fvar_mk_df$factor <- factor(fvar_mk_df$factor)
+      hc<-hclust(dist(t(fvar_mk)))
+      fvar_mk_df$view <- factor(fvar_mk_df$view, levels = colnames(fvar_mk)[hc$order])
+      if(orderFactorsbyR2) factor_order <- order(rowSums(fvar_mk), decreasing = F) else factor_order <- rev(1:length(factorsNonconst))
+      fvar_mk_df$factor <- factor(fvar_mk_df$factor, levels = factorsNonconst[factor_order])
+      
+      #Creating the plot 
+      hm <- ggplot(fvar_mk_df,aes(view,factor)) + geom_raster(aes(fill=value)) +
+        guides(fill=guide_colorbar("R2")) +
+        # scale_y_discrete(position = "right") +
+        scale_fill_gradientn(colors=c("white","darkblue"),guide="colorbar") +
+        theme(axis.title.x = element_blank(),
+              # axis.text.x = element_blank(),
+              axis.line = element_blank(),
+              axis.ticks =  element_blank(),
+              panel.background = element_blank())
+      if(showtotalR2) hm <- hm + ggtitle("Factor-wise variance explained per view")  + 
+        guides(fill=guide_colorbar("R2")) 
+      else
+        hm <- hm + ggtitle("Factor-wise variance explained per view")  + 
+        guides(fill=guide_colorbar("Residual R2 per view")) 
+        
+      
+      fvar_m_df <- data.frame(view=names(fvar_m), R2=fvar_m)
+      fvar_m_df$view <- factor(fvar_m_df$view, levels = colnames(fvar_mk)[hc$order])
+      
+      # Barplot with coefficient of determination (R2) per view
+      bplt <- ggplot( fvar_m_df, aes(x=view, y=R2)) + 
+        geom_bar(stat="identity", fill="deepskyblue4", width=0.9) +
+        xlab("") + 
+        # scale_y_continuous(position = "right")+
+        # theme_minimal() +
+        theme(plot.margin = unit(c(1,2.4,0,0), "cm"),
+              panel.background = element_blank()) +
+        ggtitle("Total variance explained per view")
+      
+      # Join the two plots
+      # Need to fix alignment using e.g. gtable...
+      # gg_R2 <- gridExtra::arrangeGrob(hm$gtable, bplt, ncol=1, heights=c(10,5) )
+      gg_R2 <- gridExtra::arrangeGrob(hm, bplt, ncol=1, heights=c(length(factorsNonconst),7) )
+      grid.arrange(gg_R2)
+     
+      if (!showtotalR2){
+        #Calculate 'variance component'/contribution of each factor
+        cols  <- c(RColorBrewer::brewer.pal(9, "Set1"),RColorBrewer::brewer.pal(8, "Dark2"))
+        varcomp_mk <- sapply(views, function(m) sapply(factorsNonconst, function(l) sum(sapply(factorsNonconst, function(k) cov(Ypred_mk[[m]][,l], Ypred_mk[[m]][,k])))))
+        par(mfrow=c(1,2))
+        barplot(t(t(varcomp_mk)/colSums(varcomp_mk)), col = cols, horiz = T, main = "Variance components per view", ncol = 2)
+        plot.new()
+        legend("center", fill=cols, legend=factorsNonconst)
+      }
     }
     
   # Store results
     R2_list <- list(
       R2Total = fvar_m,
-      R2PerFactor = fvar_mk, 
-      measure = "R2")
+      R2PerFactor = fvar_mk)
     if(perFeature){
       R2_list$R2PerFactorAndFeature = fvar_mdk
       R2_list$R2PerFeature = fvar_md

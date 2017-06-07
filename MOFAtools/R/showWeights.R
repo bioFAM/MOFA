@@ -63,6 +63,7 @@ showWeightHeatmap <- function(model, view, features="all", factors="all", interc
 
 
 
+
 #' @title showWeights: plot weights for a certain factor and view in a dotplot
 #' @name showWeights
 #' @description Function to visualize weights in a dotplot highlighting features with highest loadings
@@ -124,15 +125,7 @@ showWeights <- function(model, view, factor, ntop = 0, ntail = 0, manual = NULL,
   else df_W$groups <- T
   
   if(is.null(main)) main <- paste("Weigths on LF", factor, "on view", view)
-  gg_W <- ggplot2::ggplot(df_W, aes(x=FeatureName, y=loading, col=imp)) + geom_point()  +
-    theme(axis.title.x=element_blank(),
-          axis.text.x=element_blank(),
-          axis.ticks.x=element_blank())+
-    ggrepel::geom_text_repel(data = filter(df_W, imp), aes(label = FeatureName),
-                    segment.alpha=0.2, box.padding = unit(0.5, "lines")) +scale_color_manual(values=c("black", "red")) +
-    ggtitle(paste("Weigths on LF", factor, "on view", view)) +
-    guides(color=F) 
-  
+
   gg_W <- ggplot2::ggplot(df_W, aes(x=FeatureName, y=loading, col= groups)) + geom_point() +
     ggrepel::geom_text_repel(data = filter(df_W, imp), aes(label = FeatureName, col = groups),
                              segment.alpha=0.2, box.padding = unit(0.5, "lines"), show.legend= F) +

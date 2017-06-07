@@ -47,10 +47,7 @@ setMethod("show", "MOFAmodel", function(object) {
     stop("Error: Dimensions not defined")
   if(!.hasSlot(object,"Status") | length(object@Status) == 0)
     stop("Error: Status not defined")
-  if(object@Status == "trained")
-  cat(sprintf("MOFA trained model with the following characteristics: \n views: %d \n viewnames: %s \n number of features: %s \n Number of samples: %d \n Number of latent variables: %d ",
-              object@Dimensions[["M"]], paste(viewNames(object),collapse=" "), paste(as.character(object@Dimensions[["D"]]),collapse=" "), object@Dimensions[["N"]], object@Dimensions[["K"]]))
-  else
-  cat(sprintf("Untrained MOFA object with the following characteristics: \n views: %d \n viewnames: %s \n number of features: %s \n Number of samples: %d \n Run MOFA on this object to obtain latent factors!",
-                object@Dimensions[["M"]], paste(viewNames(object),collapse=" "), paste(as.character(object@Dimensions[["D"]]),collapse=" "), object@Dimensions[["N"]]))
+  if(object@Status == "trained") { tmp <- "Trained" } else { tmp <- "Untrained" } 
+  cat(sprintf("%s MOFA model with the following characteristics: \n views: %d \n viewnames: %s \n number of features: %s \n Number of samples: %d \n Number of latent variables: %d ",
+              tmp, object@Dimensions[["M"]], paste(viewNames(object),collapse=" "), paste(as.character(object@Dimensions[["D"]]),collapse=" "), object@Dimensions[["N"]], object@Dimensions[["K"]]))
 })

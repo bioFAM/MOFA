@@ -1,20 +1,8 @@
-
-"""
-TO-DO:
-- Init theta in SW init?
-- Some variables are init as s.nan, that depend on the schedule
-- properly handle differnet trials...
-- Save training options does notw ork because of dict in dropK
-- Warning if negative lower bound
-- Multiple trials really decreasing elbo
-"""
-
-# Import required modules
 import argparse
 import pandas as pd
 import scipy as s
 
-# Import manual functions
+# from MOFA.core.utils import *
 from run_utils import *
 
 
@@ -53,21 +41,25 @@ args = p.parse_args()
 
 data_opts = {}
 
+# I/O
 data_opts['input_files'] = args.inFiles
 data_opts['outfile'] = args.outFile
+data_opts['rownames'] = 0
+data_opts['colnames'] = 0
+data_opts['delimiter'] = " "
+
+# View names
 data_opts['view_names'] = args.views
+
+# Center the data
 if args.learnMean:
   data_opts['center'] = [False for l in args.likelihoods]
 else:
   data_opts['center'] = [True if l=="gaussian" else False for l in args.likelihoods]
-data_opts['rownames'] = 0
-data_opts['colnames'] = 0
-# data_opts['rownames'] = None
-# data_opts['colnames'] = None
-data_opts['delimiter'] = " "
 
 M = len(data_opts['input_files'])
 
+# Mask data
 if args.maskAtRandom is not None:
   data_opts['maskAtRandom'] = args.maskAtRandom
 else:
@@ -99,7 +91,7 @@ if args.covariatesFile is not None:
 else:
     data_opts['covariates'] = None
 
-# If we want to learn the mean, we add a covariate where the latent variable is all 1s
+# If we want to learn the mean, we add a constant latent variable vector of ones
 if args.learnMean:
   if data_opts['covariates'] is not None:
     data_opts['covariates'].insert(0, "mean", s.ones(N,))
@@ -113,19 +105,24 @@ if args.learnMean:
 
 model_opts = {}
 
-# Define number of latent factors
+# Define initial number of latent factors
 K = model_opts['k'] = args.factors
 
 # Define likelihoods
 model_opts['likelihood'] = args.likelihoods
 assert M==len(model_opts['likelihood']), "Please specify one likelihood for each view"
+assert set(model_opts['likelihood']).issubset(set(["gaussian","bernoulli","poisson"]))
 
 # Define whether to learn the feature-wise means
 model_opts["learnMean"] = args.learnMean
 
-# Define the sparsity levels
+# Define whether to learn the variance of the latent variables
 model_opts['ardZ'] = args.ardZ
+
+# Define how to learn the variance of the weights
 model_opts['ardW'] = args.ardW
+
+# Define for which factors and views should we learn 'theta', the sparsity of the factor
 if args.learnTheta:
   model_opts['learnTheta'] = s.ones((M,K))
 else:
@@ -133,10 +130,6 @@ else:
 
 # Define schedule of updates
 model_opts['schedule'] = args.schedule
-if model_opts["ardZ"]: 
-  assert "AlphaZ" in args.schedule, "AlphaZ should be in the update schedule"
-else:
-  assert "AlphaZ" not in args.schedule, "AlphaZ should not be in the update schedule"
 
 
 ####################################
@@ -168,7 +161,7 @@ for m in xrange(M):
       model_opts["priorTheta"]["a"][m][k] = s.nan
       model_opts["priorTheta"]["b"][m][k] = s.nan
 
-# Noise
+# Tau
 model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-3 for m in xrange(M)], 'b':[s.ones(D[m])*1e-3 for m in xrange(M)] }
 
 
@@ -181,7 +174,7 @@ model_opts["initZ"] = { 'mean':"random", 'var':s.ones((K,)), 'E':None, 'E2':None
 if model_opts['ardZ']:
   model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*1e2 }
 
-# Noise
+# Tau
 model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(D[m])*100 for m in xrange(M)] }
 
 # ARD of weights
@@ -195,12 +188,11 @@ elif model_opts['ardW'] == "k":
 
 # Weights
 model_opts["initSW"] = { 
-  # 'Theta':[0.5*s.ones((D[m],K)) for m in xrange(M)],
   'Theta':[args.initTheta*s.ones((D[m],K)) for m in xrange(M)],
   'mean_S0':[s.zeros((D[m],K)) for m in xrange(M)],
   # 'var_S0':[s.ones((D[m],K))*model_opts["initAlphaW"]['E'][m] for m in xrange(M)], # IS THIS ACTUALLY USED?
   'var_S0':[s.nan*s.ones((D[m],K)) for m in xrange(M)], # IS THIS ACTUALLY USED?
-  'mean_S1':[s.zeros((D[m],K)) for m in xrange(M)], # (TO-DO) allow also random
+  'mean_S1':[s.zeros((D[m],K)) for m in xrange(M)],
   # 'mean_S1':[stats.norm.rvs(loc=0, scale=1, size=(D[m],K)) for m in xrange(M)],
   'var_S1':[s.ones((D[m],K)) for m in xrange(M)],
   'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M # It will be calculated from the parameters
@@ -216,15 +208,16 @@ for m in xrange(M):
       model_opts["initTheta"]["b"][m][k] = s.nan
       model_opts["initTheta"]["E"][m][k] = args.initTheta
 
-##############################
-## Learn feature-wise means ##
-##############################
+##########################################################
+## Modify priors and initialisations for the covariates ##
+##########################################################
+
+# Covariates are constant vectors and do not have any prior or variational distribution on Z
 
 if data_opts['covariates'] is not None:
   idx = xrange(data_opts['covariates'].shape[1])
 
-  ## Prior distributions (P) ##
-  # Latent variables
+  # Ignore prior distributions
   if model_opts['ardZ']:
     model_opts["priorZ"]["mean"][:,idx] = s.nan
     model_opts["priorAlphaZ"]["a"][idx] = s.nan
@@ -232,13 +225,18 @@ if data_opts['covariates'] is not None:
   else:
     model_opts["priorZ"]["var"][idx] = s.nan
 
-  ## Variational distributions (Q) ##
-  # Latent variables
+  # Ignore variational distribution
   # model_opts["initZ"]["mean"][:,idx] = model_opts["covariates"]
   model_opts["initZ"]["var"][idx] = 0.
   if model_opts['ardZ']:
         model_opts["initAlphaZ"]["E"][idx] = s.nan
 
+###########################################################
+## Modify priors and initialisations for the mean vector ##
+###########################################################
+
+# By definition, the weights of the vector associated with the means should not be sparse, therefore we remove
+# the spike and slab prior by not learning theta and initialisating it to one
 
 if model_opts["learnMean"]:
   model_opts['learnTheta'][:,0] = 0.
@@ -268,7 +266,7 @@ train_opts['maxiter'] = args.iter
 # Lower bound computation frequency
 train_opts['elbofreq'] = args.elbofreq
 
-# Save model (to finish)
+# (NOT IMPLEMENTED) Save temporary versions of the model
 train_opts['savefreq'] = s.nan
 train_opts['savefolder'] = s.nan
 
@@ -283,7 +281,7 @@ train_opts['freqdrop'] = args.freqDrop
 # Tolerance level for convergence
 train_opts['tolerance'] = args.tolerance
 
-# Do no stop even when convergence criteria is met?
+# Do no stop even when convergence criteria is met
 train_opts['forceiter'] = args.nostop
 
 # Number of trials

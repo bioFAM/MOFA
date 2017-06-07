@@ -3,31 +3,34 @@
 #' @name histPlot
 #' @description fill this
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param id latent variable
+#' @param id name of latent variable to plot
 #' @details asd
 #' @return fill this
 #' @reference fill this
 #' @import ggplot2
 #' @export
-histPlot <- function(object, id, xlabel = NULL, groups = NULL, alpha=1.0, binwidth=NULL) {
+histPlot <- function(object, id, xlabel = NULL, groups = NULL, alpha=0.6, binwidth=NULL, name_colour="", showNA=F) {
   
   if (class(object) != "MOFAmodel") 
     stop("'object' has to be an instance of MOFAmodel")
   
   N <- object@Dimensions[["N"]]
   Z <- getExpectations(object, "Z", "E")
-  
+  id <- as.character(id)
   if (is.null(xlabel)) { xlabel <- paste("Latent factor", id) }
   if (is.null(groups)) { groups <- rep("1",N) }
+
   
   df = data.frame(x=Z[,id], group=groups)
+  if(!showNA) df <- filter(df, !is.na(group))
+  df$group <- as.factor(df$group)
   
   p <- ggplot(df, aes(x=x)) + 
-    geom_histogram(aes(fill=group), alpha=alpha, binwidth=binwidth) + 
+    geom_histogram(aes(fill=group, group=group), alpha=alpha, binwidth=binwidth, position="identity") + 
     xlab(xlabel) + 
     ylab("Count") + 
     scale_y_continuous(expand=c(0,0)) +
-    # guides(fill=guide_legend(title=name_colour))
+    guides(fill=guide_legend(title=name_colour))
     theme(plot.margin = margin(40,40,20,20), 
           axis.text = element_text(size=rel(1.3), color = "black"), 
           axis.title.y = element_text(size=rel(1.5), margin=margin(0,15,0,0)), 
@@ -44,6 +47,36 @@ histPlot <- function(object, id, xlabel = NULL, groups = NULL, alpha=1.0, binwid
   if (length(unique(df$group))==1) { p <- p + guides(fill = FALSE) }
   
   return(p)
+}
+
+
+#' @title Visualize beeswarm plot of one latent variable
+#' @name beeswarmPlot
+#' @description fill this
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @param id latent variable
+#' @details asd
+#' @return fill this
+#' @reference fill this
+#' @import beeswarm
+#' @export
+beeswarmPlot <- function(object, id, label = NULL, groups = NULL, groupname="") {
+  
+  if (class(object) != "MOFAmodel") 
+    stop("'object' has to be an instance of MOFAmodel")
+  
+  N <- object@Dimensions[["N"]]
+  Z <- getExpectations(object, "Z", "E")
+  
+  if (is.null(label)) { label <- paste("Latent factor", id) }
+  if (is.null(groups)) { groups <- rep("1",N) } else groups <- as.factor(groups)
+  
+  beeswarm::beeswarm(Z[,id], pwcol = groups, pch = 16,
+                     ylab = label, xlab = "")
+  
+  if(!is.null(groups))
+  legend("topright", legend =  levels(groups), title = groupname, pch = 16, col = 1:length(levels(groups)))
+  
 }
 
 #' @title Visualize scatterplot of two latent variables

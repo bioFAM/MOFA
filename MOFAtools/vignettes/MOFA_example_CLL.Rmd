@@ -61,15 +61,15 @@ Important:
 - outFile: Output file for the model
 - mofaDir: directory of the MOFA package
 ```{r}
-DirOptions <- list(
-  "tmpDir" = "/tmp",
-  "outFile" = "/Users/ricard/test.hdf5",
-  "mofaDir" = "/Users/ricard/mofa/MOFA"
-)
+# DirOptions <- list(
+#   "tmpDir" = "/tmp",
+#   "outFile" = "/Users/ricard/test.hdf5",
+#   "mofaDir" = "/Users/ricard/mofa/MOFA"
+# )
 
 DirOptions <- list(
   "tmpDir" = "/users/bvelten/Documents/MOFA/CLL_MOFA_data/testPipeline/",
-  "outFile" = "/users/bvelten/Documents/MOFA/CLL_MOFA_data/testPipeline/",
+  "outFile" = "/users/bvelten/Documents/MOFA/CLL_MOFA_data/testPipeline/test.hdf5",
   "mofaDir" = "/users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFA"
 )
 ```
@@ -107,7 +107,7 @@ object <- prepareMOFA(object,
 ```
 
 ## Run MOFA
-This step can take some time , it is recommended to run it from the Python-based module
+This step can take some time, it is recommended to run it from the Python-based module
 ```{r}
 object <- runMOFA(object, DirOptions)
 ```

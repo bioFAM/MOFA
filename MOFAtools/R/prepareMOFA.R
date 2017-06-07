@@ -23,12 +23,6 @@ prepareMOFA <- function(object, DirOptions, ModelOptions = NULL, TrainOptions = 
   # Create temporary folder to store the input matrices
   dir.create(DirOptions$tmpDir, showWarnings = FALSE)
   
-  # DirOptions <- list(
-  #   "tmpDir"="/tmp",
-  #   "outFile"="/Users/ricard/test.hdf5",
-  #   "mofaDir"="/Users/ricard/mofa/MOFA"
-  # )
-  
   # Store views as matrices in .txt files
   message(sprintf("Storing input views in %s...", DirOptions$tmpDir))
   for(view in viewNames(object)) {

@@ -16,7 +16,7 @@
 #' @import pheatmap
 #' @export
 
-showDataHeatmap <- function(model, view, factor, nfeatures=50, ...) {
+showDataHeatmap <- function(model, view, factor, nfeatures=50, main=NULL, ...) {
   
   # Sanity checks
   if (class(model) != "MOFAmodel")
@@ -35,7 +35,8 @@ showDataHeatmap <- function(model, view, factor, nfeatures=50, ...) {
   tmp <- model@TrainData[[view]][,apply(model@TrainData[[view]],2, function(x) !all(is.na(x)))]
   
   # Plot heatmap
-  pheatmap::pheatmap(t(tmp[features,]), fontsize = 8, show_rownames = F, ...)
+  if(is.null(main)) main <- paste(view, "values on top weighted feautres for factor", factor)
+  pheatmap::pheatmap(t(tmp[features,]), fontsize = 8, show_rownames = F, main=main,...)
 }
 
 

@@ -36,7 +36,7 @@ showDataHeatmap <- function(model, view, factor, nfeatures=50, main=NULL, ...) {
   
   # Plot heatmap
   if(is.null(main)) main <- paste(view, "values on top weighted feautres for factor", factor)
-  pheatmap::pheatmap(t(tmp[features,]), fontsize = 8, show_rownames = F, main=main,...)
+  pheatmap::pheatmap(t(tmp[features,]), fontsize = 8, main=main,...)
 }
 
 

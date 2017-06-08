@@ -1,6 +1,6 @@
 ---
 title: " Vignette illustrating the use of MOFA on the CLL data"
-author: "Britta Velten"
+author: "Britta Velten and Ricard Argelaguet"
 date: "`r Sys.Date()`"
 output:
   BiocStyle::html_document:
@@ -12,18 +12,18 @@ vignette: >
 ---
 
 ```{r}
-devtools::load_all("/Users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFAtools/")
-# devtools::load_all("/Users/ricard/mofa/MOFAtools")
+# devtools::load_all("/Users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFAtools/")
+devtools::load_all("/Users/ricard/mofa/MOFAtools")
 library(MultiAssayExperiment)
+library(reshape)
 ```
 
 # Step 1: Initialize MOFA object
 
 ## Load data
 There are two ways to load the data into MOFA: 
-(1) A list of matrices where features are rows and samples are columns: MutliAssayExperiment is constructed internally
-(2) A MultiAssayExperiment object.
-I WOULD INCLUDE HERE THE FILTERING MINVIEWS. 
+(1) A MultiAssayExperiment object.
+(2) A list of matrices where features are rows and samples are columns: MutliAssayExperiment is constructed internally
 ```{r}
 data("CLL_views")
 
@@ -61,17 +61,17 @@ Important:
 - outFile: Output file for the model
 - mofaDir: directory of the MOFA package
 ```{r}
-# DirOptions <- list(
-#   "tmpDir" = "/tmp",
-#   "outFile" = "/Users/ricard/test.hdf5",
-#   "mofaDir" = "/Users/ricard/mofa/MOFA"
-# )
-
 DirOptions <- list(
-  "tmpDir" = "/users/bvelten/Documents/MOFA/CLL_MOFA_data/testPipeline/",
-  "outFile" = "/users/bvelten/Documents/MOFA/CLL_MOFA_data/testPipeline/test.hdf5",
-  "mofaDir" = "/users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFA"
+  "tmpDir" = "/tmp",
+  "outFile" = "/Users/ricard/test.hdf5",
+  "mofaDir" = "/Users/ricard/mofa/MOFA"
 )
+
+# DirOptions <- list(
+#   "tmpDir" = "/users/bvelten/Documents/MOFA/CLL_MOFA_data/testPipeline/",
+#   "outFile" = "/users/bvelten/Documents/MOFA/CLL_MOFA_data/testPipeline/test.hdf5",
+#   "mofaDir" = "/users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFA"
+# )
 ```
 
 ### Define model options
@@ -91,7 +91,7 @@ Important:
 - Dropping options of latent factors
 ```{r}
 TrainOptions <- getDefaultTrainOpts()
-TrainOptions$maxiter <- 5
+TrainOptions$maxiter <- 10
 TrainOptions$drop_by_norm <- 0.00
 TrainOptions$drop_by_r2 <- 0.00
 ```
@@ -110,6 +110,7 @@ object <- prepareMOFA(object,
 This step can take some time, it is recommended to run it from the Python-based module
 ```{r}
 object <- runMOFA(object, DirOptions)
+# object <- readRDS(DirOptions$outFile)
 ```
 
 # Step 3: Analyse a trained MOFA model
@@ -121,8 +122,8 @@ calculateVarianceExplained(object)
 
 ## Scatterplots of pairs of latent variables
 ```{r}
-# scatterPairs(object)
-sctterPlot(object, facotr)
+scatterPairs(object, factors = c("2","3"), showMissing = F)
+# sctterPlot(object, facotr)
 ```
 
 ## Characterisation of specific latent factors
@@ -135,9 +136,7 @@ showWeights(object, "view", factor, ntop, ntail, manual)
 
 ### Show original data for the genes with top weights
 ```{r}
-view <- "mRNA"
-factor <- "2"
-showDataHeatmap(model, view, factor, nfeatures=50)
+showDataHeatmap(model, view="expr", factor="2", nfeatures=50)
 
 # The X axis is the latent variable and the Y axis is the observed value of the feature
 # showDataScatter(model, view, factor, nfeatures=50, colour_by=NULL, shape_by=NULL)

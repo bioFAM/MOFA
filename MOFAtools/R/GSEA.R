@@ -1,70 +1,7 @@
-#' @title Line plot of Feature Set Enrichment Analysis results
-#' @name LinePlot_FeatureSetEnrichmentAnalysis
-#' @description Line plot of the Feature Set Enrichment Analyisis results for a specific latent variable
-#' @param p.values output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are feature sets and columns are latent variables
-#' @param threshold p.value threshold to filter out feature sets
-#' @param max.pathways maximum number of enriched pathways to display
-#' @details fill this
-#' @return nothing
-#' @import ggplot2
-#' @export
-LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, view, factor, threshold=0.1, max.pathways=25, ...) {
-  
-  # Sanity checks
-  # (...)
-  
-  # Get data  
-  tmp <- as.data.frame(p.values[,factor, drop=F])
-  tmp$pathway <- rownames(tmp)
-  colnames(tmp) <- c("pvalue")
-  
-  # Filter out pathways
-  tmp <- tmp[tmp$pvalue<=threshold,,drop=F]
-  
-  # If there are too many pathways enriched, just keep the 'max_pathways' more significant
-  if (nrow(tmp) > max.pathways)
-    tmp <- head(tmp,n=max.pathways)
-  
-  # Convert pvalues to log scale (add a small regulariser to avoid numerical errors)
-  tmp$log <- -log10(tmp$pvalue + 1e-6)
-  
-  # Annotate significcant pathways
-  # tmp$sig <- factor(tmp$pvalue<threshold)
-  
-  p <- ggplot2::ggplot(tmp, aes(x=pathway, y=log)) +
-    ggtitle("") +
-    geom_point(size=5) +
-    geom_hline(yintercept=-log10(threshold), linetype="longdash") +
-    scale_y_continuous(limits=c(0,7)) +
-    scale_color_manual(values=c("black","red")) +
-    geom_segment(aes(xend=pathway, yend=0)) +
-    ylab("-log pvalue") +
-    coord_flip() +
-    theme(
-      axis.text.y = element_text(size=rel(1.2), hjust=1, color='black'),
-      axis.title.y=element_blank(),
-      legend.position='none',
-      panel.background = element_blank()
-    )
-  print(p)
-}
 
-#' @title Heatmap of Feature Set Enrichment Analysis results
-#' @name Heatmap_FeatureSetEnrichmentAnalysis
-#' @description Heatmap of the Feature Set Enrichment Analyisis results
-#' @param p.values output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are gene sets and columns are latent variables
-#' @param threshold p.value threshold to filter out feature sets. If a feature set has a p.value lower than 'threshold'
-#' @param ... Parameters to be passed to pheatmap function
-#' @details fill this
-#' @return nothing
-#' @import pheatmap
-#' @export
-Heatmap_FeatureSetEnrichmentAnalysis <- function(p.values, threshold=0.05, ...) {
-  p.values <- p.values[!apply(p.values, 1, function(x) sum(x>=threshold)) == ncol(p.values),]
-  pheatmap::pheatmap(p.values, cluster_rows = T, cluster_cols = F, show_rownames = F, show_colnames = T,
-                     color = colorRampPalette(c("red", "lightgrey"))(n=5))
-}
-
+##########################################################
+## Functions to perform Feature Set Enrichment Analysis ##
+##########################################################
 
 #' @title Feature Set Enrichment Analysis
 #' @name FeatureSetEnrichmentAnalysis 
@@ -95,7 +32,7 @@ FeatureSetEnrichmentAnalysis <- function(model, view, factors="all", feature.set
   # Collect factors
   if (paste0(factors,sep="",collapse="") == "all") { 
     factors <- factorNames(model)
-    if (model@ModelOpts$learnMean) { factors <- factors[-1] }
+    if (model@ModelOpts$learnMean==T) { factors <- factors[-1] }
   }
   
   # Collect observed data
@@ -601,3 +538,69 @@ pcgseViaWMW = function(data, prcomp.output, pc.indexes, feature.set.indexes, fea
 
 
 
+#' @title Line plot of Feature Set Enrichment Analysis results
+#' @name LinePlot_FeatureSetEnrichmentAnalysis
+#' @description Line plot of the Feature Set Enrichment Analyisis results for a specific latent variable
+#' @param p.values output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are feature sets and columns are latent variables
+#' @param threshold p.value threshold to filter out feature sets
+#' @param max.pathways maximum number of enriched pathways to display
+#' @details fill this
+#' @return nothing
+#' @import ggplot2
+#' @export
+LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, view, factor, threshold=0.1, max.pathways=25, ...) {
+  
+  # Sanity checks
+  # (...)
+  
+  # Get data  
+  tmp <- as.data.frame(p.values[,factor, drop=F])
+  colnames(tmp) <- c("pvalue")
+  tmp$pathway <- rownames(tmp)
+  
+  # Filter out pathways
+  tmp <- tmp[tmp$pvalue<=threshold,,drop=F]
+  
+  # If there are too many pathways enriched, just keep the 'max_pathways' more significant
+  if (nrow(tmp) > max.pathways)
+    tmp <- head(tmp,n=max.pathways)
+  
+  # Convert pvalues to log scale (add a small regulariser to avoid numerical errors)
+  tmp$log <- -log10(tmp$pvalue + 1e-6)
+  
+  # Annotate significcant pathways
+  # tmp$sig <- factor(tmp$pvalue<threshold)
+  
+  p <- ggplot2::ggplot(tmp, aes(x=pathway, y=log)) +
+    ggtitle("") +
+    geom_point(size=5) +
+    geom_hline(yintercept=-log10(threshold), linetype="longdash") +
+    scale_y_continuous(limits=c(0,7)) +
+    scale_color_manual(values=c("black","red")) +
+    geom_segment(aes(xend=pathway, yend=0)) +
+    ylab("-log pvalue") +
+    coord_flip() +
+    theme(
+      axis.text.y = element_text(size=rel(1.2), hjust=1, color='black'),
+      axis.title.y=element_blank(),
+      legend.position='none',
+      panel.background = element_blank()
+    )
+  print(p)
+}
+
+#' @title Heatmap of Feature Set Enrichment Analysis results
+#' @name Heatmap_FeatureSetEnrichmentAnalysis
+#' @description Heatmap of the Feature Set Enrichment Analyisis results
+#' @param p.values output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are gene sets and columns are latent variables
+#' @param threshold p.value threshold to filter out feature sets. If a feature set has a p.value lower than 'threshold'
+#' @param ... Parameters to be passed to pheatmap function
+#' @details fill this
+#' @return nothing
+#' @import pheatmap
+#' @export
+Heatmap_FeatureSetEnrichmentAnalysis <- function(p.values, threshold=0.05, ...) {
+  p.values <- p.values[!apply(p.values, 1, function(x) sum(x>=threshold)) == ncol(p.values),]
+  pheatmap::pheatmap(p.values, cluster_rows = T, cluster_cols = F, show_rownames = F, show_colnames = T,
+                     color = colorRampPalette(c("red", "lightgrey"))(n=5))
+}

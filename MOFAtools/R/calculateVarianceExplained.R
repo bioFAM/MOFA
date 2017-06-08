@@ -59,13 +59,13 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
 
   # Calculate prediction under the null model (intercept only)
     #by default the null model is using the intercept LF if present and not the actual mean
-    NullModel <- lapply(views, function(m)  if(object@ModelOpts$learnMean) unique(Ypred_mk[[m]][[1]][1,]) else apply(Y[[m]],2,mean,na.rm=T))
+    NullModel <- lapply(views, function(m)  if(object@ModelOpts$learnMean==T) unique(Ypred_mk[[m]][[1]][1,]) else apply(Y[[m]],2,mean,na.rm=T))
     names(NullModel) <- views
     resNullModel <- lapply(views, function(m) sweep(Y[[m]],2,NullModel[[m]],"-"))
     names(resNullModel) <- views
     
   #remove intercept factor if present
-  if(object@ModelOpts$learnMean) factorsNonconst <- factors[-1] else  factorsNonconst <- factors
+  if(object@ModelOpts$learnMean==T) factorsNonconst <- factors[-1] else  factorsNonconst <- factors
     
   # Calculate coefficient of determination
     # per view

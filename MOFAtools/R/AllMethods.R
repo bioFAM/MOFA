@@ -271,6 +271,25 @@ setMethod(".TrainData<-", signature(object="MOFAmodel", value="list"),
     object
 })
 
+####################################
+## Set and retrieve imputed data ##
+####################################
+
+#' @rdname ImputedData
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @return list of numeric matrices that contain the training data
+#' @rdname ImputedData
+#' @export
+setMethod("ImputedData", signature(object="MOFAmodel"), function(object) { object@ImputedData } )
+
+#' @import methods
+setMethod(".ImputedData<-", signature(object="MOFAmodel", value="list"),
+          function(object,value) {
+            # to do sanity checks
+            object@ImputedData <- value
+            object
+          })
+
 #######################################
 ## Set and retrieve training options ##
 #######################################

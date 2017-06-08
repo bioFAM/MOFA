@@ -10,15 +10,14 @@
 #' @param factors Latent variables or factores to use, default is "all"
 #' @param plotit boolean, wether to produce a plot (default true)
 #' @param perFeature boolean, whether to calculate in addition variance explained per feature (and factor) (default FALSE)
-#' @param InterceptLFasNull whether to use the intercept factor or the featureMean as null mode
 #' @param orderFactorsbyR2 if T, facotrs are order according to sum of variance explained across views
-#' @param showtotalR2 if FALSE, R2 with respect to total prediciton instead of observations is considered instead of total R2
+#' @param showtotalR2 if FALSE, R2 with respect to total prediciton instead of observations is considered instead of total R2 showing each factors contribution to the full prediction
 #' @details fill this
 #' @return a list containing list of R2 for all gaussian views and list of BS for all binary views
-#' @import pheatmap gridExtra ggplot2
+#' @import pheatmap gridExtra ggplot2 reshape2
 #' @export
 
-calculateVarianceExplained <- function(object, views="all", factors="all", plotit=T, perFeature=F, InterceptLFasNull=T, 
+calculateVarianceExplained <- function(object, views="all", factors="all", plotit=T, perFeature=F, 
                                        orderFactorsbyR2=T, showtotalR2=T) {
   
   # Sanity checks
@@ -58,8 +57,9 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
                       })
     names(Ypred_mk) <- views
 
-  # Calculate prediction under the null model (mean only)
-    NullModel <- lapply(views, function(m)  if(InterceptLFasNull) unique(Ypred_mk[[m]][[1]][1,]) else apply(Y[[m]],2,mean,na.rm=T))
+  # Calculate prediction under the null model (intercept only)
+    #by default the null model is using the intercept LF if present and not the actual mean
+    NullModel <- lapply(views, function(m)  if(object@ModelOpts$learnMean) unique(Ypred_mk[[m]][[1]][1,]) else apply(Y[[m]],2,mean,na.rm=T))
     names(NullModel) <- views
     resNullModel <- lapply(views, function(m) sweep(Y[[m]],2,NullModel[[m]],"-"))
     names(resNullModel) <- views
@@ -103,7 +103,7 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
       #                       treeheight_col = 10)
       
       #Melting data so we can plot it with GGplot
-      fvar_mk_df <- melt(fvar_mk,varnames  = c("factor","view"))
+      fvar_mk_df <- reshape2::melt(fvar_mk,varnames  = c("factor","view"))
       
       #Resetting factors
       fvar_mk_df$factor <- factor(fvar_mk_df$factor)

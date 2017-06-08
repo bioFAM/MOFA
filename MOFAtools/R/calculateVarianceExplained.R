@@ -146,7 +146,7 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
       # Need to fix alignment using e.g. gtable...
       # gg_R2 <- gridExtra::arrangeGrob(hm$gtable, bplt, ncol=1, heights=c(10,5) )
       gg_R2 <- gridExtra::arrangeGrob(hm, bplt, ncol=1, heights=c(length(factorsNonconst),7) )
-      grid.arrange(gg_R2)
+      gridExtra::grid.arrange(gg_R2)
      
       if (!showtotalR2){
         #Calculate 'variance component'/contribution of each factor

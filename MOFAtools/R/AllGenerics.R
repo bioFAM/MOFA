@@ -75,6 +75,18 @@ setGeneric(".InputData<-", function(object, value) {standardGeneric(".InputData<
 
 
 ################
+## Imputed Data ##
+################
+
+#' @title ImputedData: set and retrieve training data
+#' @name ImputedData
+#' @rdname ImputedData
+#' @export
+setGeneric("ImputedData", function(object) {standardGeneric("ImputedData")})
+
+setGeneric(".ImputedData<-", function(object, value) {standardGeneric(".ImputedData<-")})
+
+################
 ## Train Data ##
 ################
 
@@ -85,6 +97,7 @@ setGeneric(".InputData<-", function(object, value) {standardGeneric(".InputData<
 setGeneric("TrainData", function(object) {standardGeneric("TrainData")})
 
 setGeneric(".TrainData<-", function(object, value) {standardGeneric(".TrainData<-")})
+
 
 ###################
 ## Train Options ##

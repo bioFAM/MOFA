@@ -1,21 +1,21 @@
 
-#' @title Calculate variance explained in a MOFA model for each view and latent factor
+#' @title Calculate variance explained by the model
 #' @name calculateVarianceExplained
-#' @description Method to calculate variance explained in a MOFA model for each view and latent factor.
-#' As a measure of variance explained the coefficient of determination, given by 1 - SS_res/SS_total.
-#' For non-gaussian views the calculations are basedon the gaussian pseudo-data. 
-#' The resulting measures per factor and overall are plotted as a heatmap and barplot by default.
+#' @description Method to calculate variance explained by the MOFA model for each view and latent factor, and optionally also for each feature.
+#' As a measure of variance explained we adopt the coefficient of determination (R2).
+#' For non-gaussian views the calculations are based on the normally-distributed pseudo-data (see REF).
+#' If the data is non-centered and the model had to learn the mean then we regress it out before computing the R2
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param views Views to use, default is "all"
 #' @param factors Latent variables or factores to use, default is "all"
 #' @param plotit boolean, wether to produce a plot (default true)
 #' @param perFeature boolean, whether to calculate in addition variance explained per feature (and factor) (default FALSE)
 #' @param orderFactorsbyR2 if T, facotrs are order according to sum of variance explained across views
-#' @param showtotalR2 if FALSE, R2 with respect to total prediciton instead of observations is considered instead of total R2 showing each factors contribution to the full prediction
+#' @param showtotalR2 (REWRITE) if FALSE, R2 with respect to total prediciton instead of observations is considered instead of total R2 showing each factors contribution to the full prediction
 #' @param showVarComp if True plot additional barplots showing the contribution of ea
 #' @details fill this
-#' @return a list containing list of R2 for all gaussian views and list of BS for all binary views
-#' @import pheatmap gridExtra ggplot2 reshape2
+#' @return fill this
+#' @import pheatmap gridExtra ggplot2 reshape2 cowplot
 #' @export
 
 calculateVarianceExplained <- function(object, views="all", factors="all", plotit=T, perFeature=F, 
@@ -48,15 +48,14 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
   Z <- getExpectations(object,"Z","E")
   Y <- getExpectations(object,"Y","E")
 
-
   # Calculate predictions under the  MOFA model using all or a single factor
-    Ypred_m <- lapply(views, function(m) Z%*%t(SW[[m]])); names(Ypred_m) <- views
-    Ypred_mk <- lapply(views, function(m) {
-                        ltmp <- lapply(factors, function(k) Z[,k]%*%t(SW[[m]][,k]) )
-                        names(ltmp) <- factorNames(object)
-                        ltmp
-                      })
-    names(Ypred_mk) <- views
+  Ypred_m <- lapply(views, function(m) Z%*%t(SW[[m]])); names(Ypred_m) <- views
+  Ypred_mk <- lapply(views, function(m) {
+                      ltmp <- lapply(factors, function(k) Z[,k]%*%t(SW[[m]][,k]) )
+                      names(ltmp) <- factorNames(object)
+                      ltmp
+                    })
+  names(Ypred_mk) <- views
 
   # Calculate prediction under the null model (intercept only)
     #by default the null model is using the intercept LF if present and not the actual mean
@@ -74,8 +73,9 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
   # Calculate coefficient of determination
     # per view
      fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T))
+     
     # per view and feature
-    if(perFeature)
+    if (perFeature)
       fvar_md <- lapply(views, function(m) 1 - colSums((Y[[m]]-Ypred_m[[m]])**2,na.rm=T) / colSums(resNullModel[[m]]**2,na.rm=T))
     
     # per factor and view
@@ -83,7 +83,7 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
         else fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((partialresNull[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(partialresNull[[m]]**2, na.rm=T) ))
     
     # per factor and view and feature
-    if(perFeature)
+    if (perFeature)
       fvar_mdk <- lapply(views, function(m) lapply(factorsNonconst, function(k) 1 - colSums((resNullModel[[m]]-Ypred_mk[[m]][[k]])**2,na.rm=T) / colSums(resNullModel[[m]]**2,na.rm=T)))
     
     # Set names
@@ -98,59 +98,65 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
     rownames(fvar_mk) <- factorsNonconst 
     
   
-    if(plotit){
-      # Heatmap with coefficient of determination (R2) per factor and view
-      # hm <- pheatmap::pheatmap(fvar_mk, silent=T,
-      #                       color = colorRampPalette(c("white","darkblue"))(100), 
-      #                       cluster_cols = T, cluster_rows = F,
-      #                       main = "Variance explained per view and factor",
-      #                       treeheight_col = 10)
+    if (plotit) {
       
-      #Melting data so we can plot it with GGplot
-      fvar_mk_df <- reshape2::melt(fvar_mk,varnames  = c("factor","view"))
-      
-      #Resetting factors
+      # Sort factors
+      fvar_mk_df <- reshape2::melt(fvar_mk, varnames=c("factor","view"))
       fvar_mk_df$factor <- factor(fvar_mk_df$factor)
-      hc<-hclust(dist(t(fvar_mk)))
+      hc <- hclust(dist(t(fvar_mk)))
       fvar_mk_df$view <- factor(fvar_mk_df$view, levels = colnames(fvar_mk)[hc$order])
       if(orderFactorsbyR2) factor_order <- order(rowSums(fvar_mk), decreasing = F) else factor_order <- rev(1:length(factorsNonconst))
       fvar_mk_df$factor <- factor(fvar_mk_df$factor, levels = factorsNonconst[factor_order])
       
-      #Creating the plot 
-      hm <- ggplot(fvar_mk_df,aes(view,factor)) + geom_raster(aes(fill=value)) +
+      # Plot 1: grid with the variance explained per factor in each view
+      hm <- ggplot(fvar_mk_df, aes(view,factor)) + 
+        geom_tile(aes(fill=value), color="black") +
         guides(fill=guide_colorbar("R2")) +
-        # scale_y_discrete(position = "right") +
-        scale_fill_gradientn(colors=c("white","darkblue"),guide="colorbar") +
-        theme(axis.title.x = element_blank(),
-              # axis.text.x = element_blank(),
-              axis.line = element_blank(),
-              axis.ticks =  element_blank(),
-              panel.background = element_blank())
-      if(showtotalR2) hm <- hm + ggtitle("Factor-wise variance explained per view")  + 
-        guides(fill=guide_colorbar("R2")) 
-      else
-        hm <- hm + ggtitle("Factor-wise variance explained per view")  + 
-        guides(fill=guide_colorbar("Residual R2 per view")) 
-        
+        scale_fill_gradientn(colors=c("gray97","darkblue"), guide="colorbar") +
+        ylab("Latent factor") +
+        theme(
+          # plot.margin = margin(5,5,5,5),
+          plot.title = element_text(size=15, hjust=0.5),
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5),
+          # axis.text.x = element_blank(),
+          axis.title.y = element_text(size=13),
+          axis.line = element_blank(),
+          axis.ticks =  element_blank()
+          )
       
+      hm <- hm + ggtitle("Variance explained per factor in view")  + 
+      if (showtotalR2) {
+        guides(fill=guide_colorbar("R2"))
+      } else {
+        guides(fill=guide_colorbar("Residual R2")) 
+      }
+        
+      # Plot 2: barplot with coefficient of determination (R2) per view
       fvar_m_df <- data.frame(view=names(fvar_m), R2=fvar_m)
       fvar_m_df$view <- factor(fvar_m_df$view, levels = colnames(fvar_mk)[hc$order])
       
-      # Barplot with coefficient of determination (R2) per view
       bplt <- ggplot( fvar_m_df, aes(x=view, y=R2)) + 
+        ggtitle("Total variance explained per view") +
         geom_bar(stat="identity", fill="deepskyblue4", width=0.9) +
         xlab("") + 
-        # scale_y_continuous(position = "right")+
-        # theme_minimal() +
-        theme(plot.margin = unit(c(1,2.4,0,0), "cm"),
-              panel.background = element_blank()) +
-        ggtitle("Total variance explained per view")
+        scale_y_continuous(expand=c(0.01,0.01)) +
+        theme(
+          plot.margin = unit(c(1,2.4,0,0), "cm"),
+          panel.background = element_blank(),
+          plot.title = element_text(size=15, hjust=0.5),
+          axis.ticks.x = element_blank(),
+          # axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5)
+          axis.text.x = element_blank()
+              )
       
       # Join the two plots
       # Need to fix alignment using e.g. gtable...
-      # gg_R2 <- gridExtra::arrangeGrob(hm$gtable, bplt, ncol=1, heights=c(10,5) )
-      gg_R2 <- gridExtra::arrangeGrob(hm, bplt, ncol=1, heights=c(length(factorsNonconst),7) )
-      gridExtra::grid.arrange(gg_R2)
+      # gg_R2 <- gridExtra::arrangeGrob(hm, bplt, ncol=1, heights=c(length(factorsNonconst),7) )
+      # gg_R2 <- gridExtra::arrangeGrob(bplt, hm, ncol=1, heights=c(1/2,1/2) )
+      # gridExtra::grid.arrange(gg_R2)
+      p <- cowplot::plot_grid(bplt, hm, align="v", nrow=2, rel_heights=c(1/3,2/3))
+      print(p)
      
       #optional: barplots with individual contributions of factors to explaining variance in a view, takes a lot of time....
       if (showVarComp){

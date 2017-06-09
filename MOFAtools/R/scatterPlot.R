@@ -147,7 +147,7 @@ beeswarmPlot <- function(object, id, label = NULL, groups = NULL, groupname="") 
                 legend.text = element_text(size = titlesize),
                 legend.title = element_text(size =titlesize))+
          guides(color=guide_legend(title=name_colour), shape=guide_legend(title=name_shape))+
-         scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))])+
+         scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))])
     if(!colorLegend) p <- p + guides(color = FALSE)
     if(!shapeLegend) p <- p + guides(shape = FALSE)
     return(p)

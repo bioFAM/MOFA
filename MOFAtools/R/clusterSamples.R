@@ -15,17 +15,17 @@ clusterSamples <- function(object, factors="all", anno_df=NULL, main=NULL){
   if (class(object) != "MOFAmodel")
     stop("'object' has to be an instance of MOFAmodel")
   
-  Z <- model@Expectations$Z$E
-  N <- model@Dimensions[["N"]]
+  Z <- object@Expectations$Z$E
+  N <- object@Dimensions[["N"]]
   
   if(is.null(main)) main <- "Clustering based on latent factors"
   
   # Define factors
   if (factors=="all") { 
-    factors <- factorNames(model) 
+    factors <- factorNames(object) 
     if(is.null(factors)) factors <- 1:ncol(Z)
   } else {
-    stopifnot(all(factors %in% factorNames(model)))  
+    stopifnot(all(factors %in% factorNames(object)))  
   }
   
   hc.out <- hclust(dist(Z[, factors]))

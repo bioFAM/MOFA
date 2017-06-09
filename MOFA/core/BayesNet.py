@@ -62,12 +62,12 @@ class BayesNet(object):
                 drop_dic["by_norm"] = [ s.random.choice(drop_dic["by_norm"]) ]
 
         ### test ###
-        # print "correlation:"
-        # Z = self.nodes["Z"].getExpectation()
-        # r = s.absolute(corr(Z.T,Z.T))
-        # s.fill_diagonal(r,0)
-        # r *= s.tri(*r.shape)
-        # print r.max()
+        print "correlation:"
+        Z = self.nodes["Z"].getExpectation()
+        r = s.absolute(corr(Z.T,Z.T))
+        s.fill_diagonal(r,0)
+        r *= s.tri(*r.shape)
+        print r.max()
 
         # alpha = self.nodes["AlphaW"].getExpectation()
         # print (alpha)

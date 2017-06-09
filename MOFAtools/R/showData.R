@@ -75,7 +75,7 @@ showDataScatter <- function(model, view, factor, nfeatures=50, colour_by=NULL, s
   # Selecct top features
   features <- names(tail(sort(abs(w)), n=nfeatures))
   w <- w[features]
-  Y <- Y[,features]
+  Y <- Y[features,]
   
   
   # collect color groups

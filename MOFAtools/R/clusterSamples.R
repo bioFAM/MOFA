@@ -36,8 +36,8 @@ clusterSamples <- function(object, factors="all", anno_df=NULL, main=NULL){
   if(!setequal(rownames(anno_df), rownames(Z))) stop("anno_df needs to have rownames matching the samples names in the MOFA object")
   } 
   
-  pheatmap::pheatmap(Z[,factors, drop=F], annotation_row = anno_df, 
-                       cluster_cols = length(factors)>1, show_rownames = T,
+  pheatmap::pheatmap(t(Z[,factors, drop=F]), annotation_col = anno_df, 
+                       cluster_rows = length(factors)>1, show_colnames = T,
                      main = main)
   
   return(hc.out)

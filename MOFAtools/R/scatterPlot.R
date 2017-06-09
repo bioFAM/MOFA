@@ -154,65 +154,85 @@ beeswarmPlot <- function(object, id, label = NULL, groups = NULL, groupname="") 
   }
   
   
-  #' @title Visualize scatterplot of all latent variables in a pair-wise grid
-  #' @name scatterPairs
-  #' @description fill this
-  #' @param object a \code{\link{MOFAmodel}} object.
-  #' @param colour_by discrete vector of length N (samples in object) to colour samples by
-  #' @param showMissing boolean wether to include NA values of coulour_by
-  #' @details asd
-  #' @return fill this
-  #' @reference fill this
-  #' @import GGally
-  #' @export
-  #' 
+#' @title Visualize scatterplot of all latent variables in a pair-wise grid
+#' @name scatterPairs
+#' @description fill this
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @param colour_by vector of length N with discrete sample groups to colour by
+#' @param colour_name name of the factor used to colour_by (only relevant if colour_by is not NULL)
+#' @param showMissing boolean wether to include missing values in colour_by
+#' @details asd
+#' @return fill this
+#' @reference fill this
+#' @import ggplot2 GGally
+#' @export
+#' 
+scatterPairs <- function(object, factors = "all", colour_by=NULL, showMissing=T, colour_name=NULL) {
   
-  scatterPairs <- function (object, factors = "all", colour_by=NULL, showMissing=T, colour_name=NULL){
-    
-    if (class(object) != "MOFAmodel") 
-      stop("'object' has to be an instance of MOFAmodel")
-    
-    
-    N <- object@Dimensions[["N"]]
-    Z <- getExpectations(object, "Z", "E")
-    
-    if (paste0(factors,sep="",collapse="") == "all") { 
-      factors <- factorNames(object) 
-      #old object are not compatible with factro names
-      if(is.null(factors)) factors <- 1:ncol(Z)
-    } else {
-      stopifnot(all(factors %in% factorNames(object)))  
-    }
+  # Sanity checks
+  if (class(object) != "MOFAmodel") 
+    stop("'object' has to be an instance of MOFAmodel")
   
-    if(object@ModelOpts$learnMean==T & any(apply(Z[,factors],2,var)==0)) warning("The constant intercept factor is included in the plot")
-    
-    if (!is.null(colour_by)) {
-      if (length(colour_by) != N) 
-        stop("'colour_by' has to be a vector of length N")
-    } else {
-      colour_by <- rep(TRUE, N)
-    }
-    
-    Z2include <- Z[,factors]
-    colnames(Z2include) <- paste("LF", colnames(Z2include), sep="_")
+  # Collect relevant data
+  N <- object@Dimensions[["N"]]
+  Z <- getExpectations(object, "Z", "E")
   
-    if(!showMissing) {
-      Z2include <- Z2include[!is.na(colour_by),]
-      colour_by <- colour_by[!is.na(colour_by)]
-    }
-    
-    df_pairs <- as.data.frame(Z2include)
-    df_pairs<- cbind(df_pairs, colour_by=as.factor(colour_by))
-    if(!is.null(colour_name)) {
-      main <- paste("Scatterplots of latent factors coloured by", colour_name)
-      p <- ggplot(df_pairs, aes(x= colnames(Z2include)[1], y=colnames(Z2include)[2], colour=colour_by)) + guides(color=guide_legend(title=colour_name))+geom_point()
-      legend <- grab_legend(p)
-    }
-    else {
-      main <- "Scatterplots of latent factors" 
-      legend <- NULL
-    }
-    GGally::ggpairs(df_pairs, columns = colnames(Z2include), lower=list(continuous="points"), upper=list(continuous="density"), 
-            mapping= aes(colour=colour_by), title = main, legend =legend)
+  # Get factors
+  if (paste0(factors,collapse="") == "all") { 
+    factors <- factorNames(object) 
+    if(is.null(factors)) factors <- 1:ncol(Z) # old object are not compatible with factro names
+  } else {
+    stopifnot(all(factors %in% factorNames(object)))  
+  }
+  Z <- Z[,factors]
+
+  # Remove constant factors 
+  tmp <- apply(Z,2,var)
+  if (any(tmp==0)) {
+    message(paste0("Removing constant factors: %s", paste(which(tmp==0), collapse="")))
+    Z <- Z[,!tmp==0]
+    factors <- factors[!tmp==0]
+  }
+  
+  # Get color vector
+  if (!is.null(colour_by)) {
+    if (length(colour_by) != N) 
+      stop("'colour_by' has to be a vector of length N")
+  } else {
+    colour_by <- rep(TRUE, N)
+  }
+  
+  # Remove missing values
+  if(!showMissing) {
+    Z <- Z[!is.na(colour_by),]
+    colour_by <- colour_by[!is.na(colour_by)]
+  }
+  
+  # Crete data.frame
+  df <- as.data.frame(Z); colnames(df) <- paste0("LF_",colnames(df))
+  df <- cbind(df, colour_by=as.factor(colour_by))
+  
+  # Define title and legend of the plot
+  if(!is.null(colour_name)) {
+    main <- paste("Scatterplots of latent factors coloured by", colour_name)
+    p <- ggplot(df, aes_string(x=colnames(df)[1], y=colnames(df)[2], color="colour_by")) +
+      geom_point() +
+      guides(color=guide_legend(title=colour_name))
+    legend <- GGally::grab_legend(p)
+  } else {
+    main <- "Scatterplots of latent factors" 
+    legend <- NULL
+  }
+  
+  # Generate plot
+  GGally::ggpairs(df, columns = colnames(df[,!colnames(df)=="colour_by"]), lower=list(continuous="points"), upper=list(continuous="density"), 
+          mapping=aes(colour=colour_by), title=main, legend=legend) +
+    theme_bw() +
+    theme(plot.title = element_text(size = 16, hjust=0.5, color="black"), 
+          axis.title = element_text(size = 10, color="black"), 
+          axis.text = element_text(size = 9, color="black"), 
+          legend.position = "right", 
+          legend.title = element_text()
+          )
 }
   

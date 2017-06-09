@@ -15,7 +15,7 @@
 #' @param ... further arguments that can be passed to pheatmap
 #' @details fill this
 #' @return a weight matrix of dimension d (feautres) x k (number of latent factors)
-#' @import pheatmap
+#' @import pheatmap magrittr
 #' @export
 
 showWeightHeatmap <- function(model, view, features="all", factors="all", interceptLF =F, main=NULL, color = NULL, breaks=NULL, show_rownames = F) {

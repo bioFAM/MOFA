@@ -1,3 +1,77 @@
+#' @title Line plot of Feature Set Enrichment Analysis results
+#' @name LinePlot_FeatureSetEnrichmentAnalysis
+#' @description Line plot of the Feature Set Enrichment Analyisis results for a specific latent variable
+#' @param p.values output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are feature sets and columns are latent variables
+#' @param factor Factor for which to show wnriched pathways in the lineplot
+#' @param threshold p.value threshold to filter out feature sets
+#' @param max.pathways maximum number of enriched pathways to display
+#' @details fill this
+#' @return nothing
+#' @import ggplot2
+#' @export
+LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, factor, threshold=0.1, max.pathways=25, ...) {
+  
+  # Sanity checks
+  # (...)
+  
+  # Get data  
+  tmp <- as.data.frame(p.values[,factor, drop=F])
+  tmp$pathway <- rownames(tmp)
+  colnames(tmp) <- c("pvalue")
+  
+  # Filter out pathways
+  tmp <- tmp[tmp$pvalue<=threshold,,drop=F]
+  if(nrow(tmp)==0) stop("No siginificant pathways at the specified threshold. For an overview use Heatmap_FeatureSetEnrichmentAnalysis().")
+  
+  # If there are too many pathways enriched, just keep the 'max_pathways' more significant
+  if (nrow(tmp) > max.pathways)
+    tmp <- head(tmp,n=max.pathways)
+  
+  # Convert pvalues to log scale (add a small regulariser to avoid numerical errors)
+  tmp$log <- -log10(tmp$pvalue + 1e-6)
+  
+  # Annotate significcant pathways
+  # tmp$sig <- factor(tmp$pvalue<threshold)
+  
+  #order according to significance
+  tmp$pathway <- factor(tmp$pathway <- rownames(tmp), levels = tmp$pathway[order(tmp$pvalue, decreasing = T)])
+  
+  p <- ggplot2::ggplot(tmp, aes(x=pathway, y=log)) +
+    ggtitle(paste("Enriched sets in factor", factor)) +
+    geom_point(size=5) +
+    geom_hline(yintercept=-log10(threshold), linetype="longdash") +
+    scale_y_continuous(limits=c(0,7)) +
+    scale_color_manual(values=c("black","red")) +
+    geom_segment(aes(xend=pathway, yend=0)) +
+    ylab("-log pvalue") +
+    coord_flip() +
+    theme(
+      axis.text.y = element_text(size=rel(1.2), hjust=1, color='black'),
+      axis.title.y=element_blank(),
+      legend.position='none',
+      panel.background = element_blank()
+    )
+  print(p)
+  return(p)
+}
+
+#' @title Heatmap of Feature Set Enrichment Analysis results
+#' @name Heatmap_FeatureSetEnrichmentAnalysis
+#' @description Heatmap of the Feature Set Enrichment Analyisis results
+#' @param p.values output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are gene sets and columns are latent variables
+#' @param threshold p.value threshold to filter out feature sets. If a feature set has a p.value lower than 'threshold'
+#' @param ... Parameters to be passed to pheatmap function
+#' @details fill this
+#' @return vector of factors being enriched for at least one feautre set at the threshold specified 
+#' @import pheatmap
+#' @export
+Heatmap_FeatureSetEnrichmentAnalysis <- function(p.values, threshold=0.05, ...) {
+  p.values <- p.values[!apply(p.values, 1, function(x) sum(x>=threshold)) == ncol(p.values),]
+  pheatmap::pheatmap(p.values, cluster_rows = T, cluster_cols = F, show_rownames = F, show_colnames = T,
+                     color = colorRampPalette(c("red", "lightgrey"))(n=5))
+  sigFactors <- colnames(p.values)[which(apply(p.values, 2, function(x) any(x<=threshold)))]
+  return(sigFactors)
+}
 
 ##########################################################
 ## Functions to perform Feature Set Enrichment Analysis ##
@@ -19,21 +93,154 @@
 #' @param min.size Minimum size of a feature set
 #' @param nperm Number of permutations to perform. Only relevant if statistical.test is set to "permutation".
 #' @param cores Number of cores to run the permutation analysis in parallel. Only relevant if statistical.test is set to "permutation".
+#' @param p.adj.method Method to adjust p-values factor-wise for multiple testing. Can be any method in p.adjust.methods(). Default uses Benjamini-Hochberg procedure.
 #' @details fill this
 #' @return a list with two matrices, one for the feature set statistics and the other for the pvalues. Rows are feature sets and columns are latent variables.
 #' @import doParallel
 #' @export
 
-
-FeatureSetEnrichmentAnalysis <- function(model, view, factors="all", feature.sets, local.statistic="loading",
-                                         transformation="abs.value", global.statistic="mean.diff", statistical.test="parametric", 
-                                         nperm=1, min.size=10, cores=1) {
+FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all", local.statistic=c("loading", "cor", "z"),
+                                         transformation=c("abs.value", "none"), global.statistic=c("mean.diff", "rank.sum"),
+                                         statistical.test=c("parametric", "cor.adj.parametric", "permutation"),
+                                         nperm=100, min.size=10, cores=1, p.adj.method = "BH", alpha=0.1) {
   
   # Collect factors
   if (paste0(factors,sep="",collapse="") == "all") { 
     factors <- factorNames(model)
-    if (model@ModelOpts$learnMean==T) { factors <- factors[-1] }
+    if (model@ModelOpts$learnMean) { factors <- factors[-1] }
+  } else if(!all(factors %in% factorNames(model))) stop("Factors do not match factor names in model")
+  
+  # Collect observed data and turn it to a sample x features format
+  data <- model@TrainData[[view]]
+  data <- t(data)
+  
+  # Collect relevant expectations
+  W <- getExpectations(model,"SW","E")[[view]][,factors, drop=FALSE]
+  Z <- getExpectations(model,"Z","E")[,factors, drop=FALSE]
+  
+  # Check that there is no constant factor
+  stopifnot( all(apply(Z,2,var)>0) )
+  
+  # To-do: check feature.sets input format
+  
+  # turn feature.sets into binary membership matrices if provided as list
+  if(class(feature.sets) == "list") {
+    features <- Reduce(union, feature.sets)
+    feature.sets <- sapply(names(feature.sets), function(nm) {
+      tmp <- features %in% feature.sets[[nm]]
+      names(tmp) <- features
+      tmp
+    })
+    feature.sets <-t(feature.sets)*1
   }
+  
+  # Check if some features do not intersect between the feature sets and the observed data and remove them
+  features <- intersect(colnames(data),colnames(feature.sets))
+  if(length(features) == 0 ) stop("Feautre names in feature.sets do not match feature names in model.")
+  data <- data[,features]
+  W <- W[features,]
+  feature.sets <- feature.sets[,features]
+  
+  # Filter feature sets with small number of features
+  feature.sets <- feature.sets[rowSums(feature.sets)>=min.size,]
+  
+  #Match test options
+  local.statistic <- match.arg(local.statistic)
+  transformation <- match.arg(transformation)
+  global.statistic <- match.arg(global.statistic)
+  statistical.test <- match.arg(statistical.test)
+  
+  # Print options
+  message("Doing feature Ontology Enrichment Analysis with the following options...")
+  message(sprintf("View: %s", view))
+  message(sprintf("Latent variables: %s", paste(as.character(factors),collapse=" ")))
+  message(sprintf("Number of feature sets: %d", nrow(feature.sets)))
+  message(sprintf("Local statistic: %s", local.statistic))
+  message(sprintf("Transformation: %s", transformation))
+  message(sprintf("Global statistic: %s", global.statistic))
+  message(sprintf("Statistical test: %s", statistical.test))
+  if (statistical.test=="permutation") {
+    message(sprintf("Cores: %d", cores))
+    message(sprintf("Number of permutations: %d", nperm))
+  }
+  
+  # use own version for permutation test because of bugs in pcgse
+  if (statistical.test == "permutation") {
+    doParallel::registerDoParallel(cores=cores)
+    
+    null_dist_tmp <- foreach(rnd=1:nperm) %dopar% {
+      perm <- sample(ncol(data))
+      # Permute rows of the weight matrix to obtain a null distribution
+      W_null <- apply(W, 2, function(w) w[perm])
+      rownames(W_null) <- rownames(W); colnames(W_null) <- colnames(W)
+      
+      data_null <- data[,perm]
+      rownames(data_null) <- rownames(data)
+      
+      # Compute null statistic
+      s.null <- pcgse(data=data_null, prcomp.output=list(rotation=W_null, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
+                      transformation=transformation, feature.set.statistic=global.statistic, feature.set.test="parametric", nperm=NA)$statistic
+      # tmp <- apply(abs(s.null), 2, max)
+      # tmp
+      abs(s.null)
+    }
+    null_dist <- do.call("rbind", null_dist_tmp)
+    colnames(null_dist) <- factors
+    
+    # Compute true statistics
+    s.true <- pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
+                    transformation=transformation, feature.set.statistic=global.statistic, feature.set.test="parametric", nperm=NA)$statistic
+    colnames(s.true) <-factors
+    rownames(s.true) <- rownames(feature.sets)
+    
+    #directly use permutation to control FDR
+    sigPathways <- lapply(1:length(factors), function(j) {
+      calcfdr <- function(t){
+        fp <- sum(abs(null_dist[,j]) > t )
+        tp <- sum(abs(s.true[,j]) > t )
+        fp/(tp+fp)}
+      fdr <-sapply(seq(0,100,0.01), calcfdr)
+      Idxsel <- which(fdr<=alpha)[1]
+      if(!is.na(Idxsel)) {
+        tsel <- seq(0,100,0.01)[Idxsel]
+        rownames(s.true)[s.true[,j] > t]
+      } else NULL
+    })
+      
+    # Compute p.values
+    p.values <- matrix(NA, nr=nrow(s.true), nc=ncol(s.true));
+    rownames(p.values) <- rownames(s.true); colnames(p.values) <- factors
+    for (j in factors) {
+      p.values[,j] <- sapply(s.true[,j], function(x) mean(abs(null_dist[,j]) > abs(x)) )
+    }
+
+  } else {
+    p.values <- pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
+                      transformation=transformation, feature.set.statistic=global.statistic, feature.set.test=statistical.test, nperm=nperm)$p.values
+    colnames(p.values) <- factors
+    rownames(p.values) <- rownames(feature.sets)
+  }
+  
+  if(!p.adj.method %in%  p.adjust.methods) stop("p.adj.method needs to be an element of p.adjust.methods")
+  adj.p.values <- apply(p.values, 2,function(lfw) p.adjust(lfw, method = p.adj.method))
+  
+  sigPathways2 <- lapply(factors, function(j) rownames(adj.p.values)[adj.p.values[,j] <= alpha])
+  if(statistical.test != "permutation") sigPathways <- NULL
+  
+  return(list(pval = p.values, pval.adj = adj.p.values, sigPathways=sigPathways, sigPathways2=sigPathways2))
+}
+
+
+FeatureSetEnrichmentAnalysisOld <- function(model, view, feature.sets, factors="all", local.statistic="loading",
+                                         transformation="abs.value", global.statistic="mean.diff", statistical.test="parametric", 
+                                         nperm=100, min.size=10, cores=1, p.adj.method = "BH") {
+  
+  # Collect factors
+  if (paste0(factors,sep="",collapse="") == "all") { 
+    factors <- factorNames(model)
+    if (model@ModelOpts$learnMean) { factors <- factors[-1] }
+  } else if(!all(factors %in% factorNames(model))) stop("Factors do not match factor names in model")
+
   
   # Collect observed data
   data <- model@TrainData[[view]]
@@ -49,10 +256,21 @@ FeatureSetEnrichmentAnalysis <- function(model, view, factors="all", feature.set
   stopifnot( all(apply(Z,2,var)>0) )
   
   # To-do: check feature.sets input format
-  # (...)
+  
+  # turn lists into binary membership matrices
+  if(class(feature.sets) == "list") {
+    features <- Reduce(union, feature.sets)
+    feature.sets <- sapply(names(feature.sets), function(nm) {
+      tmp <- features %in% feature.sets[[nm]]
+      names(tmp) <- features
+      tmp
+      })
+    feature.sets <-t(feature.sets)*1
+  }
   
   # Check if some features do not intersect between the feature sets and the observed data and remove them
   features <- intersect(colnames(data),colnames(feature.sets))
+  if(length(features) == 0 ) stop("Feautre names in feature.sets do not match feature names in model.")
   # features <- intersect(rownames(data),colnames(feature.sets))
   data <- data[,features]
   # data <- data[features,]
@@ -103,13 +321,13 @@ FeatureSetEnrichmentAnalysis <- function(model, view, factors="all", feature.set
     # Compute true statistics
     s.true <- pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
                     transformation=transformation, feature.set.statistic=global.statistic, feature.set.test="parametric", nperm=NA)$statistic
-    colnames(s.true) <- factorNames(model)[factor.indexes]
+    colnames(s.true) <- factorNames(model)[factors]
     rownames(s.true) <- rownames(feature.sets)
     
     # Compute p.values
     p.values <- matrix(NA, nr=nrow(s.true), nc=ncol(s.true));
-    rownames(p.values) <- rownames(s.true); colnames(p.values) <- factorNames(model)[factor.indexes]
-    for (j in 1:length(factor.indexes)) {
+    rownames(p.values) <- rownames(s.true); colnames(p.values) <- factorNames(model)[factors]
+    for (j in 1:length(factors)) {
       p.values[,j] <- sapply(s.true[,j], function(x) mean(null_dist[,j] > abs(x)) )
     }
     p.values
@@ -121,7 +339,10 @@ FeatureSetEnrichmentAnalysis <- function(model, view, factors="all", feature.set
     rownames(p.values) <- rownames(feature.sets)
   }
   
-  return(p.values)
+  if(!p.adj.method %in%  p.adjust.methods) stop("p.adj.method needs to be an element of p.adjust.methods")
+  adj.p.values <- apply(p.values, 2,function(lfw) p.adjust(lfw, method = p.adj.method))
+  
+  return(list(pval = p.values, pval.adj = adj.p.values))
 }
 
 

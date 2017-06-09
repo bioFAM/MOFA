@@ -57,15 +57,15 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
   names(Ypred_mk) <- views
 
   # Calculate prediction under the null model (intercept only)
-  # If the model has learnt the intercept (ModelOpts$learnMean==T) then this value is subtracted from the predictions
-  # If th emodel has not learnt the mean (ModelOpts$learnMean==F) then the actual data mean is subtracted from the predictions
-  NullModel <- lapply(views, function(m)  if(object@ModelOpts$learnMean==TRUE) unique(Ypred_mk[[m]][[1]][1,]) else apply(Y[[m]],2,mean,na.rm=T))
-  names(NullModel) <- views
-  resNullModel <- lapply(views, function(m) sweep(Y[[m]],2,NullModel[[m]],"-"))
-  names(resNullModel) <- views
+    #by default the null model is using the intercept LF if present and not the actual mean
+    NullModel <- lapply(views, function(m)  if(object@ModelOpts$learnMean==T) unique(Ypred_mk[[m]][[1]][1,]) else apply(Y[[m]],2,mean,na.rm=T))
+    names(NullModel) <- views
+    resNullModel <- lapply(views, function(m) sweep(Y[[m]],2,NullModel[[m]],"-"))
+    partialresNull <- lapply(views, function(m) sweep(Ypred_m[[m]],2,NullModel[[m]],"-"))
+    names(resNullModel) <- views
     
-  # remove intercept factor if present
-  if (object@ModelOpts$learnMean==TRUE) factorsNonconst <- factors[-1] else  factorsNonconst <- factors
+  #remove intercept factor if present
+  if(object@ModelOpts$learnMean==T) factorsNonconst <- factors[-1] else  factorsNonconst <- factors
     
   # Calculate coefficient of determination
     # per view
@@ -76,12 +76,9 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
       fvar_md <- lapply(views, function(m) 1 - colSums((Y[[m]]-Ypred_m[[m]])**2,na.rm=T) / colSums(resNullModel[[m]]**2,na.rm=T))
     
     # per factor and view
-    if (showtotalR2) {
-      fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((resNullModel[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) ))
-    } else {
-      fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((Ypred_m[[m]]-Ypred_mk[[m]][[k]]-Ypred_mk[[m]][[1]])**2, na.rm=T) / sum((Ypred_m[[m]]-Ypred_mk[[m]][[1]])**2, na.rm=T) ))
-    }
-        
+     if(showtotalR2) fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((resNullModel[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) ))
+        else fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((partialresNull[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(partialresNull[[m]]**2, na.rm=T) ))
+    
     # per factor and view and feature
     if (perFeature)
       fvar_mdk <- lapply(views, function(m) lapply(factorsNonconst, function(k) 1 - colSums((resNullModel[[m]]-Ypred_mk[[m]][[k]])**2,na.rm=T) / colSums(resNullModel[[m]]**2,na.rm=T)))
@@ -157,7 +154,6 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
       # gridExtra::grid.arrange(gg_R2)
       p <- cowplot::plot_grid(bplt, hm, align="v", nrow=2, rel_heights=c(1/3,2/3))
       print(p)
-      
      
       if (!showtotalR2){
         #Calculate 'variance component'/contribution of each factor

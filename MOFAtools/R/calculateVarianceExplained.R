@@ -19,7 +19,7 @@
 #' @export
 
 calculateVarianceExplained <- function(object, views="all", factors="all", plotit=T, perFeature=F, 
-                                       orderFactorsbyR2=T, showtotalR2=T) {
+                                       orderFactorsbyR2=T, showtotalR2=T, showVarComp=F) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel")

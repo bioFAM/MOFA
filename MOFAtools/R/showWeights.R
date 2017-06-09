@@ -18,7 +18,7 @@
 #' @import pheatmap
 #' @export
 
-showWeightHeatmap <- function(model, view, features="all", factors="all", interceptLF =F, main=NULL, color = NULL, breaks=NULL, ...) {
+showWeightHeatmap <- function(model, view, features="all", factors="all", interceptLF =F, main=NULL, color = NULL, breaks=NULL, show_rownames = F) {
   
   # Sanity checks
   if (class(model) != "MOFAmodel")
@@ -58,7 +58,7 @@ showWeightHeatmap <- function(model, view, features="all", factors="all", interc
                 seq(maxV/palLength,maxV, length.out=floor(palLength/2)))
   }
   
-  pheatmap::pheatmap(W, main=main, color=color, breaks=breaks, ...)
+  pheatmap::pheatmap(W, main=main, color=color, breaks=breaks, show_rownames = show_rownames )
 }
 
 

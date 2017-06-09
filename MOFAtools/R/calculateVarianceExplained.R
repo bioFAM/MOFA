@@ -18,7 +18,7 @@
 #' @export
 
 calculateVarianceExplained <- function(object, views="all", factors="all", plotit=T, perFeature=F, 
-                                       orderFactorsbyR2=T, showtotalR2=T) {
+                                       orderFactorsbyR2=T, showtotalR2=F) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel")
@@ -58,26 +58,28 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
 
   # Calculate prediction under the null model (intercept only)
     #by default the null model is using the intercept LF if present and not the actual mean
-    NullModel <- lapply(views, function(m)  if(object@ModelOpts$learnMean==T) unique(Ypred_mk[[m]][[1]][1,]) else apply(Y[[m]],2,mean,na.rm=T))
-    names(NullModel) <- views
-    resNullModel <- lapply(views, function(m) sweep(Y[[m]],2,NullModel[[m]],"-"))
-    partialresNull <- lapply(views, function(m) sweep(Ypred_m[[m]],2,NullModel[[m]],"-"))
-    names(resNullModel) <- views
+    # NullModel <- lapply(views, function(m)  if(object@ModelOpts$learnMean==T) unique(Ypred_mk[[m]][[1]][1,]) else apply(Y[[m]],2,mean,na.rm=T))
+    NullModel <- lapply(views, function(m)  if(object@ModelOpts$learnMean==T) Ypred_mk[[m]][[1]][1,] else apply(Y[[m]],2,mean,na.rm=T)); names(NullModel) <- views
+    resNullModel <- lapply(views, function(m) sweep(Y[[m]],2,NullModel[[m]],"-")); names(resNullModel) <- views
+    partialresNull <- lapply(views, function(m) sweep(Ypred_m[[m]],2,NullModel[[m]],"-")); names(partialresNull) <- views
     
-  #remove intercept factor if present
+  # Remove intercept factor if present
   if(object@ModelOpts$learnMean==T) factorsNonconst <- factors[-1] else  factorsNonconst <- factors
     
   # Calculate coefficient of determination
     # per view
-     fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T))
+    fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T))
      
     # per view and feature
     if (perFeature)
       fvar_md <- lapply(views, function(m) 1 - colSums((Y[[m]]-Ypred_m[[m]])**2,na.rm=T) / colSums(resNullModel[[m]]**2,na.rm=T))
     
     # per factor and view
-     if(showtotalR2) fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((resNullModel[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) ))
-        else fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((partialresNull[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(partialresNull[[m]]**2, na.rm=T) ))
+     if (showtotalR2) {
+       fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((resNullModel[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) ))
+     } else {
+       fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((partialresNull[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(partialresNull[[m]]**2, na.rm=T) ))
+     }
     
     # per factor and view and feature
     if (perFeature)
@@ -113,16 +115,17 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
         ylab("Latent factor") +
         theme(
           # plot.margin = margin(5,5,5,5),
-          plot.title = element_text(size=15, hjust=0.5),
+          plot.title = element_text(size=17, hjust=0.5),
           axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5),
-          # axis.text.x = element_blank(),
-          axis.title.y = element_text(size=13),
+          axis.text.x = element_text(size=11, angle=90, hjust=1, vjust=0.5, color="black"),
+          axis.text.y = element_text(size=12, color="black"),
+          axis.title.y = element_text(size=15),
           axis.line = element_blank(),
-          axis.ticks =  element_blank()
+          axis.ticks =  element_blank(),
+          panel.background = element_blank()
           )
       
-      hm <- hm + ggtitle("Variance explained per factor in view")  + 
+      hm <- hm + ggtitle("Variance explained per factor")  + 
       if (showtotalR2) {
         guides(fill=guide_colorbar("R2"))
       } else {
@@ -136,16 +139,19 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
       bplt <- ggplot( fvar_m_df, aes(x=view, y=R2)) + 
         ggtitle("Total variance explained per view") +
         geom_bar(stat="identity", fill="deepskyblue4", width=0.9) +
-        xlab("") + 
+        xlab("") + ylab("R2") +
         scale_y_continuous(expand=c(0.01,0.01)) +
         theme(
           plot.margin = unit(c(1,2.4,0,0), "cm"),
           panel.background = element_blank(),
-          plot.title = element_text(size=15, hjust=0.5),
+          plot.title = element_text(size=17, hjust=0.5),
           axis.ticks.x = element_blank(),
           # axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5)
-          axis.text.x = element_blank()
-              )
+          axis.text.x = element_blank(),
+          axis.text.y = element_text(size=12, color="black"),
+          axis.title.y = element_text(size=13, color="black"),
+          axis.line = element_line(size=rel(1.0), color="black")
+            )
       
       # Join the two plots
       # Need to fix alignment using e.g. gtable...

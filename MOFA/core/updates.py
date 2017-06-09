@@ -98,7 +98,7 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
 
         # Calculate terms for the update
         term1 = s.square(Y).sum(axis=0).data
-        term2 = 2*(Y*s.dot(Z,SW.T)).sum(axis=0).data
+        term2 = 2.*(Y*s.dot(Z,SW.T)).sum(axis=0).data
         term3 = ma.array(ZZ.dot(SWW.T), mask=ma.getmask(Y)).sum(axis=0)
         SWZ = ma.array(SW.dot(Z.T), mask=ma.getmask(Y).T)
         term4 = dotd(SWZ, SWZ.T) - ma.array(s.dot(s.square(Z),s.square(SW).T),mask=ma.getmask(Y)).sum(axis=0)

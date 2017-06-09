@@ -63,7 +63,7 @@ model <- loadModel("/Users/ricard/scMT/mofa/out/model.hdf5")
 ## Show the variance explained for each factor in each view
 ```{r, fig.height=7, fig.width=7}
 r2 <- calculateVarianceExplained(model, views="all", factors="all", plotit=T, perFeature=F, 
-                           orderFactorsbyR2=T, showtotalR2=T)
+                           orderFactorsbyR2=T, showtotalR2=F)
 ```
 
 ## Scatterplots of pairs of latent variables

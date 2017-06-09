@@ -64,7 +64,7 @@ data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 # data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
 
 missingness = 0.0
-missing_view = 0.0
+missing_view = 0.1
 # Y_warp = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 #   likelihood="warp", missingness=missingness, missing_view=missing_view)
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -84,6 +84,8 @@ data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
 # data["Y"] = ( Y_warp[0], Y_warp[1], Y_warp[2] )
 # data["Y"] = ( Y_gaussian[0], )
 
+print data["Y"][1]
+exit()
 ##################
 ## Data options ##
 ##################
@@ -161,7 +163,7 @@ model_opts['ardZ'] = False
 model_opts['ardW'] = "mk"
 
 # Define for which factors to learn Theta
-model_opts['learnTheta'] = 0.*s.ones((M,K))
+model_opts['learnTheta'] = s.ones((M,K))
 
 # Define schedule of updates
 # model_opts['schedule'] = ["Y","SW","Z","AlphaW","Theta","Tau"]
@@ -225,6 +227,7 @@ model_opts["initSW"] = { 'Theta':[s.ones((D[m],K)) for m in xrange(M)],
                           'var_S1':[s.ones((D[m],K)) for m in xrange(M)],
                           'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M }
 
+
 # Theta
 model_opts["initTheta"] = { 'a':[s.ones(K) for m in xrange(M)], 'b':[s.ones(K) for m in xrange(M)], 'E':[s.zeros(K)*s.nan for m in xrange(M)] }
 for m in xrange(M):
@@ -232,7 +235,6 @@ for m in xrange(M):
     if model_opts['learnTheta'][m,k]==0.:
       model_opts["initTheta"]["a"][m][k] = s.nan
       model_opts["initTheta"]["b"][m][k] = s.nan
-      # model_opts["initTheta"]["E"][m][k] = 0.5 # CHANGEE THISSSSsSSSSSS
       model_opts["initTheta"]["E"][m][k] = 1.0
 
 

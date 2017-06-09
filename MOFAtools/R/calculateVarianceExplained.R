@@ -12,6 +12,7 @@
 #' @param perFeature boolean, whether to calculate in addition variance explained per feature (and factor) (default FALSE)
 #' @param orderFactorsbyR2 if T, facotrs are order according to sum of variance explained across views
 #' @param showtotalR2 if FALSE, R2 with respect to total prediciton instead of observations is considered instead of total R2 showing each factors contribution to the full prediction
+#' @param showVarComp if True plot additional barplots showing the contribution of ea
 #' @details fill this
 #' @return a list containing list of R2 for all gaussian views and list of BS for all binary views
 #' @import pheatmap gridExtra ggplot2 reshape2
@@ -59,11 +60,13 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
 
   # Calculate prediction under the null model (intercept only)
     #by default the null model is using the intercept LF if present and not the actual mean
-    NullModel <- lapply(views, function(m)  if(object@ModelOpts$learnMean==T) unique(Ypred_mk[[m]][[1]][1,]) else apply(Y[[m]],2,mean,na.rm=T))
+    NullModel <- lapply(views, function(m)  if(object@ModelOpts$learnMean==T) Ypred_mk[[m]][[1]][1,] else apply(Y[[m]],2,mean,na.rm=T))
     names(NullModel) <- views
     resNullModel <- lapply(views, function(m) sweep(Y[[m]],2,NullModel[[m]],"-"))
     partialresNull <- lapply(views, function(m) sweep(Ypred_m[[m]],2,NullModel[[m]],"-"))
     names(resNullModel) <- views
+    names(partialresNull) <- views
+    
     
   #remove intercept factor if present
   if(object@ModelOpts$learnMean==T) factorsNonconst <- factors[-1] else  factorsNonconst <- factors
@@ -149,10 +152,11 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
       gg_R2 <- gridExtra::arrangeGrob(hm, bplt, ncol=1, heights=c(length(factorsNonconst),7) )
       gridExtra::grid.arrange(gg_R2)
      
-      if (!showtotalR2){
+      #optional: barplots with individual contributions of factors to explaining variance in a view, takes a lot of time....
+      if (showVarComp){
         #Calculate 'variance component'/contribution of each factor
         cols  <- c(RColorBrewer::brewer.pal(9, "Set1"),RColorBrewer::brewer.pal(8, "Dark2"))
-        varcomp_mk <- sapply(views, function(m) sapply(factorsNonconst, function(l) sum(sapply(factorsNonconst, function(k) cov(Ypred_mk[[m]][,l], Ypred_mk[[m]][,k])))))
+        varcomp_mk <- sapply(views, function(m) sapply(factorsNonconst, function(l) sum(sapply(factorsNonconst, function(k) cov(Ypred_mk[[m]][[l]], Ypred_mk[[m]][[k]])))))
         par(mfrow=c(1,2))
         barplot(t(t(varcomp_mk)/colSums(varcomp_mk)), col = cols, horiz = T, main = "Variance components per view", ncol = 2)
         plot.new()

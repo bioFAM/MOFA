@@ -218,6 +218,6 @@ object<-imputeMissing(object)
 ##  Cluster samples based on latent factors
 ```{r}
 clusterSamples(object, "all")
-clusterSamples(object, "4")
+clusterSamples(object, "4", anno_df = data.frame(data$mut["IGHV",]))
 
 ```

@@ -43,8 +43,8 @@ imputeMissing <- function(object, viewnms="all", type = c("inRange","response", 
     }
     # values that have been observed are kept
     if(onlyMissing){
-      observed <- which(!is.na(model@TrainData[[viewidx]]), arr.ind = T)
-      imputedView[observed] <- model@TrainData[[viewidx]][observed]
+      observed <- which(!is.na(object@TrainData[[viewidx]]), arr.ind = T)
+      imputedView[observed] <- object@TrainData[[viewidx]][observed]
     }
     imputedView
   })    

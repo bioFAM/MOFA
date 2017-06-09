@@ -157,8 +157,19 @@ Here we are going to use the absolute value of the weight (or loading) as featur
 # Load reactome annotations
 reactome <- readRDS("/Users/ricard/data/reactome/v59/homo_sapiens/out/human_reactome.rds")
 
+# Load reactome annotations + information on pathways
+reactome<-readRDS("~/Documents/MOFA/CLL_MOFA_data/GO/reactome/human_reactome_binary_matrix.rds")
+ReactomePathwayInfo<-readLines("~/Documents/MOFA/CLL_MOFA_data/GO/reactome/ReactomePathwaysMeta.txt")
+ReactomePathwayInfo<-do.call(rbind,strsplit(ReactomePathwayInfo, "\t"))
+colnames(ReactomePathwayInfo)<-c("id", "description", "species")
+ReactomePathwayInfo<-as.data.frame(ReactomePathwayInfo)
+ReactomePathwayInfo<-ReactomePathwayInfo[ReactomePathwayInfo$species=="Homo sapiens",]
+rownames(reactome) <- ReactomePathwayInfo$description[match(rownames(reactome), ReactomePathwayInfo$id)]
+
 # Run Feature Set Enrichment Analysis
-p.values <- FeatureSetEnrichmentAnalysis(
+FSE.out <- FeatureSetEnrichmentAnalysis(model, view = "mRNA", feature.sets = reactome)
+
+FSE.out <- FeatureSetEnrichmentAnalysis(
   model,
   view = "mRNA", 
   factors = "all", 
@@ -166,37 +177,38 @@ p.values <- FeatureSetEnrichmentAnalysis(
   local.statistic = "loading",
   transformation = "abs.value",
   global.statistic = "mean.diff",
-  statistical.test = "cor.adj.parametric",
-  nperm=NA, 
+  statistical.test = "permutation",
+  nperm=100, 
   min.size=10,
-  cores=1
+  cores=1, alpha=0.05
 )
 
+pval <- FSE.out$pval
 # Rename pathways
 # tmp <- read.table("/Users/ricard/data/reactome/v59/homo_sapiens/AllPathways.txt", header=F, quote="", sep="\t", stringsAsFactors=F)[,c(1,2)]
 # reactome_meta <- tmp[,2]; names(reactome_meta) <- tmp[,1]
 # rownames(p.values) <- stringr::str_replace_all(rownames(gsea.out_reactome), reactome_meta)
 
 # Correct for multiple testing
-p.values_adj <- apply(p.values, 2,function(lfw) p.adjust(lfw, method = "BH"))
+p.values_adj <- FSE.out$pval.adj
 
 
 # Visualise the results 
 # all factors
-Heatmap_FeatureSetEnrichmentAnalysis(p.values_adj, threshold=0.1)
+sigFactors <- Heatmap_FeatureSetEnrichmentAnalysis(p.values_adj, threshold=0.05)
 
 # individual factors
-LinePlot_FeatureSetEnrichmentAnalysis(p.values_adj, view, factor, threshold=0.1, max.pathways=25)
+for(factor in sigFactors) LinePlot_FeatureSetEnrichmentAnalysis(p.values_adj, factor, threshold=0.05, max.pathways=25)
 ```
 
 # Step 4: Impute Missing observations
 ```{r}
-imputeMissing(object)
+object<-imputeMissing(object)
 ```
 
 
-<!-- # Cluster samples -->
-<!-- ```{r} -->
-<!-- clusterMOFA(object, factors) -->
-<!-- ``` -->
+# Cluster samples
+```{r}
+clusterSamples(object, "all")
+```
 

@@ -33,7 +33,7 @@ clusterSamples <- function(object, factors="all", anno_df=NULL, main=NULL){
   if(!is.null(anno_df)) {
   if(!is.data.frame(anno_df)) stop("anno_df should be a dataframe containing covaraites on samples")
   if(nrow(anno_df) != N) stop("The number of rows in anno_df has to match the number of samples in the model")
-  if(!setequal(rownames(df_anno), rownames(Z))) stop("df_anno needs to have rownames matching the samples names in the MOFA object")
+  if(!setequal(rownames(anno_df), rownames(Z))) stop("anno_df needs to have rownames matching the samples names in the MOFA object")
   } 
   
   pheatmap::pheatmap(Z[,factors, drop=F], annotation_row = anno_df, 

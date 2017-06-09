@@ -62,6 +62,7 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
     NullModel <- lapply(views, function(m)  if(object@ModelOpts$learnMean==T) unique(Ypred_mk[[m]][[1]][1,]) else apply(Y[[m]],2,mean,na.rm=T))
     names(NullModel) <- views
     resNullModel <- lapply(views, function(m) sweep(Y[[m]],2,NullModel[[m]],"-"))
+    partialresNull <- lapply(views, function(m) sweep(Ypred_m[[m]],2,NullModel[[m]],"-"))
     names(resNullModel) <- views
     
   #remove intercept factor if present
@@ -76,7 +77,7 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
     
     # per factor and view
      if(showtotalR2) fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((resNullModel[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) ))
-        else fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((Ypred_m[[m]]-Ypred_mk[[m]][[k]]-Ypred_mk[[m]][[1]])**2, na.rm=T) / sum((Ypred_m[[m]]-Ypred_mk[[m]][[1]])**2, na.rm=T) ))
+        else fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((partialresNull[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(partialresNull[[m]]**2, na.rm=T) ))
     
     # per factor and view and feature
     if(perFeature)

@@ -17,9 +17,10 @@
 #' @return a weight matrix of dimension d (feautres) x k (number of latent factors)
 #' @importFrom pheatmap pheatmap
 #' @importFrom RColorBrewer brewer.pal colorRampPalette
+#' @import magrittr
 #' @export
 
-showWeightHeatmap <- function(model, view, features="all", factors="all", interceptLF =F, main=NULL, color = NULL, breaks=NULL, ...) {
+showWeightHeatmap <- function(model, view, features="all", factors="all", interceptLF =F, main=NULL, color = NULL, breaks=NULL, show_rownames = F) {
   
   # Sanity checks
   if (class(model) != "MOFAmodel")
@@ -58,7 +59,6 @@ showWeightHeatmap <- function(model, view, features="all", factors="all", interc
     breaks <- c(seq(minV, 0, length.out=ceiling(palLength/2) + 1), 
                 seq(maxV/palLength,maxV, length.out=floor(palLength/2)))
   }
-  
   pheatmap(W, main=main, color=color, breaks=breaks, ...)
 }
 

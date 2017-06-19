@@ -1,13 +1,20 @@
 
 library(MOFAtools)
 
-file = "/Users/ricard/data/CLL/out/imputation/missingAtRandom/commonPats_small_0.5_drug_ArdWbasic_k10_nomean_2.hdf5"
-# file = "/Users/ricard/test.hdf5"
+file = "/tmp/test.h5"
 model <- loadModel(file)
+
+calculateVarianceExplained(model)
+
+Z <- getExpectations(model,"Z","E")
+Y <- model@TrainData
+SW <- getExpectations(model,"SW","E")
 
 showWeights(model, view="mut", features="all", factors="all", main=NULL)
 showWeights(model, view="mut", features="all", factors=14:15, main=NULL)
-  
+
+scatterPairs(model)  
+
 mut <- read.table("/Users/ricard/data/CLL/views/commonPats_small/mut.txt", sep=" ", header=T)
 scatterPlot(model, 2, 5, colour_by = as.factor(mut$TP53))
 

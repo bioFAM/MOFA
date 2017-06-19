@@ -4,7 +4,7 @@
 \alias{showDataHeatmap}
 \title{showDataHeatmap: heatmap of the observed values of the most relevant features for a given factor}
 \usage{
-showDataHeatmap(model, view, factor, nfeatures = 50, ...)
+showDataHeatmap(model, view, factor, nfeatures = 50, main = NULL, ...)
 }
 \arguments{
 \item{model}{a fitted MOFA model}

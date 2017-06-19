@@ -15,7 +15,8 @@
 #' @param ... further arguments that can be passed to pheatmap
 #' @details fill this
 #' @return a weight matrix of dimension d (feautres) x k (number of latent factors)
-#' @import pheatmap
+#' @importFrom pheatmap pheatmap
+#' @importFrom RColorBrewer brewer.pal colorRampPalette
 #' @export
 
 showWeightHeatmap <- function(model, view, features="all", factors="all", interceptLF =F, main=NULL, color = NULL, breaks=NULL, ...) {
@@ -58,7 +59,7 @@ showWeightHeatmap <- function(model, view, features="all", factors="all", interc
                 seq(maxV/palLength,maxV, length.out=floor(palLength/2)))
   }
   
-  pheatmap::pheatmap(W, main=main, color=color, breaks=breaks, ...)
+  pheatmap(W, main=main, color=color, breaks=breaks, ...)
 }
 
 
@@ -117,7 +118,7 @@ showWeights <- function(model, view, factor, ntop = 0, ntail = 0, manual = NULL,
     
     df_W$groups <- as.factor(FeatureGroups[as.character(df_W$FeatureName)] )
     if(is.null(FeatureGroupsCols)){
-      FeatureGroupsCols <- c(RColorBrewer::brewer.pal(9, "Set1"), RColorBrewer::brewer.pal(8, "Set2"), RColorBrewer::brewer.pal(12, "Set3"))
+      FeatureGroupsCols <- c(brewer.pal(9, "Set1"), brewer.pal(8, "Set2"), brewer.pal(12, "Set3"))
       if(length(unique(df_W$groups)) > 29) FeatureGroupsCols <- colors(length(unique(df_W$groups)))
       FeatureGroupsCols <- FeatureGroupsCols[1:length(unique(df_W$groups))]
       names(FeatureGroupsCols) <- unique(FeatureGroups)

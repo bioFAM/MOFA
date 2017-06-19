@@ -10,8 +10,10 @@
 #' @return Plots a heatmap of correlation of Latent Factors in all models when 'comparison' is 'all'. 
 #' Otherwise, for each pair of models, a seperate heatmap is produced comparing one model againt the other.
 #' The corresponding correlation matrix or list or pairwise correlation matrices is returned
-#' @reference fill this
-#' @import pheatmap
+#' @references fill this
+#' @importFrom stats cor
+#' @importFrom pheatmap pheatmap
+#' @importFrom RColorBrewer colorRampPalette
 #' @export
 
 compareModels <- function(ModelList, comparison="all") {

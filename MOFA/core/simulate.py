@@ -202,7 +202,6 @@ class Simulate(object):
             n_missing = s.random.choice(range(self.N), int(missing_view * self.N), replace=False)
             Y[0][n_missing,:] = s.nan
 
-
         # Create a mask
         # for m in xrange(self.M):
             # Y[m] = ma.masked_invalid(Y[m])

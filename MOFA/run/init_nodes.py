@@ -239,8 +239,10 @@ class initModel(object):
         #  pb (float): 'b' parameter of the prior distribution
         #  qb (float): initialisation of the 'b' parameter of the variational distribution
         #  qE (float): initial expectation of the variational distribution
-        #  learnTheta (binary): binary matrix with dim (M,K) indicating for which factors and views we learn theta
+        #  learnTheta (binary): list with binary matrices with dim (D[m],K)
 
+        print "We need to fix this so theta takes dimension (D,K)"
+        exit()
         Theta_list = [None] * self.M
         for m in xrange(self.M):
             Klearn = learnTheta[m,:]==1.
@@ -257,15 +259,15 @@ class initModel(object):
         # Method to initialise the theta node
         Theta_list = [None] * self.M
         for m in xrange(self.M):
-            Theta_list[m] = Theta_Node(dim=(self.K,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
+            Theta_list[m] = Theta_Node(dim=(self.D[m],self.K,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
         self.Theta = Multiview_Variational_Node(self.M, *Theta_list)
         self.nodes["Theta"] = self.Theta
 
     def initThetaConst(self, value):
-        # Method to initialise the theta node
+        # Method to initialise a constant theta node
         Theta_list = [None] * self.M
         for m in xrange(self.M):
-            Theta_list[m] = Theta_Constant_Node(dim=(self.K,), value=value[m], N_cells=1.)
+            Theta_list[m] = Theta_Constant_Node(dim=(self.D[m],self.K,), value=value[m], N_cells=1.)
         self.Theta = Multiview_Constant_Node(self.M, *Theta_list)
         self.nodes["Theta"] = self.Theta
 

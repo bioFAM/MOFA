@@ -2,20 +2,20 @@
 % Please edit documentation in R/createMOFAobject.R
 \name{createMOFAobject}
 \alias{createMOFAobject}
-\title{Initialize a \code{\link{MOFAmodel}} object with multi-omic input data}
+\title{Initialize a \code{\link{MOFAmodel}} object with multi-omic data}
 \usage{
 createMOFAobject(mae, minViews = 1)
 }
 \arguments{
-\item{mae}{A MultiAssayExperiment containing the input data for MOFA}
-
 \item{minViews}{Number of views a sample has to be observed to be included (default 1, i.e. including all samples)}
+
+\item{A}{MultiAssayExperiment containing the input data for MOFA}
 }
 \value{
 an untrained MOFA model object
 }
 \description{
-Method to intilize the InputData slot of the MOFA object starting from a MutliAssayExperiment object
+Method to intilize the InputData slot of the MOFA object using a MultiAssayExperiment object as input
 }
 \details{
 fill this

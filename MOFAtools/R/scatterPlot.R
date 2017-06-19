@@ -6,7 +6,7 @@
 #' @param id name of latent variable to plot
 #' @details asd
 #' @return fill this
-#' @reference fill this
+#' @references fill this
 #' @import ggplot2
 #' @export
 histPlot <- function(object, id, xlabel = NULL, groups = NULL, alpha=0.6, binwidth=NULL, name_colour="", showNA=F) {
@@ -57,7 +57,7 @@ histPlot <- function(object, id, xlabel = NULL, groups = NULL, alpha=0.6, binwid
 #' @param id latent variable
 #' @details asd
 #' @return fill this
-#' @reference fill this
+#' @references fill this
 #' @import beeswarm
 #' @export
 beeswarmPlot <- function(object, id, label = NULL, groups = NULL, groupname="") {
@@ -87,7 +87,7 @@ beeswarmPlot <- function(object, id, label = NULL, groups = NULL, groupname="") 
 #' @param idy latent variable on the y axis
 #' @details asd
 #' @return fill this
-#' @reference fill this
+#' @references fill this
 #' @import ggplot2
 #' @export
   scatterPlot<-function (object, idx, idy, title = "", titlesize = 16, xlabel = NULL, 
@@ -163,7 +163,7 @@ beeswarmPlot <- function(object, id, label = NULL, groups = NULL, groupname="") 
 #' @param showMissing boolean wether to include missing values in colour_by
 #' @details asd
 #' @return fill this
-#' @reference fill this
+#' @references fill this
 #' @import ggplot2 GGally
 #' @export
 #' 

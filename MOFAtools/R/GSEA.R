@@ -1,78 +1,3 @@
-#' @title Line plot of Feature Set Enrichment Analysis results
-#' @name LinePlot_FeatureSetEnrichmentAnalysis
-#' @description Line plot of the Feature Set Enrichment Analyisis results for a specific latent variable
-#' @param p.values output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are feature sets and columns are latent variables
-#' @param factor Factor for which to show wnriched pathways in the lineplot
-#' @param threshold p.value threshold to filter out feature sets
-#' @param max.pathways maximum number of enriched pathways to display
-#' @details fill this
-#' @return nothing
-#' @import ggplot2
-#' @export
-LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, factor, threshold=0.1, max.pathways=25, ...) {
-  
-  # Sanity checks
-  # (...)
-  
-  # Get data  
-  tmp <- as.data.frame(p.values[,factor, drop=F])
-  tmp$pathway <- rownames(tmp)
-  colnames(tmp) <- c("pvalue")
-  
-  # Filter out pathways
-  tmp <- tmp[tmp$pvalue<=threshold,,drop=F]
-  if(nrow(tmp)==0) stop("No siginificant pathways at the specified threshold. For an overview use Heatmap_FeatureSetEnrichmentAnalysis().")
-  
-  # If there are too many pathways enriched, just keep the 'max_pathways' more significant
-  if (nrow(tmp) > max.pathways)
-    tmp <- head(tmp,n=max.pathways)
-  
-  # Convert pvalues to log scale (add a small regulariser to avoid numerical errors)
-  tmp$log <- -log10(tmp$pvalue + 1e-6)
-  
-  # Annotate significcant pathways
-  # tmp$sig <- factor(tmp$pvalue<threshold)
-  
-  #order according to significance
-  tmp$pathway <- factor(tmp$pathway <- rownames(tmp), levels = tmp$pathway[order(tmp$pvalue, decreasing = T)])
-  
-  p <- ggplot2::ggplot(tmp, aes(x=pathway, y=log)) +
-    ggtitle(paste("Enriched sets in factor", factor)) +
-    geom_point(size=5) +
-    geom_hline(yintercept=-log10(threshold), linetype="longdash") +
-    scale_y_continuous(limits=c(0,7)) +
-    scale_color_manual(values=c("black","red")) +
-    geom_segment(aes(xend=pathway, yend=0)) +
-    ylab("-log pvalue") +
-    coord_flip() +
-    theme(
-      axis.text.y = element_text(size=rel(1.2), hjust=1, color='black'),
-      axis.title.y=element_blank(),
-      legend.position='none',
-      panel.background = element_blank()
-    )
-  print(p)
-  return(p)
-}
-
-#' @title Heatmap of Feature Set Enrichment Analysis results
-#' @name Heatmap_FeatureSetEnrichmentAnalysis
-#' @description Heatmap of the Feature Set Enrichment Analyisis results
-#' @param p.values output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are gene sets and columns are latent variables
-#' @param threshold p.value threshold to filter out feature sets. If a feature set has a p.value lower than 'threshold'
-#' @param ... Parameters to be passed to pheatmap function
-#' @details fill this
-#' @return vector of factors being enriched for at least one feautre set at the threshold specified 
-#' @import pheatmap
-#' @export
-Heatmap_FeatureSetEnrichmentAnalysis <- function(p.values, threshold=0.05, ...) {
-  p.values <- p.values[!apply(p.values, 1, function(x) sum(x>=threshold)) == ncol(p.values),]
-  pheatmap::pheatmap(p.values, cluster_rows = T, cluster_cols = F, show_rownames = F, show_colnames = T,
-                     color = colorRampPalette(c("red", "lightgrey"))(n=5))
-  sigFactors <- colnames(p.values)[which(apply(p.values, 2, function(x) any(x<=threshold)))]
-  return(sigFactors)
-}
-
 ##########################################################
 ## Functions to perform Feature Set Enrichment Analysis ##
 ##########################################################
@@ -96,7 +21,8 @@ Heatmap_FeatureSetEnrichmentAnalysis <- function(p.values, threshold=0.05, ...) 
 #' @param p.adj.method Method to adjust p-values factor-wise for multiple testing. Can be any method in p.adjust.methods(). Default uses Benjamini-Hochberg procedure.
 #' @details fill this
 #' @return a list with two matrices, one for the feature set statistics and the other for the pvalues. Rows are feature sets and columns are latent variables.
-#' @import doParallel
+#' @import foreach doParallel
+#' @importFrom stats p.adjust
 #' @export
 
 FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all", local.statistic=c("loading", "cor", "z"),
@@ -208,7 +134,7 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
     })
       
     # Compute p.values
-    p.values <- matrix(NA, nr=nrow(s.true), nc=ncol(s.true));
+    p.values <- matrix(NA, nrow=nrow(s.true), ncol=ncol(s.true));
     rownames(p.values) <- rownames(s.true); colnames(p.values) <- factors
     for (j in factors) {
       p.values[,j] <- sapply(s.true[,j], function(x) mean(abs(null_dist[,j]) > abs(x)) )
@@ -231,119 +157,89 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
 }
 
 
-FeatureSetEnrichmentAnalysisOld <- function(model, view, feature.sets, factors="all", local.statistic="loading",
-                                         transformation="abs.value", global.statistic="mean.diff", statistical.test="parametric", 
-                                         nperm=100, min.size=10, cores=1, p.adj.method = "BH") {
-  
-  # Collect factors
-  if (paste0(factors,sep="",collapse="") == "all") { 
-    factors <- factorNames(model)
-    if (model@ModelOpts$learnMean) { factors <- factors[-1] }
-  } else if(!all(factors %in% factorNames(model))) stop("Factors do not match factor names in model")
+########################
+## Plotting functions ##
+########################
 
+
+#' @title Line plot of Feature Set Enrichment Analysis results
+#' @name LinePlot_FeatureSetEnrichmentAnalysis
+#' @description Line plot of the Feature Set Enrichment Analyisis results for a specific latent variable
+#' @param p.values output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are feature sets and columns are latent variables
+#' @param factor Factor for which to show wnriched pathways in the lineplot
+#' @param threshold p.value threshold to filter out feature sets
+#' @param max.pathways maximum number of enriched pathways to display
+#' @details fill this
+#' @return nothing
+#' @import ggplot2
+#' @export
+LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, factor, threshold=0.1, max.pathways=25, ...) {
   
-  # Collect observed data
-  data <- model@TrainData[[view]]
-  data <- t(data)
+  # Sanity checks
+  # (...)
   
-  # Collect relevant expectations
-  W <- getExpectations(model,"SW","E")[[view]][,factors, drop=FALSE]
-  Z <- getExpectations(model,"Z","E")[,factors, drop=FALSE]
-  #; rownames(W) <- colnames(data)
-  #;          rownames(Z) <- rownames(data)
+  # Get data  
+  tmp <- as.data.frame(p.values[,factor, drop=F])
+  tmp$pathway <- rownames(tmp)
+  colnames(tmp) <- c("pvalue")
   
-  # Check that there is no constant factor
-  stopifnot( all(apply(Z,2,var)>0) )
+  # Filter out pathways
+  tmp <- tmp[tmp$pvalue<=threshold,,drop=F]
+  if(nrow(tmp)==0) stop("No siginificant pathways at the specified threshold. For an overview use Heatmap_FeatureSetEnrichmentAnalysis().")
   
-  # To-do: check feature.sets input format
+  # If there are too many pathways enriched, just keep the 'max_pathways' more significant
+  if (nrow(tmp) > max.pathways)
+    tmp <- head(tmp,n=max.pathways)
   
-  # turn lists into binary membership matrices
-  if(class(feature.sets) == "list") {
-    features <- Reduce(union, feature.sets)
-    feature.sets <- sapply(names(feature.sets), function(nm) {
-      tmp <- features %in% feature.sets[[nm]]
-      names(tmp) <- features
-      tmp
-      })
-    feature.sets <-t(feature.sets)*1
-  }
+  # Convert pvalues to log scale (add a small regulariser to avoid numerical errors)
+  tmp$log <- -log10(tmp$pvalue + 1e-6)
   
-  # Check if some features do not intersect between the feature sets and the observed data and remove them
-  features <- intersect(colnames(data),colnames(feature.sets))
-  if(length(features) == 0 ) stop("Feautre names in feature.sets do not match feature names in model.")
-  # features <- intersect(rownames(data),colnames(feature.sets))
-  data <- data[,features]
-  # data <- data[features,]
-  W <- W[features,]
-  feature.sets <- feature.sets[,features]
+  # Annotate significcant pathways
+  # tmp$sig <- factor(tmp$pvalue<threshold)
   
-  # Filter feature sets with small number of features
-  feature.sets <- feature.sets[rowSums(feature.sets)>=min.size,]
+  #order according to significance
+  tmp$pathway <- factor(tmp$pathway <- rownames(tmp), levels = tmp$pathway[order(tmp$pvalue, decreasing = T)])
   
-  # Print options
-  cat("Doing feature Ontology Enrichment Analysis with the following options...\n")
-  cat(sprintf("View: %s\n", view))
-  cat(sprintf("Latent variables: %s\n", paste(as.character(factors),collapse=" ")))
-  cat(sprintf("Number of feature sets: %d\n", nrow(feature.sets)))
-  cat(sprintf("Local statistic: %s\n", local.statistic))
-  cat(sprintf("Transformation: %s\n", transformation))
-  cat(sprintf("Global statistic: %s\n", global.statistic))
-  cat(sprintf("Statistical test: %s\n", statistical.test))
-  if (statistical.test=="permutation") {
-    cat(sprintf("Cores: %d\n", cores))
-    cat(sprintf("Number of permutations: %d\n", nperm))
-  }
-  
-  if (statistical.test == "permutation") {
-    doParallel::registerDoParallel(cores=cores)
-    stop("Permutation test is not working properly")
-    doParallel::registerDoParallel(cores=cores)
-    
-    null_dist_tmp <- foreach(rnd=1:nperm) %dopar% {
-      # for (rnd in 1:nperm) {
-      # cat(sprintf("Random trial %d\n",rnd))
-      
-      # Permute rows of the weight matrix to obtain a null distribution
-      W_null <- apply(W, 2, function(w) w[sample(length(w))])
-      rownames(W_null) <- rownames(W); colnames(W_null) <- colnames(W)
-      
-      data_null <- data[sample(nrow(data)),]
-      rownames(data_null) <- rownames(data)
-      
-      # Compute null statistic
-      s.null <- pcgse(data=data_null, prcomp.output=list(rotation=W_null, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
-                      transformation=transformation, feature.set.statistic=global.statistic, feature.set.test="parametric", nperm=NA)$statistic
-      tmp <- apply(abs(s.null), 2, max)
-      tmp
-    }
-    null_dist <- do.call("rbind", null_dist_tmp)
-    
-    # Compute true statistics
-    s.true <- pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
-                    transformation=transformation, feature.set.statistic=global.statistic, feature.set.test="parametric", nperm=NA)$statistic
-    colnames(s.true) <- factorNames(model)[factors]
-    rownames(s.true) <- rownames(feature.sets)
-    
-    # Compute p.values
-    p.values <- matrix(NA, nr=nrow(s.true), nc=ncol(s.true));
-    rownames(p.values) <- rownames(s.true); colnames(p.values) <- factorNames(model)[factors]
-    for (j in 1:length(factors)) {
-      p.values[,j] <- sapply(s.true[,j], function(x) mean(null_dist[,j] > abs(x)) )
-    }
-    p.values
-    
-  } else {
-    p.values <- pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
-                      transformation=transformation, feature.set.statistic=global.statistic, feature.set.test=statistical.test, nperm=nperm)$p.values
-    colnames(p.values) <- factors
-    rownames(p.values) <- rownames(feature.sets)
-  }
-  
-  if(!p.adj.method %in%  p.adjust.methods) stop("p.adj.method needs to be an element of p.adjust.methods")
-  adj.p.values <- apply(p.values, 2,function(lfw) p.adjust(lfw, method = p.adj.method))
-  
-  return(list(pval = p.values, pval.adj = adj.p.values))
+  p <- ggplot2::ggplot(tmp, aes(x=pathway, y=log)) +
+    ggtitle(paste("Enriched sets in factor", factor)) +
+    geom_point(size=5) +
+    geom_hline(yintercept=-log10(threshold), linetype="longdash") +
+    scale_y_continuous(limits=c(0,7)) +
+    scale_color_manual(values=c("black","red")) +
+    geom_segment(aes(xend=pathway, yend=0)) +
+    ylab("-log pvalue") +
+    coord_flip() +
+    theme(
+      axis.text.y = element_text(size=rel(1.2), hjust=1, color='black'),
+      axis.title.y=element_blank(),
+      legend.position='none',
+      panel.background = element_blank()
+    )
+  print(p)
+  return(p)
 }
+
+#' @title Heatmap of Feature Set Enrichment Analysis results
+#' @name Heatmap_FeatureSetEnrichmentAnalysis
+#' @description Heatmap of the Feature Set Enrichment Analyisis results
+#' @param p.values output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are gene sets and columns are latent variables
+#' @param threshold p.value threshold to filter out feature sets. If a feature set has a p.value lower than 'threshold'
+#' @param ... Parameters to be passed to pheatmap function
+#' @details fill this
+#' @return vector of factors being enriched for at least one feautre set at the threshold specified 
+#' @importFrom pheatmap pheatmap
+#' @importFrom RColorBrewer colorRampPalette
+#' @export
+Heatmap_FeatureSetEnrichmentAnalysis <- function(p.values, threshold=0.05, ...) {
+  p.values <- p.values[!apply(p.values, 1, function(x) sum(x>=threshold)) == ncol(p.values),]
+  pheatmap(p.values, cluster_rows = T, cluster_cols = F, show_rownames = F, show_colnames = T,
+                     color = colorRampPalette(c("red", "lightgrey"))(n=5))
+  sigFactors <- colnames(p.values)[which(apply(p.values, 2, function(x) any(x<=threshold)))]
+  return(sigFactors)
+}
+
+
+
 
 
 ######################################################################
@@ -436,65 +332,6 @@ pcgse = function(data,
   
   return (results) 
 }
-
-# pcgseViaPermutation = function(data, prcomp.output, pc.indexes, feature.set.indexes, feature.statistic, transformation, feature.set.statistic, nperm=999) {
-#   
-#   num.feature.sets <- length(feature.set.indexes)
-#   # n <-  nrow(data)
-#   p.values <- matrix(0, nrow=num.feature.sets, ncol=length(pc.indexes))
-#   rownames(p.values) = names(feature.set.indexes)
-#   feature.set.statistics = matrix(T, nrow=num.feature.sets, ncol=length(pc.indexes))    
-#   rownames(feature.set.statistics) = names(feature.set.indexes)  
-#   
-#   null_dist <- matrix(NA, nrow=nperm, ncol=length(pc.indexes))
-#   for (i in 1:nperm) {
-#     # Shuffle feature statistics to obtain a null distribution
-#     feature.statistics.null <- feature.statistics[sample(nrow(feature.statistics)),]
-#     for (j in 1:length(pc.indexes)) {
-#       pc.index <- pc.indexes[j]
-#       pc <- prcomp.output$x[,pc.index]
-#       feature.set.statistics = rep(NA, num.feature.sets)
-#       if (feature.set.statistic == "rank.sum") {
-#         stop()
-#       } else if (feature.set.statistic == "mean_diff") {
-#         for (k in 1:num.feature.sets) {
-#           m1 = length(feature.set.indexes[[k]])
-#           not.feature.set.indexes = which(!(1:num.feature.sets %in% feature.set.indexes[[k]]))
-#           m2 = length(not.feature.set.indexes)
-#           # compute the mean difference of the feature-level statistics
-#           mean.diff = mean(feature.statistics.null[feature.set.indexes[[k]],j]) - mean(feature.statistics.null[not.feature.set.indexes])
-#           # compute the pooled standard deviation
-#           pooled.sd = sqrt(((m1-1)*var(feature.statistics.null[feature.set.indexes[[k]],j]) + (m2-1)*var(feature.statistics.null[not.feature.set.indexes,j]))/(m1+m2-2))
-#           # compute the t-statistic
-#           feature.set.statistics[k] = mean.diff/(pooled.sd*sqrt(1/m1 + 1/m2))
-#         }
-#       }
-#       null_dist[i,j] = max(abs(feature.set.statistics))
-#     }
-#   }
-#   
-#   # Compute the true statistics and obtain a p.value
-#   if (feature.set.statistic == "mean_diff") {
-#     for (k in 1:num.feature.sets) {
-#       m1 = length(feature.set.indexes[[k]])
-#       not.feature.set.indexes = which(!(1:num.feature.sets %in% feature.set.indexes[[k]]))
-#       m2 = length(not.feature.set.indexes)
-#       # compute the mean difference of the feature-level statistics
-#       mean.diff = mean(feature.statistics.null[feature.set.indexes[[k]],j]) - mean(feature.statistics.null[not.feature.set.indexes])
-#       # compute the pooled standard deviation
-#       pooled.sd = sqrt(((m1-1)*var(feature.statistics.null[feature.set.indexes[[k]],j]) + (m2-1)*var(feature.statistics.null[not.feature.set.indexes,j]))/(m1+m2-2))
-#       # compute the t-statistic
-#       feature.set.statistics[k] = mean.diff/(pooled.sd*sqrt(1/m1 + 1/m2))
-#     }
-#   }
-#   p.values[,j] = mean(null_dist[,j] > abs(x))
-#   
-#   # Build the result list
-#   # results = list()
-#   # results$p.values = p.values
-#   # results$statistics = feature.set.statistics  
-#   return (results)
-# }
 
 
 
@@ -604,103 +441,6 @@ pcgseViaTTest = function(data, prcomp.output, pc.indexes, feature.set.indexes, f
 }
 
 #-------------------------------------------------------------------------------------------------------------------------------
-# Internal methods - Enrichment via SAFE method that computes the permutation distribution of the mean difference of t-statistics
-# associated with a linear regression of the PC on the genomic variables.
-#-------------------------------------------------------------------------------------------------------------------------------
-
-#' @title asd
-#' @name asd
-#' @description asd
-#' @param X.mat asd
-#' @details asd
-#' @return asd
-#' @export
-local.featureStatistics = function(X.mat, y.vec,...){
-  args.local = list(...)[[1]]
-  feature.stat = args.local$feature.statistic
-  trans = args.local$transformation
-  return (function(data=X.mat, vector=y.vec, feature.statistic = feature.stat, transformation = trans,...) {
-    p = length(vector)
-    n = ncol(data)
-    feature.statistics = rep(0, p)
-    # compute the Pearson correlation between the selected PCs and the data
-    feature.statistics = cor(t(data), vector)
-    if (feature.statistic == "z") {
-      # use Fisher's Z transformation to convert to Z-statisics
-      feature.statistics = sapply(feature.statistics, function(x) {
-        return (sqrt(n-3)*atanh(x))})
-    }
-    # Absolute value transformation of the feature-level statistics if requested
-    if (transformation == "abs.value") {
-      feature.statistics = sapply(feature.statistics, abs)
-    }
-    return (feature.statistics)
-  })
-}
-
-global.StandAveDiff = function(C.mat,local.stats,...) {
-  feature.set.mat = t(as.matrix(C.mat))
-  return (function(feature.statistics=local.stats,feature.sets=feature.set.mat,...) {
-    num.feature.sets = nrow(feature.set.mat)
-    feature.set.statistics = rep(0, num.feature.sets)
-    for (i in 1:num.feature.sets) {
-      indexes.for.feature.set = which(feature.set.mat[i,]==1)
-      m1 = length(indexes.for.feature.set)
-      not.feature.set.indexes = which(!(1:ncol(feature.set.mat) %in% indexes.for.feature.set))
-      m2 = length(not.feature.set.indexes)
-      # compute the mean difference of the feature-level statistics
-      mean.diff = mean(feature.statistics[indexes.for.feature.set]) - mean(feature.statistics[not.feature.set.indexes])
-      # compute the pooled standard deviation
-      pooled.sd = sqrt(((m1-1)*var(feature.statistics[indexes.for.feature.set]) + (m2-1)*var(feature.statistics[not.feature.set.indexes]))/(m1+m2-2))
-      # compute the t-statistic
-      feature.set.statistics[i] = mean.diff/(pooled.sd*sqrt(1/m1 + 1/m2))
-    }
-    return (feature.set.statistics)
-  })
-}
-
-
-pcgseViaSAFE = function(data, prcomp.output, pc.indexes, feature.set.indexes, feature.statistic, transformation, feature.set.statistic, nperm=999) {
-  num.feature.sets = nrow(feature.set.indexes)
-  n= nrow(data)
-  p.values = matrix(0, nrow=num.feature.sets, ncol=length(pc.indexes))
-  rownames(p.values) = names(feature.set.indexes)
-  feature.set.statistics = matrix(T, nrow=num.feature.sets, ncol=length(pc.indexes))    
-  rownames(feature.set.statistics) = names(feature.set.indexes)  
-  
-  for (j in 1:length(pc.indexes)) {
-    pc.index = pc.indexes[j]
-    pc = prcomp.output$x[,pc.index]
-    global="AveDiff"
-    if (feature.set.statistic == "rank.sum") {
-      global="Wilcoxon"
-    } else {
-      # global="StandAveDiff"
-      global="AveDiff" 
-    }
-    safe.results = safe::safe(X.mat=t(data), y.vec=pc, C.mat=t(feature.set.indexes), local="featureStatistics", global=global, Pi.mat=nperm,
-                              args.global=list(one.sided=T), args.local=list(feature.statistic=feature.statistic, transformation=transformation), alpha=1.01, print.it = FALSE,
-                              parallel = TRUE)
-    p.values[,j] = slot(safe.results, "global.pval")
-    feature.set.statistics[,j] = slot(safe.results, "global.stat")    
-  }
-  
-  # Turn one-sided p-values into two-sided p-values
-  p.values = apply(p.values, c(1,2), function(x) {
-    upper = 1 - x
-    lower = x
-    return (2*min(upper, lower))
-  })
-  
-  # Build the result list
-  results = list()
-  results$p.values = p.values
-  results$statistics = feature.set.statistics  
-  
-  return (results)
-}
-
-#-------------------------------------------------------------------------------------------------------------------------------
 # Internal methods - Enrichment via Wilcoxon Mann Whitney or correlation-adjusted WMW
 #-------------------------------------------------------------------------------------------------------------------------------
 
@@ -754,74 +494,4 @@ pcgseViaWMW = function(data, prcomp.output, pc.indexes, feature.set.indexes, fea
   results$statistics = feature.set.statistics  
   
   return (results)
-}
-
-
-
-
-#' @title Line plot of Feature Set Enrichment Analysis results
-#' @name LinePlot_FeatureSetEnrichmentAnalysis
-#' @description Line plot of the Feature Set Enrichment Analyisis results for a specific latent variable
-#' @param p.values output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are feature sets and columns are latent variables
-#' @param threshold p.value threshold to filter out feature sets
-#' @param max.pathways maximum number of enriched pathways to display
-#' @details fill this
-#' @return nothing
-#' @import ggplot2
-#' @export
-LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, view, factor, threshold=0.1, max.pathways=25, ...) {
-  
-  # Sanity checks
-  # (...)
-  
-  # Get data  
-  tmp <- as.data.frame(p.values[,factor, drop=F])
-  colnames(tmp) <- c("pvalue")
-  tmp$pathway <- rownames(tmp)
-  
-  # Filter out pathways
-  tmp <- tmp[tmp$pvalue<=threshold,,drop=F]
-  
-  # If there are too many pathways enriched, just keep the 'max_pathways' more significant
-  if (nrow(tmp) > max.pathways)
-    tmp <- head(tmp,n=max.pathways)
-  
-  # Convert pvalues to log scale (add a small regulariser to avoid numerical errors)
-  tmp$log <- -log10(tmp$pvalue + 1e-6)
-  
-  # Annotate significcant pathways
-  # tmp$sig <- factor(tmp$pvalue<threshold)
-  
-  p <- ggplot2::ggplot(tmp, aes(x=pathway, y=log)) +
-    ggtitle("") +
-    geom_point(size=5) +
-    geom_hline(yintercept=-log10(threshold), linetype="longdash") +
-    scale_y_continuous(limits=c(0,7)) +
-    scale_color_manual(values=c("black","red")) +
-    geom_segment(aes(xend=pathway, yend=0)) +
-    ylab("-log pvalue") +
-    coord_flip() +
-    theme(
-      axis.text.y = element_text(size=rel(1.2), hjust=1, color='black'),
-      axis.title.y=element_blank(),
-      legend.position='none',
-      panel.background = element_blank()
-    )
-  print(p)
-}
-
-#' @title Heatmap of Feature Set Enrichment Analysis results
-#' @name Heatmap_FeatureSetEnrichmentAnalysis
-#' @description Heatmap of the Feature Set Enrichment Analyisis results
-#' @param p.values output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are gene sets and columns are latent variables
-#' @param threshold p.value threshold to filter out feature sets. If a feature set has a p.value lower than 'threshold'
-#' @param ... Parameters to be passed to pheatmap function
-#' @details fill this
-#' @return nothing
-#' @import pheatmap
-#' @export
-Heatmap_FeatureSetEnrichmentAnalysis <- function(p.values, threshold=0.05, ...) {
-  p.values <- p.values[!apply(p.values, 1, function(x) sum(x>=threshold)) == ncol(p.values),]
-  pheatmap::pheatmap(p.values, cluster_rows = T, cluster_cols = F, show_rownames = F, show_colnames = T,
-                     color = colorRampPalette(c("red", "lightgrey"))(n=5))
 }

@@ -5,7 +5,6 @@
 #' @param factors factors to use for the clustering
 #' @details asd
 #' @return A hclust object containing the clustering of the samples
-#' @reference fill this
 #' @export
 #' 
 

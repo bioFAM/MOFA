@@ -8,10 +8,8 @@
 #' @param onlyMissing By default, only values missing in Training Data are replaced by imputed ones. If all predicitons based on MOFA are wanted, this needs to be set to FALSE. 
 #' @details asd
 #' @return List of imputed data, each list element corresponding to specified views.
-#' @reference fill this
+#' @references fill this
 #' @export
-#' ??
-
 imputeMissing <- function(object, viewnms="all", type = c("inRange","response", "link"), onlyMissing =T){
   
   # Sanity checks

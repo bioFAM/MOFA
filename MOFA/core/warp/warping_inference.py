@@ -102,7 +102,7 @@ class Warping_inference(object):
         ans = numpy.log(partial_f_prime_val + self.entity.f_prime(X,i)) 
         ans -= 0.5*tau * ((Z - F)**2)
         func = numpy.sum(ans)
-        assert func == numpy.sum( mat_mask * ans)
+        # assert func == numpy.sum( mat_mask * ans)
         return -func
 
     def _f_ELBO_d_param(self,param,param_opt,i,X,F,tau,mat_mask,partial_f_val,partial_f_prime_val):
@@ -127,9 +127,9 @@ class Warping_inference(object):
         grad = inv_f_prime_val * self.entity.f_prime(X,i,partial=param_opt) 
         grad -= tau_Z_F * self.entity.f(X,i,partial=param_opt)       
         grad *= param_class.f_prime()
-                
+
         res = numpy.array([(-1.0) * numpy.mean(grad)])
-        assert res == numpy.array([(-1.0) * numpy.mean(mat_mask*grad)])
+        # assert res == numpy.array([(-1.0) * numpy.mean(mat_mask*grad)])
 
         return res
 

@@ -5,8 +5,9 @@
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @details asd
 #' @return fill this
-#' @reference fill this
-#' @import pheatmap RColorBrewer
+#' @references fill this
+#' @importFrom pheatmap pheatmap
+#' @importFrom RColorBrewer brewer.pal colorRampPalette
 #' @export
 FeaturesCorPlot <- function(object, view, method="pearson", regress_factors=NULL, top=500, ...) {
   if (class(object) != "MOFAmodel")
@@ -30,8 +31,8 @@ FeaturesCorPlot <- function(object, view, method="pearson", regress_factors=NULL
   
   # Draw heatmap
   breaksList = seq(-1,1, by=0.01)
-  pheatmap::pheatmap(r, 
-    color=colorRampPalette(rev(RColorBrewer::brewer.pal(n=10, name="RdYlBu")))(length(breaksList)),
+  pheatmap(r, 
+    color=colorRampPalette(rev(brewer.pal(n=10, name="RdYlBu")))(length(breaksList)),
     breaks=breaksList,
     cluster_cols=F, cluster_rows=F, 
     show_colnames=F, show_rownames=F, ...
@@ -47,7 +48,7 @@ FeaturesCorPlot <- function(object, view, method="pearson", regress_factors=NULL
 #' @param ... arguments passed to \code{corrplot}
 #' @details asd
 #' @return fill this
-#' @reference fill this
+#' @references fill this
 #' @import corrplot
 #' @export
 FactorsCorPlot <- function(object, method="pearson", ...) {
@@ -70,7 +71,7 @@ FactorsCorPlot <- function(object, method="pearson", ...) {
 #' @param title fill this
 #' @details asd
 #' @return fill this
-#' @import ggplot2 dplyr
+#' @import ggplot2 dplyr tidyr
 #' @export
 FactorsScatterPlot <- function(object, z_order=NULL, title="") {
   # THIS HAS TO BE FINISHED, WE SHOULDNT USE PIPES OR DPLYR 
@@ -80,14 +81,14 @@ FactorsScatterPlot <- function(object, z_order=NULL, title="") {
   # Convert latent variable matrix into dataframe
   Z <- Z[,z_order]; colnames(Z) <- z_order
   Z_long <- as.data.frame(t(Z)) %>% dplyr::tbl_df %>% dplyr::mutate(Z=factor(1:n())) %>%
-    dplyr::gather(sample,value,-Z)
+    tidyr::gather(sample,value,-Z)
   
   # Concate PCs
   joined <- Z_long %>% inner_join(Z_long, by='sample') %>%
     dplyr::rename(Z1=Z.x, Z2=Z.y, value1=value.x, value2=value.y)
   
   # Plot
-  p <- ggplot2::ggplot(joined, aes(x=value1, y=value2)) +
+  p <- ggplot(joined, aes(x=value1, y=value2)) +
     ggtitle(title) +
     stat_smooth(method=lm, color='black') +
     geom_point(aes(color=sample), size=0.5, alpha=0.5) +
@@ -107,8 +108,9 @@ FactorsScatterPlot <- function(object, z_order=NULL, title="") {
 #' @param method fill, can be svd, ppca, bpca
 #' @details fill
 #' @return Correlation matrix of latent factors versus principal components
-#' @reference fill this
+#' @references fill this
 #' @import corrplot pcaMethods
+#' @importFrom stats cor
 #' @export
 
 CorrplotLFvsPC <- function(model, views="all", noPCs=5, method="svd"){

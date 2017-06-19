@@ -4,7 +4,7 @@
 \alias{getDefaultTrainOpts}
 \title{getDefaultTrainOpts: Get default training options}
 \usage{
-getDefaultTrainOpts()
+getDefaultTrainOpts(silent = T)
 }
 \value{
 list with training options

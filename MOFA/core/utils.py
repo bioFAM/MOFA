@@ -9,6 +9,9 @@ import h5py
 Module to define some useful util functions
 """
 
+# Function to load prior annotations for the weight sparsity level (given by the variable theta)
+def loadTheta(data_opts):
+	
 # Function to mask the data, mainly to test missing values and imputation
 def maskData(data, data_opts):
     print "Masking data..."

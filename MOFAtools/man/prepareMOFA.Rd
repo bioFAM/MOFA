@@ -4,17 +4,16 @@
 \alias{prepareMOFA}
 \title{prepareMOFA: Prepare an untrained MOFA object for running MOFA}
 \usage{
-prepareMOFA(object, dir, ModelOptions = NULL, TrainOptions = NULL,
-  outFile = "MOFAout", k = 10, MOFAdir)
+prepareMOFA(object, DirOptions, ModelOptions = NULL, TrainOptions = NULL)
 }
 \arguments{
 \item{object}{an untrained MOFA object}
 
-\item{dir}{directory to store .txt and .sh files in}
-
 \item{ModelOptions}{list of ModelOptions (see getDefaultModelOpts for what options can be set here). If none specified, default options are used.}
 
 \item{TrainOptions}{list of TrainOptions (see getDefaultTrainOptions for what options can be set here). If none specified, default options are used.}
+
+\item{dir}{directory to store .txt and .sh files in}
 
 \item{outFile}{name of output file from Python MOFA}
 

@@ -12,7 +12,7 @@ vignette: >
 ---
 
 ```{r, echo=FALSE, message=FALSE}
-devtools::load_all("/Users/ricard/mofa/MOFAtools")
+# devtools::load_all("/Users/ricard/mofa/MOFAtools")
 
 library(MultiAssayExperiment)
 library(reshape)
@@ -84,10 +84,10 @@ FactorsCorPlot(model)
 ```{r}
 
 # Number of expressed genes
-cor( colSums(model@TrainData$expr>0), getExpectations(model,"Z","E")[,-1], use="complete.obs")
+# cor( colSums(model@TrainData$expr>0), getExpectations(model,"Z","E")[,-1], use="complete.obs")
 
 # Mean methylation rate
-cor( colMeans(model@TrainData$met_genebody, na.rm=T), getExpectations(model,"Z","E"), use="complete.obs")
+# cor( colMeans(model@TrainData$met_genebody, na.rm=T), getExpectations(model,"Z","E"), use="complete.obs")
 ```
 
 ### Show weights and identify most relevant features

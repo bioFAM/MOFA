@@ -2,7 +2,7 @@
 % Please edit documentation in R/loadModel.R
 \name{loadModel}
 \alias{loadModel}
-\title{LoadModel: loading a trained MOFA model from python output}
+\title{loadModel: loading a trained MOFA model from python output}
 \usage{
 loadModel(file, model = NULL)
 }

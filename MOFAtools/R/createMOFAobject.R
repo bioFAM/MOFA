@@ -6,6 +6,7 @@
 #' @param minViews Number of views a sample has to be observed to be included (default 1, i.e. including all samples)
 #' @details fill this
 #' @return an untrained MOFA model object
+#' @importFrom utils combn
 #' @export
 
 

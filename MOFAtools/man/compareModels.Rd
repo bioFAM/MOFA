@@ -4,11 +4,7 @@
 \alias{compareModels}
 \title{Compare the latent factors of different \code{\link{MOFAmodel}}}
 \usage{
-<<<<<<< HEAD
-compareModels(ModelList, comparison = "all", interceptLF = F)
-=======
 compareModels(ModelList, comparison = "all")
->>>>>>> 8df11806a435b90c686b0f8e54663a3f09e2c9e9
 }
 \arguments{
 \item{ModelList}{a list containing \code{\link{MOFAmodel}} objects.}
@@ -20,14 +16,14 @@ Plots a heatmap of correlation of Latent Factors in all models when 'comparison'
 Otherwise, for each pair of models, a seperate heatmap is produced comparing one model againt the other.
 The corresponding correlation matrix or list or pairwise correlation matrices is returned
 }
-<<<<<<< HEAD
-=======
 \description{
 Different objects of \code{\link{MOFAmodel}} are compared in terms of correlation between 
 their latent factors. The correlation is calculated only on those samples which are present in all models 
 used for a comparison.
 }
->>>>>>> 8df11806a435b90c686b0f8e54663a3f09e2c9e9
 \details{
 asd
+}
+\references{
+fill this
 }

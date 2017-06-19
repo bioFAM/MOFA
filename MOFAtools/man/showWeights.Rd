@@ -2,13 +2,11 @@
 % Please edit documentation in R/showWeights.R
 \name{showWeights}
 \alias{showWeights}
-\title{showWeights: plot weights for a certain factor and view}
+\title{showWeights: plot weights for a certain factor and view in a dotplot}
 \usage{
-<<<<<<< HEAD
-showWeights(model, view, factor, ntop = 5, ntail = 5)
-=======
-showWeights(model, view, factor, ntop = 5, ntail = 5, manual = NULL)
->>>>>>> 8df11806a435b90c686b0f8e54663a3f09e2c9e9
+showWeights(model, view, factor, ntop = 0, ntail = 0, manual = NULL,
+  th = NULL, ntotal = 10, FeatureGroups = NULL,
+  FeatureGroupsCols = NULL, showFeatureNames = F, main = NULL)
 }
 \arguments{
 \item{model}{a fitted MOFA model}
@@ -20,12 +18,24 @@ showWeights(model, view, factor, ntop = 5, ntail = 5, manual = NULL)
 \item{ntop}{number of highest positive weights to label}
 
 \item{ntail}{number of lowest negative weights to label}
-}
-\value{
-a dataframe with of d_m rows (feautres) with weights per feature on the sepcified factor and view
+
+\item{manual}{feautre names which are labeled in the plot}
+
+\item{th}{threshold on the absolute value beyond which weigths are labeled}
+
+\item{ntotal}{number of features with highest absolute value to label}
+
+\item{FeatureGroups}{a named vector of same lengh as number of feautres annotating feature to groups that 
+will be colored in the dotplot, names have to be in accordance with feature names}
+
+\item{FeatureGroupsCols}{a named vector speciying for each elemnt in FeautreGroups a color to use for plotting}
+
+\item{showFeatureNames}{boolean wether to show all FeatureNames on the x-axis (default false)}
+
+\item{main}{plot title}
 }
 \description{
-Function to visualize weights in a dotplot highlighting top positive and neagtive featurs
+Function to visualize weights in a dotplot highlighting features with highest loadings
 }
 \details{
 fill this

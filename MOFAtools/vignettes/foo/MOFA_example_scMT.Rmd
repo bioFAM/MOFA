@@ -1,0 +1,173 @@
+---
+title: " Vignette illustrating the use of MOFA on the scMT data"
+author: "Ricard Argelaguet and Britta Velten"
+date: "`r Sys.Date()`"
+output:
+  BiocStyle::html_document:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Example_scMT}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo=FALSE, message=FALSE}
+# devtools::load_all("/Users/ricard/mofa/MOFAtools")
+
+library(MultiAssayExperiment)
+library(reshape)
+library(ggplot2)
+library(purrr)
+
+sample_metadata <- read.table("/Users/ricard/data/scMT/sample_info.txt", header=T) %>% tibble::column_to_rownames("sample")
+```
+
+# Step 1: Initialize MOFA object
+
+## Load data
+```{r}
+```
+
+## Create MOFA object
+The input data is stored in the InputData slot of the MOFA object.
+```{r}
+```
+
+# Step 2: Fit the MOFA model
+
+## Define options
+
+### Define I/O options
+```{r}
+```
+
+### Define model options
+```{r}
+```
+
+### Define training options
+```{r}
+```
+
+## Prepare MOFA
+```{r}
+```
+
+## Run MOFA
+```{r}
+model <- loadModel("/Users/ricard/scMT/mofa/out/model.hdf5")
+```
+
+# Step 3: Analyse a trained MOFA model
+
+## Show the variance explained for each factor in each view
+```{r, fig.height=7, fig.width=7}
+r2 <- calculateVarianceExplained(model, views="all", factors="all", plotit=T, perFeature=F, 
+                           orderFactorsbyR2=T, showtotalR2=F)
+```
+
+## Scatterplots of pairs of latent variables
+```{r}
+# culture <- sample_metadata[sampleNames(model),]$culture
+# scatterPairs(model, factors = c("1","2","3","4"))
+scatterPlot(model, idx="2", idy="3")
+```
+
+### Correlation of latent variables
+```{r}
+FactorsCorPlot(model)
+```
+
+## Characterisation of specific latent factors
+
+### Correlation with covariates
+```{r}
+
+# Number of expressed genes
+# cor( colSums(model@TrainData$expr>0), getExpectations(model,"Z","E")[,-1], use="complete.obs")
+
+# Mean methylation rate
+# cor( colMeans(model@TrainData$met_genebody, na.rm=T), getExpectations(model,"Z","E"), use="complete.obs")
+```
+
+### Show weights and identify most relevant features
+```{r}
+library(magrittr)
+library(dplyr)
+showWeightHeatmap(model, "expr", show_rownames=F)
+showWeights(model, view="expr", factor="4", ntop=20, ntail=20)
+
+# W <- getExpectations(model,"SW","E")$expr
+# Z <- getExpectations(model,"Z","E")
+# Yexpr <- model@TrainData$expr
+# Ymet <- model@TrainData$met_genebody
+# Ypred <- Z %*% t(W)
+```
+
+### Show original data for the genes with top weights
+```{r, fig.height=7, fig.width=11}
+view <- "expr"
+factor <- "5"
+showDataHeatmap(model, view, factor, nfeatures=300, show_colnames=F, show_rownames=T)
+
+# The X axis is the latent variable and the Y axis is the observed value of the feature
+# showDataScatter(model, view, factor, nfeatures=50, colour_by=NULL, shape_by=NULL)
+```
+
+
+### Feature set enrichment analysis
+The characterisation of factors usually requires the inspection of the corresponding weights to identify features with strong influence. However, looking at single features can be challenging and often the combination of signal from functionally related sets of features (i.e. gene ontologies) is required.
+Here we implemented a feature set enrichment analysis method (FeatureSetEnrichmentAnalysis) derived from the PCGSE package (REF).
+The input of these function is a MOFA trained model (MOFAmodel), the factors for which to perform feature set enrichment (character vector), the feature sets (matrix) and a set of options regarding how the analysis should be performed. For more information see ...
+
+Here we are going to perform feature set enrichment analysis on the mRNA view.
+Here we are going to use the absolute value of the weight (or loading) as feature statistic, the mean difference between the features in the gene set and the features outside the gene set as a feature set statistic and the correlation-adjusted parametric statistical test.
+```{r}
+# The input format for feature sets has to be a binary matrix where the rows represent feature sets and the columns are features where a value of 1 indicates that the feature belongs to the corresponding feature set.
+
+# Load reactome annotations
+# feature.sets <- 
+feature.sets <- rbind(
+  readRDS("/Users/ricard/data/reactome/v59/mus_musculus/out/mouse_v75_reactome.rds"),
+  # readRDS("/Users/ricard/data/MSigDB/v6.0/mus_musculus/C5/bp_binary_matrix_ensembl.rds"),
+  readRDS("/Users/ricard/data/manual_genesets/binary_matrix.rds")
+)
+
+# Run Feature Set Enrichment Analysis
+p.values <- FeatureSetEnrichmentAnalysis(
+  model,
+  view = "expr", 
+  factors = "all", 
+  feature.sets = feature.sets,
+  local.statistic = "loading",
+  transformation = "abs.value",
+  global.statistic = "mean.diff",
+  statistical.test = "cor.adj.parametric",
+  nperm=NA, 
+  min.size=10,
+  cores=1
+)
+
+# Rename pathways
+tmp <- read.table("/Users/ricard/data/reactome/v59/mus_musculus/AllPathways.txt", header=F, quote="", sep="\t", stringsAsFactors=F)[,c(1,2)]
+reactome_meta <- tmp[,2]; names(reactome_meta) <- tmp[,1]
+rownames(p.values) <- stringr::str_replace_all(rownames(p.values), reactome_meta)
+
+# Correct for multiple testing
+p.values_adj <- apply(p.values, 2,function(lfw) p.adjust(lfw, method = "BH"))
+
+# Visualise the results 
+# all factors
+Heatmap_FeatureSetEnrichmentAnalysis(p.values_adj, threshold=0.05)
+
+# individual factors
+LinePlot_FeatureSetEnrichmentAnalysis(p.values_adj, view="expr", factor="2", threshold=0.1, max.pathways=25)
+```
+
+
+<!-- # Cluster samples -->
+<!-- ```{r} -->
+<!-- clusterMOFA(object, factors) -->
+<!-- ``` -->
+
+

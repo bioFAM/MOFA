@@ -2,10 +2,11 @@
 % Please edit documentation in R/calculateVarianceExplained.R
 \name{calculateVarianceExplained}
 \alias{calculateVarianceExplained}
-\title{Calculate variance explained in a MOFA model for each view and latent factor}
+\title{Calculate variance explained by the model}
 \usage{
 calculateVarianceExplained(object, views = "all", factors = "all",
-  plotit = T, perFeature = F, InterceptLFasNull = F)
+  plotit = T, perFeature = F, orderFactorsbyR2 = T, showtotalR2 = T,
+  showVarComp = F)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
@@ -17,15 +18,21 @@ calculateVarianceExplained(object, views = "all", factors = "all",
 \item{plotit}{boolean, wether to produce a plot (default true)}
 
 \item{perFeature}{boolean, whether to calculate in addition variance explained per feature (and factor) (default FALSE)}
+
+\item{orderFactorsbyR2}{if T, facotrs are order according to sum of variance explained across views}
+
+\item{showtotalR2}{(REWRITE) if FALSE, R2 with respect to total prediciton instead of observations is considered instead of total R2 showing each factors contribution to the full prediction}
+
+\item{showVarComp}{if True plot additional barplots showing the contribution of ea}
 }
 \value{
-a list containing list of R2 for all gaussian views and list of BS for all binary views
+fill this
 }
 \description{
-Method to calculate variance explained in a MOFA model for each view and latent factor.
-As a measure of variance explained the coefficient of determination, given by 1 - SS_res/SS_total.
-For non-gaussian views the calculations are basedon the gaussian pseudo-data. 
-The resulting measures per factor and overall are plotted as a heatmap and barplot by default.
+Method to calculate variance explained by the MOFA model for each view and latent factor, and optionally also for each feature.
+As a measure of variance explained we adopt the coefficient of determination (R2).
+For non-gaussian views the calculations are based on the normally-distributed pseudo-data (see REF).
+If the data is non-centered and the model had to learn the mean then we regress it out before computing the R2
 }
 \details{
 fill this

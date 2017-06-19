@@ -60,6 +60,32 @@ setGeneric("viewNames", function(object) {standardGeneric("viewNames")})
 #' @export
 setGeneric("viewNames<-", function(object, value) {standardGeneric("viewNames<-")})
 
+
+################
+## Input Data ##
+################
+
+#' @title InputData: set and retrieve training data
+#' @name InputData
+#' @rdname InputData
+#' @export
+setGeneric("InputData", function(object) {standardGeneric("InputData")})
+
+setGeneric(".InputData<-", function(object, value) {standardGeneric(".InputData<-")})
+
+
+################
+## Imputed Data ##
+################
+
+#' @title ImputedData: set and retrieve training data
+#' @name ImputedData
+#' @rdname ImputedData
+#' @export
+setGeneric("ImputedData", function(object) {standardGeneric("ImputedData")})
+
+setGeneric(".ImputedData<-", function(object, value) {standardGeneric(".ImputedData<-")})
+
 ################
 ## Train Data ##
 ################
@@ -71,6 +97,7 @@ setGeneric("viewNames<-", function(object, value) {standardGeneric("viewNames<-"
 setGeneric("TrainData", function(object) {standardGeneric("TrainData")})
 
 setGeneric(".TrainData<-", function(object, value) {standardGeneric(".TrainData<-")})
+
 
 ###################
 ## Train Options ##

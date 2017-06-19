@@ -4,13 +4,13 @@
 \alias{histPlot}
 \title{Visualize histogram of one latent variable}
 \usage{
-histPlot(object, id, xlabel = NULL, groups = NULL, alpha = 1,
-  binwidth = NULL)
+histPlot(object, id, xlabel = NULL, groups = NULL, alpha = 0.6,
+  binwidth = NULL, name_colour = "", showNA = F)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{id}{latent variable}
+\item{id}{name of latent variable to plot}
 }
 \value{
 fill this
@@ -20,4 +20,7 @@ fill this
 }
 \details{
 asd
+}
+\references{
+fill this
 }

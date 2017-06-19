@@ -4,12 +4,18 @@
 \alias{imputeMissing}
 \title{Impute missing value from a fitted MOFA model}
 \usage{
-imputeMissing(model, viewnms = "all")
+imputeMissing(object, viewnms = "all", type = c("inRange", "response",
+  "link"), onlyMissing = T)
 }
 \arguments{
+\item{object}{a \code{\link{MOFAmodel}} object.}
+
 \item{viewnms}{character vector containing the names of views to be imputed (default: all)}
 
-\item{object}{a \code{\link{MOFAmodel}} object.}
+\item{type}{of imputations returned. By default values are imputed using "inRange". "response" gives mean for gaussian and poisson and probabilities for bernoulli , 
+"link" gives the linear predictions, "inRange" rounds the fitted values from "terms" for integer-valued distributions to the next integer.}
+
+\item{onlyMissing}{By default, only values missing in Training Data are replaced by imputed ones. If all predicitons based on MOFA are wanted, this needs to be set to FALSE.}
 }
 \value{
 List of imputed data, each list element corresponding to specified views.
@@ -19,4 +25,7 @@ fill this
 }
 \details{
 asd
+}
+\references{
+fill this
 }

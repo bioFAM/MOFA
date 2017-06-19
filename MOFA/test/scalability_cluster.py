@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-res_dir = '/homes/arnol/test/'
+res_dir = '/homes/ricard/scalability/'
 
 
 K_vals = np.linspace(5.0, 99.0, num=20, dtype=int)

@@ -14,10 +14,10 @@ p.add_argument( '--likelihoods',       type=str, nargs='+', required=True,      
 p.add_argument( '--views',             type=str, nargs='+', required=True,                  help='View names')
 p.add_argument( '--covariatesFile',    type=str,                                            help='Input covariate data' )
 p.add_argument( '--schedule',          type=str, nargs="+", required=True,                  help='Update schedule' )
-p.add_argument( '--learnTheta',        action='store_true',                                 help='learn the sparsity parameter from the spike and slab?' )
+p.add_argument( '--learnTheta',        type=int, nargs="+", default=0,                       help='learn the sparsity parameter from the spike and slab?' )
 p.add_argument( '--learnMean',         action='store_true',                                 help='learn the feature mean?' )
-p.add_argument( '--initTheta',         type=float, default=0.5 ,                            help='hyperparameter theta in case that learnTheta is set to False')
-p.add_argument( '--ThetaDir',     type=str, default="" ,                              help='BLABLA')
+p.add_argument( '--initTheta',         type=float, nargs="+", default=0.5 ,                            help='hyperparameter theta in case that learnTheta is set to False')
+p.add_argument( '--ThetaDir',          type=str, default="" ,                                help='BLABLA')
 p.add_argument( '--tolerance',         type=float, default=0.1 ,                            help='tolerance for convergence (deltaELBO)')
 p.add_argument( '--startDrop',         type=int, default=5 ,                                help='First iteration to start dropping factors')
 p.add_argument( '--freqDrop',          type=int, default=1 ,                                help='Frequency for dropping factors')
@@ -128,13 +128,16 @@ model_opts['ardZ'] = args.ardZ
 model_opts['ardW'] = args.ardW
 
 # Define for which factors and views should we learn 'theta', the sparsity of the factor
-if data_opts["ThetaDir"] != "":
-  args.learnTheta = False
-
-if args.learnTheta:
-  model_opts['learnTheta'] = [s.ones((D[m],K)) for m in xrange(M)]
+# if data_opts["ThetaDir"] != "":
+  # args.learnTheta = False
+if type(args.learnTheta) == int:
+  model_opts['learnTheta'] = [s.ones(K)*args.learnTheta for m in xrange(M)]
+elif type(args.learnTheta) == list:
+  assert len(args.learnTheta) == M, "--learnTheta has to be a binary vector with length number of views"
+  model_opts['learnTheta'] = [ args.learnTheta[m]*s.ones(K) for m in xrange(M) ]
 else:
-  model_opts['learnTheta'] = [s.zeros((D[m],K)) for m in xrange(M)]
+   print "--learnTheta has to be either 1 or 0 or a binary vector with length number of views"
+   exit()
 
 # Define schedule of updates
 model_opts['schedule'] = args.schedule
@@ -165,9 +168,9 @@ elif model_opts['ardW'] == "k":
 model_opts["priorTheta"] = { 'a':[s.ones((D[m],K)) for m in xrange(M)], 'b':[s.ones((D[m],K)) for m in xrange(M)] }
 for m in xrange(M):
   for k in xrange(K):
-    if model_opts['learnTheta'][m,k]==0:
-      model_opts["priorTheta"]["a"][m][d,k] = s.nan
-      model_opts["priorTheta"]["b"][m][d,k] = s.nan
+    if model_opts['learnTheta'][m][k]==0:
+      model_opts["priorTheta"]["a"][m][:,k] = s.nan
+      model_opts["priorTheta"]["b"][m][:,k] = s.nan
 
 # Tau
 model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-3 for m in xrange(M)], 'b':[s.ones(D[m])*1e-3 for m in xrange(M)] }
@@ -195,19 +198,29 @@ elif model_opts['ardW'] == "k":
   model_opts["initAlphaW"] = { 'a':s.nan*s.ones(K), 'b':s.nan*s.ones(K), 'E':s.ones(K)*100. }
 
 # Theta
-if data_opts["ThetaDir"] != "":
-  args.initTheta = loadTheta(data_opts)
-if type(args.initTheta==float):
-  args.initTheta = [s.ones((D[m],K))*args.initTheta for m in xrange(M)]
+model_opts["initTheta"] = { 'a':[s.ones((D[m],K)) for m in xrange(M)], 'b':[s.ones((D[m],K)) for m in xrange(M)], 'E':[s.nan*s.zeros((D[m],K)) for m in xrange(M)] } 
+if type(args.initTheta) == float:
+  model_opts['initTheta']['E'] = [s.ones((D[m],K))*args.initTheta for m in xrange(M)]
+elif type(args.initTheta) == list:
+  assert len(args.initTheta) == M, "--initTheta has to be a binary vector with length number of views"
+  model_opts['initTheta']['E']= [ args.initTheta[m]*s.ones((D[m],K)) for m in xrange(M) ]
+else:
+   print "--learnTheta has to be either 1 or 0 or a binary vector with length number of views"
+   exit()
 
-# model_opts["initTheta"] = { 'a':[s.ones(K)*1e-5 for m in xrange(M)], 'b':[s.ones(K)*1e-5 for m in xrange(M)], 'E':[s.nan*s.zeros(K) for m in xrange(M)] } # NOT SURE HOW TO INITIALISE THIS, WHY IS EXPECTATION NOT INITIALISED?
-model_opts["initTheta"] = { 'a':[s.ones((D[m],K)) for m in xrange(M)], 'b':[s.ones(D[m],K)) for m in xrange(M)], 'E':[s.nan*s.zeros((D[m],K)) for m in xrange(M)] } 
+if data_opts["ThetaDir"] != "":
+  theta_tmp = loadTheta(data_opts)
+  for m in xrange(M):
+    if theta_tmp[m] is not None:
+      idx = s.arange(theta_tmp[m].shape[1])
+      model_opts["initTheta"]["E"][m][:,idx] = theta_tmp[m]
+
 for m in xrange(M):
   for k in xrange(K):
-    if model_opts['learnTheta'][m,k]==0.:
-      model_opts["initTheta"]["a"][m][d,k] = s.nan
-      model_opts["initTheta"]["b"][m][d,k] = s.nan
-      model_opts["initTheta"]["E"][m][d,k] = args.initTheta[m,k]
+    if model_opts['learnTheta'][m][k]==0.:
+      model_opts["initTheta"]["a"][m][:,k] = s.nan
+      model_opts["initTheta"]["b"][m][:,k] = s.nan
+      # model_opts["initTheta"]["E"][m][d,k] = args.initTheta[m]k]
 
 # Weights
 model_opts["initSW"] = { 
@@ -258,7 +271,7 @@ if model_opts["learnMean"]:
       model_opts["initSW"]["mean_S1"][m][:,0] = data[m].mean(axis=0)
       model_opts["initSW"]["var_S1"][m][:,0] = 1e-5
     # Theta
-    model_opts['learnTheta'][m][:,0] = 0.
+    model_opts['learnTheta'][m][0] = 0.
     model_opts["initSW"]["Theta"][m][:,0] = 1.
     model_opts["priorTheta"]['a'][m][:,0] = s.nan
     model_opts["priorTheta"]['b'][m][:,0] = s.nan

@@ -232,7 +232,7 @@ class initModel(object):
         self.Y = Multiview_Mixed_Node(self.M, *Y_list)
         self.nodes["Y"] = self.Y
 
-    def initTheta(self, pa, pb, qa, qb, qE, learnTheta):
+    def initThetaMixed(self, pa, pb, qa, qb, qE, learnTheta):
         # Method to initialie a general theta node
         # Inputs:
         #  pa (float): 'a' parameter of the prior distribution
@@ -241,17 +241,30 @@ class initModel(object):
         #  qE (float): initial expectation of the variational distribution
         #  learnTheta (binary): list with binary matrices with dim (D[m],K)
 
-        print "We need to fix this so theta takes dimension (D,K)"
-        exit()
         Theta_list = [None] * self.M
         for m in xrange(self.M):
-            Klearn = learnTheta[m,:]==1.
-            Kconst = learnTheta[m,:]==0.
-            Theta_list[m] = Mixed_Theta_Nodes(
-                LearnTheta=Theta_Node(dim=(s.sum(Klearn),), pa=pa[m][Klearn], pb=pb[m][Klearn], qa=qa[m][Klearn], qb=qb[m][Klearn], qE=qE[m][Klearn]),
-                ConstTheta=Theta_Constant_Node(dim=((self.D[m],s.sum(Kconst),)), value=s.repeat(qE[m][Kconst][None,:], self.D[m], 0), N_cells=1.),
-                idx=learnTheta[m,:]
-            )
+            
+            # Initialise constant node
+            Kconst = learnTheta[m]==0.
+            if Kconst.sum() == 0:
+                ConstThetaNode = None
+            else:
+                # ConstThetaNode = Theta_Constant_Node(dim=(self.D[m],s.sum(Kconst),), value=s.repeat(qE[m][:,Kconst][None,:], self.D[m], 0), N_cells=1.)
+                ConstThetaNode = Theta_Constant_Node(dim=(self.D[m],s.sum(Kconst),), value=qE[m][:,Kconst], N_cells=1.)
+                Theta_list[m] = ConstThetaNode
+
+            # Initialise non-constant node
+            Klearn = learnTheta[m]==1.
+            if Klearn.sum() == 0:
+                LearnThetaNode = None
+            else:
+                LearnThetaNode = Theta_Node(dim=(self.D[m],s.sum(Klearn),), pa=pa[m][:,Klearn], pb=pb[m][:,Klearn], qa=qa[m][:,Klearn], qb=qb[m][:,Klearn], qE=qE[m][:,Klearn])
+                Theta_list[m] = LearnThetaNode
+
+            # Initialise mixed node
+            if ConstThetaNode is not None and LearnThetaNode is not None:
+                Theta_list[m] = Mixed_Theta_Nodes(LearnTheta=LearnThetaNode, ConstTheta=ConstThetaNode, idx=learnTheta[m])
+
         self.Theta = Multiview_Mixed_Node(self.M, *Theta_list)
         self.nodes["Theta"] = self.Theta
 

@@ -56,7 +56,7 @@ data['alpha'][0] = [1,1,1e6,1,1e6,1e6]
 data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
 data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
-theta = [ s.ones(K)*0.5 for m in xrange(M) ]
+theta = [ s.ones((D[m],K))*0.5 for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
 
 data['mu'] = [ s.ones(D[m])*3. for m in xrange(M)]

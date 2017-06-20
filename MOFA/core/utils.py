@@ -4,6 +4,7 @@ import pandas as pd
 import numpy.ma as ma
 import os
 import h5py
+import glob
 
 """
 Module to define some useful util functions
@@ -11,7 +12,28 @@ Module to define some useful util functions
 
 # Function to load prior annotations for the weight sparsity level (given by the variable theta)
 def loadTheta(data_opts):
-	
+	d = data_opts['ThetaDir']
+	file_names = glob.glob(d+'/*')
+
+	sep = data_opts['delimiter']
+
+	M = len(data_opts['view_names'])
+	ThetaPrior = [None] * M
+
+	for f in file_names:
+		annotations = pd.read_csv(f, sep=sep, header=0, index_col=0)
+		view_name = f.split('/')[-1]
+		tmp = [k  for k in range(M) if view_name == data_opts['view_names'][k]]
+		try:
+			i = tmp[0]
+			ThetaPrior[i] = annotations.values
+		except:
+			print 'View names dont match with annotation file names'
+			print 'ignoring unrecognised file names'
+
+	return ThetaPrior
+
+
 # Function to mask the data, mainly to test missing values and imputation
 def maskData(data, data_opts):
     print "Masking data..."
@@ -131,7 +153,7 @@ def ddot(d, mtx, left=True):
 
 def lambdafn(X):
 	return np.tanh(X/2.)/(4.*X)
-	
+
 def saveParameters(model, hdf5, view_names=None):
 
 	# Get nodes from the model

@@ -363,8 +363,6 @@ class Theta_Node(Beta_Unobserved_Variational_Node):
         S = self.markov_blanket['SW'].getExpectations()["ES"]
 
         # Precompute terms
-        # TODO check that it is ok with dimensions of S !! (because S is a pointer, so might be messed up)
-
         if factors_selection is not None:
             tmp1 = S[:,factors_selection].sum(axis=0)
         else:
@@ -373,7 +371,7 @@ class Theta_Node(Beta_Unobserved_Variational_Node):
         # Perform updates
         Qa = self.Ppar['a'] + tmp1
         Qb = self.Ppar['b'] + S.shape[0]-tmp1
-
+        
         # Save updated parameters of the Q distribution
         self.Q.setParameters(a=Qa, b=Qb)
 

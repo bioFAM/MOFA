@@ -60,9 +60,9 @@ class Warping_inference(object):
         NOTE: PARTIAL_F_VAL AND PRIME_VAL NOT SURE IF ITS IN THE LOOP OR NOT
         """
         for i in xrange(self.entity.I):
-            partial_f_val = self.f(X,i_not=i)
-            partial_f_prime_val = self.f_prime(X,i_not=i)
             for warp_var in self.entity.param.keys():
+                partial_f_val = self.f(X,i_not=i)
+                partial_f_prime_val = self.f_prime(X,i_not=i)
                 self._optimise_parameter(warp_var,i,X,F,tau,mat_mask,partial_f_val,partial_f_prime_val) 
                 
     def _optimise_parameter(self,warp_var,i,X,F,tau,mat_mask,partial_f_val,partial_f_prime_val):

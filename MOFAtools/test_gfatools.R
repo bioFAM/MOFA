@@ -1,32 +1,37 @@
 
 library(MOFAtools)
+library(purrr)
 
-file = "/tmp/test.h5"
+file = "/Users/ricard/perturbseq/k562/processed/model.hdf5"
 model <- loadModel(file)
 
 calculateVarianceExplained(model)
 
 Z <- getExpectations(model,"Z","E")
+rownames(Z) <- 
 Y <- model@TrainData
+
 SW <- getExpectations(model,"SW","E")
 
+theta <- model@Expectations$Theta
 showWeights(model, view="mut", features="all", factors="all", main=NULL)
 showWeights(model, view="mut", features="all", factors=14:15, main=NULL)
 
 scatterPairs(model)  
 
 mut <- read.table("/Users/ricard/data/CLL/views/commonPats_small/mut.txt", sep=" ", header=T)
-scatterPlot(model, 2, 5, colour_by = as.factor(mut$TP53))
+scatterPlot(model, 7, 3)
 
 sex <- read.table("/Users/ricard/data/CLL/views/commonPats_small/covariates.txt", header=T)[,1]
 scatterPlot(model, 2, 5, colour_by = as.factor(sex))
 
-cor(model@Expectations$SW$viab$E[,1], colMeans(model@TrainData$viab))
-cor(model@Expectations$SW$mRNA$E[,1], colMeans(model@TrainData$mRNA))
+cor(model@Expectations$SW$viab$E[,1], rowMeans(model@TrainData$viab))
 
-CalculateVariance_Views(model, views="all", factors="all")
+cor(Z, colSums(model@TrainData$expr>0))
 
-ViewFactorPlot(model)
+cor(SW$expr[,1], rowMeans(model@TrainData$expr))
+cor(SW$guides[,1], rowMeans(model@TrainData$guides))
+cor(SW$guides[,1], colMeans(model@Expectations$Y$guides$E))
 
 FactorsCorPlot(model)
 CorrplotLFvsPC(model, method="svd", noPCs=5)

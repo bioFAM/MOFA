@@ -104,6 +104,11 @@ if args.learnMean:
     data_opts['covariates'] = s.ones((N,1))
   args.factors += 1
 
+# Load known annotations
+if data_opts["ThetaDir"] != "":
+  theta_annotations = loadTheta(data_opts)
+
+
 ##############################
 ## Define the model options ##
 ##############################
@@ -142,6 +147,13 @@ else:
 # Define schedule of updates
 model_opts['schedule'] = args.schedule
 
+# Define known annotations
+if data_opts["ThetaDir"] != "":
+  for m in xrange(M):
+    if theta_annotations[m] is not None:
+      idx = s.arange(start=K-theta_annotations[m].shape[1], stop=K)
+      model_opts['learnTheta'][m][idx] = 0.
+
 
 ####################################
 ## Define priors (P distribution) ##
@@ -165,12 +177,12 @@ elif model_opts['ardW'] == "k":
   model_opts["priorAlphaW"] = { 'a':s.ones(K)*1e-3, 'b':s.ones(K)*1e-3 }
 
 # Theta
-model_opts["priorTheta"] = { 'a':[s.ones((D[m],K)) for m in xrange(M)], 'b':[s.ones((D[m],K)) for m in xrange(M)] }
+model_opts["priorTheta"] = { 'a':[s.ones(K,) for m in xrange(M)], 'b':[s.ones(K,) for m in xrange(M)] }
 for m in xrange(M):
   for k in xrange(K):
     if model_opts['learnTheta'][m][k]==0:
-      model_opts["priorTheta"]["a"][m][:,k] = s.nan
-      model_opts["priorTheta"]["b"][m][:,k] = s.nan
+      model_opts["priorTheta"]["a"][m][k] = s.nan
+      model_opts["priorTheta"]["b"][m][k] = s.nan
 
 # Tau
 model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-3 for m in xrange(M)], 'b':[s.ones(D[m])*1e-3 for m in xrange(M)] }
@@ -198,7 +210,8 @@ elif model_opts['ardW'] == "k":
   model_opts["initAlphaW"] = { 'a':s.nan*s.ones(K), 'b':s.nan*s.ones(K), 'E':s.ones(K)*100. }
 
 # Theta
-model_opts["initTheta"] = { 'a':[s.ones((D[m],K)) for m in xrange(M)], 'b':[s.ones((D[m],K)) for m in xrange(M)], 'E':[s.nan*s.zeros((D[m],K)) for m in xrange(M)] } 
+model_opts["initTheta"] = { 'a':[s.ones(K,) for m in xrange(M)], 'b':[s.ones(K,) for m in xrange(M)], 'E':[s.nan*s.zeros((D[m],K)) for m in xrange(M)] }
+
 if type(args.initTheta) == float:
   model_opts['initTheta']['E'] = [s.ones((D[m],K))*args.initTheta for m in xrange(M)]
 elif type(args.initTheta) == list:
@@ -208,23 +221,18 @@ else:
    print "--learnTheta has to be either 1 or 0 or a binary vector with length number of views"
    exit()
 
-if data_opts["ThetaDir"] != "":
-  theta_tmp = loadTheta(data_opts)
-  for m in xrange(M):
-    if theta_tmp[m] is not None:
-      idx = s.arange(theta_tmp[m].shape[1])
-      model_opts["initTheta"]["E"][m][:,idx] = theta_tmp[m]
-
 for m in xrange(M):
+  if theta_annotations[m] is not None:
+    model_opts["initTheta"]["E"][m][:,idx] = theta_annotations[m]
   for k in xrange(K):
     if model_opts['learnTheta'][m][k]==0.:
-      model_opts["initTheta"]["a"][m][:,k] = s.nan
-      model_opts["initTheta"]["b"][m][:,k] = s.nan
-      # model_opts["initTheta"]["E"][m][d,k] = args.initTheta[m]k]
+      model_opts["initTheta"]["a"][m][k] = s.nan
+      model_opts["initTheta"]["b"][m][k] = s.nan
 
 # Weights
 model_opts["initSW"] = { 
-  'Theta':[s.nan*s.ones((D[m],K)) for m in xrange(M)], # THIS SHOULDN BE USED
+  # 'Theta':[s.nan*s.ones((D[m],K)) for m in xrange(M)], # THIS SHOULDN BE USED
+  'Theta':[0.5*s.ones((D[m],K)) for m in xrange(M)], # THIS SHOULDN BE USED
   'mean_S0':[s.zeros((D[m],K)) for m in xrange(M)],
   'var_S0':[s.nan*s.ones((D[m],K)) for m in xrange(M)],
   'mean_S1':[s.zeros((D[m],K)) for m in xrange(M)],
@@ -266,17 +274,19 @@ if data_opts['covariates'] is not None:
 
 if model_opts["learnMean"]:
   for m in range(M): 
+
     # Weights
     if args.likelihoods[m]=="gaussian":
       model_opts["initSW"]["mean_S1"][m][:,0] = data[m].mean(axis=0)
       model_opts["initSW"]["var_S1"][m][:,0] = 1e-5
+
     # Theta
     model_opts['learnTheta'][m][0] = 0.
     model_opts["initSW"]["Theta"][m][:,0] = 1.
-    model_opts["priorTheta"]['a'][m][:,0] = s.nan
-    model_opts["priorTheta"]['b'][m][:,0] = s.nan
-    model_opts["initTheta"]["a"][m][:,0] = s.nan
-    model_opts["initTheta"]["b"][m][:,0] = s.nan
+    model_opts["priorTheta"]['a'][m][0] = s.nan
+    model_opts["priorTheta"]['b'][m][0] = s.nan
+    model_opts["initTheta"]["a"][m][0] = s.nan
+    model_opts["initTheta"]["b"][m][0] = s.nan
     model_opts["initTheta"]["E"][m][:,0] = 1.
 
 #################################

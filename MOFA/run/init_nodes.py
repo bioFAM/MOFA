@@ -243,26 +243,26 @@ class initModel(object):
 
         Theta_list = [None] * self.M
         for m in xrange(self.M):
-            
             # Initialise constant node
-            Kconst = learnTheta[m]==0.
+            Kconst = learnTheta[m]==0
             if Kconst.sum() == 0:
                 ConstThetaNode = None
             else:
                 # ConstThetaNode = Theta_Constant_Node(dim=(self.D[m],s.sum(Kconst),), value=s.repeat(qE[m][:,Kconst][None,:], self.D[m], 0), N_cells=1.)
-                ConstThetaNode = Theta_Constant_Node(dim=(self.D[m],s.sum(Kconst),), value=qE[m][:,Kconst], N_cells=1.)
+                ConstThetaNode = Theta_Constant_Node(dim=(self.D[m],s.sum(Kconst),), value=qE[m][:,Kconst], N_cells=1)
                 Theta_list[m] = ConstThetaNode
 
             # Initialise non-constant node
-            Klearn = learnTheta[m]==1.
+            Klearn = learnTheta[m]==1
             if Klearn.sum() == 0:
                 LearnThetaNode = None
             else:
-                LearnThetaNode = Theta_Node(dim=(self.D[m],s.sum(Klearn),), pa=pa[m][:,Klearn], pb=pb[m][:,Klearn], qa=qa[m][:,Klearn], qb=qb[m][:,Klearn], qE=qE[m][:,Klearn])
+                # FOR NOW WE JUST TAKE THE FIRST ROW BECAUSE IT IS EXPANDED. IT IS UGLY AS HELL
+                LearnThetaNode = Theta_Node(dim=(s.sum(Klearn),), pa=pa[m][Klearn], pb=pb[m][Klearn], qa=qa[m][Klearn], qb=qb[m][Klearn], qE=qE[m][0,Klearn])
                 Theta_list[m] = LearnThetaNode
 
             # Initialise mixed node
-            if ConstThetaNode is not None and LearnThetaNode is not None:
+            if (ConstThetaNode is not None) and (LearnThetaNode is not None):
                 Theta_list[m] = Mixed_Theta_Nodes(LearnTheta=LearnThetaNode, ConstTheta=ConstThetaNode, idx=learnTheta[m])
 
         self.Theta = Multiview_Mixed_Node(self.M, *Theta_list)
@@ -272,7 +272,7 @@ class initModel(object):
         # Method to initialise the theta node
         Theta_list = [None] * self.M
         for m in xrange(self.M):
-            Theta_list[m] = Theta_Node(dim=(self.D[m],self.K,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
+            Theta_list[m] = Theta_Node(dim=(self.K,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m][0,:])
         self.Theta = Multiview_Variational_Node(self.M, *Theta_list)
         self.nodes["Theta"] = self.Theta
 

@@ -280,7 +280,7 @@ class Tau_Jaakkola(Node):
 
     def getExpectation(self):
         return self.getValue()
-        
+
     def getExpectations(self):
         return { 'E':self.getValue(), 'lnE':s.log(self.getValue()) }
 
@@ -289,23 +289,23 @@ class Tau_Jaakkola(Node):
 class Bernoulli_PseudoY_Jaakkola(PseudoY_Seeger):
     """
     Class for a Bernoulli (0,1 data) pseudodata node with the following likelihood:
-        p(y|x) = (e^{yx}) / (1+e^x) 
+        p(y|x) = (e^{yx}) / (1+e^x)
     Following Jaakola et al and intterpreting the bound as a liklihood on gaussian pseudodata
     leads to the folllowing updates
 
     Pseudodata is given by
             yhat_ij = (2*y_ij-1)/(4*lambadfn(xi_ij))
         where lambdafn(x)= tanh(x/2)/(4*x).
-    
-    Its conditional distribution is given by 
-            N((ZW)_ij, 1/(2 lambadfn(xi_ij)))       
-    
+
+    Its conditional distribution is given by
+            N((ZW)_ij, 1/(2 lambadfn(xi_ij)))
+
     Updates for the variational parameter xi_ij are given by
             sqrt(E((ZW)_ij^2))
 
-    xi_ij in above notation is the same as zeta (variational parameter)         
+    xi_ij in above notation is the same as zeta (variational parameter)
 
-    NOTE: For this class to work the noise variance tau needs to be updated according to 
+    NOTE: For this class to work the noise variance tau needs to be updated according to
         tau_ij <- 2*lambadfn(xi_ij)
     """
     def __init__(self, dim, obs, params=None, E=None):
@@ -315,6 +315,7 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY_Seeger):
         assert s.all( (self.obs==0) | (self.obs==1) ), "Data must be binary"
 
     def updateExpectations(self):
+        # TODO check lambdafn
         self.E = (2.*self.obs - 1.)/(4.*lambdafn(self.params["zeta"]))
 
     def updateParameters(self):
@@ -338,23 +339,23 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY_Seeger):
 class Warped_PseudoY_Node(PseudoY):
     def __init__(self, dim, obs, params=None, func_type='tanh', I=3, E=None):
         PseudoY.__init__(self, dim=dim, obs=obs, params=params, E=E)
-        self.warping = Warping_inference(func_type,I)  
+        self.warping = Warping_inference(func_type,I)
 
     def updateParameters(self):
-        tau = self.markov_blanket["Tau"].getExpectation()  
+        tau = self.markov_blanket["Tau"].getExpectation()
         W = self.markov_blanket["SW"].getExpectation()
         Z = self.markov_blanket["Z"].getExpectation()
-        self.warping.update_parameters(self.obs, Z.dot(W.T), tau, ~ma.getmask(self.obs))  
+        self.warping.update_parameters(self.obs, Z.dot(W.T), tau, ~ma.getmask(self.obs))
 
         self.params = {
             # 'function_type': self.warping.entity.func_type_str,
             'a':s.array([self.warping.entity.param['a'][i].x for i in xrange(self.warping.entity.I)]),
             'b':s.array([self.warping.entity.param['b'][i].x for i in xrange(self.warping.entity.I)]),
             'c':s.array([self.warping.entity.param['c'][i].x for i in xrange(self.warping.entity.I)]),
-        } 
+        }
 
     def updateExpectations(self):
-        self.E = self.warping.f(self.obs, i_not=-1) 
+        self.E = self.warping.f(self.obs, i_not=-1)
 
     def calculateELBO(self):
         # print "check if this has missing values implemented"

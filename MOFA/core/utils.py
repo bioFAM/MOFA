@@ -13,7 +13,7 @@ Module to define some useful util functions
 # Function to load prior annotations for the weight sparsity level (given by the variable theta)
 def loadTheta(data_opts):
 	d = data_opts['ThetaDir']
-	file_names = glob(d+'/*')
+	file_names = glob.glob(d+'/*')
 
 	M = len(data_opts['view_names'])
 	ThetaPrior = [None] * M
@@ -150,7 +150,7 @@ def ddot(d, mtx, left=True):
 
 def lambdafn(X):
 	return np.tanh(X/2.)/(4.*X)
-	
+
 def saveParameters(model, hdf5, view_names=None):
 
 	# Get nodes from the model

@@ -57,7 +57,7 @@ data['alpha'][1] = [1,1e6,1,1e6,1,1e6]
 data['alpha'][2] = [1e6,1,1,1e6,1e6,1]
 
 theta = [ s.ones((D[m],K))*0.5 for m in xrange(M) ]
-data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'])
+data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'], annotation=True)
 
 data['mu'] = [ s.ones(D[m])*3. for m in xrange(M)]
 data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
@@ -84,8 +84,8 @@ data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
 # data["Y"] = ( Y_warp[0], Y_warp[1], Y_warp[2] )
 # data["Y"] = ( Y_gaussian[0], )
 
-print data["Y"][0].mean(axis=0)
-exit()
+# print data["Y"][0].mean(axis=0)
+# exit()
 ##################
 ## Data options ##
 ##################
@@ -181,7 +181,7 @@ if model_opts['ardZ']:
   model_opts["priorZ"]['var'] = s.ones((K,))*s.nan
   model_opts["priorAlphaZ"] = { 'a':s.ones(K)*1e-3, 'b':s.ones(K)*1e-3 }
 else:
-  model_opts["priorZ"]['var'] = s.ones((K,))*1. 
+  model_opts["priorZ"]['var'] = s.ones((K,))*1.
 
 
 # Weights
@@ -220,7 +220,7 @@ if model_opts['ardZ']:
 # ARD of weights
 if model_opts['ardW'] == "m":
   # model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[1.]*M }
-  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[ K*D[m]/(data[m].std(axis=0)**2 - 1./model_opts["initTau"]["E"][m]).sum() for m in xrange(M) ] } 
+  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[ K*D[m]/(data[m].std(axis=0)**2 - 1./model_opts["initTau"]["E"][m]).sum() for m in xrange(M) ] }
 elif model_opts['ardW'] == "k":
   model_opts["initAlphaW"] = { 'a':s.nan*s.ones(K), 'b':s.nan*s.ones(K), 'E':s.ones(K) }
 elif model_opts['ardW'] == "mk":
@@ -300,7 +300,7 @@ if data_opts['covariates'] is not None:
 if model_opts["learnMean"]:
   model_opts['learnTheta'][:,0] = 0.
 
-  for m in range(M): 
+  for m in range(M):
     # Weights
     if model_opts['likelihood'][m]=="gaussian":
       model_opts["initSW"]["mean_S1"][m][:,0] = data["Y"][m].mean(axis=0)

@@ -35,7 +35,7 @@ p.add_argument( '-lb', '--elbofreq',   type=int, default=1,                     
 p.add_argument( '-k', '--factors',     type=int, default=10,                                help='Number of latent variables')
 p.add_argument( '-v', '--verbose',     action='store_true',                                 help='More detailed log messages')
 args = p.parse_args()
-    
+
 #############################
 ## Define the data options ##
 #############################
@@ -68,12 +68,12 @@ M = len(data_opts['input_files'])
 if args.maskAtRandom is not None:
   data_opts['maskAtRandom'] = args.maskAtRandom
 else:
-  data_opts['maskAtRandom'] = [0]*M 
+  data_opts['maskAtRandom'] = [0]*M
 
 if args.maskNSamples is not None:
   data_opts['maskNSamples'] = args.maskNSamples
 else:
-  data_opts['maskNSamples'] = [0]*M 
+  data_opts['maskNSamples'] = [0]*M
 
 # Sanity checks
 assert M == len(data_opts['view_names']), "Length of view names and input files does not match"
@@ -165,7 +165,7 @@ if model_opts['ardZ']:
   model_opts["priorZ"]['var'] = s.ones((K,))*s.nan
   model_opts["priorAlphaZ"] = { 'a':s.ones(K)*1e-3, 'b':s.ones(K)*1e-3 }
 else:
-  model_opts["priorZ"]['var'] = s.ones((K,))*1. 
+  model_opts["priorZ"]['var'] = s.ones((K,))*1.
 
 # Weights
 model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M } # Not required
@@ -192,7 +192,7 @@ model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-3 for m in xrange(M)], 'b':[s.on
 ## Define initialisations of Q distribution ##
 ##############################################
 
-# Latent variables 
+# Latent variables
 model_opts["initZ"] = { 'mean':"random", 'var':s.ones((K,)), 'E':None, 'E2':None }
 if model_opts['ardZ']:
   model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*1e2 }
@@ -203,7 +203,7 @@ model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(D[m])*100 fo
 # ARD of weights
 if model_opts['ardW'] == "m":
   # model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
-  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[ K*D[m]/(data[m].std(axis=0)**2 - 1./model_opts["initTau"]["E"][m]).sum() for m in xrange(M) ] } 
+  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[ K*D[m]/(data[m].std(axis=0)**2 - 1./model_opts["initTau"]["E"][m]).sum() for m in xrange(M) ] }
 elif model_opts['ardW'] == "mk":
   model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*100. for m in xrange(M)] }
 elif model_opts['ardW'] == "k":
@@ -211,7 +211,6 @@ elif model_opts['ardW'] == "k":
 
 # Theta
 model_opts["initTheta"] = { 'a':[s.ones(K,) for m in xrange(M)], 'b':[s.ones(K,) for m in xrange(M)], 'E':[s.nan*s.zeros((D[m],K)) for m in xrange(M)] }
-
 if type(args.initTheta) == float:
   model_opts['initTheta']['E'] = [s.ones((D[m],K))*args.initTheta for m in xrange(M)]
 elif type(args.initTheta) == list:
@@ -231,7 +230,6 @@ for m in xrange(M):
 
 # Weights
 model_opts["initSW"] = { 
-  # 'Theta':[s.nan*s.ones((D[m],K)) for m in xrange(M)], # THIS SHOULDN BE USED
   'Theta':[0.5*s.ones((D[m],K)) for m in xrange(M)], # THIS SHOULDN BE USED
   'mean_S0':[s.zeros((D[m],K)) for m in xrange(M)],
   'var_S0':[s.nan*s.ones((D[m],K)) for m in xrange(M)],
@@ -273,8 +271,8 @@ if data_opts['covariates'] is not None:
 # the spike and slab prior by not learning theta and initialisating it to one
 
 if model_opts["learnMean"]:
-  for m in range(M): 
-
+  for m in range(M):
+    
     # Weights
     if args.likelihoods[m]=="gaussian":
       model_opts["initSW"]["mean_S1"][m][:,0] = data[m].mean(axis=0)
@@ -335,4 +333,3 @@ keep_best_run = False
 # Go!
 # runSingleTrial(data, data_opts, model_opts, train_opts, seed=None)
 runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run)
-

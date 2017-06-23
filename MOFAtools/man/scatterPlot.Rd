@@ -4,7 +4,7 @@
 \alias{scatterPlot}
 \title{Visualize scatterplot of two latent variables}
 \usage{
-scatterPlot(object, idx, idy, title = "", titlesize = 16, xlabel = NULL,
+scatterPlot(object, factors, title = "", titlesize = 16, xlabel = NULL,
   ylabel = NULL, xlim_down = NA, xlim_up = NA, ylim_down = NA,
   ylim_up = NA, dotsize = 2.5, colour_by = NULL, shape_by = NULL,
   name_colour = "", name_shape = "", showMissing = T)
@@ -12,9 +12,9 @@ scatterPlot(object, idx, idy, title = "", titlesize = 16, xlabel = NULL,
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{idx}{latent variable on the x axis}
+\item{factorx}{latent variable on the x axis}
 
-\item{idy}{latent variable on the y axis}
+\item{factory}{latent variable on the y axis}
 }
 \value{
 fill this

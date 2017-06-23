@@ -71,6 +71,9 @@ r2 <- calculateVarianceExplained(model, views="all", factors="all", plotit=T, pe
 # culture <- sample_metadata[sampleNames(model),]$culture
 # scatterPairs(model, factors = c("1","2","3","4"))
 scatterPlot(model, idx="2", idy="3")
+
+
+
 ```
 
 ### Correlation of latent variables

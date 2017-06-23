@@ -1,4 +1,9 @@
 
+###########################################################
+## Functions to visualise scatterplots of latent factors ##
+###########################################################
+
+
 #' @title Visualize histogram of one latent variable
 #' @name histPlot
 #' @description fill this
@@ -9,28 +14,40 @@
 #' @references fill this
 #' @import ggplot2
 #' @export
-histPlot <- function(object, id, xlabel = NULL, groups = NULL, alpha=0.6, binwidth=NULL, name_colour="", showNA=F) {
+histPlot <- function(object, factor, xlabel = NULL, fill=NULL, name_fill="", alpha=0.6, binwidth=NULL, showNA=F) {
   
+  # Sanity checks
   if (class(object) != "MOFAmodel") 
     stop("'object' has to be an instance of MOFAmodel")
+  if ((!is.null(fill_discrete)) & (!is.null(fill_continuous)))
+    stop("do not specify both fill_discrete and fill_continuous")
+  if(!factor %in% factorNames(object)) { stop("factor not recognised") }
   
+  # Collect relevant data
   N <- object@Dimensions[["N"]]
   Z <- getExpectations(object, "Z", "E")
-  id <- as.character(id)
-  if (is.null(xlabel)) { xlabel <- paste("Latent factor", id) }
-  if (is.null(groups)) { groups <- rep("1",N) }
-
+  factor <- as.character(factor)
   
-  df = data.frame(x=Z[,id], group=groups)
-  if(!showNA) df <- filter(df, !is.na(group))
-  df$group <- as.factor(df$group)
+  # Create data frame
+  if (is.null(fill)) { 
+    fill <- 1 
+  } else {
+    stopifnot(is.character(fill) | is.factor(fill))
+    fill <- as.factor(fill)
+  }
+  
+  df = data.frame(x=Z[,factor], fill=fill)
+  
+  if(!showNA) df <- df[!is.na(fill),]
+
+  if (is.null(xlabel)) { xlabel <- paste("Latent factor", factor) }
   
   p <- ggplot(df, aes(x=x)) + 
-    geom_histogram(aes(fill=group, group=group), alpha=alpha, binwidth=binwidth, position="identity") + 
+    geom_histogram(aes(fill=fill), alpha=alpha, binwidth=binwidth, position="identity") + 
     xlab(xlabel) + 
     ylab("Count") + 
     scale_y_continuous(expand=c(0,0)) +
-    guides(fill=guide_legend(title=name_colour))
+    guides(fill=guide_legend(title=name_fill)) +
     theme(plot.margin = margin(40,40,20,20), 
           axis.text = element_text(size=rel(1.3), color = "black"), 
           axis.title.y = element_text(size=rel(1.5), margin=margin(0,15,0,0)), 
@@ -44,7 +61,7 @@ histPlot <- function(object, id, xlabel = NULL, groups = NULL, alpha=0.6, binwid
           legend.key = element_rect(fill = "white")
     )
   
-  if (length(unique(df$group))==1) { p <- p + guides(fill = FALSE) }
+  if (is.null(fill)) { p <- p + guides(fill = FALSE) }
   
   return(p)
 }
@@ -60,7 +77,8 @@ histPlot <- function(object, id, xlabel = NULL, groups = NULL, alpha=0.6, binwid
 #' @references fill this
 #' @import beeswarm
 #' @export
-beeswarmPlot <- function(object, id, label = NULL, groups = NULL, groupname="") {
+beeswarmPlot <- function(object, factor, label = NULL, color = NULL, color_name="", legend=F) {
+  # TO-DO: BETTER USE GGPLOT AND ALLOW FOR CONTINUOUS AS WELL AS DISCRETE COLORUING
   
   if (class(object) != "MOFAmodel") 
     stop("'object' has to be an instance of MOFAmodel")
@@ -68,14 +86,15 @@ beeswarmPlot <- function(object, id, label = NULL, groups = NULL, groupname="") 
   N <- object@Dimensions[["N"]]
   Z <- getExpectations(object, "Z", "E")
   
-  if (is.null(label)) { label <- paste("Latent factor", id) }
-  if (is.null(groups)) { groups <- rep("1",N) } else groups <- as.factor(groups)
+  if (is.null(label)) { label <- paste("Latent factor", factor) }
+  if (is.null(color)) { 
+    col <- rep("1",N) 
+  } 
+  beeswarm::beeswarm(Z[,factor], pwcol = col, pch = 16, ylab = label, xlab = "")
   
-  beeswarm::beeswarm(Z[,id], pwcol = groups, pch = 16,
-                     ylab = label, xlab = "")
-  
-  if(!is.null(groups))
-  legend("topright", legend =  levels(groups), title = groupname, pch = 16, col = 1:length(levels(groups)))
+  if(!is.null(color) & legend==T) {
+    legend("topright", legend = levels(col), title = color_name, pch = 16, col = 1:length(levels(color)))
+  }
   
 }
 
@@ -83,75 +102,81 @@ beeswarmPlot <- function(object, id, label = NULL, groups = NULL, groupname="") 
 #' @name scatterPlot
 #' @description fill this
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param idx latent variable on the x axis
-#' @param idy latent variable on the y axis
+#' @param factorx latent variable on the x axis
+#' @param factory latent variable on the y axis
 #' @details asd
 #' @return fill this
 #' @references fill this
 #' @import ggplot2
 #' @export
-  scatterPlot<-function (object, idx, idy, title = "", titlesize = 16, xlabel = NULL, 
-      ylabel = NULL, xlim_down = NA, xlim_up = NA, ylim_down = NA, 
-      ylim_up = NA, dotsize = 2.5, colour_by = NULL, shape_by = NULL, name_colour="", name_shape="",
-      showMissing = T) 
-{
-    if (class(object) != "MOFAmodel") 
-        stop("'object' has to be an instance of MOFAmodel")
+scatterPlot <- function (object, factors, title = "", titlesize = 16, xlabel = NULL, 
+      ylabel = NULL, xlim_down = NA, xlim_up = NA, ylim_down = NA, ylim_up = NA, 
+      dotsize = 2.5, colour_by = NULL, shape_by = NULL, name_colour="", name_shape="", showMissing = T) {
   
-    N <- object@Dimensions[["N"]]
-    Z <- getExpectations(object, "Z", "E")
-    
-    if (!is.null(colour_by)) {
-        if (length(colour_by) != N) 
-            stop("'colour_by' has to be a vector of length N")
-        colorLegend<-T
-    } else {
-        colour_by <- rep(TRUE, N)
-        colorLegend<-F
-    }
-    if (!is.null(shape_by)) {
-        if (length(shape_by) != N) 
-            stop("'shape_by' has to be a vector of length N")
-        shapeLegend<-T
-    } else {
-        shape_by <- rep(TRUE, N)
-        shapeLegend<-F
-    }
-    if (is.null(xlabel)) xlabel <- paste("Latent factor", idx)
-    if (is.null(ylabel)) ylabel <- paste("Latent factor", idy)
-
-    df = data.frame(x = Z[, idx], y = Z[, idy], shape_by = shape_by, colour_by = colour_by)
-    
-    #remove values missing color or shape annotation
-    if(!showMissing) df <- filter(df, !(shape_by=="NaN") & !(colour_by=="NaN"))
-                                  
-    p <- ggplot(df, aes(x, y, color = colour_by, shape = shape_by)) + 
-        geom_point(size = dotsize) + 
-        ggtitle(title) + 
-        xlab(xlabel) + 
-        ylab(ylabel) + 
-        scale_y_continuous(limits = c(ylim_down, ylim_up)) + 
-        scale_x_continuous(limits = c(xlim_down, xlim_up)) +
-         theme(plot.margin = margin(40, 40, 20, 20), 
-                axis.text = element_text(size = rel(1), color = "black"), 
-                axis.title = element_text(size = titlesize), 
-                axis.title.y = element_text(size = rel(1.1), margin = margin(0, 15, 0, 0)), 
-                axis.title.x = element_text(size = rel(1.1), margin = margin(15, 0, 0, 0)), 
-                axis.line = element_line(colour = "black", size = 0.5), 
-                axis.ticks = element_line(colour = "black", size = 0.5),
-                panel.border = element_blank(), 
-                panel.grid.major = element_blank(),
-                panel.grid.minor = element_blank(), 
-                panel.background = element_blank(),
-                legend.key = element_rect(fill = "white"),
-                legend.text = element_text(size = titlesize),
-                legend.title = element_text(size =titlesize))+
-         guides(color=guide_legend(title=name_colour), shape=guide_legend(title=name_shape))+
-         scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))])
-    if(!colorLegend) p <- p + guides(color = FALSE)
-    if(!shapeLegend) p <- p + guides(shape = FALSE)
-    return(p)
+  # Sanity checks
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  stopifnot(length(factors)==2)
+  stopifnot(all(factors %in% factorNames(object)))
+  
+  # Collect relevant data  
+  N <- object@Dimensions[["N"]]
+  Z <- getExpectations(object, "Z", "E")
+  factors <- as.character(factors)
+  
+  # Set color
+  if (!is.null(colour_by)) {
+    stopifnot(length(unique(colour_by)) > 1)
+    stopifnot(length(colour_by) == N)
+    colorLegend <- T
+  } else {
+    colour_by <- rep(TRUE,N)
+    colorLegend <- F
   }
+  
+  # Set shape
+  if (!is.null(shape_by)) {
+    stopifnot(length(unique(shape_by)) > 1)
+    stopifnot(length(shape_by) == N)
+    stopifnot(is.character(shape_by) | is.factor(shape_by))
+    shapeLegend <- T
+  } else {
+    shape_by <- rep(TRUE, N)
+    shapeLegend <- F
+  }
+  
+  # Create data frame to plot
+  df = data.frame(x = Z[, factors[1]], y = Z[, factors[2]], shape_by = shape_by, colour_by = colour_by)
+  
+  # remove values missing color or shape annotation
+  if (!showMissing) df <- df[!((df$shape_by=="NaN") | (df$colour_by=="NaN"))]
+  
+  if (is.null(xlabel)) xlabel <- paste("Latent factor", factors[1])
+  if (is.null(ylabel)) ylabel <- paste("Latent factor", factors[2])
+                                
+  p <- ggplot(df, aes(x, y, color = colour_by, shape = shape_by)) + 
+      geom_point(size = dotsize) + 
+      ggtitle(title) + xlab(xlabel) + ylab(ylabel) + 
+      scale_y_continuous(limits = c(ylim_down, ylim_up)) + 
+      scale_x_continuous(limits = c(xlim_down, xlim_up)) +
+      scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))]) +
+      theme(plot.margin = margin(20, 20, 10, 10), 
+            axis.text = element_text(size = rel(1), color = "black"), 
+            axis.title = element_text(size = titlesize), 
+            axis.title.y = element_text(size = rel(1.1), margin = margin(0, 10, 0, 0)), 
+            axis.title.x = element_text(size = rel(1.1), margin = margin(10, 0, 0, 0)), 
+            axis.line = element_line(colour = "black", size = 0.5), 
+            axis.ticks = element_line(colour = "black", size = 0.5),
+            panel.border = element_blank(), 
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(), 
+            panel.background = element_blank(),
+            legend.key = element_rect(fill = "white"),
+            legend.text = element_text(size = titlesize),
+            legend.title = element_text(size =titlesize))
+  if (colorLegend) { p <- p + labs(color = name_colour) } else { p <- p + guides(color = FALSE) }
+  if (shapeLegend) { p <- p + labs(shape = name_shape) }  else { p <- p + guides(shape = FALSE) }
+  return(p)
+}
   
   
 #' @title Visualize scatterplot of all latent variables in a pair-wise grid
@@ -167,20 +192,23 @@ beeswarmPlot <- function(object, id, label = NULL, groups = NULL, groupname="") 
 #' @import ggplot2 GGally
 #' @export
 #' 
-scatterPairs <- function(object, factors = "all", colour_by=NULL, showMissing=T, colour_name=NULL) {
+scatterPairs <- function(object, factors = "all", showMissing=T, 
+                         colour_by=NULL, colour_name=NULL, colourLegend=F, 
+                         shape_by=NULL, shape_name=NULL, shapeLegend=F) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") 
     stop("'object' has to be an instance of MOFAmodel")
-  
+
   # Collect relevant data
   N <- object@Dimensions[["N"]]
   Z <- getExpectations(object, "Z", "E")
+  factors <- as.character(factors)
   
   # Get factors
   if (paste0(factors,collapse="") == "all") { 
     factors <- factorNames(object) 
-    if(is.null(factors)) factors <- 1:ncol(Z) # old object are not compatible with factro names
+    # if(is.null(factors)) factors <- 1:ncol(Z) # old object are not compatible with factro names
   } else {
     stopifnot(all(factors %in% factorNames(object)))  
   }
@@ -189,19 +217,28 @@ scatterPairs <- function(object, factors = "all", colour_by=NULL, showMissing=T,
   # Remove constant factors 
   tmp <- apply(Z,2,var)
   if (any(tmp==0)) {
-    message(paste0("Removing constant factors: %s", paste(which(tmp==0), collapse="")))
+    message(paste0("Removing constant factors: ", paste(which(tmp==0), collapse="")))
     Z <- Z[,!tmp==0]
     factors <- factors[!tmp==0]
   }
   
-  # Get color vector
+  # Set color
   if (!is.null(colour_by)) {
-    if (length(colour_by) != N) 
-      stop("'colour_by' has to be a vector of length N")
+    stopifnot(length(unique(colour_by)) > 1)
+    stopifnot(length(colour_by) == N)
   } else {
-    colour_by <- rep(TRUE, N)
+    colour_by <- rep(TRUE,N)
   }
   
+  # Set shape
+  if (!is.null(shape_by)) {
+    stopifnot(length(unique(shape_by)) > 1)
+    stopifnot(length(shape_by) == N)
+    stopifnot(is.character(shape_by) | is.factor(shape_by))
+  } else {
+    shape_by <- rep(TRUE, N)
+  }
+
   # Remove missing values
   if(!showMissing) {
     Z <- Z[!is.na(colour_by),]
@@ -210,29 +247,38 @@ scatterPairs <- function(object, factors = "all", colour_by=NULL, showMissing=T,
   
   # Crete data.frame
   df <- as.data.frame(Z); colnames(df) <- paste0("LF_",colnames(df))
-  df <- cbind(df, colour_by=as.factor(colour_by))
+  df <- cbind(df, colour_by=colour_by, shape_by=shape_by)
   
   # Define title and legend of the plot
-  if(!is.null(colour_name)) {
-    main <- paste("Scatterplots of latent factors coloured by", colour_name)
-    p <- ggplot(df, aes_string(x=colnames(df)[1], y=colnames(df)[2], color="colour_by")) +
-      geom_point() +
-      guides(color=guide_legend(title=colour_name))
+  main <- "" 
+  if (!is.null(colour_name)) { colourLegend <- T }
+  if (!is.null(shape_name)) { shapeLegend <- T }
+  p <- ggplot(df, aes_string(x=colnames(df)[1], y=colnames(df)[2], color="colour_by", shape="shape_by")) + geom_point()
+  if (colourLegend) { p <- p + labs(color=colour_name) } else { p <- p + guides(color = FALSE) }
+  if (shapeLegend) { p <- p + labs(shape=shape_name) } else { p <- p + guides(shape = FALSE) }
+  if (colourLegend | shapeLegend) { 
+    p <- p +
+      theme(
+        legend.title=element_text(size=15, hjust=0.5, color="black"),
+        legend.position = "right", 
+        legend.direction = "vertical",
+        legend.key = element_blank()
+      )
     legend <- GGally::grab_legend(p)
   } else {
-    main <- "Scatterplots of latent factors" 
     legend <- NULL
   }
   
   # Generate plot
-  GGally::ggpairs(df, columns = colnames(df[,!colnames(df)=="colour_by"]), lower=list(continuous="points"), upper=list(continuous="density"), 
-          mapping=aes(colour=colour_by), title=main, legend=legend) +
+  GGally::ggpairs(df, columns = colnames(df[,!colnames(df) %in% c("colour_by","shape_by")]), 
+                  lower=list(continuous="points"), diag=list(continuous='blankDiag'), upper=list(continuous='points'),
+          mapping=aes(colour=colour_by, shape=shape_by), title=main, legend=legend) +
     theme_bw() +
     theme(plot.title = element_text(size = 16, hjust=0.5, color="black"), 
           axis.title = element_text(size = 10, color="black"), 
-          axis.text = element_text(size = 9, color="black"), 
+          axis.text = element_text(size = 9, color="black"),
           legend.position = "right", 
-          legend.title = element_text()
+          legend.direction = "vertical"
           )
 }
   

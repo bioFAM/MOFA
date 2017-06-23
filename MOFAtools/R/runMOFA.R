@@ -1,3 +1,8 @@
+
+###########################
+## Functions to run MOFA ##
+###########################
+
 #' @title prepareMOFARunFile: Write .sh files to run MOFA in Python 
 #' @name prepareMOFARunFile
 #' @description Function to produce .sh files to run MOFA in Python from the command line with specified options.

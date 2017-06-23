@@ -279,7 +279,6 @@ class initModel(object):
 
     def initThetaConst(self, value):
         # Method to initialise a constant theta node
-        import pdb; pdb.set_trace()
         Theta_list = [None] * self.M
         for m in xrange(self.M):
             Theta_list[m] = Theta_Constant_Node(dim=(self.D[m],self.K,), value=value[m], N_cells=1.)

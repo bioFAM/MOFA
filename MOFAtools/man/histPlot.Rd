@@ -4,8 +4,8 @@
 \alias{histPlot}
 \title{Visualize histogram of one latent variable}
 \usage{
-histPlot(object, id, xlabel = NULL, groups = NULL, alpha = 0.6,
-  binwidth = NULL, name_colour = "", showNA = F)
+histPlot(object, factor, xlabel = NULL, fill = NULL, name_fill = "",
+  alpha = 0.6, binwidth = NULL, showNA = F)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}

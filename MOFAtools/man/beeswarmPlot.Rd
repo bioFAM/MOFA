@@ -4,7 +4,8 @@
 \alias{beeswarmPlot}
 \title{Visualize beeswarm plot of one latent variable}
 \usage{
-beeswarmPlot(object, id, label = NULL, groups = NULL, groupname = "")
+beeswarmPlot(object, factor, label = NULL, color = NULL, color_name = "",
+  legend = F)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}

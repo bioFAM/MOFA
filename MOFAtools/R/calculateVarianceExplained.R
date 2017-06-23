@@ -15,7 +15,8 @@
 #' @param showVarComp if True plot additional barplots showing the contribution of ea
 #' @details fill this
 #' @return fill this
-#' @import pheatmap gridExtra ggplot2 reshape2 cowplot
+#' @import pheatmap gridExtra ggplot2 reshape2
+#' @importFrom cowplot plot_grid
 #' @export
 
 calculateVarianceExplained <- function(object, views="all", factors="all", plotit=T, perFeature=F, 
@@ -161,7 +162,7 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
       # gg_R2 <- gridExtra::arrangeGrob(hm, bplt, ncol=1, heights=c(length(factorsNonconst),7) )
       # gg_R2 <- gridExtra::arrangeGrob(bplt, hm, ncol=1, heights=c(1/2,1/2) )
       # gridExtra::grid.arrange(gg_R2)
-      p <- cowplot::plot_grid(bplt, hm, align="v", nrow=2, rel_heights=c(1/3,2/3))
+      p <- plot_grid(bplt, hm, align="v", nrow=2, rel_heights=c(1/3,2/3))
       print(p)
      
       #optional: barplots with individual contributions of factors to explaining variance in a view, takes a lot of time....

@@ -45,12 +45,12 @@ data_opts = {}
 # I/O
 data_opts['input_files'] = args.inFiles
 data_opts['outfile'] = args.outFile
-# data_opts['rownames'] = 0
-# data_opts['colnames'] = 0
-# data_opts['delimiter'] = " "
-data_opts['rownames'] = None
+data_opts['rownames'] = 0
 data_opts['colnames'] = 0
-data_opts['delimiter'] = ","
+data_opts['delimiter'] = " "
+# data_opts['rownames'] = None
+# data_opts['colnames'] = 0
+# data_opts['delimiter'] = ","
 data_opts['ThetaDir'] = args.ThetaDir
 
 # View names
@@ -221,8 +221,9 @@ else:
    exit()
 
 for m in xrange(M):
-  if theta_annotations[m] is not None:
-    model_opts["initTheta"]["E"][m][:,idx] = theta_annotations[m]
+  if data_opts["ThetaDir"] != "":
+    if theta_annotations[m] is not None:
+      model_opts["initTheta"]["E"][m][:,idx] = theta_annotations[m]
   for k in xrange(K):
     if model_opts['learnTheta'][m][k]==0.:
       model_opts["initTheta"]["a"][m][k] = s.nan

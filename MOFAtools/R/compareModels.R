@@ -1,4 +1,9 @@
 
+################################################
+## Functions to compare different MOFA models ##
+################################################
+
+
 #' @title Compare the latent factors of different \code{\link{MOFAmodel}} 
 #' @name compareModels
 #' @description Different objects of \code{\link{MOFAmodel}} are compared in terms of correlation between 
@@ -13,7 +18,7 @@
 #' @references fill this
 #' @importFrom stats cor
 #' @importFrom pheatmap pheatmap
-#' @importFrom RColorBrewer colorRampPalette
+#' @importFrom grDevices colorRampPalette
 #' @export
 
 compareModels <- function(ModelList, comparison="all") {

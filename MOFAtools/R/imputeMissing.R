@@ -1,3 +1,8 @@
+
+####################################################
+## Functions perform imputation of missing values ##
+####################################################
+
 #' @title Impute missing value from a fitted MOFA model
 #' @name imputeMissing
 #' @description fill this

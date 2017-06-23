@@ -228,7 +228,7 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, factor, threshold=0.
 #' @details fill this
 #' @return vector of factors being enriched for at least one feautre set at the threshold specified 
 #' @importFrom pheatmap pheatmap
-#' @importFrom RColorBrewer colorRampPalette
+#' @importFrom grDevices colorRampPalette
 #' @export
 Heatmap_FeatureSetEnrichmentAnalysis <- function(p.values, threshold=0.05, ...) {
   p.values <- p.values[!apply(p.values, 1, function(x) sum(x>=threshold)) == ncol(p.values),]

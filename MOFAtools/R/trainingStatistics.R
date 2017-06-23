@@ -1,7 +1,7 @@
 
-######################################################
-## Plot training curve for number of active factors ##
-######################################################
+###########################################
+## Functions to plot training statistics ##
+###########################################
 
 #' @rdname trainCurveFactors
 #' @name trainCurveFactors
@@ -56,10 +56,6 @@ trainCurveFactors <- function(object, title="", titlesize=16, xlabel="Iteration"
   return(p)
 }
 
-
-##################################################
-## Plot training curve for evidence lower bound ##
-##################################################
 
 #' @rdname trainCurveELBO
 #' @name trainCurveELBO

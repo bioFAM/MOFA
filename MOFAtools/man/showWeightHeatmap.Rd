@@ -2,29 +2,29 @@
 % Please edit documentation in R/showWeights.R
 \name{showWeightHeatmap}
 \alias{showWeightHeatmap}
-\title{showWeightHeatmap: get the loadings in a specific view}
+\title{showWeightHeatmap: show heatmap of the factor loadings in a specific view}
 \usage{
 showWeightHeatmap(model, view, features = "all", factors = "all",
-  interceptLF = F, main = NULL, color = NULL, breaks = NULL, ...)
+  RemoveIntercept = T, main = NULL, color = NULL, breaks = NULL)
 }
 \arguments{
-\item{model}{a fitted MOFA model}
+\item{model}{a MOFA model}
 
-\item{view}{name of view from which to get the corresponding weights}
+\item{view}{view name}
 
-\item{features}{name of features to include (default: all)}
+\item{features}{name of the features to include (default: "all")}
 
-\item{factors}{name of factors to include (default: all)}
+\item{factors}{name of the factors to include (default: "all")}
 
-\item{interceptLF}{boolean wether to include the intercept factor if present in the model (by default not included)}
+\item{RemoveIntercept}{boolean wether to include the intercept factor if present in the model (by default not included)}
 
 \item{...}{further arguments that can be passed to pheatmap}
 }
 \value{
-a weight matrix of dimension d (feautres) x k (number of latent factors)
+fill this
 }
 \description{
-Function to visualize the weights that each feautre has on a factor in the view specified as a heatmap.
+Function to visualize the weights for each feature in each factor for a given view
 }
 \details{
 fill this

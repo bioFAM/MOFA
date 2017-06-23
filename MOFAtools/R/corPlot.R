@@ -1,4 +1,8 @@
 
+##########################################################################################
+## Functions to analyse the correlation between latent factors and principal components ##
+##########################################################################################
+
 #' @title Visualize correlation matrix between the features
 #' @name FeaturesCorPlot
 #' @description fill this
@@ -7,7 +11,8 @@
 #' @return fill this
 #' @references fill this
 #' @importFrom pheatmap pheatmap
-#' @importFrom RColorBrewer brewer.pal colorRampPalette
+#' @importFrom RColorBrewer brewer.pal
+#' @importFrom grDevices colorRampPalette
 #' @export
 FeaturesCorPlot <- function(object, view, method="pearson", regress_factors=NULL, top=500, ...) {
   if (class(object) != "MOFAmodel")
@@ -128,7 +133,7 @@ CorrplotLFvsPC <- function(model, views="all", noPCs=5, method="svd"){
   # Perform PCAs
   listPCs <- lapply(views, function(m) {
     model@TrainData[[m]][is.nan(model@TrainData[[m]])] <- NA
-    pc.out <- pcaMethods::pca(model@TrainData[[m]], method=method, center=TRUE, nPcs=noPCs)
+    pc.out <- pcaMethods::pca(t(model@TrainData[[m]]), method=method, center=TRUE, nPcs=noPCs)
     tmp <- pc.out@scores
     colnames(tmp) <- paste(m, colnames(tmp), sep="_")
     tmp

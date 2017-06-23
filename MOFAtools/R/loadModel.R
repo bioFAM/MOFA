@@ -1,4 +1,9 @@
 
+############################################
+## Functions to load a trained MOFA model ##
+############################################
+
+
 #' @title loadModel: loading a trained MOFA model from python output
 #' @name loadModel
 #' @description Method to load a trained MOFA model from a hdf5 file. \cr

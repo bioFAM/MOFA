@@ -4,53 +4,56 @@
 ########################################
 
 
-#' @title showWeightHeatmap: get the loadings in a specific view
+#' @title showWeightHeatmap: show heatmap of the factor loadings in a specific view
 #' @name showWeightHeatmap
-#' @description Function to visualize the weights that each feautre has on a factor in the view specified as a heatmap.
-#' @param model a fitted MOFA model
-#' @param view name of view from which to get the corresponding weights
-#' @param features name of features to include (default: all)
-#' @param factors name of factors to include (default: all)
-#' @param interceptLF boolean wether to include the intercept factor if present in the model (by default not included)
+#' @description Function to visualize the weights for each feature in each factor for a given view
+#' @param model a MOFA model
+#' @param view view name
+#' @param features name of the features to include (default: "all")
+#' @param factors name of the factors to include (default: "all")
+#' @param RemoveIntercept boolean wether to include the intercept factor if present in the model (by default not included)
+#' @param main asd 
+#' @param color asd 
+#' @param breaks asd 
 #' @param ... further arguments that can be passed to pheatmap
 #' @details fill this
-#' @return a weight matrix of dimension d (feautres) x k (number of latent factors)
-#' @importFrom pheatmap pheatmap
-#' @importFrom RColorBrewer brewer.pal colorRampPalette
-#' @import magrittr
+#' @return fill this
+#' @import pheatmap
+#' @importFrom RColorBrewer brewer.pal 
+#' @importFrom grDevices colorRampPalette
 #' @export
-
-showWeightHeatmap <- function(model, view, features="all", factors="all", interceptLF =F, main=NULL, color = NULL, breaks=NULL, show_rownames = F) {
+showWeightHeatmap <- function(model, view, features = "all", factors = "all", RemoveIntercept = T, main=NULL, color=NULL, breaks=NULL, ...) {
   
   # Sanity checks
-  if (class(model) != "MOFAmodel")
-    stop("'model' has to be an instance of MOFAmodel")
+  if (class(model) != "MOFAmodel") stop("'model' has to be an instance of MOFAmodel")
   stopifnot(all(view %in% viewNames(model)))  
   
   # Define factors
-  if (factors=="all") { 
+  factors <- as.character(factors)
+  if (paste0(factors,collapse="")=="all") { 
     factors <- factorNames(model) 
-    if(is.null(factors)) factors <- 1:ncol(getExpectations(model,"Z","E"))
+    # if(is.null(factors)) factors <- 1:ncol(getExpectations(model,"Z","E"))
   } else {
     stopifnot(all(factors %in% factorNames(model)))  
   }
   
-  #remove intercept factor
-  if(model@ModelOpts$learnMean==T & !interceptLF) factors <- factors[factors != factorNames(model)[1]]
+  # Remove intercept factor
+  if(model@ModelOpts$learnMean==T & RemoveIntercept) { factors <- factors[factors != factorNames(model)[1]] }
   
   # Define features
-  if (features=="all") { 
+  if (paste(features,collapse="")=="all") { 
     features <- featureNames(model)[[view]]
   } else {
     stopifnot(all(features %in% featureNames(model)[[view]]))  
   }
 
+  # Get relevant data
   W <- getExpectations(model,"SW","E")[[view]][features,factors]
 
-  # Plot heatmap
-  if (is.null(main)) main <- paste("W of Latent Factors on", view)
+  # Set title
+  if (is.null(main)) { main <- paste("Loadings of Latent Factors on", view) }
   
-  #set colors and breaks if not specified
+  # set colors and breaks if not specified
   if(is.null(color) & is.null(breaks)){
     palLength <- 100
     minV <- min(W)
@@ -59,21 +62,22 @@ showWeightHeatmap <- function(model, view, features="all", factors="all", interc
     breaks <- c(seq(minV, 0, length.out=ceiling(palLength/2) + 1), 
                 seq(maxV/palLength,maxV, length.out=floor(palLength/2)))
   }
-  pheatmap(W, main=main, color=color, breaks=breaks, ...)
+  
+  # Plot heatmap
+  pheatmap::pheatmap(W, fontsize=15, ...)
 }
 
 
 
-
-#' @title showWeights: plot weights for a certain factor and view in a dotplot
+#' @title showWeights: visualise the loadings for a certain factor in a given view
 #' @name showWeights
 #' @description Function to visualize weights in a dotplot highlighting features with highest loadings
 #' @param model a fitted MOFA model
 #' @param view name of view from which to get the corresponding weights
-#' @param factor factor to plot weights for
+#' @param factor name of the factor
 #' @param ntop number of highest positive weights to label
 #' @param ntail number of lowest negative weights to label
-#' @param manual feautre names which are labeled in the plot
+#' @param manual feature names which are labeled in the plot
 #' @param th threshold on the absolute value beyond which weigths are labeled
 #' @param ntotal number of features with highest absolute value to label
 #' @param FeatureGroups  a named vector of same lengh as number of feautres annotating feature to groups that 
@@ -82,7 +86,7 @@ showWeightHeatmap <- function(model, view, features="all", factors="all", interc
 #' @param showFeatureNames boolean wether to show all FeatureNames on the x-axis (default false)
 #' @param main plot title
 #' @details fill this
-#' @import ggplot2 ggrepel
+#' @import dplyr ggplot2 ggrepel magrittr
 #' @export
 
 showWeights <- function(model, view, factor, ntop = 0, ntail = 0, manual = NULL, th = NULL, ntotal= 10, 

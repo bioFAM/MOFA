@@ -15,16 +15,18 @@ vignette: >
 # devtools::load_all("/Users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFAtools/")
 # devtools::load_all("/Users/ricard/mofa/MOFAtools")
 library(MultiAssayExperiment)
+library(MOFAtools)
 # %<>%, we should not use it or require the package...
-library(magrittr)
+# library(magrittr)
 ```
 
 # Step 1: Initialize MOFA object
 
-## Load data
+## Load data and create MOFA object
 There are two ways to load the data into MOFA: 
 (1) A MultiAssayExperiment object.
 (2) A list of matrices where features are rows and samples are columns: MutliAssayExperiment is constructed internally
+The input data is stored in the InputData slot of the MOFA object.
 ```{r}
 data("CLL_views")
 
@@ -45,11 +47,14 @@ covariates <- data.frame(
 mae_CLL <- MultiAssayExperiment(experiments = CLL_omics, pData = covariates)
 ```
 
-## Create MOFA object
-The input data is stored in the InputData slot of the MOFA object.
+### Create MOFA object using MultiAssayExperiment
 ```{r}
 object <- createMOFAobject(mae_CLL)
-# object <- createMOFAobjectFromList(ExpList = CLL_omics, pData = covariates)
+```
+
+### Create MOFA object using list of matrices
+```{r}
+object <- createMOFAobjectFromList(ExpList = CLL_omics, pData = covariates)
 ```
 
 # Step 2: Fit the MOFA model
@@ -58,38 +63,29 @@ object <- createMOFAobject(mae_CLL)
 
 ### Define I/O options
 Important:
-- tmpDir: Temporary folder to store the input matrices
-- outFile: Output file for the model
 - mofaDir: directory of the MOFA package
+- outFile: Output file for the model (.hdf5 extension)
 ```{r}
-# DirOptions <- list(
-#   "tmpDir" = "/tmp",
-#   "outFile" = "/Users/ricard/test.hdf5",
-#   "mofaDir" = "/Users/ricard/mofa/MOFA"
-# )
-
 DirOptions <- list(
-  "tmpDir" = "/users/bvelten/Documents/MOFA/CLL_MOFA_data/testPipeline/",
-  "outFile" = "/users/bvelten/Documents/MOFA/CLL_MOFA_data/testPipeline/test.hdf5",
-  "mofaDir" = "/users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFA"
+  "mofaDir" = "/Users/ricard/mofa/MOFA",
+  "outFile" = "/Users/ricard/test.hdf5"
 )
+
+# DirOptions <- list(
+#   "mofaDir" = "/users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFA",
+#   "outFile" = "/users/bvelten/Documents/MOFA/CLL_MOFA_data/testPipeline/test.hdf5"
+# )
 ```
 
 ### Define model options
-Important:
-- Initial number of latent variables
-- Likelihoods
-- Schedule of updates
+The user can look in the documentation and the function getDefaultModelOpts for the different options, but the default ones work fine. The most important thing the user has to define is the initial number of latent variables and the likelihood type (if not provided, the model tries to guess it from the data) 
 ```{r}
 ModelOptions <- getDefaultModelOpts(object)
 ModelOptions$initialK <- 10
 ```
 
 ### Define training options
-Important:
-- Number of trials
-- Maximum number of iterations
-- Dropping options of latent factors
+The user can look in the documentation and the function getDefaultTrainOpts for the different options, but the default ones work fine. The most important thing the user has to define is the maximum number of iterations and whether/how to drop inactive latent factors while training.
 ```{r}
 TrainOptions <- getDefaultTrainOpts()
 TrainOptions$maxiter <- 10
@@ -98,7 +94,7 @@ TrainOptions$drop_by_r2 <- 0.00
 ```
 
 ## Prepare MOFA
-Internally, prepareMOFA performs a set of sanity checks, fills the TrainOpts and ModelOpts slots of the MOFAmodel object and it also creates a set of temporary .txt files with the input matrices that will be loaded by the Python core implementation
+Internally, prepareMOFA performs a set of sanity checks, fills the TrainOpts and ModelOpts slots of the MOFAmodel object and it also creates a set of temporary files with the input matrices that will be loaded by the Python core implementation
 ```{r}
 object <- prepareMOFA(object, 
                       DirOptions = DirOptions,
@@ -108,13 +104,15 @@ object <- prepareMOFA(object,
 ```
 
 ## Run MOFA
-This step can take some time, it is recommended to run it from the Python-based module
+This step can take some time and it decouples from the R package, it is recommended to run it from the Python-based module
 ```{r}
 # object <- runMOFA(object, DirOptions)
 # object <- readRDS(DirOptions$outFile)
+
 #for demonstration purposes use already fitted object
-object <- loadModel("/Users/bvelten/Documents/MOFA/CLL_MOFA_data/out/test_final/common_small_noXY_alldrugs_mean2.hdf5")
-data <- TrainData(object)
+# object <- loadModel("/Users/bvelten/Documents/MOFA/CLL_MOFA_data/out/test_final/common_small_noXY_alldrugs_mean2.hdf5")
+object <- loadModel("/Users/ricard/data/CLL/out/test_final/common_small_noXY_alldrugs_mean2.hdf5")
+# data <- TrainData(object)
 ```
 
 # Step 3: Analyse a trained MOFA model
@@ -134,15 +132,28 @@ beeswarmPlot(object, "4", groups = as.factor(data$mut["IGHV",]), groupname = "IG
 # histPlot(object, "4", groups = as.factor(data$mut["IGHV",]), name_colour ="IGHV" )
 ```
 
-## Characterisation of specific latent factors by weights
+## Characterisation of specific latent factors by inspection of the weights
+
 
 ### Show weights and identify most relevant features
+There are two main functions to display the weights, a heatmap and a line plot
 ```{r}
-showWeightHeatmap(object, "mRNA")
+showWeightHeatmap(object, view="mRNA", features="all", factors="all", show_rownames=F, cluster_cols=F)
+
+top <- names(tail(sort(abs(getExpectations(object,"SW","E")[["mRNA"]][,2])), n=10))
+showWeightHeatmap(object, view="mRNA", features=top, factors=c("2","3"), 
+                  main="Weight matrix for a subset of features and factors", 
+                  show_rownames=T, cluster_cols=F, cluster_rows=F)
+```
+
+THIS PLOT IS A BIT UGGLY, WE NEED SOME MODIFICATION...
+```{r}
 showWeights(object, "mut", 4)
 ```
 
+
 ### Show original data for the genes with top weights
+There is a function to inspect the original data focusing on the features with top weights in a particular factor
 ```{r}
 showDataHeatmap(object, view="mRNA", factor="2", nfeatures=50)
 # showDataScatter(object, "mRNA", 4)
@@ -152,72 +163,83 @@ showDataHeatmap(object, view="mRNA", factor="2", nfeatures=50)
 
 
 ### Feature set enrichment analysis
-The characterisation of factors usually requires the inspection of the corresponding weights to identify features with strong influence. However, looking at single features can be challenging and often the combination of signal from functionally related sets of features (i.e. gene ontologies) is required.
+The characterisation of factors usually requires the inspection of the corresponding weights. However, looking at the loadings of single features can be challenging, and often the combination of signal from functionally related sets of features (i.e. gene ontologies) is required.
 Here we implemented a feature set enrichment analysis method (FeatureSetEnrichmentAnalysis) derived from the PCGSE package (REF).
-The input of these function is a MOFA trained model (MOFAmodel), the factors for which to perform feature set enrichment (character vector), the feature sets (matrix) and a set of options regarding how the analysis should be performed. For more information see ...
+The input of these function is a MOFA trained model (MOFAmodel), the factors for which to perform feature set enrichment (a character vector), the feature sets (a binary matrix) and a set of options regarding how the analysis should be performed. For more information see ...
 
-Here we are going to perform feature set enrichment analysis on the mRNA view.
-Here we are going to use the absolute value of the weight (or loading) as feature statistic, the mean difference between the features in the gene set and the features outside the gene set as a feature set statistic and the correlation-adjusted parametric statistical test.
+Here we are going to perform feature set enrichment analysis on the mRNA view with the following options: absolute value of the weight (or loading) as feature statistic, the mean difference between the features in the gene set and the features outside the gene set as a feature set statistic and the correlation-adjusted parametric statistical test.
 ```{r}
 # The input format for feature sets has to be a binary matrix where the rows represent feature sets and the columns are features where a value of 1 indicates that the feature belongs to the corresponding feature set.
 
 # Load reactome annotations
-# reactome <- readRDS("/Users/ricard/data/reactome/v59/homo_sapiens/out/human_reactome.rds")
+reactome <- readRDS("/Users/ricard/data/reactome/v59/homo_sapiens/out/human_reactome.rds")
+
+# Rename pathways
+tmp <- read.table("/Users/ricard/data/reactome/v59/homo_sapiens/AllPathways.txt", header=F, quote="", sep="\t", stringsAsFactors=F)[,c(1,2)]
+reactome_meta <- tmp[,2]; names(reactome_meta) <- tmp[,1]
+rownames(reactome) <- stringr::str_replace_all(rownames(reactome), reactome_meta)
 
 # Load reactome annotations + information on pathways
-reactome<-readRDS("~/Documents/MOFA/CLL_MOFA_data/GO/reactome/human_reactome_binary_matrix.rds")
-ReactomePathwayInfo<-readLines("~/Documents/MOFA/CLL_MOFA_data/GO/reactome/ReactomePathwaysMeta.txt")
-ReactomePathwayInfo<-do.call(rbind,strsplit(ReactomePathwayInfo, "\t"))
-colnames(ReactomePathwayInfo)<-c("id", "description", "species")
-ReactomePathwayInfo<-as.data.frame(ReactomePathwayInfo)
-ReactomePathwayInfo<-ReactomePathwayInfo[ReactomePathwayInfo$species=="Homo sapiens",]
-rownames(reactome) <- ReactomePathwayInfo$description[match(rownames(reactome), ReactomePathwayInfo$id)]
+# reactome<-readRDS("~/Documents/MOFA/CLL_MOFA_data/GO/reactome/human_reactome_binary_matrix.rds")
+# ReactomePathwayInfo<-readLines("~/Documents/MOFA/CLL_MOFA_data/GO/reactome/ReactomePathwaysMeta.txt")
+# ReactomePathwayInfo<-do.call(rbind,strsplit(ReactomePathwayInfo, "\t"))
+# colnames(ReactomePathwayInfo)<-c("id", "description", "species")
+# ReactomePathwayInfo<-as.data.frame(ReactomePathwayInfo)
+# ReactomePathwayInfo<-ReactomePathwayInfo[ReactomePathwayInfo$species=="Homo sapiens",]
+# rownames(reactome) <- ReactomePathwayInfo$description[match(rownames(reactome), ReactomePathwayInfo$id)]
 
-# Run Feature Set Enrichment Analysis
-FSE.out <- FeatureSetEnrichmentAnalysis(object, view = "mRNA", feature.sets = reactome)
+# Run Feature Set Enrichment Analysis (basic with default options)
+# FSE.out <- FeatureSetEnrichmentAnalysis(object, view = "mRNA", feature.sets = reactome)
 
-# FSE.out <- FeatureSetEnrichmentAnalysis(
-#   object,
-#   view = "mRNA", 
-#   factors = "all", 
-#   feature.sets = reactome,
-#   local.statistic = "loading",
-#   transformation = "abs.value",
-#   global.statistic = "mean.diff",
-#   statistical.test = "permutation",
-#   nperm=100, 
-#   min.size=10,
-#   cores=1, alpha=0.05
-# )
+# Run Feature Set Enrichment Analysis (advanced)
+FSE.out <- FeatureSetEnrichmentAnalysis(
+  object,
+  view = "mRNA",
+  factors = "all",
+  feature.sets = reactome,
+  local.statistic = "loading",
+  transformation = "abs.value",
+  global.statistic = "mean.diff",
+  # statistical.test = "permutation",
+  statistical.test = "cor.adj.parametric",
+  nperm=5,
+  min.size=10,
+  cores=1, 
+  alpha=0.05
+)
 
-pval <- FSE.out$pval
-# Rename pathways
-# tmp <- read.table("/Users/ricard/data/reactome/v59/homo_sapiens/AllPathways.txt", header=F, quote="", sep="\t", stringsAsFactors=F)[,c(1,2)]
-# reactome_meta <- tmp[,2]; names(reactome_meta) <- tmp[,1]
-# rownames(p.values) <- stringr::str_replace_all(rownames(gsea.out_reactome), reactome_meta)
+# Extract p values
+pval <- FSE.out$pval.adj
 
-# Correct for multiple testing
-p.values_adj <- FSE.out$pval.adj
-
-
-# Visualise the results 
-# all factors
-sigFactors <- Heatmap_FeatureSetEnrichmentAnalysis(p.values_adj, threshold=0.05)
-
-# individual factors
-for(factor in sigFactors) LinePlot_FeatureSetEnrichmentAnalysis(p.values_adj, factor, threshold=0.05, max.pathways=25)
 ```
 
-# Other analysis
-## Impute Missing observations
+The next step is to visualise the results of the Gene Set Enrichment Analysis. There are two default plots:
+(1) General Overview: Heatmap with the p.values, rows being pathways and columns being factors. 
+```{r}
+Heatmap_FeatureSetEnrichmentAnalysis(pval, threshold=0.10, log=T)
+```
+
+(2) Factor-specific:
+```{r}
+interestingFactors <- c("2")
+for (factor in interestingFactors) {
+  LinePlot_FeatureSetEnrichmentAnalysis(pval, factor, threshold=0.05, max.pathways=25)
+}
+```
+
+## Imputation of missing observations
 ```{r}
 object<-imputeMissing(object)
 ```
 
 
-##  Cluster samples based on latent factors
+## Clustering of samples based on latent factors
 ```{r}
-clusterSamples(object, "all")
-clusterSamples(object, "4", anno_df = data.frame(data$mut["IGHV",]))
 
+# Using all latent factors
+h <- clusterSamples(object, "all", anno_df=NULL)
+
+# Using only a subset of latent factors and include annotation data frame
+# clusterSamples(object, "4", anno_df = data.frame(data$mut["IGHV",]))
+h <- clusterSamples(object, factors=c("2","4"), anno_df = covariates[sampleNames(object),])
 ```

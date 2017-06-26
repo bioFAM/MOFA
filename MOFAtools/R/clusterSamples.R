@@ -17,7 +17,7 @@
 #' @export
 #' 
 
-clusterSamples <- function(object, factors="all", anno_df=NULL, main=NULL){
+clusterSamples <- function(object, factors="all", anno_df=NULL, main=NULL, ...){
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -26,10 +26,9 @@ clusterSamples <- function(object, factors="all", anno_df=NULL, main=NULL){
   Z <- object@Expectations$Z$E
   N <- object@Dimensions[["N"]]
   
-  if(is.null(main)) main <- "Clustering based on latent factors"
   
   # Define factors
-  if (paste(factors=="all", collapse="")) { 
+  if (paste(factors, collapse="")=="all") { 
     factors <- factorNames(object) 
     if(is.null(factors)) factors <- 1:ncol(Z)
   } else {
@@ -47,9 +46,10 @@ clusterSamples <- function(object, factors="all", anno_df=NULL, main=NULL){
   } 
   
   # Plot heatmap
+  if(is.null(main)) main <- "Clustering based on latent factors"
   pheatmap::pheatmap(t(Z[,factors, drop=F]), annotation_col = anno_df, 
-                       cluster_rows = length(factors)>1, show_colnames = T,
-                     main = main)
+                     cluster_rows = length(factors)>1, show_colnames = T,
+                     main = main, ...)
   
   return(hc.out)
 

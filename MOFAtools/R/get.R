@@ -3,6 +3,39 @@
 ## User-friendly functions to get data from the model ##
 ########################################################
 
+#' @rdname getTrainData
+#' @name getTrainData
+#' @title wraper to fetch training data from the model
+#' @description to-fill
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @param views: views (default is "all")
+#' @param as.data.frame: output the result as a long data frame?
+#' @export
+getTrainData <- function(object, views="all", as.data.frame=F) {
+  
+  # Sanity checks
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  
+  # Get views
+  if (paste0(views,collapse="") == "all") { 
+    views <- viewNames(object) 
+  } else {
+    stopifnot(all(views %in% viewNames(object)))
+  }
+  
+  # Get data
+  trainData <- object@TrainData[views]
+  
+  # Convert to long data frame
+  if (as.data.frame) {
+    tmp <- lapply(views, function(m) { tmp <- reshape2::melt(trainData[[m]]); colnames(tmp) <- c("sample","feature","value"); tmp <- cbind(view=m,tmp); return(tmp) })
+    trainData <- do.call(rbind,tmp)
+  }
+  
+  return(trainData)
+}
+
+
 #' @rdname getExpectations
 #' @name getExpectations
 #' @title wraper to fetch particular expectations from the model

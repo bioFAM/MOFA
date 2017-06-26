@@ -71,7 +71,7 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     # Latent variables
     init.initZ(pmean=model_opts["priorZ"]["mean"], pvar=model_opts["priorZ"]["var"],
                qmean=model_opts["initZ"]["mean"], qvar=model_opts["initZ"]["var"], qE=model_opts["initZ"]["E"], qE2=model_opts["initZ"]["E2"],
-               covariates=data_opts['covariates'])
+               covariates=data_opts['covariates'], scale_covariates=data_opts['scale_covariates'])
 
     # Sparse weights
     init.initSW(ptheta=model_opts["priorSW"]["Theta"], pmean_S0=model_opts["priorSW"]["mean_S0"], pvar_S0=model_opts["priorSW"]["var_S0"], pmean_S1=model_opts["priorSW"]["mean_S1"], pvar_S1=model_opts["priorSW"]["var_S1"],

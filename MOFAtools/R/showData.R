@@ -29,12 +29,15 @@ showDataHeatmap <- function(model, view, factor, nfeatures=50, main=NULL, ...) {
   features <- names(tail(sort(abs(W)), n=nfeatures))
   stopifnot(all(features %in% featureNames(model)[[view]]))
   
+  # Get trainign data
+  data <- getTrainData(model, view)
+  
   # Ignore samples with full missing views
-  tmp <- model@TrainData[[view]][,apply(model@TrainData[[view]],2, function(x) !all(is.na(x)))]
+  data <- data[,apply(data, 2, function(x) !all(is.na(x)))]
   
   # Plot heatmap
   # if(is.null(main)) main <- paste(view, "values on top weighted feautres for factor", factor)
-  pheatmap::pheatmap(t(tmp[features,]), fontsize = 15, main=main,...)
+  pheatmap::pheatmap(t(data[features,]), fontsize = 15, main=main, ...)
 }
 
 

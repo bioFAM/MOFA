@@ -35,7 +35,7 @@ class initModel(object):
         # Set the seed
         s.random.seed(seed)
 
-    def initZ(self, pmean, pvar, qmean, qvar, qE=None, qE2=None, covariates=None):
+    def initZ(self, pmean, pvar, qmean, qvar, qE=None, qE2=None, covariates=None, scale_covariates=None):
         # Method to initialise the latent variables
         # Inputs:
         # - covariates (nd array): matrix of covariates with dimensions (nsamples,ncovariates)
@@ -68,7 +68,12 @@ class initModel(object):
 
         # Add covariates
         if covariates is not None:
+            assert scale_covariates != None, "If you use covariates also define data_opts['scale_covariates']"
             idx_covariates = s.array(range(covariates.shape[1]))
+            # Center and scale the covariates to match the prior distribution N(0,1)
+            # to-do: this needs to be improved to take the particular mean and var into account
+            # covariates[scale_covariates] = (covariates - covariates.mean(axis=0)) / covariates.std(axis=0)
+            covariates[:,scale_covariates] = (covariates[:,scale_covariates] - covariates[:,scale_covariates].mean(axis=0)) / covariates[:,scale_covariates].std(axis=0)
             qmean[:,idx_covariates] = covariates
         else:
             idx_covariates = None
@@ -77,7 +82,6 @@ class initModel(object):
         # self.Z = Constant_Node(dim=(self.N,self.K), value=qmean)
         self.Z = Z_Node(dim=(self.N,self.K),
                         pmean=s.ones((self.N,self.K))*pmean,
-                        # pvar=s.ones((self.N,self.K))*pvar,
                         pvar=s.ones((self.K,))*pvar,
                         qmean=s.ones((self.N,self.K))*qmean,
                         qvar=s.ones((self.N,self.K))*qvar,

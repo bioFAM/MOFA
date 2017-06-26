@@ -31,9 +31,12 @@ runMOFA <- function(object, DirOptions) {
   #             k,  object@TrainOpts$startdrop, object@TrainOpts$freqdrop,object@TrainOpts$drop_by_norm,
   #             object@TrainOpts$drop_by_r2, MOFAdir, ifelse(object@ModelOpts$learnMean,"\n--learnMean","")), file = file.path(dir,"run.sh"))
   # 
+  
+  tmpDir <- tempdir()
+  
   command <- paste(sep=" ",
   "python", paste0(DirOptions$mofaDir,"/run/template_run.py"),
-  "--inFiles", paste(paste0(DirOptions$tmpDir, "/", viewNames(object), ".txt"), collapse = " "),
+  "--inFiles", paste(paste0(tmpDir, "/", viewNames(object), ".txt"), collapse = " "),
   "--outFile", DirOptions$outFile,
   "--views", paste(viewNames(object), collapse=" "),
   "--likelihoods", paste(object@ModelOpts$likelihood, collapse=" "),

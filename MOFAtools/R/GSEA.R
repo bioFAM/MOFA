@@ -90,7 +90,7 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
     message(sprintf("Number of permutations: %d", nperm))
   }
   
-  # use own version for permutation test because of bugs in pcgse
+  # use own version for permutation test because of bugs in PCGSE package
   if (statistical.test == "permutation") {
     doParallel::registerDoParallel(cores=cores)
     
@@ -106,8 +106,6 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
       # Compute null statistic
       s.null <- pcgse(data=data_null, prcomp.output=list(rotation=W_null, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
                       transformation=transformation, feature.set.statistic=global.statistic, feature.set.test="parametric", nperm=NA)$statistic
-      # tmp <- apply(abs(s.null), 2, max)
-      # tmp
       abs(s.null)
     }
     null_dist <- do.call("rbind", null_dist_tmp)
@@ -116,15 +114,15 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
     # Compute true statistics
     s.true <- pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
                     transformation=transformation, feature.set.statistic=global.statistic, feature.set.test="parametric", nperm=NA)$statistic
-    colnames(s.true) <-factors
+    colnames(s.true) <- factors
     rownames(s.true) <- rownames(feature.sets)
     
-    #directly use permutation to control FDR
+    # directly use permutation to control FDR
+    calcfdr <- function(t) {
+      fp <- sum(abs(null_dist[,j]) > t )
+      tp <- sum(abs(s.true[,j]) > t )
+      fp/(tp+fp) }
     sigPathways <- lapply(1:length(factors), function(j) {
-      calcfdr <- function(t){
-        fp <- sum(abs(null_dist[,j]) > t )
-        tp <- sum(abs(s.true[,j]) > t )
-        fp/(tp+fp)}
       fdr <-sapply(seq(0,100,0.01), calcfdr)
       Idxsel <- which(fdr<=alpha)[1]
       if(!is.na(Idxsel)) {
@@ -200,7 +198,7 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, factor, threshold=0.
   #order according to significance
   tmp$pathway <- factor(tmp$pathway <- rownames(tmp), levels = tmp$pathway[order(tmp$pvalue, decreasing = T)])
   
-  p <- ggplot2::ggplot(tmp, aes(x=pathway, y=log)) +
+  p <- ggplot(tmp, aes(x=pathway, y=log)) +
     ggtitle(paste("Enriched sets in factor", factor)) +
     geom_point(size=5) +
     geom_hline(yintercept=-log10(threshold), linetype="longdash") +
@@ -227,15 +225,22 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, factor, threshold=0.
 #' @param ... Parameters to be passed to pheatmap function
 #' @details fill this
 #' @return vector of factors being enriched for at least one feautre set at the threshold specified 
-#' @importFrom pheatmap pheatmap
+#' @import pheatmap
 #' @importFrom grDevices colorRampPalette
 #' @export
-Heatmap_FeatureSetEnrichmentAnalysis <- function(p.values, threshold=0.05, ...) {
+Heatmap_FeatureSetEnrichmentAnalysis <- function(p.values, threshold=0.05, log=T, ...) {
   p.values <- p.values[!apply(p.values, 1, function(x) sum(x>=threshold)) == ncol(p.values),]
-  pheatmap(p.values, cluster_rows = T, cluster_cols = F, show_rownames = F, show_colnames = T,
-                     color = colorRampPalette(c("red", "lightgrey"))(n=5))
-  sigFactors <- colnames(p.values)[which(apply(p.values, 2, function(x) any(x<=threshold)))]
-  return(sigFactors)
+  if (log) {
+    p.values <- -log10(p.values)
+    threshold <- -log10(threshold)
+    col <- colorRampPalette(c("lightgrey", "red"))(n=10)
+  } else {
+    col <- colorRampPalette(c("red", "lightgrey"))(n=10)
+  }
+  pheatmap::pheatmap(p.values, cluster_rows = T, cluster_cols = F, show_rownames = F, show_colnames = T,
+                     color = col)
+  # sigFactors <- colnames(p.values)[which(apply(p.values, 2, function(x) any(x<=threshold)))]
+  # return(sigFactors)
 }
 
 
@@ -247,7 +252,7 @@ Heatmap_FeatureSetEnrichmentAnalysis <- function(p.values, threshold=0.05, ...) 
 ######################################################################
 
 pcgse = function(data, 
-                 prcomp.output=NA, 
+                 prcomp.output, 
                  pc.indexes=1, 
                  feature.sets,
                  feature.statistic="z",
@@ -296,12 +301,6 @@ pcgse = function(data,
   feature.set.indexes = feature.sets  
   if (is.matrix(feature.sets)) {
     feature.set.indexes = createVarGroupList(var.groups=feature.sets)  
-  }
-  
-  # Compute PCA if necessary
-  if (all(is.na(prcomp.output))) {
-    # Center and scale so that PCA is performed on correlation matrix
-    prcomp.output=prcomp(data, scale=T)
   }
   
   n = nrow(data)

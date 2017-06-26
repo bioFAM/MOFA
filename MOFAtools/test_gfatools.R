@@ -2,7 +2,8 @@
 library(MOFAtools)
 library(purrr)
 
-file = "/Users/ricard/perturbseq/k562/processed/model.hdf5"
+# file = "/Users/ricard/perturbseq/k562/processed/model.hdf5"
+file = "/tmp/test.h5"
 model <- loadModel(file)
 
 calculateVarianceExplained(model)

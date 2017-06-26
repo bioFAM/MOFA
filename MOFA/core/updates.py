@@ -408,7 +408,7 @@ class Theta_Constant_Node(Constant_Variational_Node):
     def getExpectations(self):
         return { 'E':self.E, 'lnE':self.lnE, 'lnEInv':self.lnEInv }
 
-    def removeFactors(self, idx, axis=0):
+    def removeFactors(self, idx, axis=1):
         # Ideally we want this node to use the removeFactors defined in Node()
         # but the problem is that we also need to update the "expectations", so i need
         # to call precompute()

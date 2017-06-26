@@ -49,7 +49,7 @@ getExpectations <- function(object, variable, expectation, as.data.frame=F) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
-  stopifnot(variable %in% names(model@Expectations))
+  stopifnot(variable %in% names(object@Expectations))
   
   # Get expectations in single matrix or list of matrices (for multi-view nodes)
   if (variable=="Z") {
@@ -104,7 +104,7 @@ getParameters <- function(object, variable, parameter, as.data.frame=F) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
-  stopifnot(variable %in% names(model@Parameters))
+  stopifnot(variable %in% names(object@Parameters))
   
   # Get expectations in single matrix or list of matrices (for multi-view nodes)
   if (variable=="Z") {

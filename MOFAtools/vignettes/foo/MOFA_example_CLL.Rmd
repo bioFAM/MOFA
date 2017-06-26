@@ -12,8 +12,8 @@ vignette: >
 ---
 
 ```{r}
-# devtools::load_all("/Users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFAtools/")
-# devtools::load_all("/Users/ricard/mofa/MOFAtools")
+devtools::load_all("/Users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFAtools/")
+devtools::load_all("/Users/ricard/mofa/MOFAtools")
 library(MultiAssayExperiment)
 library(MOFAtools)
 # %<>%, we should not use it or require the package...
@@ -37,7 +37,9 @@ CLL_omics <-  lapply( CLL_views[c("lincRNA","meth","miRNA","mRNA","mut","viab")]
 # Define pData
 covariates <- data.frame(
   sex = CLL_views[["covariates"]][1,], 
-  diagnosis = CLL_views[["covariates"]][2,]
+  diagnosis = CLL_views[["covariates"]][2,],
+  IGHV = CLL_views[["mut"]]["IGHV",],
+  trisomy12 = CLL_views[["mut"]]["trisomy12",]
 )
 
 # Define sampleMap

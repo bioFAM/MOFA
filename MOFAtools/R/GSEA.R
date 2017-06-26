@@ -118,16 +118,16 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
     rownames(s.true) <- rownames(feature.sets)
     
     # directly use permutation to control FDR
-    calcfdr <- function(t) {
-      fp <- sum(abs(null_dist[,j]) > t )
-      tp <- sum(abs(s.true[,j]) > t )
+    calcfdr <- function(th, idx) {
+      fp <- sum(abs(null_dist[,idx]) > th)
+      tp <- sum(abs(s.true[,idx]) > th )
       fp/(tp+fp) }
     sigPathways <- lapply(1:length(factors), function(j) {
-      fdr <-sapply(seq(0,100,0.01), calcfdr)
+      fdr <-sapply(seq(0,100,0.01), calcfdr,j)
       Idxsel <- which(fdr<=alpha)[1]
       if(!is.na(Idxsel)) {
         tsel <- seq(0,100,0.01)[Idxsel]
-        rownames(s.true)[s.true[,j] > t]
+        rownames(s.true)[s.true[,j] > tsel]
       } else NULL
     })
       

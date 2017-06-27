@@ -5,7 +5,7 @@
 \title{Calculate variance explained by the model}
 \usage{
 calculateVarianceExplained(object, views = "all", factors = "all",
-  plotit = T, perFeature = F, orderFactorsbyR2 = T, showtotalR2 = T,
+  plotit = T, perFeature = F, orderFactorsbyR2 = F, showtotalR2 = T,
   showVarComp = F)
 }
 \arguments{

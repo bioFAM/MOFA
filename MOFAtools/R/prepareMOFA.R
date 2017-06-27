@@ -20,8 +20,7 @@ prepareMOFA <- function(object, DirOptions, ModelOptions = NULL, TrainOptions = 
   if (class(object) != "MOFAmodel")
     stop("'object' has to be an instance of MOFAmodel")
   
-  # Create temporary folder to store the input matrices
-  DirOptions$tmpDir <- tempdir()
+  # Create temporary folder to store data
   dir.create(DirOptions$tmpDir, showWarnings = FALSE)
   
   # Store views as matrices in .txt files
@@ -29,6 +28,12 @@ prepareMOFA <- function(object, DirOptions, ModelOptions = NULL, TrainOptions = 
   for(view in viewNames(object)) {
     write.table(t(object@TrainData[[view]]), file=file.path(DirOptions$tmpDir, paste0(view,".txt")),
                 sep=" ", row.names=TRUE, col.names=TRUE, quote=F)
+  }
+  
+  # Store covariates as a .txt file
+  if (!is.null(ModelOptions$covariates)) {
+  write.table(ModelOptions$covariates, file=file.path(DirOptions$tmpDir, "covariates.txt"), 
+              sep=" ", row.names=TRUE, col.names=TRUE, quote=F)
   }
   
   # Get training options
@@ -100,26 +105,23 @@ getDefaultTrainOpts <- function(silent=T) {
 #' @return  list with training options
 #' @export
 #' 
-getDefaultModelOpts <- function(object, silent=T) {
+getDefaultModelOpts <- function(object) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel")
-    stop("'object' has to be an instance of MOFAmodel")
-  if(!.hasSlot(object,"Dimensions") | length(object@Dimensions) == 0)
-    stop("Dimensions of object need to be defined before getting ModelOpts")
-  if(!.hasSlot(object,"InputData"))
-    stop("Input data needs to be specified before getting ModelOpts")
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!.hasSlot(object,"Dimensions") | length(object@Dimensions) == 0) stop("Dimensions of object need to be defined before getting ModelOpts")
+  if (!.hasSlot(object,"InputData")) stop("Input data needs to be specified before getting ModelOpts")
   
   # Guess likelihood type
   likelihood = rep("gaussian", object@Dimensions[["M"]]); names(likelihood) <- viewNames(object)
-  for (view in viewNames(object)) {
-    data <- MultiAssayExperiment::experiments(object@InputData)[[view]]
-    if (all(data %in% c(0,1,NA))) {
-      likelihood[view] <- "bernoulli"
-    } else if (all(data%%1==0)) {
-      likelihood[view] <- "poisson"
-    }
-  }
+  # for (view in viewNames(object)) {
+  #   data <- getTrainData(object, view)
+  #   if (all(data %in% c(0,1,NA))) {
+  #     likelihood[view] <- "bernoulli"
+  #   } else if (all(data%%1==0)) {
+  #     likelihood[view] <- "poisson"
+  #   }
+  # }
   
   # Define default model options
   ModelOptions <- list(
@@ -129,8 +131,7 @@ getDefaultModelOpts <- function(object, silent=T) {
     likelihood = likelihood,
     initialK = 10,
     schedule = c("Y","SW","Z","AlphaW","Theta","Tau"),
-    covariatesFile = NULL,
-    scale_covariates = NULL
+    covariates = NULL
   )
   
   return(ModelOptions)

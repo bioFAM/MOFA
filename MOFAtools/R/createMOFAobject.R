@@ -37,7 +37,7 @@ createMOFAobject <- function(mae, minViews = 1) {
   mae_sub <- mae
   
   # re-arrange data for training in MOFA to matrices, fill in NAs and store in TrainData slot
-  object@TrainData <- lapply(names(mae_sub), function(exp) .subset_augment(mae_sub@ExperimentList[[exp]], sampleMap(mae_sub)$colname))
+  object@TrainData <- lapply(names(mae_sub), function(exp) .subset_augment(assays(mae_sub)[[exp]], sampleMap(mae_sub)[sampleMap(mae_sub)$assay==exp,"colname"]))
 
   # set dimensionalities
   object@Dimensions[["M"]] <- length(object@TrainData)

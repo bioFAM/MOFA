@@ -4,7 +4,7 @@
 \alias{getDefaultModelOpts}
 \title{getDefaultModelOpts: Get default model options}
 \usage{
-getDefaultModelOpts(object, silent = T)
+getDefaultModelOpts(object)
 }
 \arguments{
 \item{object}{untrained MOFA object to get model options for}

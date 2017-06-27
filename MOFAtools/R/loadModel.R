@@ -14,74 +14,78 @@
 #' @importFrom rhdf5 h5read
 #' @export
 
-loadModel <- function(file, model=NULL) {
+loadModel <- function(file, object=NULL) {
   
   message(paste0("Loading the following MOFA model: ", file))
   
-  if(is.null(model)) model <- new("MOFAmodel")
+  if (is.null(object)) object <- new("MOFAmodel")
   
-  # if(.hasSlot(model,"Status") & length(model@Status) !=0)
-  #   if (model@Status == "trained") warning("The specified model is already trained, over-writing training output with new results!")
+  # if(.hasSlot(object,"Status") & length(object@Status) !=0)
+  #   if (object@Status == "trained") warning("The specified object is already trained, over-writing training output with new results!")
   
   # Load expectations and parameters
-  model@Expectations <- h5read(file,"expectations")
-  model@Parameters <- h5read(file,"parameters")
-  model@Status <- "trained"
+  object@Expectations <- h5read(file,"expectations")
+  object@Parameters <- h5read(file,"parameters")
+  object@Status <- "trained"
   
   # Load training statistics
   tryCatch( {
-    model@TrainStats <- h5read(file, 'training_stats',read.attributes=T);
-    colnames(model@TrainStats$elbo_terms) <- attr(h5read(file,"training_stats/elbo_terms", read.attributes=T),"colnames")
+    object@TrainStats <- h5read(file, 'training_stats',read.attributes=T);
+    colnames(object@TrainStats$elbo_terms) <- attr(h5read(file,"training_stats/elbo_terms", read.attributes=T),"colnames")
   }, error = function(x) { print("Training stats not found, not loading it...") })
 
   
   # Load training options
-  # if(.hasSlot(model,"TrainOpts") & length(model@TrainOpts) == 0){
-  #   if(!all(model@TrainOpts == as.list(h5read(file, 'training_opts',read.attributes=T)))) 
-  #     warning("TrainOpts already defined in the model but not in agreement with trained model, over-writting pre-defined TrainOpts")
-  # }
-  tryCatch(model@TrainOpts <- as.list(h5read(file, 'training_opts',read.attributes=T)), error = function(x) { print("Training opts not found, not loading it...") })
-  
+  if (length(object@TrainOpts) == 0) {
+    tryCatch(object@TrainOpts <- as.list(h5read(file, 'training_opts',read.attributes=T)), error = function(x) { print("Training opts not found, not loading it...") })
+  }
+    
   # Load model options
-  # if(.hasSlot(model,"ModelOpts") & length(model@ModelOpts) == 0){
-  #   if(!all(model@ModelOpts == as.list(h5read(file, 'model_opts',read.attributes=T)))) 
-  #     warning("ModelOpts already defined in the model but not in agreement with trained model, over-writting pre-defined ModelOpts")
-  # }
-  tryCatch(model@ModelOpts <- as.list(h5read(file, 'model_opts',read.attributes=T)), error = function(x) { print("Model opts not found, not loading it...") })
+  if (length(object@ModelOpts) == 0) {
+    tryCatch(object@ModelOpts <- as.list(h5read(file, 'model_opts',read.attributes=T)), error = function(x) { print("Model opts not found, not loading it...") })
+  }
   
   # Load training data
+  if (length(object@TrainData) == 0) {
   tryCatch( {
-    TrainingData <- h5read(file,"data")
-    featuredata <- h5read(file,"features")
-    sampledata <- h5read(file,"samples")
-    for (m in names(TrainingData)) {
-      rownames(TrainingData[[m]]) <- sampledata
-      colnames(TrainingData[[m]]) <- featuredata[[m]]
+    TrainData <- h5read(file,"data")
+    featureData <- h5read(file,"features")
+    sampleData <- h5read(file,"samples")
+    for (m in names(TrainData)) {
+      rownames(TrainData[[m]]) <- sampleData
+      colnames(TrainData[[m]]) <- featureData[[m]]
     }
-    TrainingData <- lapply(TrainingData, t)
-    # if(.hasSlot(model,"TrainData") & length(model@TrainData) != 0){
-    #   if(!identical(TrainingData, model@TrainData)) 
-    #     warning("TrainData already defined in the model but not in agreement with trained model, over-writting pre-defined TrainData and Dimensions")
-    # }
-    model@TrainData <- TrainingData
-    model@Dimensions[["M"]] <- length(model@TrainData)
-    model@Dimensions[["N"]] <- ncol(model@TrainData[[1]])
-    model@Dimensions[["D"]] <- sapply(model@TrainData,nrow)
-    model@Dimensions[["K"]] <- ncol(model@Expectations$Z$E)
-    viewNames(model) <- names(model@TrainData)
-    sampleNames(model) <- colnames(model@TrainData[[1]])
-    featureNames(model) <- lapply(model@TrainData,rownames)
-    factorNames(model) <- as.character(1:model@Dimensions[["K"]])
-    # K=tail(training_stats$activeK[!is.nan(training_stats$activeK)],n=1)
-    }, error = function(x) { print("Error loading the data...") })
+    TrainData <- lapply(TrainData, t)
+    object@TrainData <- TrainData
+    }, error = function(x) { print("Error loading the training data...") })
+  }
+  
+  # Load dimensions and names
+  object@Dimensions[["M"]] <- length(object@TrainData)
+  object@Dimensions[["N"]] <- ncol(object@TrainData[[1]])
+  object@Dimensions[["D"]] <- sapply(object@TrainData,nrow)
+  # K=tail(training_stats$activeK[!is.nan(training_stats$activeK)],n=1)
+  object@Dimensions[["K"]] <- ncol(object@Expectations$Z$E)
+  viewNames(object) <- names(object@TrainData)
+  sampleNames(object) <- colnames(object@TrainData[[1]])
+  featureNames(object) <- lapply(object@TrainData,rownames)
+  factorNames(object) <- as.character(1:object@Dimensions[["K"]])
+    
+  # Rename covariates
+  if (object@ModelOpts$learnMean) factorNames(object) <- c("intercept",as.character(1:(object@Dimensions[["K"]]-1)))
+  if (!is.null(object@ModelOpts$covariates)) {
+    if (object@ModelOpts$learnMean) {
+      factorNames(object) <- c("intercept", colnames(object@ModelOpts$covariates), as.character((ncol(object@ModelOpts$covariates)+1:(object@Dimensions[["K"]]-1-ncol(object@ModelOpts$covariates)))))
+    } else {
+      factorNames(object) <- c(colnames(object@ModelOpts$covariates), as.character((ncol(object@ModelOpts$covariates)+1:(object@Dimensions[["K"]]-1))))
+    }
+  }
   
   # Re-name and order factors in order of variance explained and label intercept
-  if(model@ModelOpts$learnMean) factorNames(model) <- c("intercept",as.character(1:(model@Dimensions[["K"]]-1)))
-  r2 <- rowSums(calculateVarianceExplained(model,plotit=F)$R2PerFactor)
-  order_factors <- c("intercept",order(r2, decreasing = T))
-  model <- subsetFactors(model,order_factors)
-  factorNames(model) <-  c("intercept",as.character(1:(model@Dimensions[["K"]]-1)))
+  r2 <- rowSums(calculateVarianceExplained(object,plotit=F)$R2PerFactor)
+  order_factors <- c("intercept",names(r2)[order(r2, decreasing = T)])
+  object <- subsetFactors(object,order_factors)
   
-  return(model)
+  return(object)
 }
 

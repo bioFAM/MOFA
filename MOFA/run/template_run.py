@@ -13,7 +13,7 @@ p.add_argument( '--outFile',           type=str, required=True,                 
 p.add_argument( '--likelihoods',       type=str, nargs='+', required=True,                  help='Likelihoods (bernoulli, gaussian, poisson, binomial)')
 p.add_argument( '--views',             type=str, nargs='+', required=True,                  help='View names')
 p.add_argument( '--covariatesFile',    type=str,                                            help='Input covariate data' )
-p.add_argument( '--scale_covariates',   type=float, nargs='+', default=0,                    help='' )
+p.add_argument( '--scale_covariates',   type=float, nargs='+', default=0,                   help='' )
 p.add_argument( '--schedule',          type=str, nargs="+", required=True,                  help='Update schedule' )
 p.add_argument( '--learnTheta',        type=int, nargs="+", default=0,                      help='learn the sparsity parameter from the spike and slab?' )
 p.add_argument( '--learnMean',         action='store_true',                                 help='learn the feature mean?' )
@@ -92,9 +92,10 @@ D = [data[m].shape[1] for m in xrange(M)]
 
 # Load covariates
 if args.covariatesFile is not None:
-  print "Doesn't work, we need to deal with scale_covariates"
-  exit()
-  data_opts['covariates'] = pd.read_csv(args.covariatesFile, delimiter=" ", header=0)
+  data_opts['covariates'] = pd.read_csv(args.covariatesFile, delimiter=" ", header=0).as_matrix()
+  data_opts['scale_covariates'] = args.scale_covariates
+  assert len(data_opts['scale_covariates']) == data_opts['covariates'].shape[1], "'scale_covariates' has to be the same length as the number of covariates"
+  data_opts['scale_covariates'] = [ bool(x) for x in data_opts['scale_covariates'] ]
   args.factors += data_opts['covariates'].shape[1]
 else:
   data_opts['scale_covariates'] = False
@@ -103,7 +104,9 @@ else:
 # If we want to learn the mean, we add a constant latent variable vector of ones
 if args.learnMean:
   if data_opts['covariates'] is not None:
-    data_opts['covariates'].insert(0, "mean", s.ones(N,))
+    # data_opts['covariates'].insert(0, "mean", s.ones(N,))
+    data_opts['covariates'] = s.insert(data_opts['covariates'], obj=0, values=1, axis=1)
+    data_opts['scale_covariates'].insert(0,False)
   else:
     data_opts['covariates'] = s.ones((N,1))
     data_opts['scale_covariates'] = [False]

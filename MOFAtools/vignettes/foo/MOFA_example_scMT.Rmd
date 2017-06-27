@@ -12,17 +12,78 @@ vignette: >
 ---
 
 ```{r, echo=FALSE, message=FALSE}
-# devtools::load_all("/Users/ricard/mofa/MOFAtools")
-
+devtools::load_all("/Users/ricard/mofa/MOFAtools")
+library(MultiAssayExperiment)
 library(MOFAtools)
 library(data.table)
 library(purrr)
-sample_metadata <- read.table("/Users/ricard/data/scMT/sample_info.txt", header=T) %>% tibble::column_to_rownames("sample")
 ```
 
+# Step 1: Initialize MOFA model
+
+## Load data as a MultiAssayExperiment
 ```{r}
-model <- loadModel("/Users/ricard/scMT/mofa/out/model.hdf5")
+# sample_metadata <- read.table("/Users/ricard/data/scMT/sample_info.txt", header=T) %>% tibble::column_to_rownames("sample")
+mae <- readRDS("/Users/ricard/data/scMT/join/scMT_MultiAssayExperiment.rds")
 ```
+
+## Create MOFA model
+```{r}
+model <- createMOFAobject(mae)
+```
+
+# Step 2: Fit the MOFA model
+
+## Define options
+
+### Define I/O options
+```{r}
+DirOptions <- list(
+  "tmpDir" = tempdir(),
+  "mofaDir" = "/Users/ricard/mofa/MOFA",
+  "outFile" = "/Users/ricard/test.hdf5"
+)
+```
+
+### Define model options
+```{r}
+ModelOptions <- getDefaultModelOpts(model)
+ModelOptions$initialK <- 10
+
+# Define covariates
+ModelOptions$covariates <- colData(mae)[,c("mean_methylation","cell_dropout")]
+stopifnot(all(rownames(ModelOptions$covariates)==sampleNames(model)))
+ModelOptions$scale_covariates <- rep(1,ncol(ModelOptions$covariates))
+```
+
+
+
+### Define training options
+```{r}
+TrainOptions <- getDefaultTrainOpts()
+TrainOptions$maxiter <- 10
+TrainOptions$drop_by_norm <- 0.00
+TrainOptions$drop_by_r2 <- 0.00
+```
+
+## Prepare MOFA
+Internally, prepareMOFA performs a set of sanity checks, fills the TrainOpts and ModelOpts slots of the MOFAmodel model and it also creates a set of temporary files with the input matrices that will be loaded by the Python core implementation
+```{r}
+model <- prepareMOFA(model, 
+                      DirOptions = DirOptions,
+                      ModelOptions = ModelOptions,
+                      TrainOptions = TrainOptions
+)
+```
+
+
+## Run MOFA
+This step can take some time and it decouples from the R package, it is recommended to run it from the Python-based module
+```{r}
+model <- runMOFA(model, DirOptions)
+# model <- loadModel("/Users/ricard/scMT/mofa/out/model.hdf5")
+```
+
 
 # Step 3: Analyse a trained MOFA model
 
@@ -134,7 +195,7 @@ LinePlot_FeatureSetEnrichmentAnalysis(p.values_adj, view="expr", factor="2", thr
 
 <!-- # Cluster samples -->
 <!-- ```{r} -->
-<!-- clusterMOFA(object, factors) -->
+<!-- clusterMOFA(model, factors) -->
 <!-- ``` -->
 
 

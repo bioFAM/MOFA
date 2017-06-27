@@ -21,7 +21,7 @@
 #' @importFrom grDevices colorRampPalette
 #' @export
 
-compareModels <- function(ModelList, comparison="all") {
+compareModels <- function(ModelList, comparison="all", main=NULL, ...) {
   #check inputs
   if(class(ModelList)!="list")
     stop("'ModelList' has to be a list")
@@ -66,9 +66,10 @@ compareModels <- function(ModelList, comparison="all") {
     rownames(modelAnnot) <- colnames(LFscommon)
     
     #plot heatmap
+    if(is.null(main)) main <- "Absolute correlation between latent factors"
     pheatmap(abs(corLFs), show_rownames = F,
              color=colorRampPalette(c("white", "orange" ,"red"))(100), 
-             annotation_col = modelAnnot, main= "Absolute correlation between latent factors")
+             annotation_col = modelAnnot, main= main , ...)
     
     return(corLFs)
     }
@@ -84,9 +85,10 @@ compareModels <- function(ModelList, comparison="all") {
             NA
           }
           else{
+          if(is.null(main)) main <- paste("Absolute correlation between factors in model", i,"and",j)
           corLFs_pairs <- cor(LFs1[common_pairwise,], LFs2[common_pairwise,])
           pheatmap(abs(corLFs_pairs),color=colorRampPalette(c("white", "orange" ,"red"))(100),
-                   main=paste("Absolute correlation between factors in model", i,"and",j))
+                   main=main, ...)
           corLFs_pairs
           }
         })

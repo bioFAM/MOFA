@@ -153,7 +153,7 @@ scatterPlot <- function (object, factors, title = "", titlesize = 16, xlabel = N
     } else {
       stop("'shape_by' was specified but it was not recognised, please read the documentation")
     }
-    colorLegend <- T
+    shapeLegend <- T
   } else {
     shape_by <- rep(TRUE,N)
     shapeLegend <- F

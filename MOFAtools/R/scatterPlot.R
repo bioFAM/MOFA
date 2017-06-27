@@ -153,7 +153,7 @@ scatterPlot <- function (object, factors, title = "", titlesize = 16, xlabel = N
     } else {
       stop("'shape_by' was specified but it was not recognised, please read the documentation")
     }
-    colorLegend <- T
+    shapeLegend <- T
   } else {
     shape_by <- rep(TRUE,N)
     shapeLegend <- F
@@ -163,7 +163,7 @@ scatterPlot <- function (object, factors, title = "", titlesize = 16, xlabel = N
   df = data.frame(x = Z[, factors[1]], y = Z[, factors[2]], shape_by = shape_by, colour_by = colour_by)
   
   # remove values missing color or shape annotation
-  if (!showMissing) df <- df[!((df$shape_by=="NaN") | (df$colour_by=="NaN"))]
+  if (!showMissing) df <- df[!((df$colour_by=="NaN") | (df$shape_by=="NaN")),]
   
   if (is.null(xlabel)) xlabel <- paste("Latent factor", factors[1])
   if (is.null(ylabel)) ylabel <- paste("Latent factor", factors[2])

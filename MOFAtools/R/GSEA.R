@@ -183,7 +183,10 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, factor, threshold=0.
   
   # Filter out pathways
   tmp <- tmp[tmp$pvalue<=threshold,,drop=F]
-  if(nrow(tmp)==0) stop("No siginificant pathways at the specified threshold. For an overview use Heatmap_FeatureSetEnrichmentAnalysis().")
+  if(nrow(tmp)==0) {
+    warning("No siginificant pathways at the specified threshold. For an overview use Heatmap_FeatureSetEnrichmentAnalysis().")
+    return()
+  }
   
   # If there are too many pathways enriched, just keep the 'max_pathways' more significant
   if (nrow(tmp) > max.pathways)

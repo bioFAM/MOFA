@@ -121,7 +121,7 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
           # plot.margin = margin(5,5,5,5),
           plot.title = element_text(size=17, hjust=0.5),
           axis.title.x = element_blank(),
-          axis.text.x = element_text(size=11, angle=90, hjust=1, vjust=0.5, color="black"),
+          axis.text.x = element_text(size=11, angle=60, hjust=1, vjust=1, color="black"),
           axis.text.y = element_text(size=12, color="black"),
           axis.title.y = element_text(size=15),
           axis.line = element_blank(),

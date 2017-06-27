@@ -212,11 +212,11 @@ FSE.out <- FeatureSetEnrichmentAnalysis(
   local.statistic = "loading",
   transformation = "abs.value",
   global.statistic = "mean.diff",
-  # statistical.test = "permutation",
-  statistical.test = "cor.adj.parametric",
-  nperm=5,
+  statistical.test = "permutation",
+  # statistical.test = "cor.adj.parametric",
+  nperm=1000,
   min.size=10,
-  cores=1, 
+  cores=2, 
   alpha=0.05
 )
 

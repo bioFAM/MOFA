@@ -4,11 +4,11 @@
 \alias{showDataScatter}
 \title{showDataScatter: scatterplot of the observed data for the most relevant features for a given factor}
 \usage{
-showDataScatter(model, view, factor, nfeatures = 50, colour_by = NULL,
+showDataScatter(object, view, factor, nfeatures = 50, colour_by = NULL,
   shape_by = NULL, xlabel = "", ylabel = "")
 }
 \arguments{
-\item{model}{a fitted MOFA model}
+\item{object}{a fitted MOFA model}
 
 \item{view}{name of view}
 

@@ -75,10 +75,12 @@ loadModel <- function(file, model=NULL) {
     # K=tail(training_stats$activeK[!is.nan(training_stats$activeK)],n=1)
     }, error = function(x) { print("Error loading the data...") })
   
-  # Re-name factors in order of variance explained and label intercept
+  # Re-name and order factors in order of variance explained and label intercept
   if(model@ModelOpts$learnMean) factorNames(model) <- c("intercept",as.character(1:(model@Dimensions[["K"]]-1)))
   r2 <- rowSums(calculateVarianceExplained(model,plotit=F)$R2PerFactor)
-  factorNames(model)[factorNames(model)!="intercept"] <- match(factorNames(model)[factorNames(model)!="intercept"],order(r2, decreasing = T))
+  order_factors <- c("intercept",order(r2, decreasing = T))
+  model <- subsetFactors(model,order_factors)
+  factorNames(model) <-  c("intercept",as.character(1:(model@Dimensions[["K"]]-1)))
   
   return(model)
 }

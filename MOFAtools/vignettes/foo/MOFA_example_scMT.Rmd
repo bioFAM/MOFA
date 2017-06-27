@@ -14,46 +14,12 @@ vignette: >
 ```{r, echo=FALSE, message=FALSE}
 # devtools::load_all("/Users/ricard/mofa/MOFAtools")
 
-library(MultiAssayExperiment)
-library(reshape)
-library(ggplot2)
+library(MOFAtools)
+library(data.table)
 library(purrr)
-
 sample_metadata <- read.table("/Users/ricard/data/scMT/sample_info.txt", header=T) %>% tibble::column_to_rownames("sample")
 ```
 
-# Step 1: Initialize MOFA object
-
-## Load data
-```{r}
-```
-
-## Create MOFA object
-The input data is stored in the InputData slot of the MOFA object.
-```{r}
-```
-
-# Step 2: Fit the MOFA model
-
-## Define options
-
-### Define I/O options
-```{r}
-```
-
-### Define model options
-```{r}
-```
-
-### Define training options
-```{r}
-```
-
-## Prepare MOFA
-```{r}
-```
-
-## Run MOFA
 ```{r}
 model <- loadModel("/Users/ricard/scMT/mofa/out/model.hdf5")
 ```
@@ -63,17 +29,15 @@ model <- loadModel("/Users/ricard/scMT/mofa/out/model.hdf5")
 ## Show the variance explained for each factor in each view
 ```{r, fig.height=7, fig.width=7}
 r2 <- calculateVarianceExplained(model, views="all", factors="all", plotit=T, perFeature=F, 
-                           orderFactorsbyR2=T, showtotalR2=F)
+                           orderFactorsbyR2=F, showtotalR2=F)
 ```
+
 
 ## Scatterplots of pairs of latent variables
 ```{r}
 # culture <- sample_metadata[sampleNames(model),]$culture
-# scatterPairs(model, factors = c("1","2","3","4"))
+scatterPairs(model, factors = c("1","2","3","4"))
 scatterPlot(model, idx="2", idy="3")
-
-
-
 ```
 
 ### Correlation of latent variables

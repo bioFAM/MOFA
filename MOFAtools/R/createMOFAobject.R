@@ -25,16 +25,17 @@ createMOFAobject <- function(mae, minViews = 1) {
   ##=== arrange to matrices in TrainData====
   
   # find samples which have been onserved in less than minViews
-  if(!minViews %in% 1: length(mae))
-    stop("'minViews' needs to be in 1 : number of experiments in 'mae'")
-  sub <- combn(1:length(mae), minViews)
-  samples2include <- apply(apply(sub, 2, function(s) complete.cases(mae[,,s])), 1, any)
+  # if(!minViews %in% 1: length(mae))
+  #   stop("'minViews' needs to be in 1 : number of experiments in 'mae'")
+  # sub <- combn(1:length(mae), minViews)
+  # samples2include <- apply(apply(sub, 2, function(s) complete.cases(mae[,,s])), 1, any)
 
   # drop samples which have been onserved in less than minViews
-  mae_sub <- mae[,samples2include,]
-  if(minViews>1)
-    message(paste("Removing ", sum(!samples2include), " sample not present in at least 'minViews'= ", minViews, ". Remaing samples for training: ", sum(samples2include), sep=""))
-
+  # mae_sub <- mae[,samples2include,]
+  # if(minViews>1)
+  #   message(paste("Removing ", sum(!samples2include), " sample not present in at least 'minViews'= ", minViews, ". Remaing samples for training: ", sum(samples2include), sep=""))
+  mae_sub <- mae
+  
   # re-arrange data for training in MOFA to matrices, fill in NAs and store in TrainData slot
   object@TrainData <- lapply(names(mae_sub), function(exp) .subset_augment(mae_sub@ExperimentList[[exp]], sampleMap(mae_sub)$colname))
 

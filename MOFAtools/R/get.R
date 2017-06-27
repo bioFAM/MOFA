@@ -3,6 +3,24 @@
 ## User-friendly functions to get data from the model ##
 ########################################################
 
+#' @rdname getCovariates
+#' @name getCovariates
+#' @title wraper to extract covariates from the MultiAssayExperiment stored in the InputData slot
+#' @description to-fill
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @param names: names of the covariates
+#' @export
+#' 
+getCovariates <- function(object, names) {
+  
+  # Sanity checks
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
+  stopifnot(all(names %in% colnames(colData(object@InputData))))
+  
+  return(colData(object@InputData)[,names])
+  
+}
+
 #' @rdname getTrainData
 #' @name getTrainData
 #' @title wraper to fetch training data from the model
@@ -30,6 +48,8 @@ getTrainData <- function(object, views="all", as.data.frame=F) {
   if (as.data.frame) {
     tmp <- lapply(views, function(m) { tmp <- reshape2::melt(trainData[[m]]); colnames(tmp) <- c("sample","feature","value"); tmp <- cbind(view=m,tmp); return(tmp) })
     trainData <- do.call(rbind,tmp)
+  } else if ((length(views)==1) && (as.data.frame==F)) {
+    trainData <- trainData[[view]]
   }
   
   return(trainData)

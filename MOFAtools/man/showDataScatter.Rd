@@ -2,10 +2,10 @@
 % Please edit documentation in R/showData.R
 \name{showDataScatter}
 \alias{showDataScatter}
-\title{showDataScatter: scatterplot of the observed values for the most relevant features for a given factor}
+\title{showDataScatter: scatterplot of the observed data for the most relevant features for a given factor}
 \usage{
 showDataScatter(model, view, factor, nfeatures = 50, colour_by = NULL,
-  shape_by = NULL, ...)
+  shape_by = NULL, xlabel = "", ylabel = "")
 }
 \arguments{
 \item{model}{a fitted MOFA model}
@@ -17,8 +17,6 @@ showDataScatter(model, view, factor, nfeatures = 50, colour_by = NULL,
 \item{nfeatures}{total number of features (default=???)}
 
 \item{shape_by}{vector}
-
-\item{...}{further arguments that can be passed to ...?}
 
 \item{color_by}{vector}
 }

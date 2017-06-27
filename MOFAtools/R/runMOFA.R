@@ -32,14 +32,14 @@ runMOFA <- function(object, DirOptions) {
   #             object@TrainOpts$drop_by_r2, MOFAdir, ifelse(object@ModelOpts$learnMean,"\n--learnMean","")), file = file.path(dir,"run.sh"))
   # 
   
-  tmpDir <- tempdir()
-  
   command <- paste(sep=" ",
   "python", paste0(DirOptions$mofaDir,"/run/template_run.py"),
-  "--inFiles", paste(paste0(tmpDir, "/", viewNames(object), ".txt"), collapse = " "),
+  "--inFiles", paste(paste0(DirOptions$tmpDir, "/", viewNames(object), ".txt"), collapse = " "),
   "--outFile", DirOptions$outFile,
   "--views", paste(viewNames(object), collapse=" "),
   "--likelihoods", paste(object@ModelOpts$likelihood, collapse=" "),
+  "--learnTheta", paste(object@ModelOpts$learnTheta, collapse=" "),
+  "--initTheta", paste(object@ModelOpts$initTheta, collapse=" "),
   "--schedule", paste(object@ModelOpts$schedule, collapse=" "),
   "--ntrials", object@TrainOpts$trials,
   "--ncores", object@TrainOpts$cores,
@@ -54,11 +54,12 @@ runMOFA <- function(object, DirOptions) {
   )
   
   if (!is.null(object@ModelOpts$covariatesFile)) {
-    command <- paste(command, "--covariatesFile", object@ModelOpts$covariatesFile, sep=" ")
+    command <- paste(command, 
+                     "--covariatesFile", object@ModelOpts$covariatesFile, sep=" ",
+                     "--scale_covariates", paste(ModelOpts$scale_covariates, sep=" ")
+                     )
   }
-  if (object@ModelOpts$learnTheta == T) {
-    command <- paste(command, "--learnTheta", sep=" ")
-  }
+  
   if (object@TrainOpts$forceiter == T) {
     command <- paste(command, "--nostop", sep=" ")
   }

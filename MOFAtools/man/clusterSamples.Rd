@@ -2,14 +2,18 @@
 % Please edit documentation in R/clusterSamples.R
 \name{clusterSamples}
 \alias{clusterSamples}
-\title{Cluster samples in a MOFA model based on latent factors}
+\title{Hierarchical clustering on samples based on latent factors}
 \usage{
-clusterSamples(object, factors = "all", anno_df = NULL, main = NULL)
+clusterSamples(object, factors = "all", anno_df = NULL, main = NULL, ...)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
 \item{factors}{factors to use for the clustering}
+
+\item{anno_df}{annotation data frame that will be passed to pheatmap}
+
+\item{main}{title of the plot}
 }
 \value{
 A hclust object containing the clustering of the samples
@@ -18,5 +22,5 @@ A hclust object containing the clustering of the samples
 fill this
 }
 \details{
-asd
+If only one factor (...). Plots heatmap
 }

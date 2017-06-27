@@ -2,7 +2,7 @@
 % Please edit documentation in R/showWeights.R
 \name{showWeights}
 \alias{showWeights}
-\title{showWeights: plot weights for a certain factor and view in a dotplot}
+\title{showWeights: visualise the loadings for a certain factor in a given view}
 \usage{
 showWeights(model, view, factor, ntop = 0, ntail = 0, manual = NULL,
   th = NULL, ntotal = 10, FeatureGroups = NULL,
@@ -13,13 +13,13 @@ showWeights(model, view, factor, ntop = 0, ntail = 0, manual = NULL,
 
 \item{view}{name of view from which to get the corresponding weights}
 
-\item{factor}{factor to plot weights for}
+\item{factor}{name of the factor}
 
 \item{ntop}{number of highest positive weights to label}
 
 \item{ntail}{number of lowest negative weights to label}
 
-\item{manual}{feautre names which are labeled in the plot}
+\item{manual}{feature names which are labeled in the plot}
 
 \item{th}{threshold on the absolute value beyond which weigths are labeled}
 

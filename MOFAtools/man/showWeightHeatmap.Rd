@@ -5,7 +5,7 @@
 \title{showWeightHeatmap: show heatmap of the factor loadings in a specific view}
 \usage{
 showWeightHeatmap(model, view, features = "all", factors = "all",
-  RemoveIntercept = T, main = NULL, color = NULL, breaks = NULL)
+  RemoveIntercept = T, main = NULL, color = NULL, breaks = NULL, ...)
 }
 \arguments{
 \item{model}{a MOFA model}
@@ -17,6 +17,12 @@ showWeightHeatmap(model, view, features = "all", factors = "all",
 \item{factors}{name of the factors to include (default: "all")}
 
 \item{RemoveIntercept}{boolean wether to include the intercept factor if present in the model (by default not included)}
+
+\item{main}{asd}
+
+\item{color}{asd}
+
+\item{breaks}{asd}
 
 \item{...}{further arguments that can be passed to pheatmap}
 }

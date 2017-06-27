@@ -4,7 +4,8 @@
 \alias{Heatmap_FeatureSetEnrichmentAnalysis}
 \title{Heatmap of Feature Set Enrichment Analysis results}
 \usage{
-Heatmap_FeatureSetEnrichmentAnalysis(p.values, threshold = 0.05, ...)
+Heatmap_FeatureSetEnrichmentAnalysis(p.values, threshold = 0.05, log = T,
+  ...)
 }
 \arguments{
 \item{p.values}{output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are gene sets and columns are latent variables}

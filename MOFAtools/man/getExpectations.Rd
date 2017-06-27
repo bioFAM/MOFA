@@ -4,14 +4,16 @@
 \alias{getExpectations}
 \title{wraper to fetch particular expectations from the model}
 \usage{
-getExpectations(object, variable, expectation)
+getExpectations(object, variable, expectation, as.data.frame = F)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
 \item{variable:}{variable name ('SW')}
 
-\item{expectation_name:}{expectation name ('E')}
+\item{expectation:}{expectation name ('E')}
+
+\item{as.data.frame:}{output the result as a long data frame?}
 }
 \description{
 to-fill

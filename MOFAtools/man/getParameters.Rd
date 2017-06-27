@@ -4,14 +4,16 @@
 \alias{getParameters}
 \title{wraper to fetch particular parameters from the model}
 \usage{
-getParameters(object, variable, parameter)
+getParameters(object, variable, parameter, as.data.frame = F)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{variable:}{variable name ('SW')}
+\item{variable:}{variable name ('AlphaW')}
 
-\item{parameter_name:}{parameter name ('E')}
+\item{parameter:}{parameter name ('a')}
+
+\item{as.data.frame:}{output the result as a long data frame?}
 }
 \description{
 to-fill

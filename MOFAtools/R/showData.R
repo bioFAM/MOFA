@@ -6,7 +6,7 @@
 #' @title showDataHeatmap: heatmap of the observed data of the most relevant features for a given factor
 #' @name showDataHeatmap
 #' @description Function to plot a heatmap of the original data using the most relevant features of a given latent variables
-#' @param model a fitted MOFA model
+#' @param object a fitted MOFA model
 #' @param view name of view
 #' @param factor factor
 #' @param nfeatures total number of features, sorted by weight (default=???)
@@ -15,29 +15,29 @@
 #' @return fill this
 #' @import pheatmap
 #' @export
-showDataHeatmap <- function(model, view, factor, nfeatures=50, main=NULL, ...) {
+showDataHeatmap <- function(object, view, factor, nfeatures=50, main=NULL, ...) {
   
   # Sanity checks
-  if (class(model) != "MOFAmodel") stop("'model' has to be an instance of MOFAmodel")
-  stopifnot(view %in% viewNames(model))
-  stopifnot(factor %in% factorNames(model)) 
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  stopifnot(view %in% viewNames(object))
+  stopifnot(factor %in% factorNames(object)) 
   
   # Collect relevant expectations
-  W <- getExpectations(model,"SW","E")[[view]][,factor]
+  W <- getExpectations(object,"SW","E")[[view]][,factor]
   
   # Define features
   features <- names(tail(sort(abs(W)), n=nfeatures))
-  stopifnot(all(features %in% featureNames(model)[[view]]))
+  stopifnot(all(features %in% featureNames(object)[[view]]))
   
   # Get trainign data
-  data <- getTrainData(model, view)
+  data <- getTrainData(object, view)
   
   # Ignore samples with full missing views
   data <- data[,apply(data, 2, function(x) !all(is.na(x)))]
   
   # Plot heatmap
-  # if(is.null(main)) main <- paste(view, "values on top weighted feautres for factor", factor)
-  pheatmap::pheatmap(t(data[features,]), fontsize = 15, main=main, ...)
+  if(is.null(main)) main <- paste(view, "observations for the top weighted features of factor", factor)
+  pheatmap::pheatmap(t(data[features,]), fontsize = 14, main=main, ...)
 }
 
 
@@ -45,7 +45,7 @@ showDataHeatmap <- function(model, view, factor, nfeatures=50, main=NULL, ...) {
 #' @title showDataScatter: scatterplot of the observed data for the most relevant features for a given factor
 #' @name showDataScatter
 #' @description Function to plot a scatterplot of the observed values for the most relevant features for a given factor
-#' @param model a fitted MOFA model
+#' @param object a fitted MOFA model
 #' @param view name of view
 #' @param factor factor
 #' @param nfeatures total number of features (default=???)
@@ -56,21 +56,21 @@ showDataHeatmap <- function(model, view, factor, nfeatures=50, main=NULL, ...) {
 #' @import ggplot2
 #' @export
 
-showDataScatter <- function(model, view, factor, nfeatures=50, colour_by=NULL, shape_by=NULL,
+showDataScatter <- function(object, view, factor, nfeatures=50, colour_by=NULL, shape_by=NULL,
                             xlabel="", ylabel="") {
   
   # Sanity checcks
-  if (class(model) != "MOFAmodel") stop("'model' has to be an instance of MOFAmodel")
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(factor)==1)
   stopifnot(length(view)==1)
-  if (!factor %in% factorNames(model)) stop(sprintf("The factor %s is not present in the model",factor))
-  if (!view %in% viewNames(model)) stop(sprintf("The view %s is not present in the model",view))
+  if (!factor %in% factorNames(object)) stop(sprintf("The factor %s is not present in the object",factor))
+  if (!view %in% viewNames(object)) stop(sprintf("The view %s is not present in the object",view))
   
   # Collect data
-  N <- model@Dimensions[["N"]]
-  z <- getExpectations(model, "Z", "E")[,factor]
-  w <- getExpectations(model, "SW", "E")[[view]][,factor]
-  Y <- model@TrainData[[view]]
+  N <- object@Dimensions[["N"]]
+  z <- getExpectations(object, "Z", "E")[,factor]
+  w <- getExpectations(object, "SW", "E")[[view]][,factor]
+  Y <- object@TrainData[[view]]
   
   # Select top features (by absolute value)
   features <- names(tail(sort(abs(w)), n=nfeatures))

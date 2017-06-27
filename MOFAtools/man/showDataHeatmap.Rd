@@ -2,7 +2,7 @@
 % Please edit documentation in R/showData.R
 \name{showDataHeatmap}
 \alias{showDataHeatmap}
-\title{showDataHeatmap: heatmap of the observed values of the most relevant features for a given factor}
+\title{showDataHeatmap: heatmap of the observed data of the most relevant features for a given factor}
 \usage{
 showDataHeatmap(model, view, factor, nfeatures = 50, main = NULL, ...)
 }
@@ -18,7 +18,7 @@ showDataHeatmap(model, view, factor, nfeatures = 50, main = NULL, ...)
 \item{...}{further arguments that can be passed to pheatmap}
 }
 \value{
-pheatmap model
+fill this
 }
 \description{
 Function to plot a heatmap of the original data using the most relevant features of a given latent variables

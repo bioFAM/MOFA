@@ -21,6 +21,7 @@ prepareMOFA <- function(object, DirOptions, ModelOptions = NULL, TrainOptions = 
     stop("'object' has to be an instance of MOFAmodel")
   
   # Create temporary folder to store the input matrices
+  DirOptions$tmpDir <- tempdir()
   dir.create(DirOptions$tmpDir, showWarnings = FALSE)
   
   # Store views as matrices in .txt files
@@ -81,7 +82,7 @@ getDefaultTrainOpts <- function(silent=T) {
     startdrop = 5,       # Initial iteration to start dropping factors
     freqdrop = 1,        # Frequency of dropping latent factors
     drop_by_norm = 0.00,  # Option to drop latent factors: minimum norm threshold
-    # drop_by_cor = NA,   # Option to drop latent factors: maximum correlation between two factors
+    # drop_by_cor = NA,   # (NOT IMPLEMENTED) Option to drop latent factors: maximum correlation between two factors
     drop_by_r2 = 0.00,   # Option to drop latent factors: minimum coefficient of determination (percentage of variance explained in at least one view)
     
     verbosity = 2,       # Verbosity (TO BE DEFINED)
@@ -123,13 +124,14 @@ getDefaultModelOpts <- function(object, silent=T) {
   # Define default model options
   ModelOptions <- list(
     learnMean = TRUE,
-    learnTheta = TRUE,
+    learnTheta = rep(1,object@Dimensions[["M"]]),
+    initTheta = rep(0.5,object@Dimensions[["M"]]),
     likelihood = likelihood,
     initialK = 10,
     schedule = c("Y","SW","Z","AlphaW","Theta","Tau"),
-    covariatesFile = NULL
+    covariatesFile = NULL,
+    scale_covariates = NULL
   )
   
-  if(!silent) message("Using gaussian liklihoods for all views by default, change liklihood entry in ModelOpts to accomodate non-gaussian views. SCHEDULE")
   return(ModelOptions)
 }

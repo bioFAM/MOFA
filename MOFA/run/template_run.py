@@ -13,11 +13,12 @@ p.add_argument( '--outFile',           type=str, required=True,                 
 p.add_argument( '--likelihoods',       type=str, nargs='+', required=True,                  help='Likelihoods (bernoulli, gaussian, poisson, binomial)')
 p.add_argument( '--views',             type=str, nargs='+', required=True,                  help='View names')
 p.add_argument( '--covariatesFile',    type=str,                                            help='Input covariate data' )
+p.add_argument( '--scale_covariates',   type=float, nargs='+', default=0,                    help='' )
 p.add_argument( '--schedule',          type=str, nargs="+", required=True,                  help='Update schedule' )
-p.add_argument( '--learnTheta',        type=int, nargs="+", default=0,                       help='learn the sparsity parameter from the spike and slab?' )
+p.add_argument( '--learnTheta',        type=int, nargs="+", default=0,                      help='learn the sparsity parameter from the spike and slab?' )
 p.add_argument( '--learnMean',         action='store_true',                                 help='learn the feature mean?' )
-p.add_argument( '--initTheta',         type=float, nargs="+", default=0.5 ,                            help='hyperparameter theta in case that learnTheta is set to False')
-p.add_argument( '--ThetaDir',          type=str, default="" ,                                help='BLABLA')
+p.add_argument( '--initTheta',         type=float, nargs="+", default=0.5 ,                 help='hyperparameter theta in case that learnTheta is set to False')
+p.add_argument( '--ThetaDir',          type=str, default="" ,                               help='BLABLA')
 p.add_argument( '--tolerance',         type=float, default=0.1 ,                            help='tolerance for convergence (deltaELBO)')
 p.add_argument( '--startDrop',         type=int, default=5 ,                                help='First iteration to start dropping factors')
 p.add_argument( '--freqDrop',          type=int, default=1 ,                                help='Frequency for dropping factors')
@@ -91,10 +92,13 @@ D = [data[m].shape[1] for m in xrange(M)]
 
 # Load covariates
 if args.covariatesFile is not None:
-    data_opts['covariates'] = pd.read_csv(args.covariatesFile, delimiter=" ", header=0)
-    args.factors += data_opts['covariates'].shape[1]
+  print "Doesn't work, we need to deal with scale_covariates"
+  exit()
+  data_opts['covariates'] = pd.read_csv(args.covariatesFile, delimiter=" ", header=0)
+  args.factors += data_opts['covariates'].shape[1]
 else:
-    data_opts['covariates'] = None
+  data_opts['scale_covariates'] = False
+  data_opts['covariates'] = None
 
 # If we want to learn the mean, we add a constant latent variable vector of ones
 if args.learnMean:
@@ -102,6 +106,7 @@ if args.learnMean:
     data_opts['covariates'].insert(0, "mean", s.ones(N,))
   else:
     data_opts['covariates'] = s.ones((N,1))
+    data_opts['scale_covariates'] = [False]
   args.factors += 1
 
 # Load known annotations

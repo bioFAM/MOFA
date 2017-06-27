@@ -88,9 +88,9 @@ beeswarmPlot <- function(object, factor, label = NULL, color = NULL, color_name=
   
   if (is.null(label)) { label <- paste("Latent factor", factor) }
   if (is.null(color)) { 
-    col <- rep("1",N) 
+    color <- rep("1",N) 
   } 
-  beeswarm::beeswarm(Z[,factor], pwcol = col, pch = 16, ylab = label, xlab = "")
+  beeswarm::beeswarm(Z[,factor], pwcol = color, pch = 16, ylab = label, xlab = "")
   
   if(!is.null(color) & legend==T) {
     legend("topright", legend = levels(col), title = color_name, pch = 16, col = 1:length(levels(color)))
@@ -125,8 +125,16 @@ scatterPlot <- function (object, factors, title = "", titlesize = 16, xlabel = N
   
   # Set color
   if (!is.null(colour_by)) {
-    stopifnot(length(unique(colour_by)) > 1)
-    stopifnot(length(colour_by) == N)
+    # It is the name of a covariate 
+    if (length(colour_by) == 1 & is.character(colour_by)) {
+      colour_by <- as.factor(getCovariates(object, colour_by))
+    # It is a vector of length N
+    } else if (length(colour_by) > 1) {
+      stopifnot(length(colour_by) == N)
+      colour_by <- as.factor(colour_by)
+    } else {
+      stop("'colour_by' was specified but it was not recognised, please read the documentation")
+    }
     colorLegend <- T
   } else {
     colour_by <- rep(TRUE,N)
@@ -135,12 +143,19 @@ scatterPlot <- function (object, factors, title = "", titlesize = 16, xlabel = N
   
   # Set shape
   if (!is.null(shape_by)) {
-    stopifnot(length(unique(shape_by)) > 1)
-    stopifnot(length(shape_by) == N)
-    stopifnot(is.character(shape_by) | is.factor(shape_by))
-    shapeLegend <- T
+    # It is the name of a covariate 
+    if (length(shape_by) == 1 & is.character(shape_by)) {
+      shape_by <- as.factor(getCovariates(object, shape_by))
+    # It is a vector of length N
+    } else if (length(shape_by) > 1) {
+      stopifnot(length(shape_by) == N)
+      shape_by <- as.factor(shape_by)
+    } else {
+      stop("'shape_by' was specified but it was not recognised, please read the documentation")
+    }
+    colorLegend <- T
   } else {
-    shape_by <- rep(TRUE, N)
+    shape_by <- rep(TRUE,N)
     shapeLegend <- F
   }
   
@@ -224,19 +239,38 @@ scatterPairs <- function(object, factors = "all", showMissing=T,
   
   # Set color
   if (!is.null(colour_by)) {
-    stopifnot(length(unique(colour_by)) > 1)
-    stopifnot(length(colour_by) == N)
+    # It is the name of a covariate 
+    if (length(colour_by) == 1 & is.character(colour_by)) {
+      colour_by <- as.factor(getCovariates(object, colour_by))
+      # It is a vector of length N
+    } else if (length(colour_by) > 1) {
+      stopifnot(length(colour_by) == N)
+      colour_by <- as.factor(colour_by)
+    } else {
+      stop("'colour_by' was specified but it was not recognised, please read the documentation")
+    }
+    colorLegend <- T
   } else {
     colour_by <- rep(TRUE,N)
+    colorLegend <- F
   }
   
   # Set shape
   if (!is.null(shape_by)) {
-    stopifnot(length(unique(shape_by)) > 1)
-    stopifnot(length(shape_by) == N)
-    stopifnot(is.character(shape_by) | is.factor(shape_by))
+    # It is the name of a covariate 
+    if (length(shape_by) == 1 & is.character(shape_by)) {
+      shape_by <- as.factor(getCovariates(object, shape_by))
+      # It is a vector of length N
+    } else if (length(shape_by) > 1) {
+      stopifnot(length(shape_by) == N)
+      shape_by <- as.factor(shape_by)
+    } else {
+      stop("'shape_by' was specified but it was not recognised, please read the documentation")
+    }
+    colorLegend <- T
   } else {
-    shape_by <- rep(TRUE, N)
+    shape_by <- rep(TRUE,N)
+    shapeLegend <- F
   }
 
   # Remove missing values

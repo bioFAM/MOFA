@@ -12,8 +12,8 @@ vignette: >
 ---
 
 ```{r}
-devtools::load_all("/Users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFAtools/")
-devtools::load_all("/Users/ricard/mofa/MOFAtools")
+# devtools::load_all("/Users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFAtools/")
+# devtools::load_all("/Users/ricard/mofa/MOFAtools")
 library(MultiAssayExperiment)
 library(MOFAtools)
 # %<>%, we should not use it or require the package...
@@ -36,17 +36,27 @@ CLL_omics <-  lapply( CLL_views[c("lincRNA","meth","miRNA","mRNA","mut","viab")]
 
 # Define pData
 covariates <- data.frame(
+  row.names = colnames(CLL_views[["covariates"]]),
   sex = CLL_views[["covariates"]][1,], 
   diagnosis = CLL_views[["covariates"]][2,],
   IGHV = CLL_views[["mut"]]["IGHV",],
   trisomy12 = CLL_views[["mut"]]["trisomy12",]
 )
 
-# Define sampleMap
-# (...)
+# Define sampleMap (in this case is just identity, we don't need to do this)
+# mRNAmap <- data.frame(primary=colnames(CLL_views[["mRNA"]]), assay=colnames(CLL_views[["mRNA"]]), stringsAsFactors = FALSE)
+# miRNAmap <- data.frame(primary=colnames(CLL_views[["miRNA"]]), assay=colnames(CLL_views[["miRNA"]]), stringsAsFactors = FALSE)
+# lincRNAmap <- data.frame(primary=colnames(CLL_views[["lincRNA"]]), assay=colnames(CLL_views[["lincRNA"]]), stringsAsFactors = FALSE)
+# methmap <- data.frame(primary=colnames(CLL_views[["meth"]]), assay=colnames(CLL_views[["meth"]]), stringsAsFactors = FALSE)
+# mutmap <- data.frame(primary=colnames(CLL_views[["mut"]]), assay=colnames(CLL_views[["mut"]]), stringsAsFactors = FALSE)
+# viabmap <- data.frame(primary=colnames(CLL_views[["viab"]]), assay=colnames(CLL_views[["viab"]]), stringsAsFactors = FALSE)
+# listmap <- list(mRNAmap, miRNAmap, lincRNAmap, methmap, mutmap, viabmap)
+# names(listmap) <- c("mRNA", "miRNA", "lincRNA", "Methylation","Mutations","Drugs")
+# dfmap <- listToMap(listmap)
 
 # Create MultiAssayExperiment object
-mae_CLL <- MultiAssayExperiment(experiments = CLL_omics, pData = covariates)
+# mae_CLL <- MultiAssayExperiment(experiments = CLL_omics, pData = covariates)
+mae_CLL <- MultiAssayExperiment(experiments = CLL_omics, colData = covariates)
 ```
 
 ### Create MOFA object using MultiAssayExperiment
@@ -56,7 +66,7 @@ object <- createMOFAobject(mae_CLL)
 
 ### Create MOFA object using list of matrices
 ```{r}
-object <- createMOFAobjectFromList(ExpList = CLL_omics, pData = covariates)
+# object <- createMOFAobjectFromList(ExpList = CLL_omics, pData = covariates)
 ```
 
 # Step 2: Fit the MOFA model
@@ -66,7 +76,7 @@ object <- createMOFAobjectFromList(ExpList = CLL_omics, pData = covariates)
 ### Define I/O options
 Important:
 - mofaDir: directory of the MOFA package
-- outFile: Output file for the model (.hdf5 extension)
+- outFile: Output file for the model
 ```{r}
 DirOptions <- list(
   "mofaDir" = "/Users/ricard/mofa/MOFA",
@@ -108,7 +118,7 @@ object <- prepareMOFA(object,
 ## Run MOFA
 This step can take some time and it decouples from the R package, it is recommended to run it from the Python-based module
 ```{r}
-# object <- runMOFA(object, DirOptions)
+object <- runMOFA(object, DirOptions)
 # object <- readRDS(DirOptions$outFile)
 
 #for demonstration purposes use already fitted object
@@ -121,16 +131,16 @@ object <- loadModel("/Users/ricard/data/CLL/out/test_final/common_small_noXY_all
 
 ## Show the variance explained for each factor in each view
 ```{r}
-calculateVarianceExplained(object)
-calculateVarianceExplained(object, showtotalR2 = T, showVarComp = F)
+r2 <- calculateVarianceExplained(object)
+r2 <- calculateVarianceExplained(object, showtotalR2 = T, showVarComp = F)
 ```
 
 ## Inspect latent facotrs
 Scatterplots of pairs of latent variables and beeswarm/histogram fo single LFs
 ```{r}
-scatterPairs(object, factors = c("4","8"), showMissing = F, colour_by =  data$mut["IGHV",], colour_name = "IGHV")
-scatterPlot(object, "4", "8", colour_by = as.factor(data$mut["IGHV",]), name_colour = "IGHV")
-beeswarmPlot(object, "4", groups = as.factor(data$mut["IGHV",]), groupname = "IGHV" )
+ighv <- as.factor(TrainData(object)[["mut"]]["IGHV",])
+scatterPairs(object, factors = c("4","8"), showMissing = F, colour_by = ighv, colour_name = "IGHV")
+beeswarmPlot(object, factor="4", color = ighv, color_name = "IGHV")
 # histPlot(object, "4", groups = as.factor(data$mut["IGHV",]), name_colour ="IGHV" )
 ```
 

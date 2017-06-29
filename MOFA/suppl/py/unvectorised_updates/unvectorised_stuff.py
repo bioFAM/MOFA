@@ -14,24 +14,24 @@ elbo of W part of SW
 ## Non-vectorised update for Z (with clusters) and with general tau ##
 ######################################################################
 
-# D = SW.shape[0]
-# K = SW.shape[1]
-# N = Y.shape[0]
-# for n in xrange(N):
-#     for k in xrange(K):
-#         # Variance
-#         tmp = 0
-#         for d in xrange(D):
-#             if not s.isnan(Y[n,d]):   
-#                 tmp += tau[n,d]*SWW[d,k]
-#         Qvar[n,k] = 1./(tmp + Alpha[n,k])
+        # Qvar = Qvar_copy
+        # Qmean = Qmean_copy
+        # K = self.dim[1]
+        # for n in xrange(self.N):
+        #     for k in latent_variables:
+        #         # Variance
+        #         foo = 0
+        #         bar = 0
+        #         for m in xrange(M):
+        #             D = SWtmp[m]["E"].shape[0]
+        #             for d in xrange(D):
+        #                 if not s.isnan(Y[m].data[n,d]):   
+        #                     foo += tau[m][n,d]*SWtmp[m]["ESWW"][d,k]
+        #                     bar += Alpha[n,k]*Mu[n,k] + tau[m][n,d]*SWtmp[m]["E"][d,k] * (Y[m][n,d] - s.sum(SWtmp[m]["E"][d,s.arange(K)!=k]*Qmean[n,s.arange(K)!=k]))
+        #         Qvar[n,k] = 1./(foo + Alpha[n,k])
 
-#         # Mean
-#         tmp = 0
-#         for d in xrange(D):
-#             if not s.isnan(Y[n,d]):
-#                 tmp += Alpha[n,k]*Mu[0,k] + tau[n,d]*SW[d,k] * (Y[n,d] - s.sum(SW[d,s.arange(K)!=k]*Qmean[n,s.arange(K)!=k]))
-#         Qmean[n,k] = Qvar[n,k]*tmp
+        #         # Mean
+        #         Qmean[n,k] = Qvar[n,k] * bar
 
 ##################################
 ## Non-vectorised update of Tau ##

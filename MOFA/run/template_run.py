@@ -13,11 +13,12 @@ p.add_argument( '--outFile',           type=str, required=True,                 
 p.add_argument( '--likelihoods',       type=str, nargs='+', required=True,                  help='Likelihoods (bernoulli, gaussian, poisson, binomial)')
 p.add_argument( '--views',             type=str, nargs='+', required=True,                  help='View names')
 p.add_argument( '--covariatesFile',    type=str,                                            help='Input covariate data' )
-p.add_argument( '--scale_covariates',   type=float, nargs='+', default=0,                   help='' )
+p.add_argument( '--scale_covariates',  type=int, nargs='+', default=0,                   help='' )
 p.add_argument( '--schedule',          type=str, nargs="+", required=True,                  help='Update schedule' )
 p.add_argument( '--learnTheta',        type=int, nargs="+", default=0,                      help='learn the sparsity parameter from the spike and slab?' )
 p.add_argument( '--learnMean',         action='store_true',                                 help='learn the feature mean?' )
 p.add_argument( '--initTheta',         type=float, nargs="+", default=0.5 ,                 help='hyperparameter theta in case that learnTheta is set to False')
+p.add_argument( '--startSparsity',     type=int, default=1,                                  help='')
 p.add_argument( '--ThetaDir',          type=str, default="" ,                               help='BLABLA')
 p.add_argument( '--tolerance',         type=float, default=0.1 ,                            help='tolerance for convergence (deltaELBO)')
 p.add_argument( '--startDrop',         type=int, default=5 ,                                help='First iteration to start dropping factors')
@@ -50,8 +51,8 @@ data_opts['rownames'] = 0
 data_opts['colnames'] = 0
 data_opts['delimiter'] = " "
 # data_opts['rownames'] = None
-# data_opts['colnames'] = 0
-# data_opts['delimiter'] = ","
+# data_opts['colnames'] = None
+# data_opts['delimiter'] = " "
 data_opts['ThetaDir'] = args.ThetaDir
 
 # View names
@@ -92,9 +93,13 @@ D = [data[m].shape[1] for m in xrange(M)]
 
 # Load covariates
 if args.covariatesFile is not None:
-  data_opts['covariates'] = pd.read_csv(args.covariatesFile, delimiter=" ", header=0).as_matrix()
+  data_opts['covariates'] = pd.read_csv(args.covariatesFile, delimiter=" ", header=None).as_matrix()
+  print "Loaded covariates from " + args.covariatesFile + "with shape " + str(data_opts['covariates'].shape) + "..."
   data_opts['scale_covariates'] = args.scale_covariates
-  assert len(data_opts['scale_covariates']) == data_opts['covariates'].shape[1], "'scale_covariates' has to be the same length as the number of covariates"
+  if len(data_opts['scale_covariates']) == 1 and data_opts['covariates'].shape[1] > 1:
+    data_opts['scale_covariates'] = args.scale_covariates[0] * s.ones(data_opts['covariates'].shape[1])
+  elif type(data_opts['scale_covariates'])==list:
+    assert len(data_opts['scale_covariates']) == data_opts['covariates'].shape[1], "'scale_covariates' has to be the same length as the number of covariates"
   data_opts['scale_covariates'] = [ bool(x) for x in data_opts['scale_covariates'] ]
   args.factors += data_opts['covariates'].shape[1]
 else:
@@ -325,6 +330,9 @@ train_opts['tolerance'] = args.tolerance
 
 # Do no stop even when convergence criteria is met
 train_opts['forceiter'] = args.nostop
+
+# Iteration to activate spike and slab sparsity
+train_opts['startSparsity'] = args.startSparsity
 
 # Number of trials
 train_opts['trials'] = args.ntrials

@@ -1,6 +1,7 @@
 from __future__ import division
 import numpy.ma as ma
 import numpy as np
+from copy import deepcopy
 
 from time import time
 
@@ -255,7 +256,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         # Collect expectations from other nodes
         Ztmp = self.markov_blanket["Z"].getExpectations()
         Z,ZZ = Ztmp["E"],Ztmp["E2"]
-        tau = self.markov_blanket["Tau"].getExpectation()
+        tau = self.markov_blanket["Tau"].getExpectation().copy()
         Y = self.markov_blanket["Y"].getExpectation()
         alpha = self.markov_blanket["Alpha"].getExpectation().copy()
         thetatmp = self.markov_blanket['Theta'].getExpectations()
@@ -271,16 +272,19 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             theta_lnE = s.repeat(theta_lnE[None,:],Qmean_S1.shape[0],0)
         if theta_lnEInv.shape != Qmean_S1.shape:
             theta_lnEInv = s.repeat(theta_lnEInv[None,:],Qmean_S1.shape[0],0)
+
         # Check dimensions of Tau and and expand if necessary
         if tau.shape != Y.shape:
             tau = s.repeat(tau[None,:], Y.shape[0], axis=0)
         tau = ma.masked_where(ma.getmask(Y), tau)
+
         # Check dimensions of Alpha and and expand if necessary
         if alpha.shape[0] == 1:
             alpha = s.repeat(alpha[:], self.dim[1], axis=0)
 
         # Update each latent variable in turn
         for k in xrange(self.dim[1]):
+
             # Calculate intermediate steps
             term1 = (theta_lnE-theta_lnEInv)[:,k]
             term2 = 0.5*s.log(alpha[k])
@@ -289,9 +293,11 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             term4_tmp2 = ( tau * s.dot((Z[:,k]*Z[:,s.arange(self.dim[1])!=k].T).T, SW[:,s.arange(self.dim[1])!=k].T) ).sum(axis=0)
             term4_tmp3 = ma.dot(ZZ[:,k].T,tau) + alpha[k]
             term4 = 0.5*s.divide((term4_tmp1-term4_tmp2)**2,term4_tmp3)
+
             # Update S
             # NOTE there could be some precision issues in S --> loads of 1s in result
             Qtheta[:,k] = 1./(1.+s.exp(-(term1+term2-term3+term4)))
+
             # Update W
             Qvar_S1[:,k] = s.divide(1,term4_tmp3)
             Qmean_S1[:,k] = Qvar_S1[:,k]*(term4_tmp1-term4_tmp2)
@@ -301,7 +307,6 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
 
         # Save updated parameters of the Q distribution
         self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=s.repeat(1/alpha[None,:],self.D,0), mean_S1=Qmean_S1, var_S1=Qvar_S1, theta=Qtheta )
-        # self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=s.zeros((1,)), mean_S1=Qmean_S1, var_S1=Qvar_S1, theta=Qtheta )
 
     def calculateELBO(self):
 
@@ -444,7 +449,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         # Collect expectations from the markov blanket
         Y = self.markov_blanket["Y"].getExpectation()
         SWtmp = self.markov_blanket["SW"].getExpectations()
-        tau = self.markov_blanket["Tau"].getExpectation()
+        tau = deepcopy(self.markov_blanket["Tau"].getExpectation())
         latent_variables = self.getLvIndex() # excluding covariates from the list of latent variables
 
         if "Mu" in self.markov_blanket:
@@ -468,47 +473,15 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         Q = self.Q.getParameters().copy()
         Qmean, Qvar = Q['mean'], Q['var']
 
-        Qvar_copy = Qvar.copy()
-        Qmean_copy = Qmean.copy()
-
-        ### START LOOP ###
         M = len(Y)
         for k in latent_variables:
-            tmp = s.zeros((self.N,))
+            foo = s.zeros((self.N,))
+            bar = s.zeros((self.N,))
             for m in xrange(M):
-                if k in latent_variables:
-                    Qvar[:,k] += ma.dot(tau[m],SWtmp[m]["ESWW"][:,k])
-                tmp += ma.dot(tau[m]*(Y[m] - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SWtmp[m]["E"][:,s.arange(self.dim[1])!=k].T )), SWtmp[m]["E"][:,k])
-            if k in latent_variables:
-                Qvar[:,k] = 1./(Alpha[:,k]+Qvar[:,k])
-            Qmean[:,k] = Qvar[:,k] * (  Alpha[:,k]*Mu[:,k] + tmp )
-        ### END LOOP ###
-
-        # ### START CONCATENATE ###
-        # # Qvar = Qvar_copy
-        # # Qmean = Qmean_copy
-        # # Concatenate multi-view nodes to avoid looping over M (maybe its not a good idea)
-        # M = len(Y)
-        # Y = ma.concatenate([Y[m] for m in xrange(M)],axis=1)
-        # SW = s.concatenate([SWtmp[m]["E"]for m in xrange(M)],axis=0)
-        # SWW = s.concatenate([SWtmp[m]["ESWW"] for m in xrange(M)],axis=0)
-        # tau = ma.concatenate([tau[m] for m in xrange(M)],axis=1)
-
-
-        # # Update variance
-        # # Qvar_copy = Qvar.copy()
-        # CHECK THAT HTIS IS CORRECT WITH ALPHA BEING A K-VECTOR
-        # Qvar = 1./(Alpha + ma.dot(tau,SWW))
-
-        # # restoring values of the variance for the covariates
-        # if any(self.covariates):
-        #     Qvar[self.covariates] = Qvar_copy[self.covariates]
-
-        # # Update mean
-        # for k in latent_variables:
-        #     Qmean[:,k] = Qvar[:,k] * (  Alpha*Mu[:,k] +
-        #                                 ma.dot(tau*(Y - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SW[:,s.arange(self.dim[1])!=k].T )), SW[:,k])  )
-        # ### END CONCATENATE ###
+                foo += ma.dot(tau[m],SWtmp[m]["ESWW"][:,k])
+                bar += ma.dot(tau[m]*(Y[m] - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SWtmp[m]["E"][:,s.arange(self.dim[1])!=k].T )), SWtmp[m]["E"][:,k])
+            Qvar[:,k] = 1./(Alpha[:,k]+foo)
+            Qmean[:,k] = Qvar[:,k] * (  Alpha[:,k]*Mu[:,k] + bar )
 
         # Save updated parameters of the Q distribution
         self.Q.setParameters(mean=Qmean, var=Qvar)

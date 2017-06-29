@@ -196,6 +196,8 @@ class Bernoulli_PseudoY(PseudoY_Seeger):
 
     def calculateELBO(self):
         # Compute Lower Bound using the Bernoulli likelihood with observed data
+        print "Potential error, check that we are masked"
+        exit()
         Z = self.markov_blanket["Z"].getExpectation()
         SW = self.markov_blanket["SW"].getExpectation()
         tmp = s.dot(Z,SW.T)

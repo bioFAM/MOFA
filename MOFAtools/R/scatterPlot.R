@@ -173,7 +173,7 @@ scatterPlot <- function (object, factors, title = "", titlesize = 16, xlabel = N
       ggtitle(title) + xlab(xlabel) + ylab(ylabel) + 
       scale_y_continuous(limits = c(ylim_down, ylim_up)) + 
       scale_x_continuous(limits = c(xlim_down, xlim_up)) +
-      scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))]) +
+      # scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))]) +
       theme(plot.margin = margin(20, 20, 10, 10), 
             axis.text = element_text(size = rel(1), color = "black"), 
             axis.title = element_text(size = titlesize), 

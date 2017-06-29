@@ -14,7 +14,7 @@
 #' @importFrom rhdf5 h5read
 #' @export
 
-loadModel <- function(file, object=NULL) {
+loadModel <- function(file, object=NULL, sortFactors=T) {
   
   message(paste0("Loading the following MOFA model: ", file))
   
@@ -72,20 +72,23 @@ loadModel <- function(file, object=NULL) {
   factorNames(object) <- as.character(1:object@Dimensions[["K"]])
     
   # Rename covariates
-  if (object@ModelOpts$learnMean) factorNames(object) <- c("intercept",as.character(1:(object@Dimensions[["K"]]-1)))
+  if (object@ModelOpts$learnMean == TRUE) factorNames(object) <- c("intercept",as.character(1:(object@Dimensions[["K"]]-1)))
   if (!is.null(object@ModelOpts$covariates)) {
-    if (object@ModelOpts$learnMean) {
+    if (object@ModelOpts$learnMean == TRUE) {
       factorNames(object) <- c("intercept", colnames(object@ModelOpts$covariates), as.character((ncol(object@ModelOpts$covariates)+1:(object@Dimensions[["K"]]-1-ncol(object@ModelOpts$covariates)))))
     } else {
       factorNames(object) <- c(colnames(object@ModelOpts$covariates), as.character((ncol(object@ModelOpts$covariates)+1:(object@Dimensions[["K"]]-1))))
     }
   }
   
-  # Re-name and order factors in order of variance explained and label intercept
-  r2 <- rowSums(calculateVarianceExplained(object,plotit=F)$R2PerFactor)
-  order_factors <- c("intercept",names(r2)[order(r2, decreasing = T)])
-  object <- subsetFactors(object,order_factors)
-  
+  if (sortFactors) {
+    stop()
+    # Re-name and order factors in order of variance explained and label intercept
+    r2 <- rowSums(calculateVarianceExplained(object,plotit=F)$R2PerFactor)
+    order_factors <- c("intercept",names(r2)[order(r2, decreasing = T)])
+    object <- subsetFactors(object,order_factors)
+    # factorNames(object) <- 
+  }
   return(object)
 }
 

@@ -33,7 +33,7 @@ prepareMOFA <- function(object, DirOptions, ModelOptions = NULL, TrainOptions = 
   # Store covariates as a .txt file
   if (!is.null(ModelOptions$covariates)) {
   write.table(ModelOptions$covariates, file=file.path(DirOptions$tmpDir, "covariates.txt"), 
-              sep=" ", row.names=TRUE, col.names=TRUE, quote=F)
+              sep=" ", row.names=F, col.names=F, quote=F)
   }
   
   # Get training options
@@ -84,6 +84,7 @@ getDefaultTrainOpts <- function(silent=T) {
     
     elbofreq = 1,        # Frequency of evidence lower bound calculation
     
+    startSparsity = 1000, # ...
     startdrop = 5,       # Initial iteration to start dropping factors
     freqdrop = 1,        # Frequency of dropping latent factors
     drop_by_norm = 0.00,  # Option to drop latent factors: minimum norm threshold

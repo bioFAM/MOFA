@@ -72,8 +72,9 @@ class Simulate(object):
 
         else:
             for m in xrange(self.M):
-                for k in xrange(self.K):
-                    S[m][:,k] = bernoulli.rvs(p=theta[m][k], size=self.D[m])
+                for d in xrange(self.D[m]):
+                    for k in xrange(self.K):
+                        S[m][d,k] = bernoulli.rvs(p=theta[m][d,k], size=1)
 
         # Simualte ARD precision
         if alpha is None:

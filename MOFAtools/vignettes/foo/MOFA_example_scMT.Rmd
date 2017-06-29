@@ -12,7 +12,7 @@ vignette: >
 ---
 
 ```{r, echo=FALSE, message=FALSE}
-devtools::load_all("/Users/ricard/mofa/MOFAtools")
+# devtools::load_all("/Users/ricard/mofa/MOFAtools")
 library(MultiAssayExperiment)
 library(MOFAtools)
 library(data.table)
@@ -41,7 +41,7 @@ model <- createMOFAobject(mae)
 DirOptions <- list(
   "tmpDir" = tempdir(),
   "mofaDir" = "/Users/ricard/mofa/MOFA",
-  "outFile" = "/Users/ricard/test.hdf5"
+  "outFile" = "/Users/ricard/scMT/mofa/out/model.hdf5"
 )
 ```
 
@@ -49,19 +49,20 @@ DirOptions <- list(
 ```{r}
 ModelOptions <- getDefaultModelOpts(model)
 ModelOptions$initialK <- 10
+ModelOptions$learnMean <- F
 
 # Define covariates
-ModelOptions$covariates <- colData(mae)[,c("mean_methylation","cell_dropout")]
+ModelOptions$covariates <- colData(mae)[,c("cell_dropout"), drop=F]
 stopifnot(all(rownames(ModelOptions$covariates)==sampleNames(model)))
 ModelOptions$scale_covariates <- rep(1,ncol(ModelOptions$covariates))
 ```
 
 
-
 ### Define training options
 ```{r}
 TrainOptions <- getDefaultTrainOpts()
-TrainOptions$maxiter <- 10
+TrainOptions$maxiter <- 1000
+TrainOptions$startSparsity <- 200
 TrainOptions$drop_by_norm <- 0.00
 TrainOptions$drop_by_r2 <- 0.00
 ```
@@ -77,12 +78,16 @@ model <- prepareMOFA(model,
 ```
 
 
+
 ## Run MOFA
 This step can take some time and it decouples from the R package, it is recommended to run it from the Python-based module
 ```{r}
 model <- runMOFA(model, DirOptions)
-# model <- loadModel("/Users/ricard/scMT/mofa/out/model.hdf5")
+# model <- loadModel("/Users/ricard/scMT/mofa/out/model.hdf5", sortFactors = F)
 ```
+
+
+
 
 
 # Step 3: Analyse a trained MOFA model
@@ -96,9 +101,22 @@ r2 <- calculateVarianceExplained(model, views="all", factors="all", plotit=T, pe
 
 ## Scatterplots of pairs of latent variables
 ```{r}
+
+Z <- getExpectations(model,"Z","E")
+e <- model@TrainData$expr
+m <- model@TrainData$met_prom_cgi
+
 # culture <- sample_metadata[sampleNames(model),]$culture
-scatterPairs(model, factors = c("1","2","3","4"))
-scatterPlot(model, idx="2", idy="3")
+scatterPairs(model, factors = c("2","4","5"), colour_by="culture")
+
+clusters <- rep(NA,length(sampleNames(model))); names(clusters) <- sampleNames(model)
+clusters[names(which(Z[,"5"]<0.3 & Z[,"4"]>(-0.5)))] <- "1"
+clusters[names(which(Z[,"5"]>0.3 & Z[,"4"]>(-0.5)))] <- "2"
+clusters[names(which(Z[,"4"]<(-0.5)))] <- "3"
+# clusters <- cut(Z[,"5"], breaks=c(-Inf,0,Inf), labels=c("1","2"))
+
+colData(model@InputData)$cluster <- clusters
+scatterPlot(model, factors=c("4","5"), colour_by="cluster", shape_by="culture")
 ```
 
 ### Correlation of latent variables
@@ -110,44 +128,48 @@ FactorsCorPlot(model)
 
 ### Correlation with covariates
 ```{r}
-
-# Number of expressed genes
-# cor( colSums(model@TrainData$expr>0), getExpectations(model,"Z","E")[,-1], use="complete.obs")
-
 # Mean methylation rate
 # cor( colMeans(model@TrainData$met_genebody, na.rm=T), getExpectations(model,"Z","E"), use="complete.obs")
 ```
 
+### Plot sparsity
+```{r}
+# getExpectations(model,"Theta","E")
+```
+
 ### Show weights and identify most relevant features
 ```{r}
-library(magrittr)
-library(dplyr)
-showWeightHeatmap(model, "expr", show_rownames=F)
-showWeights(model, view="expr", factor="4", ntop=20, ntail=20)
-
-# W <- getExpectations(model,"SW","E")$expr
-# Z <- getExpectations(model,"Z","E")
-# Yexpr <- model@TrainData$expr
-# Ymet <- model@TrainData$met_genebody
-# Ypred <- Z %*% t(W)
+showWeightHeatmap(model, "Expression", factors = c("4","2","cell_dropout","5"), show_rownames=F)
+showWeights(model, view="Expression", factor="5", ntop=10, ntail=10)
+showWeights(model, view="Expression", factor="2", ntop=10, ntail=10)
 ```
 
 ### Show original data for the genes with top weights
 ```{r, fig.height=7, fig.width=11}
-view <- "expr"
-factor <- "5"
-showDataHeatmap(model, view, factor, nfeatures=300, show_colnames=F, show_rownames=T)
 
-# The X axis is the latent variable and the Y axis is the observed value of the feature
+# Latent variable 4 (methylation factor)
+anno_df <- data.frame(
+  row.names=rownames(colData(object@InputData)),
+  culture=object@InputData$culture
+  # cluster=object@InputData$cluster
+)
+showDataHeatmap(model, view="met_super_enhancers", factor="4", nfeatures=100, show_colnames=F, show_rownames=T, annotation_row=anno_df, fontsize_row=8)
+
+showDataHeatmap(model, view="met_prom_cgi", factor="7", nfeatures=100, show_colnames=F, show_rownames=T, annotation_row=anno_df, fontsize_row=8)
+
+# Latent variable 2 (shared expression and methylation factor)
+
+# Latent variable 5 (expression pluripotency component)
 # showDataScatter(model, view, factor, nfeatures=50, colour_by=NULL, shape_by=NULL)
 ```
 
 
-### Feature set enrichment analysis
+## Feature set enrichment analysis
 The characterisation of factors usually requires the inspection of the corresponding weights to identify features with strong influence. However, looking at single features can be challenging and often the combination of signal from functionally related sets of features (i.e. gene ontologies) is required.
 Here we implemented a feature set enrichment analysis method (FeatureSetEnrichmentAnalysis) derived from the PCGSE package (REF).
 The input of these function is a MOFA trained model (MOFAmodel), the factors for which to perform feature set enrichment (character vector), the feature sets (matrix) and a set of options regarding how the analysis should be performed. For more information see ...
 
+### Calculate enrichment scores
 Here we are going to perform feature set enrichment analysis on the mRNA view.
 Here we are going to use the absolute value of the weight (or loading) as feature statistic, the mean difference between the features in the gene set and the features outside the gene set as a feature set statistic and the correlation-adjusted parametric statistical test.
 ```{r}
@@ -162,9 +184,9 @@ feature.sets <- rbind(
 )
 
 # Run Feature Set Enrichment Analysis
-p.values <- FeatureSetEnrichmentAnalysis(
+fsea.out <- FeatureSetEnrichmentAnalysis(
   model,
-  view = "expr", 
+  view = "Expression", 
   factors = "all", 
   feature.sets = feature.sets,
   local.statistic = "loading",
@@ -176,15 +198,17 @@ p.values <- FeatureSetEnrichmentAnalysis(
   cores=1
 )
 
+# Extract p values
+pval <- fsea.out$pval.adj
+
 # Rename pathways
 tmp <- read.table("/Users/ricard/data/reactome/v59/mus_musculus/AllPathways.txt", header=F, quote="", sep="\t", stringsAsFactors=F)[,c(1,2)]
 reactome_meta <- tmp[,2]; names(reactome_meta) <- tmp[,1]
-rownames(p.values) <- stringr::str_replace_all(rownames(p.values), reactome_meta)
+rownames(pval) <- stringr::str_replace_all(rownames(pval), reactome_meta)
+```
 
-# Correct for multiple testing
-p.values_adj <- apply(p.values, 2,function(lfw) p.adjust(lfw, method = "BH"))
-
-# Visualise the results 
+### Visualise the results
+```{r}
 # all factors
 Heatmap_FeatureSetEnrichmentAnalysis(p.values_adj, threshold=0.05)
 

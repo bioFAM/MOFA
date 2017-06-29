@@ -30,10 +30,10 @@ from MOFA.run.run_utils import *
 # Define dimensionalities
 M = 3
 # N = 3000
-N = 100
+N = 10
 # D = s.asarray([10000,10000,10000])
 # D = s.asarray([500,])
-D = s.asarray([500,500,500])
+D = s.asarray([200,200,200])
 K = 7
 
 
@@ -56,15 +56,14 @@ data['alpha'][0] = [1,1,1,1e6,1,1e6,1e6]
 data['alpha'][1] = [1,1,1e6,1,1e6,1,1e6]
 data['alpha'][2] = [1,1e6,1,1,1e6,1e6,1]
 
-theta = [ s.ones((D[m],K))*1.0 for m in xrange(M) ]
-data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=theta, alpha=data['alpha'], annotation=True)
-
+data['theta'] = [ s.ones((D[m],K))*0.5 for m in xrange(M) ]
+data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=data['theta'], alpha=data['alpha'], annotation=False)
 data['mu'] = [ s.ones(D[m])*0. for m in xrange(M)]
 data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 # data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
 
-missingness = 0.0
-missing_view = 0.0
+missingness = 0.3
+missing_view = 0.5
 # Y_warp = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 #   likelihood="warp", missingness=missingness, missing_view=missing_view)
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -72,20 +71,18 @@ Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data
 # Y_poisson = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 # 	likelihood="poisson", missingness=missingness, missing_view=missing_view)
 # Y_bernoulli = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
-# 	likelihood="bernoulli", missingness=missingness, missing_view=missing_view)
+	# likelihood="bernoulli", missingness=missingness, missing_view=missing_view)
 # Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 # 	likelihood="binomial", min_trials=10, max_trials=50, missingness=missingness)
 
 data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
 # data["Y"] = ( Y_gaussian[0], Y_bernoulli[1], Y_bernoulli[2] )
-# data["Y"] = ( Y_bernoulli[0], Y_bernoulli[1], Y_bernoulli[2] )
+# data["Y"] = [ Y_bernoulli[0], Y_bernoulli[1], Y_bernoulli[2] ]
 # data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
 # data["Y"] = ( Y_warp[0], )
 # data["Y"] = ( Y_warp[0], Y_warp[1], Y_warp[2] )
 # data["Y"] = ( Y_gaussian[0], )
 
-# print data["Y"][0].mean(axis=0)
-# exit()
 ##################
 ## Data options ##
 ##################
@@ -94,14 +91,18 @@ data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
 data_opts = {}
 data_opts["outfile"] = "/tmp/test.h5"
 data_opts['view_names'] = ["View 1","View 2","View 3"]
-data_opts['center'] = [True]*M
+data_opts['center'] = [False]*M
 data_opts['scale_views'] = [False]*M
-data_opts['covariates'] = stats.bernoulli.rvs(0.5, size=N)[:,None]
-data_opts['scale_covariates'] = [True]
+# data_opts['covariates'] = stats.bernoulli.rvs(0.5, size=N)[:,None]
+data_opts['covariates'] = None
+# data_opts['scale_covariates'] = [True]
+data_opts['scale_covariates'] = None
+
 
 # Center the data
 if data_opts['center'][m]:
-  data[m] = (data["Y"][m] - data["Y"][m].mean())
+  data["Y"][m] = (data["Y"][m] - data["Y"][m].mean())
+
 
 # Scale the views
 # NOT WORKING YET
@@ -118,7 +119,7 @@ if data_opts['center'][m]:
 #################################
 
 # Define initial number of latent variables
-K = 10
+K = 12
 
 # Define model dimensionalities
 dim = {}
@@ -145,7 +146,7 @@ model_opts["learnMean"] = True
 if model_opts["learnMean"]:
   if data_opts['covariates'] is None:
     data_opts['covariates'] = s.ones((dim["N"],1))
-    data_opts['scale_covariates'] = False
+    data_opts['scale_covariates'] = [False]
   else:
     data_opts['covariates'] = s.concatenate((data_opts['covariates'],s.ones((dim["N"],1))), axis=1)
     data_opts['scale_covariates'].append(False)
@@ -158,7 +159,7 @@ if model_opts["learnMean"]:
 model_opts['likelihood'] = ['gaussian']* M
 # model_opts['likelihood'] = ['gaussian','poisson','bernoulli']
 # model_opts['likelihood'] = ['gaussian','bernoulli','bernoulli']
-# model_opts['likelihood'] = ['warp']*M
+# model_opts['likelihood'] = ['bernoulli']*M
 
 # Define initial number of factors
 model_opts['k'] = K
@@ -168,11 +169,11 @@ model_opts['ardZ'] = False
 model_opts['ardW'] = "mk"
 
 # Define for which factors to learn Theta
-model_opts['learnTheta'] = [s.zeros(K) for m in xrange(M)]
+model_opts['learnTheta'] = [s.ones(K) for m in xrange(M)]
 
 # Define schedule of updates
 # model_opts['schedule'] = ["Y","SW","Z","AlphaW","Theta","Tau"]
-model_opts['schedule'] = ["SW","Z","AlphaW","Theta","Tau"]
+model_opts['schedule'] = ["Y","SW","Z","AlphaW","Theta","Tau"]
 
 ####################################
 ## Define priors (P distribution) ##
@@ -326,7 +327,7 @@ if model_opts["learnMean"]:
 
 train_opts = {}
 train_opts['elbofreq'] = 1
-train_opts['maxiter'] = 500
+train_opts['maxiter'] = 5000
 # train_opts['tolerance'] = 1E-2
 train_opts['tolerance'] = 0.01
 train_opts['forceiter'] = True
@@ -335,6 +336,7 @@ train_opts['startdrop'] = 10
 train_opts['freqdrop'] = 1
 train_opts['savefreq'] = s.nan
 train_opts['savefolder'] = s.nan
+train_opts['startSparsity'] = 500
 train_opts['verbosity'] = 2
 train_opts['trials'] = 1
 train_opts['cores'] = 1

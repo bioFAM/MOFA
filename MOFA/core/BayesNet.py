@@ -172,6 +172,8 @@ class BayesNet(object):
 
             # Update node by node, with E and M step merged
             for node in self.schedule:
+                if node=="Theta" and i<self.options['startSparsity']:
+                    continue
                 self.nodes[node].update()
 
             # Calculate Evidence Lower Bound

@@ -24,7 +24,7 @@ runMOFA <- function(object, DirOptions) {
   
   # Prepare command
   command <- paste(sep=" ",
-  "python", paste0(DirOptions$mofaDir,"/run/template_run.py"),
+  "/Users/ricard/anaconda2/bin/python", paste0(DirOptions$mofaDir,"/run/template_run.py"),
   "--inFiles", paste(paste0(DirOptions$tmpDir, "/", viewNames(object), ".txt"), collapse = " "),
   "--outFile", DirOptions$outFile,
   "--views", paste(viewNames(object), collapse=" "),
@@ -38,6 +38,7 @@ runMOFA <- function(object, DirOptions) {
   "--elbofreq", object@TrainOpts$elbofreq,
   "--startDrop", object@TrainOpts$startdrop,
   "--freqDrop", object@TrainOpts$freqdrop,
+  "--startSparsity", object@TrainOpts$startSparsity,
   "--dropNorm", object@TrainOpts$drop_by_norm,
   "--dropR2", object@TrainOpts$drop_by_r2,
   "--factors", object@ModelOpts$initialK,

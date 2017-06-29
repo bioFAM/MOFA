@@ -29,7 +29,7 @@ showDataHeatmap <- function(object, view, factor, nfeatures=50, main=NULL, ...) 
   features <- names(tail(sort(abs(W)), n=nfeatures))
   stopifnot(all(features %in% featureNames(object)[[view]]))
   
-  # Get trainign data
+  # Get train data
   data <- getTrainData(object, view)
   
   # Ignore samples with full missing views
@@ -37,7 +37,7 @@ showDataHeatmap <- function(object, view, factor, nfeatures=50, main=NULL, ...) 
   
   # Plot heatmap
   if(is.null(main)) main <- paste(view, "observations for the top weighted features of factor", factor)
-  pheatmap::pheatmap(t(data[features,]), fontsize = 14, main=main, ...)
+  pheatmap::pheatmap(t(data[features,]), main=main, ...)
 }
 
 

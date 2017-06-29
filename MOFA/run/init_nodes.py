@@ -69,16 +69,19 @@ class initModel(object):
         # Add covariates
         if covariates is not None:
             assert scale_covariates != None, "If you use covariates also define data_opts['scale_covariates']"
-            scale_covariates = s.array(scale_covariates)
+
+            # Select indices for covaraites
             idx_covariates = s.array(range(covariates.shape[1]))
+
             # Center and scale the covariates to match the prior distribution N(0,1)
             # to-do: this needs to be improved to take the particular mean and var into account
             # covariates[scale_covariates] = (covariates - covariates.mean(axis=0)) / covariates.std(axis=0)
-            covariates[:,scale_covariates] = (covariates[:,scale_covariates] - covariates[:,scale_covariates].mean(axis=0)) / covariates[:,scale_covariates].std(axis=0)
+            scale_covariates = s.array(scale_covariates)
+            covariates[:,scale_covariates] = (covariates[:,scale_covariates] - s.nanmean(covariates[:,scale_covariates], axis=0)) / s.nanstd(covariates[:,scale_covariates], axis=0)
+
+            # Set to zero the missing values in the covariates
+            covariates[s.isnan(covariates)] = 0.
             qmean[:,idx_covariates] = covariates
-            print idx_covariates
-            print qmean[0,:]
-            exit()
         else:
             idx_covariates = None
 

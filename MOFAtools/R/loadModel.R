@@ -14,7 +14,7 @@
 #' @importFrom rhdf5 h5read
 #' @export
 
-loadModel <- function(file, object=NULL, sortFactors=T) {
+loadModel <- function(file, object=NULL, sortFactors=F) {
   
   message(paste0("Loading the following MOFA model: ", file))
   
@@ -54,6 +54,7 @@ loadModel <- function(file, object=NULL, sortFactors=T) {
     for (m in names(TrainData)) {
       rownames(TrainData[[m]]) <- sampleData
       colnames(TrainData[[m]]) <- featureData[[m]]
+      TrainData[[m]][is.nan(TrainData[[m]])] <- NA
     }
     TrainData <- lapply(TrainData, t)
     object@TrainData <- TrainData

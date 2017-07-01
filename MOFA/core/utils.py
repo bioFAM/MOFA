@@ -33,7 +33,11 @@ def loadTheta(data_opts):
 
 # Function to mask the data, mainly to test missing values and imputation
 def maskData(data, data_opts):
-    print "Masking data..."
+    print "Masking data with the following options:"
+    print "at random:"
+    print data_opts['maskAtRandom']
+    print "full cases:"
+    print data_opts['maskNSamples']
 
     for m in xrange(len(data)):
 

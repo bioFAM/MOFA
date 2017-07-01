@@ -512,7 +512,12 @@ class Beta(Distribution):
         if E is None: 
             self.updateExpectations()
         else:
-            self.expectations = { 'E':s.ones(dim)*E }
+            self.expectations = { 
+            'E':s.ones(dim)*E,
+            'lnE':s.log(s.ones(dim)*E),
+            'lnEInv':s.log(1.-s.ones(dim)*E)
+            }
+            self.expectations["lnEInv"][s.isinf(self.expectations["lnEInv"])] = -s.inf
 
         # Check that dimensionalities match
         self.CheckDimensionalities()

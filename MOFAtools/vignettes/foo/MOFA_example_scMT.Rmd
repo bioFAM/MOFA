@@ -12,7 +12,7 @@ vignette: >
 ---
 
 ```{r, echo=FALSE, message=FALSE}
-# devtools::load_all("/Users/ricard/mofa/MOFAtools")
+devtools::load_all("/Users/ricard/mofa/MOFAtools")
 library(MultiAssayExperiment)
 library(MOFAtools)
 library(data.table)
@@ -83,8 +83,9 @@ model <- prepareMOFA(model,
 This step can take some time and it decouples from the R package, it is recommended to run it from the Python-based module
 ```{r}
 model <- runMOFA(model, DirOptions)
-# model <- loadModel("/Users/ricard/scMT/mofa/out/model.hdf5", sortFactors = F)
+model <- loadModel("/Users/ricard/scMT/mofa/out/model.hdf5", sortFactors = F)
 ```
+
 
 
 
@@ -103,6 +104,7 @@ r2 <- calculateVarianceExplained(model, views="all", factors="all", plotit=T, pe
 ```{r}
 
 Z <- getExpectations(model,"Z","E")
+
 e <- model@TrainData$expr
 m <- model@TrainData$met_prom_cgi
 
@@ -141,7 +143,12 @@ FactorsCorPlot(model)
 ```{r}
 showWeightHeatmap(model, "Expression", factors = c("4","2","cell_dropout","5"), show_rownames=F)
 showWeights(model, view="Expression", factor="5", ntop=10, ntail=10)
-showWeights(model, view="Expression", factor="2", ntop=10, ntail=10)
+
+p1 <- showAllWeights(model, view="expr", factor="2", nfeatures=50, abs=FALSE, main="")
+print(p1)
+p2 <- showTopWeights(model, view="expr", factor="2", nfeatures=50,  manual_features=NULL)
+print(p2)
+```
 ```
 
 ### Show original data for the genes with top weights
@@ -149,13 +156,14 @@ showWeights(model, view="Expression", factor="2", ntop=10, ntail=10)
 
 # Latent variable 4 (methylation factor)
 anno_df <- data.frame(
-  row.names=rownames(colData(object@InputData)),
-  culture=object@InputData$culture
-  # cluster=object@InputData$cluster
+  row.names=rownames(colData(model@InputData)),
+  culture=model@InputData$culture
+  # cluster=model@InputData$cluster
 )
 showDataHeatmap(model, view="met_super_enhancers", factor="4", nfeatures=100, show_colnames=F, show_rownames=T, annotation_row=anno_df, fontsize_row=8)
 
-showDataHeatmap(model, view="met_prom_cgi", factor="7", nfeatures=100, show_colnames=F, show_rownames=T, annotation_row=anno_df, fontsize_row=8)
+showDataHeatmap(model, view="met_prom_cgi", factor="10", nfeatures=100, show_colnames=F, show_rownames=T, fontsize_row=8)
+showDataHeatmap(model, view="Expression", factor="9", nfeatures=100, show_colnames=F, show_rownames=T, fontsize_row=8)
 
 # Latent variable 2 (shared expression and methylation factor)
 
@@ -221,5 +229,10 @@ LinePlot_FeatureSetEnrichmentAnalysis(p.values_adj, view="expr", factor="2", thr
 <!-- ```{r} -->
 <!-- clusterMOFA(model, factors) -->
 <!-- ``` -->
+
+# Imputation
+```{r}
+Ypred <- imputeMissing(model, viewnms = "Expression")@ImputedData$Expression
+```
 
 

@@ -128,11 +128,6 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     nodes["Y"].addMarkovBlanket(Z=nodes["Z"], SW=nodes["SW"], Tau=nodes["Tau"])
     nodes["Tau"].addMarkovBlanket(Z=nodes["Z"], SW=nodes["SW"], Y=nodes["Y"])
 
-
-    # Initialise expectations of the required nodes
-    # TO-DO we have to do something with this.....
-    init.initExpectations("Theta")
-
     ##################################
     ## Add the nodes to the network ##
     ##################################

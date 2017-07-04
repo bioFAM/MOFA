@@ -30,10 +30,10 @@ from MOFA.run.run_utils import *
 # Define dimensionalities
 M = 3
 # N = 3000
-N = 10
-# D = s.asarray([10000,10000,10000])
-# D = s.asarray([500,])
-D = s.asarray([200,200,200])
+N = 100
+D = s.asarray([1000,1000,1000])
+# D = s.asarray([500,500,500])
+# D = s.asarray([50,50,50])
 K = 7
 
 
@@ -55,15 +55,15 @@ data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
 data['alpha'][0] = [1,1,1,1e6,1,1e6,1e6]
 data['alpha'][1] = [1,1,1e6,1,1e6,1,1e6]
 data['alpha'][2] = [1,1e6,1,1,1e6,1e6,1]
-
 data['theta'] = [ s.ones((D[m],K))*0.5 for m in xrange(M) ]
+# data['theta'] = [ s.repeat(s.linspace(0.1, 1.0, K)[None,:],D[m],0) for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=data['theta'], alpha=data['alpha'], annotation=False)
 data['mu'] = [ s.ones(D[m])*0. for m in xrange(M)]
 data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 # data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
 
-missingness = 0.3
-missing_view = 0.5
+missingness = 0.0
+missing_view = 0.0
 # Y_warp = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 #   likelihood="warp", missingness=missingness, missing_view=missing_view)
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -75,7 +75,7 @@ Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data
 # Y_binomial = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 # 	likelihood="binomial", min_trials=10, max_trials=50, missingness=missingness)
 
-data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
+data["Y"] = [ Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] ]
 # data["Y"] = ( Y_gaussian[0], Y_bernoulli[1], Y_bernoulli[2] )
 # data["Y"] = [ Y_bernoulli[0], Y_bernoulli[1], Y_bernoulli[2] ]
 # data["Y"] = ( Y_gaussian[0], Y_poisson[1], Y_bernoulli[2] )
@@ -91,7 +91,7 @@ data["Y"] = ( Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] )
 data_opts = {}
 data_opts["outfile"] = "/tmp/test.h5"
 data_opts['view_names'] = ["View 1","View 2","View 3"]
-data_opts['center'] = [False]*M
+data_opts['center'] = [True]*M
 data_opts['scale_views'] = [False]*M
 # data_opts['covariates'] = stats.bernoulli.rvs(0.5, size=N)[:,None]
 data_opts['covariates'] = None
@@ -101,7 +101,7 @@ data_opts['scale_covariates'] = None
 
 # Center the data
 if data_opts['center'][m]:
-  data["Y"][m] = (data["Y"][m] - data["Y"][m].mean())
+  data["Y"][m] = (data["Y"][m] - data["Y"][m].mean(axis=0))
 
 
 # Scale the views
@@ -119,7 +119,7 @@ if data_opts['center'][m]:
 #################################
 
 # Define initial number of latent variables
-K = 12
+K = 15
 
 # Define model dimensionalities
 dim = {}
@@ -142,7 +142,7 @@ if data_opts['covariates'] is not None:
   K = dim["K"]
 
 # Define whether to learn means
-model_opts["learnMean"] = True
+model_opts["learnMean"] = False
 if model_opts["learnMean"]:
   if data_opts['covariates'] is None:
     data_opts['covariates'] = s.ones((dim["N"],1))
@@ -169,7 +169,7 @@ model_opts['ardZ'] = False
 model_opts['ardW'] = "mk"
 
 # Define for which factors to learn Theta
-model_opts['learnTheta'] = [s.ones(K) for m in xrange(M)]
+model_opts['learnTheta'] = [1.*s.ones(K) for m in xrange(M)]
 
 # Define schedule of updates
 # model_opts['schedule'] = ["Y","SW","Z","AlphaW","Theta","Tau"]
@@ -195,7 +195,7 @@ if model_opts['ardW'] == "m":
 elif model_opts['ardW'] == "k":
   model_opts["priorAlphaW"] = { 'a':s.ones(K)*1e-3, 'b':s.ones(K)*1e-3 }
 elif model_opts['ardW'] == "mk":
-  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-3]*M, 'b':[s.ones(K)*1e-3]*M }
+  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-14]*M, 'b':[s.ones(K)*1e-14]*M }
 
 
 # Theta
@@ -208,7 +208,7 @@ for m in xrange(M):
 
 
 # Noise
-model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-3 for m in xrange(M)], 'b':[s.ones(D[m])*1e-3 for m in xrange(M)] }
+model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-14 for m in xrange(M)], 'b':[s.ones(D[m])*1e-14 for m in xrange(M)] }
 
 
 #############################################
@@ -228,21 +228,20 @@ if model_opts['ardW'] == "m":
 elif model_opts['ardW'] == "k":
   model_opts["initAlphaW"] = { 'a':s.nan*s.ones(K), 'b':s.nan*s.ones(K), 'E':s.ones(K)*100 }
 elif model_opts['ardW'] == "mk":
-  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[1.*s.ones(K) for m in xrange(M)] }
+  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[100.*s.ones(K) for m in xrange(M)] }
 
 # Theta
-model_opts["initTheta"] = { 'a':[s.ones(K,) for m in xrange(M)], 'b':[s.ones(K,) for m in xrange(M)], 'E':[1.*s.ones((D[m],K)) for m in xrange(M)] }
+model_opts["initTheta"] = { 'a':[s.ones(K,) for m in xrange(M)], 'b':[s.ones(K,) for m in xrange(M)], 'E':[s.ones((D[m],K)) for m in xrange(M)] }
 for m in xrange(M):
   for k in xrange(K):
     if model_opts['learnTheta'][m][k]==0.:
       model_opts["initTheta"]["a"][m][k] = s.nan
       model_opts["initTheta"]["b"][m][k] = s.nan
-      # model_opts["initTheta"]["E"][m][:,k] = 1.0
 
 
 # Weights
 model_opts["initSW"] = { 
-  'Theta':[0.5*s.ones((D[m],K)) for m in xrange(M)],
+  'Theta':[s.ones((D[m],K)) for m in xrange(M)],
   'mean_S0':[s.zeros((D[m],K)) for m in xrange(M)],
   'var_S0':[s.nan*s.ones((D[m],K)) for m in xrange(M)],
   'mean_S1':[s.zeros((D[m],K)) for m in xrange(M)], # (TO-DO) allow also random

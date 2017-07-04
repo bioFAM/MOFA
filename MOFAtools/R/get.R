@@ -49,7 +49,7 @@ getTrainData <- function(object, views="all", as.data.frame=F) {
     tmp <- lapply(views, function(m) { tmp <- reshape2::melt(trainData[[m]]); colnames(tmp) <- c("sample","feature","value"); tmp <- cbind(view=m,tmp); return(tmp) })
     trainData <- do.call(rbind,tmp)
   } else if ((length(views)==1) && (as.data.frame==F)) {
-    trainData <- trainData[[view]]
+    trainData <- trainData[[views]]
   }
   
   return(trainData)

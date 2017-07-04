@@ -321,6 +321,7 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY_Seeger):
         self.E = (2.*self.obs - 1.)/(4.*lambdafn(self.params["zeta"]))
 
     def updateParameters(self):
+        # SHOULD WE MASK SOMETHING HERE?
         Z = self.markov_blanket["Z"].getExpectations()
         SW = self.markov_blanket["SW"].getExpectations()
         self.params["zeta"] = s.sqrt( s.square(Z["E"].dot(SW["E"].T)) - s.dot(s.square(Z["E"]),s.square(SW["E"].T)) + s.dot(Z["E2"], SW["ESWW"].T) )

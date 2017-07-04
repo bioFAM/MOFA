@@ -1,14 +1,23 @@
 
-elbo of W part of SW
+        t1 = time()
+        print "time1: " + str(time()-t1)
+        t2 = time()
+        print "time2: " + str(time()-t2)
+        exit()
 
-        lb_pw = 0.
-        lb_qw = -0.5*self.dim[1]*self.D 
-        for d in xrange(S.shape[0]):
-            for k in xrange(S.shape[1]):
-                lb_pw += 0.5*alpha["lnE"][0] - 0.5*alpha["E"][0]*WW[d,k]
-                lb_qw += -0.5*(S[d,k]*s.log(Qvar[d,k]) + (1.-S[d,k])*s.log(1./alpha["E"][0]))
-        print lb_pw
-        print lb_qw
+
+##########################
+## elbo of W part of SW ##
+##########################
+
+        # lb_pw = 0.
+        # lb_qw = -0.5*self.dim[1]*self.D 
+        # for d in xrange(S.shape[0]):
+        #     for k in xrange(S.shape[1]):
+        #         lb_pw += 0.5*alpha["lnE"][0] - 0.5*alpha["E"][0]*WW[d,k]
+        #         lb_qw += -0.5*(S[d,k]*s.log(Qvar[d,k]) + (1.-S[d,k])*s.log(1./alpha["E"][0]))
+        # print lb_pw
+        # print lb_qw
         
 ######################################################################
 ## Non-vectorised update for Z (with clusters) and with general tau ##

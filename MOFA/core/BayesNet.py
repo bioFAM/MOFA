@@ -73,10 +73,9 @@ class BayesNet(object):
         # print (alpha)
 
         # # print "SW:"
-        # SW = self.nodes["SW"].getExpectation()
-        # for m in xrange(len(SW)):
-        #     print m
-        #     print s.absolute(SW[m]).mean(axis=0)
+        SW = self.nodes["SW"].getExpectation()
+        for m in xrange(len(SW)):
+            print str(m) + "= " + str(s.absolute(SW[m]>0.001).sum(axis=0))
 
         # SW = s.concatenate(self.nodes["SW"].getExpectation(), axis=0)
         # print (s.absolute(SW)>0.01).sum(axis=0)
@@ -172,9 +171,12 @@ class BayesNet(object):
 
             # Update node by node, with E and M step merged
             for node in self.schedule:
+                # print "Node: " + str(node)
+                # t = time()
                 if node=="Theta" and i<self.options['startSparsity']:
                     continue
                 self.nodes[node].update()
+                # print "time: " + str(time()-t)
 
             # Calculate Evidence Lower Bound
             if (i+1) % self.options['elbofreq'] == 0:

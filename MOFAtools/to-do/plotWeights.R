@@ -13,6 +13,10 @@ df <- df[with(df, order(-weight)), ]
 df <- head(df,n)
 df$name <- factor(df$name, levels=df$name)
 
+# Sort by weight 
+W <- W[order(W$value, decreasing = T),]
+W$feature <- factor(W$feature, levels=W$feature)
+
 p <- ggplot2::ggplot(df,aes(x=name, y=weight, color=weight)) +
   geom_point(size=5) +
   geom_segment(aes(xend=name, yend=0)) +

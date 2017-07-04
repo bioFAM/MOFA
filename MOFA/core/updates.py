@@ -87,26 +87,38 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
     def updateParameters(self):
 
         # Collect expectations from other nodes
-        Y = self.markov_blanket["Y"].getExpectation()
+        Y = self.markov_blanket["Y"].getExpectation().copy()
         tmp = self.markov_blanket["SW"].getExpectations()
         SW,SWW = tmp["E"], tmp["ESWW"]
         Ztmp = self.markov_blanket["Z"].getExpectations()
         Z,ZZ = Ztmp["E"],Ztmp["E2"]
+        mask = ma.getmask(Y)
 
         # Collect parameters from the P and Q distributions of this node
         P,Q = self.P.getParameters(), self.Q.getParameters()
         Pa, Pb = P['a'], P['b']
 
+        # Mask matrices
+        Y = Y.data
+        Y[mask] = 0.
+
         # Calculate terms for the update
-        term1 = s.square(Y).sum(axis=0).data
-        term2 = 2.*(Y*s.dot(Z,SW.T)).sum(axis=0).data
-        term3 = ma.array(ZZ.dot(SWW.T), mask=ma.getmask(Y)).sum(axis=0)
-        SWZ = ma.array(SW.dot(Z.T), mask=ma.getmask(Y).T)
-        term4 = dotd(SWZ, SWZ.T) - ma.array(s.dot(s.square(Z),s.square(SW).T),mask=ma.getmask(Y)).sum(axis=0)
+        # term1 = s.square(Y).sum(axis=0).data # not checked numerically with or without mask
+        term1 = s.square(Y).sum(axis=0)
+
+        # term2 = 2.*(Y*s.dot(Z,SW.T)).sum(axis=0).data
+        term2 = 2.*(Y*s.dot(Z,SW.T)).sum(axis=0) # save to modify
+
+        term3 = ma.array(ZZ.dot(SWW.T), mask=mask).sum(axis=0)
+
+        SWZ = ma.array(SW.dot(Z.T), mask=mask.T)
+
+        term4 = dotd(SWZ, SWZ.T) - ma.array(s.dot(s.square(Z),s.square(SW).T), mask=mask).sum(axis=0)
+
         tmp = term1 - term2 + term3 + term4
 
         # Perform updates of the Q distribution
-        Qa = Pa + (Y.shape[0] - ma.getmask(Y).sum(axis=0))/2.
+        Qa = Pa + (Y.shape[0] - mask.sum(axis=0))/2.
         Qb = Pb + tmp/2.
 
         # Save updated parameters of the Q distribution
@@ -257,10 +269,11 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         Ztmp = self.markov_blanket["Z"].getExpectations()
         Z,ZZ = Ztmp["E"],Ztmp["E2"]
         tau = self.markov_blanket["Tau"].getExpectation().copy()
-        Y = self.markov_blanket["Y"].getExpectation()
+        Y = self.markov_blanket["Y"].getExpectation().copy()
         alpha = self.markov_blanket["Alpha"].getExpectation().copy()
         thetatmp = self.markov_blanket['Theta'].getExpectations()
         theta_lnE, theta_lnEInv  = thetatmp['lnE'], thetatmp['lnEInv']
+        mask = ma.getmask(Y)
 
         # Collect parameters and expectations from P and Q distributions of this node
         SW = self.Q.getExpectations()["E"]
@@ -276,11 +289,16 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         # Check dimensions of Tau and and expand if necessary
         if tau.shape != Y.shape:
             tau = s.repeat(tau[None,:], Y.shape[0], axis=0)
-        tau = ma.masked_where(ma.getmask(Y), tau)
+        # tau = ma.masked_where(ma.getmask(Y), tau)
 
         # Check dimensions of Alpha and and expand if necessary
         if alpha.shape[0] == 1:
             alpha = s.repeat(alpha[:], self.dim[1], axis=0)
+
+        # Mask matrices
+        Y = Y.data
+        Y[mask] = 0.
+        tau[mask] = 0.
 
         # Update each latent variable in turn
         for k in xrange(self.dim[1]):
@@ -288,25 +306,31 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             # Calculate intermediate steps
             term1 = (theta_lnE-theta_lnEInv)[:,k]
             term2 = 0.5*s.log(alpha[k])
-            term3 = 0.5*s.log(ma.dot(ZZ[:,k],tau) + alpha[k])
-            term4_tmp1 = ma.dot((tau*Y).T,Z[:,k]).data
-            term4_tmp2 = ( tau * s.dot((Z[:,k]*Z[:,s.arange(self.dim[1])!=k].T).T, SW[:,s.arange(self.dim[1])!=k].T) ).sum(axis=0)
-            term4_tmp3 = ma.dot(ZZ[:,k].T,tau) + alpha[k]
-            term4 = 0.5*s.divide((term4_tmp1-term4_tmp2)**2,term4_tmp3)
+            # term3 = 0.5*s.log(ma.dot(ZZ[:,k],tau) + alpha[k])
+            term3 = 0.5*s.log(s.dot(ZZ[:,k],tau) + alpha[k]) # good to modify
+            # term4_tmp1 = ma.dot((tau*Y).T,Z[:,k]).data
+            term4_tmp1 = s.dot((tau*Y).T,Z[:,k]) # good to modify
+            # term4_tmp2 = ( tau * s.dot((Z[:,k]*Z[:,s.arange(self.dim[1])!=k].T).T, SW[:,s.arange(self.dim[1])!=k].T) ).sum(axis=0)
+            term4_tmp2 = ( tau * s.dot((Z[:,k]*Z[:,s.arange(self.dim[1])!=k].T).T, SW[:,s.arange(self.dim[1])!=k].T) ).sum(axis=0) # good to modify
+            # term4_tmp3 = ma.dot(ZZ[:,k].T,tau) + alpha[k]
+            term4_tmp3 = ma.dot(ZZ[:,k].T,tau) + alpha[k] # good to modify
+
+            # term4 = 0.5*s.divide((term4_tmp1-term4_tmp2)**2,term4_tmp3)
+            term4 = 0.5*s.divide(s.square(term4_tmp1-term4_tmp2),term4_tmp3) # good to modify, awsnt checked numerically
 
             # Update S
             # NOTE there could be some precision issues in S --> loads of 1s in result
             Qtheta[:,k] = 1./(1.+s.exp(-(term1+term2-term3+term4)))
 
             # Update W
-            Qvar_S1[:,k] = s.divide(1,term4_tmp3)
+            Qvar_S1[:,k] = 1./term4_tmp3
             Qmean_S1[:,k] = Qvar_S1[:,k]*(term4_tmp1-term4_tmp2)
 
             # Update Expectations for the next iteration
             SW[:,k] = Qtheta[:,k] * Qmean_S1[:,k]
 
         # Save updated parameters of the Q distribution
-        self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=s.repeat(1/alpha[None,:],self.D,0), mean_S1=Qmean_S1, var_S1=Qvar_S1, theta=Qtheta )
+        self.Q.setParameters(mean_S0=s.zeros((self.D,self.dim[1])), var_S0=s.repeat(1./alpha[None,:],self.D,0), mean_S1=Qmean_S1, var_S1=Qvar_S1, theta=Qtheta )
 
     def calculateELBO(self):
 
@@ -388,12 +412,16 @@ class Theta_Node(Beta_Unobserved_Variational_Node):
         QE, QlnE, QlnEInv = Qexp['E'], Qexp['lnE'], Qexp['lnEInv']
 
         # minus cross entropy of Q and P
-        lb_p = ma.masked_invalid( (Pa-1.)*QlnE + (Pb-1.)*QlnEInv - special.betaln(Pa,Pb) ).sum()
+        # lb_p = ma.masked_invalid( (Pa-1.)*QlnE + (Pb-1.)*QlnEInv - special.betaln(Pa,Pb) ).sum()
+        lb_p = (Pa-1.)*QlnE + (Pb-1.)*QlnEInv - special.betaln(Pa,Pb)
+        lb_p[np.isnan(lb_p)] = 0
 
         # minus entropy of Q
-        lb_q = ma.masked_invalid( (Qa-1.)*QlnE + (Qb-1.)*QlnEInv - special.betaln(Qa,Qb) ).sum()
+        # lb_q = ma.masked_invalid( (Qa-1.)*QlnE + (Qb-1.)*QlnEInv - special.betaln(Qa,Qb) ).sum()
+        lb_q = (Qa-1.)*QlnE + (Qb-1.)*QlnEInv - special.betaln(Qa,Qb)
+        lb_q[np.isnan(lb_q)] = 0
 
-        return lb_p - lb_q
+        return lb_p.sum() - lb_q.sum()
 
 class Theta_Constant_Node(Constant_Variational_Node):
     """
@@ -447,10 +475,11 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
     def updateParameters(self):
 
         # Collect expectations from the markov blanket
-        Y = self.markov_blanket["Y"].getExpectation()
+        Y = deepcopy(self.markov_blanket["Y"].getExpectation())
         SWtmp = self.markov_blanket["SW"].getExpectations()
         tau = deepcopy(self.markov_blanket["Tau"].getExpectation())
         latent_variables = self.getLvIndex() # excluding covariates from the list of latent variables
+        mask = [ma.getmask(Y[m]) for m in xrange(len(Y))]
 
         if "Mu" in self.markov_blanket:
             Mu = self.markov_blanket['Mu'].getExpectation()
@@ -467,7 +496,12 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         for m in xrange(len(Y)):
             if tau[m].shape != Y[m].shape:
                 tau[m] = s.repeat(tau[m].copy()[None,:], self.N, axis=0)
-                tau[m] = ma.masked_where(ma.getmask(Y[m]), tau[m])
+            # Mask tau
+            # tau[m] = ma.masked_where(ma.getmask(Y[m]), tau[m]) # important to keep this out of the loop to mask non-gaussian tau
+            tau[m][mask[m]] = 0.
+            # Mask Y
+            Y[m] = Y[m].data
+            Y[m][mask[m]] = 0.
 
         # Collect parameters from the P and Q distributions of this node
         Q = self.Q.getParameters().copy()
@@ -478,8 +512,8 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
             foo = s.zeros((self.N,))
             bar = s.zeros((self.N,))
             for m in xrange(M):
-                foo += ma.dot(tau[m],SWtmp[m]["ESWW"][:,k])
-                bar += ma.dot(tau[m]*(Y[m] - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SWtmp[m]["E"][:,s.arange(self.dim[1])!=k].T )), SWtmp[m]["E"][:,k])
+                foo += np.dot(tau[m],SWtmp[m]["ESWW"][:,k])
+                bar += np.dot(tau[m]*(Y[m] - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SWtmp[m]["E"][:,s.arange(self.dim[1])!=k].T )), SWtmp[m]["E"][:,k])
             Qvar[:,k] = 1./(Alpha[:,k]+foo)
             Qmean[:,k] = Qvar[:,k] * (  Alpha[:,k]*Mu[:,k] + bar )
 

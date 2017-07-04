@@ -208,7 +208,8 @@ class initModel(object):
             elif self.lik[m] == "bernoulli":
                 # tmp = s.ones(self.D[m])*0.25
                 # tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
-                tau_list[m] = Tau_Jaakkola(dim=(self.D[m],), value=0.25)
+                # tau_list[m] = Tau_Jaakkola(dim=(self.D[m],), value=0.25)
+                tau_list[m] = Tau_Jaakkola(dim=((self.N,self.D[m])), value=1.)
             elif self.lik[m] == "binomial":
                 tmp = 0.25*s.amax(self.data["tot"][m],axis=0)
                 tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)

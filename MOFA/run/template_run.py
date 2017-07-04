@@ -49,10 +49,9 @@ data_opts['input_files'] = args.inFiles
 data_opts['outfile'] = args.outFile
 data_opts['rownames'] = 0
 data_opts['colnames'] = 0
-data_opts['delimiter'] = " "
 # data_opts['rownames'] = None
 # data_opts['colnames'] = None
-# data_opts['delimiter'] = " "
+data_opts['delimiter'] = " "
 data_opts['ThetaDir'] = args.ThetaDir
 
 # View names

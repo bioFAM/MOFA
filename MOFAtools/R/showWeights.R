@@ -69,88 +69,156 @@ showWeightHeatmap <- function(model, view, features = "all", factors = "all", Re
 
 
 
-#' @title showWeights: visualise the loadings for a certain factor in a given view
-#' @name showWeights
-#' @description Function to visualize weights in a dotplot highlighting features with highest loadings
+#' @title showAllWeights: visualise the distribution of loadings for a certain factor in a given view
+#' @name showAllWeights
+#' @description Function to visualize the distribution of weights in a dotplot with the possibility of highlighting specific features
 #' @param model a fitted MOFA model
 #' @param view name of view from which to get the corresponding weights
 #' @param factor name of the factor
-#' @param ntop number of highest positive weights to label
-#' @param ntail number of lowest negative weights to label
-#' @param manual feature names which are labeled in the plot
-#' @param th threshold on the absolute value beyond which weigths are labeled
-#' @param ntotal number of features with highest absolute value to label
-#' @param FeatureGroups  a named vector of same lengh as number of feautres annotating feature to groups that 
-#'  will be colored in the dotplot, names have to be in accordance with feature names
-#' @param FeatureGroupsCols  a named vector speciying for each elemnt in FeautreGroups a color to use for plotting
-#' @param showFeatureNames boolean wether to show all FeatureNames on the x-axis (default false)
+#' @param nfeatures number of features to label based on weight
+#' @param abs take absolute value of the weights?
+#' @param threshold threshold on the absolute value beyond which weigths are labeled
+#' @param manual features to be manually labelled. A list of character vectors
+#' @param color_manual a character vector with colors
 #' @param main plot title
 #' @details fill this
-#' @import dplyr ggplot2 ggrepel magrittr
+#' @import ggplot2 ggrepel
 #' @export
-
-showWeights <- function(model, view, factor, ntop = 0, ntail = 0, manual = NULL, th = NULL, ntotal= 10, 
-                        FeatureGroups = NULL, FeatureGroupsCols=NULL, showFeatureNames = F, main = NULL) {
+showAllWeights <- function(model, view, factor, nfeatures = 0, abs=FALSE, threshold = NULL, 
+                                    manual = NULL, color_manual=NULL, main = NULL) {
   
   # Sanity checks
-  if (class(model) != "MOFAmodel")
-    stop("'model' has to be an instance of MOFAmodel")
+  if (class(model) != "MOFAmodel") stop("'model' has to be an instance of MOFAmodel")
   stopifnot(all(view %in% viewNames(model)))  
-  
-  if(is.null(factorNames)) factorNames(model) <- 1:model@Dimensions$K
   factor <- as.character(factor)
-  stopifnot((factor %in% factorNames(model)))
-
-  W <- getExpectations(model,"SW","E")[[view]][,factor]
+  stopifnot(factor %in% factorNames(model))
+  if(!is.null(manual)) { stopifnot(class(manual)=="list"); stopifnot(all(Reduce(intersect,manual) %in% featureNames(model)[[view]]))  }
   
-  df_W <- data.frame(loading=W, FeatureName = names(W))
-  df_W$imp <- F
-  if(ntop>0) df_W$imp[df_W$loading >= sort(df_W$loading, decreasing = T)[ntop]] <- T
-  if(ntail>0) df_W$imp[df_W$loading <= sort(df_W$loading, decreasing = F)[ntail]] <- T
-  if(!is.null(manual)) df_W$imp[df_W$FeatureName %in% manual] <-T
-  if(!is.null(th)) df_W$imp[abs(df_W$loading) >= th] <- T
-  if(ntotal > 0) df_W$imp[abs(df_W$loading) >= sort(abs(df_W$loading), decreasing = T)[ntotal]] <- T
+  # Collect expectations  
+  W <- getExpectations(model,"SW","E", as.data.frame = T)
+  W <- W[W$factor==factor & W$view==view,]
   
-  df_W %<>% arrange(loading)
-  df_W$FeatureName <- factor(df_W$FeatureName, levels=df_W$FeatureName)
+  if (abs) W$value <- abs(W$value)
   
-  #color groups of features
-  if(!is.null(FeatureGroups)) {
-    #sanity check
-    if(length(FeatureGroups) != length(W)) stop("Length of FeatureGroup and number of features in the view do not agree")
-    if(!setequal(names(FeatureGroups),as.character(df_W$FeatureName))) stop("Names of FeatureGroup and names of features in the view do not agree")
-    
-    df_W$groups <- as.factor(FeatureGroups[as.character(df_W$FeatureName)] )
-    if(is.null(FeatureGroupsCols)){
-      FeatureGroupsCols <- c(brewer.pal(9, "Set1"), brewer.pal(8, "Set2"), brewer.pal(12, "Set3"))
-      if(length(unique(df_W$groups)) > 29) FeatureGroupsCols <- colors(length(unique(df_W$groups)))
-      FeatureGroupsCols <- FeatureGroupsCols[1:length(unique(df_W$groups))]
-      names(FeatureGroupsCols) <- unique(FeatureGroups)
-    }}
-  else df_W$groups <- T
+  # Define groups for labelling
+  W$group <- "0"
   
-  if(is.null(main)) main <- paste("Weigths on LF", factor, "on view", view)
-
-  gg_W <- ggplot2::ggplot(df_W, aes(x=FeatureName, y=loading, col= groups)) + geom_point() +
-    ggrepel::geom_text_repel(data = filter(df_W, imp), aes(label = FeatureName, col = groups),
-                             segment.alpha=0.2, box.padding = unit(0.5, "lines"), show.legend= F) +
-    ggtitle(main)
+  # Define group of features to color according to the loading
+  if(nfeatures>0) W$group[abs(W$value) >= sort(abs(W$value), decreasing = T)[nfeatures]] <- "1"
+  if(!is.null(threshold)) W$group[abs(W$value) >= threshold] <- "1"
   
-  if(!is.null(FeatureGroups)) gg_W <- gg_W + scale_color_manual(values=FeatureGroupsCols)
-    else gg_W <- gg_W + guides(col=F) + scale_color_manual(values=c("black", "red"))  +
-                geom_point(aes(x=FeatureName, y=loading, col=imp)) 
+  # Define group of features to label manually
+  if(!is.null(manual)) {
+    # Sample colors
+    if (is.null(color_manual)) {
+      color_manual <- hcl(h = seq(15, 375, length = length(manual) + 1), l = 65, c = 100)[1:length(manual)]
+    } else {
+      stopifnot(length(color_manual)==length(manual)) 
+    }
+    for (m in 1:length(manual)) {
+      W$group[W$feature %in% manual[[m]]] <- as.character(m+1)
+    }
+  }
   
-    if(showFeatureNames)
-      gg_W <- gg_W + theme(axis.title.x=element_blank(),
-                       axis.text.x=element_text(angle = 90, hjust = 1),
-                       axis.ticks.x=element_blank(),
-                       panel.background =element_rect(fill="white"))
-    else
-      gg_W <- gg_W + theme(axis.title.x=element_blank(),
-                           axis.text.x=element_blank(),
-                           axis.ticks.x=element_blank(),
-                           panel.background =element_rect(fill="white"))
+  # Sort by weight 
+  W <- W[order(W$value, decreasing = T),]
+  W$feature <- factor(W$feature, levels=W$feature)
   
-  print(gg_W)
+  # Define plot title
+  if(is.null(main)) main <- paste("Distribution of weigths of LF", factor, "in", view, "view")
+  
+  # Generate plot
+  W$tmp <- as.character(W$group!="0")
+  gg_W <- ggplot(W, aes(x=feature, y=value, col=group)) + 
+    ggtitle(main) + geom_point(aes(size=tmp)) + labs(y="Loading") +
+    ggrepel::geom_text_repel(data = W[W$group!="0",], aes(label = feature, col = group),
+                             segment.alpha=0.2, box.padding = unit(0.5, "lines"), show.legend= F)
+  # Define size
+  gg_W <- gg_W + scale_size_manual(values=c(0.1,1.5)) + guides(size=F)
+  
+  # Define colors
+  cols <- c("grey","black",color_manual)
+  gg_W <- gg_W + scale_color_manual(values=cols) + guides(col=F)
+  
+  # Add Theme  
+  gg_W <- gg_W + theme(
+    plot.title = element_text(size=rel(1.3), hjust=0.5),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(size=rel(1.3), color="black"),
+    axis.title.y = element_text(size=rel(1.5), color="black"),
+    axis.ticks.x = element_blank(),
+    panel.background = element_rect(fill="white")
+    )
+  
+  return(gg_W)
 }
+
+
+
+#' @title showTopWeights: visualise the top weights for a certain factor in a given view
+#' @name showTopWeights
+#' @description Function to visualize the top weights
+#' @param model a fitted MOFA model
+#' @param view name of view from which to get the corresponding weights
+#' @param factor name of the factor
+#' @param nfeatures number of features
+#' @param abs take absolute value of the weights?
+#' @details fill this
+#' @import ggplot2
+#' @export
+showTopWeights <- function(model, view, factor, nfeatures = 0, manual_features=NULL, abs=TRUE) {
+  
+  # Sanity checks
+  if (class(model) != "MOFAmodel") stop("'model' has to be an instance of MOFAmodel")
+  stopifnot(all(view %in% viewNames(model)))  
+  factor <- as.character(factor)
+  stopifnot(factor %in% factorNames(model))
+  if(!is.null(manual_features)) { stopifnot(class(manual_features)=="list"); stopifnot(all(Reduce(intersect,manual_features) %in% featureNames(model)[[view]]))  }
+  
+  # Collect expectations  
+  W <- getExpectations(model,"SW","E", as.data.frame = T)
+  W <- W[W$factor==factor & W$view==view,]
+  
+  # Sort according to loadings
+  W <- W[with(W, order(-abs(value))), ]
+  
+  # Extract top hits
+  if (nfeatures>0) features <- head(W$feature,nfeatures)
+  
+  # Extract manual hits
+  if (!is.null(manual_features)) features <- W$feature[W$feature %in% manual_features]
+  
+  W <- W[W$feature %in% features,]
+  W$feature <- factor(W$feature, levels=W$feature)
+  
+  # Take absolute value of the loadings
+  W$Sign <- c("Negative sign","Positive sign")[as.numeric(W$value > 0)+1]
+  if (abs) { W$value <- abs(W$value); xlab <- "Absolute loading" } else { xlab <- "Loading" }
+  
+  p <- ggplot(W,aes(x=feature, y=value, color=Sign)) +
+    geom_point(size=3) +
+    geom_segment(aes(xend=feature, yend=0)) +
+    # scale_colour_gradient(low="grey", high="black") +
+    scale_colour_manual(values=c("#F8766D","#00BFC4")) +
+    # guides(colour = guide_legend(title.position="top", title.hjust = 0.5)) +
+    ylab(xlab) +
+    coord_flip() + 
+    theme(axis.title.x = element_text(size=rel(1.5), color='black', margin=margin(8,0,0,0)),
+          axis.title.y = element_blank(),
+          axis.text.y = element_text(size=rel(1.2), hjust=1, color='black', margin=margin(0,-10,0,0)),
+          axis.text.x = element_text(size=rel(1.5), color='black'),
+          axis.ticks.y = element_blank(),
+          axis.ticks.x = element_line(),
+          legend.position='top',
+          # legend.title=element_text(size=rel(1.5), color="black"),
+          legend.title=element_blank(),
+          legend.text=element_text(size=rel(1.3), color="black"),
+          legend.key=element_rect(fill='transparent'),
+          panel.background = element_blank(),
+          aspect.ratio = .7)
+  return(p)
+  
+}
+
 

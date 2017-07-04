@@ -13,11 +13,9 @@ vignette: >
 
 ```{r}
 # devtools::load_all("/Users/bvelten/Documents/MOFA/MOFApackage/scGFA/MOFAtools/")
-# devtools::load_all("/Users/ricard/mofa/MOFAtools")
+devtools::load_all("/Users/ricard/mofa/MOFAtools")
 library(MultiAssayExperiment)
 library(MOFAtools)
-# %<>%, we should not use it or require the package...
-# library(magrittr)
 ```
 
 # Step 1: Initialize MOFA object
@@ -123,8 +121,8 @@ object <- runMOFA(object, DirOptions)
 
 #for demonstration purposes use already fitted object
 # object <- loadModel("/Users/bvelten/Documents/MOFA/CLL_MOFA_data/out/test_final/common_small_noXY_alldrugs_mean2.hdf5")
-object <- loadModel("/Users/ricard/data/CLL/out/test_final/common_small_noXY_alldrugs_mean2.hdf5")
-# data <- TrainData(object)
+# object <- loadModel("/Users/ricard/data/CLL/out/test_final/common_small_noXY_alldrugs_mean2.hdf5")
+object <- loadModel("/Users/ricard/data/CLL/out/test_final/29Jun/test2.hdf5")
 ```
 
 # Step 3: Analyse a trained MOFA model
@@ -212,8 +210,8 @@ FSE.out <- FeatureSetEnrichmentAnalysis(
   local.statistic = "loading",
   transformation = "abs.value",
   global.statistic = "mean.diff",
-  statistical.test = "permutation",
-  # statistical.test = "cor.adj.parametric",
+  # statistical.test = "permutation",
+  statistical.test = "cor.adj.parametric",
   nperm=1000,
   min.size=10,
   cores=2, 

@@ -68,7 +68,8 @@ compareModels <- function(ModelList, comparison="all", main=NULL, ...) {
     #plot heatmap
     if(is.null(main)) main <- "Absolute correlation between latent factors"
     pheatmap(abs(corLFs), show_rownames = F,
-             color=colorRampPalette(c("white", "orange" ,"red"))(100), 
+             color = colorRampPalette(c("white",RColorBrewer::brewer.pal(9,name="YlOrRd")))(100),
+             # color=colorRampPalette(c("white", "orange" ,"red"))(100), 
              annotation_col = modelAnnot, main= main , ...)
     
     return(corLFs)

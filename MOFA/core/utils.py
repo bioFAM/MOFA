@@ -55,7 +55,8 @@ def maskData(data, data_opts):
         # Mask samples in a complete view
         Nsamples2Mask = data_opts['maskNSamples'][m]
         if Nsamples2Mask != 0:
-            idxMask = np.random.choice(N, size=Nsamples2Mask, replace = False)
+            # idxMask = np.random.choice(N, size=Nsamples2Mask, replace = False)
+            idxMask = np.arange(Nsamples2Mask)
             tmp = data[m].copy()
             tmp.ix[idxMask, :] = pd.np.nan
             data[m] = tmp

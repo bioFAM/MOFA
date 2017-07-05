@@ -54,7 +54,7 @@ runMOFA <- function(object, DirOptions) {
   if (object@ModelOpts$learnMean == T) { command <- paste(command, "--learnMean", sep=" ") }
   
   # Run motherfuckers!!!!
-  system(command)
+  system(command, ignore.stdout = F, ignore.stderr = T)
   
   # Load trained model
   object <- loadModel(DirOptions$outFile, object)

@@ -2,11 +2,19 @@
 library(MOFAtools)
 library(purrr)
 
-# file = "/Users/ricard/perturbseq/k562/processed/model.hdf5"
-file = "/tmp/test.h5"
-model <- loadModel(file)
+file = "/Users/ricard/data/CLL/out/imputation/FullCases/1Jul/allPats_smallnoXY_N50_drug_k25_1.hdf5"
+# file = "/Users/ricard/scMT/mofa/out/model_test.hdf5"
+# file = "/tmp/test.h5"
+model <- loadModel(file, sortFactors = F)
 
 calculateVarianceExplained(model)
+
+
+showAllWeights(model, view="expr", factor="9")
+showDataHeatmap(model, view="met_genebody", factor="9", nfeatures = 200)
+
+Ypred <- t(model@Expectations$SW$expr$E %*% t(model@Expectations$Z$E))
+
 
 Z <- getExpectations(model,"Z","E")
 rownames(Z) <- 

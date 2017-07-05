@@ -34,8 +34,8 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     ###########################
 
     if not os.path.isdir(os.path.dirname(data_opts["outfile"])):
-        print "Error: Output directory does not exist"
-        exit()
+        print "Output directory does not exist, creating it..."
+        os.makedirs(os.path.dirname(data_opts["outfile"]))
 
     # If it doesnt exist, create the output folder
     # outdir = os.path.dirname(data_opts['outfile'])
@@ -102,8 +102,11 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     if len(s.unique(model_opts['learnTheta'])) == 1:
         # All are infered
         if s.unique(model_opts['learnTheta'])==1.:
-            init.initThetaLearn(pa=model_opts["priorTheta"]['a'], pb=model_opts["priorTheta"]['b'],
-                qa=model_opts["initTheta"]['a'],  qb=model_opts["initTheta"]['b'], qE=model_opts["initTheta"]['E'])
+            # init.initThetaLearn(pa=model_opts["priorTheta"]['a'], pb=model_opts["priorTheta"]['b'],
+            #     qa=model_opts["initTheta"]['a'],  qb=model_opts["initTheta"]['b'], qE=model_opts["initTheta"]['E'])
+            init.initThetaMixed(pa=model_opts["priorTheta"]['a'], pb=model_opts["priorTheta"]['b'],
+                qa=model_opts["initTheta"]['a'],  qb=model_opts["initTheta"]['b'], qE=model_opts["initTheta"]['E'],
+                learnTheta=model_opts['learnTheta'])
         # None are infered
         elif s.unique(model_opts['learnTheta'])==0.:
             init.initThetaConst(value=model_opts["initTheta"]['E'])

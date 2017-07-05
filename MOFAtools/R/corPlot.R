@@ -116,36 +116,44 @@ FactorsScatterPlot <- function(object, z_order=NULL, title="") {
 #' @references fill this
 #' @import corrplot pcaMethods
 #' @importFrom stats cor
+#' @importFrom plyr rbind.fill.matrix
 #' @export
 
-CorrplotLFvsPC <- function(model, views="all", noPCs=5, method="svd"){
-  
-  if (views=="all") {
-    views <- viewNames(model)  
-  } else {
-    stopifnot(all(views%in%viewNames(model)))
-  }
+CorrplotLFvsPC <- function(model, views="all", noPCs=5, method="svd") {
+
+  if (class(model) != "MOFAmodel") stop("'model' has to be an instance of MOFAmodel")
+  if (views[1]=="all") { views <- viewNames(model) } else { stopifnot(all(views%in%viewNames(model))) }
   
   # Collect expectations
-  Z <- getExpectations(model,"Z","E")
+  # Z <- getExpectations(model,"Z","E")
+  Z <- getFactors(model)
+  if (model@ModelOpts$learnMean) Z <- Z[,-1]
   
   
   # Perform PCAs
   listPCs <- lapply(views, function(m) {
-    model@TrainData[[m]][is.nan(model@TrainData[[m]])] <- NA
-    pc.out <- pcaMethods::pca(t(model@TrainData[[m]]), method=method, center=TRUE, nPcs=noPCs)
-    tmp <- pc.out@scores
-    colnames(tmp) <- paste(m, colnames(tmp), sep="_")
+    data <- getTrainData(model,m)
+    # Replace Nan by NA
+    data[is.nan(data)] <- NA
+    # Remove samples with missing views
+    data <- data[,apply(data,2, function(x) mean(is.na(x))) < 1]
+    # Perform PCA
+    pc.out <- pcaMethods::pca(t(data), method=method, center=TRUE, scale="none", nPcs=noPCs)
+    # Extract principal components
+    tmp <- t(pc.out@scores)
+    rownames(tmp) <- paste(m, rownames(tmp), sep="_")
     tmp
   })
   
   # Calculate correlation matrix between latent factors and PCs
-  matPCs <- do.call(cbind,listPCs)
-  corrmatrix <- cor(matPCs,Z)
+  # matPCs <- do.call(cbind,listPCs)
+  matPCs <- t(plyr::rbind.fill.matrix(listPCs))
+  colnames(matPCs) <- unlist(lapply(listPCs,rownames))
+  corrmatrix <- cor(matPCs,Z, use="complete.obs")
   
   # Plot correlation matrix
   # corrplot::corrplot(t(corrmatrix), order="original", title="", tl.col="black", mar=c(1,1,3,1))
-  corrplot::corrplot(t(corrmatrix), order="original", title="", tl.col="black")
+  corrplot::corrplot(t(abs(corrmatrix)), order="original", title="", tl.col="black")
   
   return(corrmatrix)
 }

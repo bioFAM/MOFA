@@ -72,9 +72,10 @@ class Simulate(object):
 
         else:
             for m in xrange(self.M):
-                for d in xrange(self.D[m]):
-                    for k in xrange(self.K):
-                        S[m][d,k] = bernoulli.rvs(p=theta[m][d,k], size=1)
+                S[m] = bernoulli.rvs(p=theta[m].flatten(), size=self.D[m]*self.K).reshape((self.D[m],self.K))
+                # for d in xrange(self.D[m]):
+                #     for k in xrange(self.K):
+                #         S[m][d,k] = bernoulli.rvs(p=theta[m][d,k], size=1)
 
         # Simualte ARD precision
         if alpha is None:
@@ -101,7 +102,7 @@ class Simulate(object):
         # Precision of noise is initialised by default using a uniform distribution
         return [ uniform.rvs(loc=1,scale=3,size=self.D[m]) for m in xrange(self.M) ]
 
-    def initMu(self, mu=None):
+    def initMu(self):
         # Means are initialised to zero by default
         return [ s.zeros(self.D[m]) for m in xrange(self.M) ]
 
@@ -136,31 +137,30 @@ class Simulate(object):
         # Sample observations using a poisson likelihood
         elif likelihood == "poisson":
             # Slow way
-            for m in xrange(self.M):
-                for n in xrange(self.N):
-                    for d in xrange(self.D[m]):
-                        f = s.dot(Z[n,:],W[m][d,:].T)
-                        # f = s.dot(Z[n,:],W[m][d,:].T) + norm.rvs(loc=0,scale=s.sqrt(1/Tau[m][d]))
-                        rate = s.log(1+s.exp(f))
-                        # Sample from the Poisson distribution
-                        # Y[m][n,d] = poisson.rvs(rate)
-                        # Use the more likely values
-                        Y[m][n,d] = s.special.round(rate)
-
-            # # Fast way
             # for m in xrange(self.M):
-            #     F = s.dot(Z,W[m].T)
-            #     # F = s.dot(Z,W[m].T) + norm.rvs(loc=0,scale=s.sqrt(1/Tau[m]))
-            #     rate = s.log(1+s.exp(F))
-            #     # Sample from the Poisson distribution
-            #     # MAYBE THIS REQUIRES RESHAPING
-            #     # Y[m] = poisson.rvs(rate)
-            #     # Use the more likely values
-            #     Y[m] = s.special.round(rate)
+            #     for n in xrange(self.N):
+            #         for d in xrange(self.D[m]):
+            #             f = s.dot(Z[n,:],W[m][d,:].T)
+            #             # f = s.dot(Z[n,:],W[m][d,:].T) + norm.rvs(loc=0,scale=s.sqrt(1/Tau[m][d]))
+            #             rate = s.log(1+s.exp(f))
+            #             # Sample from the Poisson distribution
+            #             # Y[m][n,d] = poisson.rvs(rate)
+            #             # Use the more likely values
+            #             Y[m][n,d] = s.special.round(rate)
+
+            # Fast way
+            for m in xrange(self.M):
+                F = s.dot(Z,W[m].T)
+                # F = s.dot(Z,W[m].T) + norm.rvs(loc=0,scale=s.sqrt(1/Tau[m]))
+                rate = s.log(1+s.exp(F))
+                # Sample from the Poisson distribution
+                # MAYBE THIS REQUIRES RESHAPING
+                # Y[m] = poisson.rvs(rate)
+                # Use the more likely values
+                Y[m] = s.special.round(rate)
 
         # Sample observations using a bernoulli likelihood
         elif likelihood == "bernoulli":
-            # Slow way
             for m in xrange(self.M):
                 # for n in xrange(self.N):
                     # for d in xrange(self.D[m]):

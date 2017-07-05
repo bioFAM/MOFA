@@ -72,7 +72,7 @@ loadModel <- function(file, object=NULL, sortFactors=F) {
   featureNames(object) <- lapply(object@TrainData,rownames)
   factorNames(object) <- as.character(1:object@Dimensions[["K"]])
     
-  # Rename covariates
+  # Rename covariates, including intercept
   if (object@ModelOpts$learnMean == TRUE) factorNames(object) <- c("intercept",as.character(1:(object@Dimensions[["K"]]-1)))
   if (!is.null(object@ModelOpts$covariates)) {
     if (object@ModelOpts$learnMean == TRUE) {
@@ -82,13 +82,17 @@ loadModel <- function(file, object=NULL, sortFactors=F) {
     }
   }
   
+  # Re-name and order factors in order of variance explained
   if (sortFactors) {
-    stop()
-    # Re-name and order factors in order of variance explained and label intercept
-    r2 <- rowSums(calculateVarianceExplained(object,plotit=F)$R2PerFactor)
-    order_factors <- c("intercept",names(r2)[order(r2, decreasing = T)])
+    r2 <- rowSums(calculateVarianceExplained(object,plotit=F,showtotalR2=T)$R2PerFactor)
+    order_factors <- c(names(r2)[order(r2, decreasing = T)])
+    if (object@ModelOpts$learnMean) { order_factors <- c("intercept",order_factors) }
     object <- subsetFactors(object,order_factors)
-    # factorNames(object) <- 
+    if (object@ModelOpts$learnMean) { 
+      factorNames(object) <- c("intercept",1:(object@Dimensions$K-1))
+    } else {
+      factorNames(object) <- c(1:object@Dimensions$K) 
+    }
   }
   return(object)
 }

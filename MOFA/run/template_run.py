@@ -17,12 +17,12 @@ p.add_argument( '--scale_covariates',  type=int, nargs='+', default=0,          
 p.add_argument( '--schedule',          type=str, nargs="+", required=True,                  help='Update schedule' )
 p.add_argument( '--learnTheta',        type=int, nargs="+", default=0,                      help='learn the sparsity parameter from the spike and slab?' )
 p.add_argument( '--learnMean',         action='store_true',                                 help='learn the feature mean?' )
-p.add_argument( '--initTheta',         type=float, nargs="+", default=0.5 ,                 help='hyperparameter theta in case that learnTheta is set to False')
+p.add_argument( '--initTheta',         type=float, nargs="+", default=1. ,                 help='hyperparameter theta in case that learnTheta is set to False')
 p.add_argument( '--startSparsity',     type=int, default=1,                                  help='')
 p.add_argument( '--ThetaDir',          type=str, default="" ,                               help='BLABLA')
 p.add_argument( '--tolerance',         type=float, default=0.1 ,                            help='tolerance for convergence (deltaELBO)')
-p.add_argument( '--startDrop',         type=int, default=5 ,                                help='First iteration to start dropping factors')
-p.add_argument( '--freqDrop',          type=int, default=1 ,                                help='Frequency for dropping factors')
+p.add_argument( '--startDrop',         type=int, default=999999 ,                                help='First iteration to start dropping factors')
+p.add_argument( '--freqDrop',          type=int, default=999999 ,                                help='Frequency for dropping factors')
 p.add_argument( '--maskAtRandom',      type=float,nargs="+", default=None,                  help='Fraction of data to mask per view')
 p.add_argument( '--maskNSamples',      type=int,nargs="+", default=None,                    help='Number of patients to mask per view')
 p.add_argument( '--nostop',            action='store_true',                                 help='Do not stop even when convergence criterion is met?' )
@@ -184,7 +184,7 @@ model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.na
 if model_opts['ardW'] == "m":
   model_opts["priorAlphaW"] = { 'a':[1e-3]*M, 'b':[1e-3]*M }
 elif model_opts['ardW'] == "mk":
-  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-3]*M, 'b':[s.ones(K)*1e-3]*M }
+  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-14]*M, 'b':[s.ones(K)*1e-14]*M }
 elif model_opts['ardW'] == "k":
   model_opts["priorAlphaW"] = { 'a':s.ones(K)*1e-3, 'b':s.ones(K)*1e-3 }
 
@@ -197,7 +197,7 @@ for m in xrange(M):
       model_opts["priorTheta"]["b"][m][k] = s.nan
 
 # Tau
-model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-3 for m in xrange(M)], 'b':[s.ones(D[m])*1e-3 for m in xrange(M)] }
+model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-14 for m in xrange(M)], 'b':[s.ones(D[m])*1e-14 for m in xrange(M)] }
 
 
 ##############################################
@@ -207,7 +207,7 @@ model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-3 for m in xrange(M)], 'b':[s.on
 # Latent variables
 model_opts["initZ"] = { 'mean':"random", 'var':s.ones((K,)), 'E':None, 'E2':None }
 if model_opts['ardZ']:
-  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*1e2 }
+  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*1. }
 
 # Tau
 model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(D[m])*100 for m in xrange(M)] }
@@ -217,7 +217,7 @@ if model_opts['ardW'] == "m":
   # model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
   model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[ K*D[m]/(data[m].std(axis=0)**2 - 1./model_opts["initTau"]["E"][m]).sum() for m in xrange(M) ] }
 elif model_opts['ardW'] == "mk":
-  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*100. for m in xrange(M)] }
+  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*1. for m in xrange(M)] }
 elif model_opts['ardW'] == "k":
   model_opts["initAlphaW"] = { 'a':s.nan*s.ones(K), 'b':s.nan*s.ones(K), 'E':s.ones(K)*100. }
 
@@ -243,7 +243,7 @@ for m in xrange(M):
 
 # Weights
 model_opts["initSW"] = { 
-  'Theta':[0.5*s.ones((D[m],K)) for m in xrange(M)], # THIS SHOULDN BE USED
+  'Theta':[s.ones((D[m],K)) for m in xrange(M)], # THIS SHOULDN BE USED
   'mean_S0':[s.zeros((D[m],K)) for m in xrange(M)],
   'var_S0':[s.nan*s.ones((D[m],K)) for m in xrange(M)],
   'mean_S1':[s.zeros((D[m],K)) for m in xrange(M)],
@@ -348,4 +348,7 @@ keep_best_run = False
 
 # Go!
 # runSingleTrial(data, data_opts, model_opts, train_opts, seed=None)
+# t1 = t = time()
 runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run)
+# t2 = time() - t1
+# s.savetxt(args.outFile, t2*np.ones(1), fmt='%.3f')

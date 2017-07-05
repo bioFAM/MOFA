@@ -190,7 +190,7 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, factor, threshold=0.
   
   # If there are too many pathways enriched, just keep the 'max_pathways' more significant
   if (nrow(tmp) > max.pathways)
-    tmp <- head(tmp,n=max.pathways)
+    tmp <- head(tmp[order(tmp$pvalue),],n=max.pathways)
   
   # Convert pvalues to log scale (add a small regulariser to avoid numerical errors)
   tmp$log <- -log10(tmp$pvalue + 1e-6)
@@ -216,7 +216,7 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, factor, threshold=0.
       legend.position='none',
       panel.background = element_blank()
     )
-  print(p)
+  
   return(p)
 }
 
@@ -234,14 +234,13 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, factor, threshold=0.
 Heatmap_FeatureSetEnrichmentAnalysis <- function(p.values, threshold=0.05, log=T, ...) {
   p.values <- p.values[!apply(p.values, 1, function(x) sum(x>=threshold)) == ncol(p.values),]
   if (log) {
-    p.values <- -log10(p.values)
+    p.values <- -log10(p.values+0.001)
     threshold <- -log10(threshold)
     col <- colorRampPalette(c("lightgrey", "red"))(n=10)
   } else {
     col <- colorRampPalette(c("red", "lightgrey"))(n=10)
   }
-  pheatmap::pheatmap(p.values, cluster_rows = T, cluster_cols = F, show_rownames = F, show_colnames = T,
-                     color = col)
+  pheatmap::pheatmap(p.values, color = col, ...)
   # sigFactors <- colnames(p.values)[which(apply(p.values, 2, function(x) any(x<=threshold)))]
   # return(sigFactors)
 }

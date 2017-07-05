@@ -1,7 +1,7 @@
 
-########################################################
-## User-friendly functions to get data from the model ##
-########################################################
+##########################################################
+## User-friendly functions to fetch data from the model ##
+##########################################################
 
 #' @rdname getCovariates
 #' @name getCovariates
@@ -12,13 +12,48 @@
 #' @export
 #' 
 getCovariates <- function(object, names) {
-  
-  # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
   stopifnot(all(names %in% colnames(colData(object@InputData))))
-  
   return(colData(object@InputData)[,names])
   
+}
+
+
+#' @rdname getFactors
+#' @name getFactors
+#' @title wraper to extract the latent factors from the model
+#' @description to-fill
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @export
+#' 
+getFactors <- function(object, as.data.frame=F) {
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
+  return(getExpectations(model,"Z","E",as.data.frame))
+}
+
+
+#' @rdname getWeights
+#' @name getWeights
+#' @title wraper to extract the weights from the model
+#' @description to-fill
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @export
+#' 
+getWeights <- function(object, views="all", factors="all", as.data.frame=F) {
+  # Sanity checks
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  # Get views and factors
+  if (paste0(views,collapse="") == "all") { views <- viewNames(object) } else { stopifnot(all(views %in% viewNames(object))) }
+  if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } else { stopifnot(all(factors %in% factorNames(object))) }
+  
+  weights <- getExpectations(model,"SW","E",as.data.frame)
+  if (as.data.frame) {
+    weights <- weights[weights$view%in%views & weights$factor%in%factors, ]
+  } else {
+    weights <- lapply(views, function(m) weights[[m]][,factors,drop=F])
+    if (length(views)==1) { weights <- weights[[1]] }
+  }
+  return(weights)
 }
 
 #' @rdname getTrainData
@@ -85,26 +120,26 @@ getExpectations <- function(object, variable, expectation, as.data.frame=F) {
       colnames(tmp) <- c("sample","factor","value")
     }
     if (variable=="SW") {
-      tmp <- lapply(names(exp), function(m) { tmp <- reshape2::melt(exp[[m]]); colnames(tmp) <- c("feature","factor","value"); tmp <- cbind(view=m,tmp); return(tmp) })
-      tmp <- do.call(rbind,tmp)
+      tmp <- lapply(names(exp), function(m) { tmp <- reshape2::melt(exp[[m]]); colnames(tmp) <- c("feature","factor","value"); tmp$view <- m;  tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character); return(tmp) })
+      tmp <- do.call(rbind.data.frame,tmp)
     }
     if (variable=="Y") {
-      tmp <- lapply(names(exp), function(m) { tmp <- reshape2::melt(exp[[m]]); colnames(tmp) <- c("sample","feature","value"); tmp <- cbind(view=m,tmp); return(tmp) })
+      tmp <- lapply(names(exp), function(m) { tmp <- reshape2::melt(exp[[m]]); colnames(tmp) <- c("sample","feature","value"); tmp$view <- m;  tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character); return(tmp) })
       tmp <- do.call(rbind,tmp)
     }
     if (variable=="Tau") {
-      tmp <- lapply(names(exp), function(m) data.frame(view=m, feature=names(exp[[m]]), value=unname(exp[[m]])) )
+      tmp <- lapply(names(exp), function(m) { data.frame(view=m, feature=names(exp[[m]]), value=unname(exp[[m]])); tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character); return(tmp) })
       tmp <- do.call(rbind,tmp)
     }
     if (variable=="AlphaW") {
-      tmp <- lapply(names(exp), function(m) tmp <- data.frame(view=m, factor=names(exp[[m]]), value=unname(exp[[m]])) )
+      tmp <- lapply(names(exp), function(m) { tmp <- data.frame(view=m, factor=names(exp[[m]]), value=unname(exp[[m]])); tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character); return(tmp) })
       tmp <- do.call(rbind,tmp)
     }
     if (variable=="Theta") {
-      # PROBLEM: THETA CAN BE (D,K) OR (K) 
-      stop("Not implemented")
+      stop()
+      tmp <- lapply(names(exp), function(m) { tmp <- reshape2::melt(exp[[m]]); colnames(tmp) <- c("sample","feature","value"); tmp$view <- m; tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character); return(tmp) })
+      tmp <- do.call(rbind,tmp)
     }
-    # exp <- cbind(variable = variable, tmp)
     exp <- tmp
   }
   return(exp)

@@ -121,7 +121,7 @@ showAllWeights <- function(model, view, factor, nfeatures = 0, abs=FALSE, thresh
   }
   
   # Sort by weight 
-  W <- W[order(W$value, decreasing = T),]
+  W <- W[order(W$value),]
   W$feature <- factor(W$feature, levels=W$feature)
   
   # Define plot title
@@ -130,11 +130,12 @@ showAllWeights <- function(model, view, factor, nfeatures = 0, abs=FALSE, thresh
   # Generate plot
   W$tmp <- as.character(W$group!="0")
   gg_W <- ggplot(W, aes(x=feature, y=value, col=group)) + 
+    scale_y_continuous(expand = c(0.01,0.01)) + scale_x_discrete(expand = c(0.01,0.01)) +
     ggtitle(main) + geom_point(aes(size=tmp)) + labs(y="Loading") +
     ggrepel::geom_text_repel(data = W[W$group!="0",], aes(label = feature, col = group),
-                             segment.alpha=0.2, box.padding = unit(0.5, "lines"), show.legend= F)
+                             segment.alpha=0.1, segment.color="black", segment.size=0.3, box.padding = unit(0.5, "lines"), show.legend= F)
   # Define size
-  gg_W <- gg_W + scale_size_manual(values=c(0.1,1.5)) + guides(size=F)
+  gg_W <- gg_W + scale_size_manual(values=c(0.05,1.5)) + guides(size=F)
   
   # Define colors
   cols <- c("grey","black",color_manual)
@@ -142,6 +143,8 @@ showAllWeights <- function(model, view, factor, nfeatures = 0, abs=FALSE, thresh
   
   # Add Theme  
   gg_W <- gg_W + theme(
+    # panel.spacing = margin(5,5,5,5),
+    panel.border = element_rect(colour = "black", fill=NA, size=0.75),
     plot.title = element_text(size=rel(1.3), hjust=0.5),
     axis.title.x = element_blank(),
     axis.text.x = element_blank(),
@@ -167,7 +170,7 @@ showAllWeights <- function(model, view, factor, nfeatures = 0, abs=FALSE, thresh
 #' @details fill this
 #' @import ggplot2
 #' @export
-showTopWeights <- function(model, view, factor, nfeatures = 0, manual_features=NULL, abs=TRUE) {
+showTopWeights <- function(model, view, factor, nfeatures = 0, manual_features=NULL, sign="positive", abs=TRUE) {
   
   # Sanity checks
   if (class(model) != "MOFAmodel") stop("'model' has to be an instance of MOFAmodel")
@@ -175,48 +178,60 @@ showTopWeights <- function(model, view, factor, nfeatures = 0, manual_features=N
   factor <- as.character(factor)
   stopifnot(factor %in% factorNames(model))
   if(!is.null(manual_features)) { stopifnot(class(manual_features)=="list"); stopifnot(all(Reduce(intersect,manual_features) %in% featureNames(model)[[view]]))  }
+  if (sign=="negative") stopifnot(abs==FALSE)
   
   # Collect expectations  
   W <- getExpectations(model,"SW","E", as.data.frame = T)
   W <- W[W$factor==factor & W$view==view,]
+  if (sign=="positive") { W <- W[W$value>0,] } else if (sign=="negative") { W <- W[W$value<0,] }
+  
+  # Absolute value
+  if (abs) W$value <- abs(W$value)
+  
+  # Extract relevant features
+  W <- W[with(W, order(-abs(value))), ]
+  if (nfeatures>0) features <- head(W$feature,nfeatures) # Extract top hits
+  if (!is.null(manual_features)) features <- W$feature[W$feature %in% manual_features] # Extract manual hits
+  W <- W[W$feature %in% features,]
   
   # Sort according to loadings
-  W <- W[with(W, order(-abs(value))), ]
-  
-  # Extract top hits
-  if (nfeatures>0) features <- head(W$feature,nfeatures)
-  
-  # Extract manual hits
-  if (!is.null(manual_features)) features <- W$feature[W$feature %in% manual_features]
-  
-  W <- W[W$feature %in% features,]
+  W <- W[with(W, order(-value, decreasing = T)), ]
   W$feature <- factor(W$feature, levels=W$feature)
   
-  # Take absolute value of the loadings
-  W$Sign <- c("Negative sign","Positive sign")[as.numeric(W$value > 0)+1]
-  if (abs) { W$value <- abs(W$value); xlab <- "Absolute loading" } else { xlab <- "Loading" }
+  # Define plot limits
+  # if (sign=="positive") {
+  #   lim <- min(W$value) - 0.05
+  # } else if (sign=="negative") {
+  #   lim <- max(W$value) + 0.05
+  # } else {
+  #   lim <- 0 
+  # }
   
-  p <- ggplot(W,aes(x=feature, y=value, color=Sign)) +
-    geom_point(size=3) +
-    geom_segment(aes(xend=feature, yend=0)) +
-    # scale_colour_gradient(low="grey", high="black") +
-    scale_colour_manual(values=c("#F8766D","#00BFC4")) +
+  p <- ggplot(W,aes(x=feature, y=value)) +
+    geom_point(size=2) +
+    geom_segment(aes(xend=feature, yend=0), size=0.5) +
+    scale_colour_gradient(low="grey", high="black") +
+    # scale_colour_manual(values=c("#F8766D","#00BFC4")) +
     # guides(colour = guide_legend(title.position="top", title.hjust = 0.5)) +
-    ylab(xlab) +
-    coord_flip() + 
-    theme(axis.title.x = element_text(size=rel(1.5), color='black', margin=margin(8,0,0,0)),
-          axis.title.y = element_blank(),
-          axis.text.y = element_text(size=rel(1.2), hjust=1, color='black', margin=margin(0,-10,0,0)),
-          axis.text.x = element_text(size=rel(1.5), color='black'),
-          axis.ticks.y = element_blank(),
-          axis.ticks.x = element_line(),
-          legend.position='top',
-          # legend.title=element_text(size=rel(1.5), color="black"),
-          legend.title=element_blank(),
-          legend.text=element_text(size=rel(1.3), color="black"),
-          legend.key=element_rect(fill='transparent'),
-          panel.background = element_blank(),
-          aspect.ratio = .7)
+    coord_flip() +
+    ylab("Loading") +
+    theme(
+      axis.title.x = element_text(size=rel(1.5), color='black'),
+      axis.title.y = element_blank(),
+      axis.text.y = element_text(size=rel(1.2), hjust=1, color='black'),
+      axis.text.x = element_text(size=rel(1.5), color='black'),
+      axis.ticks.y = element_blank(),
+      axis.ticks.x = element_line(),
+      legend.position='top',
+      # legend.title=element_text(size=rel(1.5), color="black"),
+      legend.title=element_blank(),
+      legend.text=element_text(size=rel(1.3), color="black"),
+      legend.key=element_rect(fill='transparent'),
+      panel.background = element_blank(),
+      aspect.ratio = .7
+      )
+  
+  if (sign=="negative") p <- p + scale_x_discrete(position = "top")
   return(p)
   
 }

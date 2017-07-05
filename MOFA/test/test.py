@@ -55,15 +55,15 @@ data['alpha'] = [ s.zeros(K,) for m in xrange(M) ]
 data['alpha'][0] = [1,1,1,1e6,1,1e6,1e6]
 data['alpha'][1] = [1,1,1e6,1,1e6,1,1e6]
 data['alpha'][2] = [1,1e6,1,1,1e6,1e6,1]
-data['theta'] = [ s.ones((D[m],K))*0.5 for m in xrange(M) ]
+data['theta'] = [ s.ones((D[m],K))*1.0 for m in xrange(M) ]
 # data['theta'] = [ s.repeat(s.linspace(0.1, 1.0, K)[None,:],D[m],0) for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=data['theta'], alpha=data['alpha'], annotation=False)
-data['mu'] = [ s.ones(D[m])*0. for m in xrange(M)]
+data['mu'] = [ s.ones(D[m])*5. for m in xrange(M)]
 data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 # data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
 
 missingness = 0.0
-missing_view = 0.0
+missing_view = 0.05
 # Y_warp = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 #   likelihood="warp", missingness=missingness, missing_view=missing_view)
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -91,7 +91,7 @@ data["Y"] = [ Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] ]
 data_opts = {}
 data_opts["outfile"] = "/tmp/test.h5"
 data_opts['view_names'] = ["View 1","View 2","View 3"]
-data_opts['center'] = [True]*M
+data_opts['center'] = [False]*M
 data_opts['scale_views'] = [False]*M
 # data_opts['covariates'] = stats.bernoulli.rvs(0.5, size=N)[:,None]
 data_opts['covariates'] = None
@@ -142,7 +142,7 @@ if data_opts['covariates'] is not None:
   K = dim["K"]
 
 # Define whether to learn means
-model_opts["learnMean"] = False
+model_opts["learnMean"] = True
 if model_opts["learnMean"]:
   if data_opts['covariates'] is None:
     data_opts['covariates'] = s.ones((dim["N"],1))
@@ -165,11 +165,11 @@ model_opts['likelihood'] = ['gaussian']* M
 model_opts['k'] = K
 
 # Define sparsities
-model_opts['ardZ'] = False
+model_opts['ardZ'] = True
 model_opts['ardW'] = "mk"
 
 # Define for which factors to learn Theta
-model_opts['learnTheta'] = [1.*s.ones(K) for m in xrange(M)]
+model_opts['learnTheta'] = [0.*s.ones(K) for m in xrange(M)]
 
 # Define schedule of updates
 # model_opts['schedule'] = ["Y","SW","Z","AlphaW","Theta","Tau"]
@@ -326,7 +326,7 @@ if model_opts["learnMean"]:
 
 train_opts = {}
 train_opts['elbofreq'] = 1
-train_opts['maxiter'] = 5000
+train_opts['maxiter'] = 1000
 # train_opts['tolerance'] = 1E-2
 train_opts['tolerance'] = 0.01
 train_opts['forceiter'] = True

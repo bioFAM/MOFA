@@ -312,8 +312,9 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
             term4_tmp1 = s.dot((tau*Y).T,Z[:,k]) # good to modify
             # term4_tmp2 = ( tau * s.dot((Z[:,k]*Z[:,s.arange(self.dim[1])!=k].T).T, SW[:,s.arange(self.dim[1])!=k].T) ).sum(axis=0)
             term4_tmp2 = ( tau * s.dot((Z[:,k]*Z[:,s.arange(self.dim[1])!=k].T).T, SW[:,s.arange(self.dim[1])!=k].T) ).sum(axis=0) # good to modify
-            # term4_tmp3 = ma.dot(ZZ[:,k].T,tau) + alpha[k]
-            term4_tmp3 = ma.dot(ZZ[:,k].T,tau) + alpha[k] # good to modify
+
+            term4_tmp3 = ma.dot(ZZ[:,k].T,tau) + alpha[k]
+            # term4_tmp3 = s.dot(ZZ[:,k].T,tau) + alpha[k] # good to modify (I REPLACE MA.DOT FOR S.DOT, IT SHOULD BE SAFE )
 
             # term4 = 0.5*s.divide((term4_tmp1-term4_tmp2)**2,term4_tmp3)
             term4 = 0.5*s.divide(s.square(term4_tmp1-term4_tmp2),term4_tmp3) # good to modify, awsnt checked numerically
@@ -480,6 +481,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         tau = deepcopy(self.markov_blanket["Tau"].getExpectation())
         latent_variables = self.getLvIndex() # excluding covariates from the list of latent variables
         mask = [ma.getmask(Y[m]) for m in xrange(len(Y))]
+
 
         if "Mu" in self.markov_blanket:
             Mu = self.markov_blanket['Mu'].getExpectation()

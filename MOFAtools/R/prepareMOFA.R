@@ -85,7 +85,7 @@ getDefaultTrainOpts <- function(silent=T) {
     elbofreq = 1,        # Frequency of evidence lower bound calculation
     
     startSparsity = 1000, # ...
-    startdrop = 5,       # Initial iteration to start dropping factors
+    startdrop = 3,       # Initial iteration to start dropping factors
     freqdrop = 1,        # Frequency of dropping latent factors
     drop_by_norm = 0.00,  # Option to drop latent factors: minimum norm threshold
     # drop_by_cor = NA,   # (NOT IMPLEMENTED) Option to drop latent factors: maximum correlation between two factors

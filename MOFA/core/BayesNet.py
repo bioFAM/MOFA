@@ -73,9 +73,9 @@ class BayesNet(object):
         # print (alpha)
 
         # # print "SW:"
-        SW = self.nodes["SW"].getExpectation()
-        for m in xrange(len(SW)):
-            print str(m) + "= " + str(s.absolute(SW[m]>0.001).sum(axis=0))
+        # SW = self.nodes["SW"].getExpectation()
+        # for m in xrange(len(SW)):
+        #     print str(m) + "= " + str(s.absolute(SW[m]>0.001).sum(axis=0))
 
         # SW = s.concatenate(self.nodes["SW"].getExpectation(), axis=0)
         # print (s.absolute(SW)>0.01).sum(axis=0)
@@ -90,6 +90,7 @@ class BayesNet(object):
         # Shut down based on coefficient of determination
         #   Advantages: it takes into account both weights and latent variables, is based on how well the model fits the data
         #   Disadvantages: slow, doesnt work with non-gaussian data
+        # TO-DO: IT DOESNT WORK PROPERLY WITH UNCENTERED DATA
         if by_r2 is not None:
             Z = self.nodes['Z'].getExpectation()
             Y = self.nodes["Y"].getExpectation()

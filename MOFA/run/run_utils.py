@@ -151,7 +151,7 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     return net
 
 # Function to run multiple trials of the model
-def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, verbose=True):
+def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, seed=None, verbose=True):
 
     #########################
     ## Run parallel trials ##
@@ -159,7 +159,7 @@ def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, ve
 
     # trained_models = Parallel(n_jobs=train_opts['cores'], backend="threading")(
     trained_models = Parallel(n_jobs=train_opts['cores'])(
-        delayed(runSingleTrial)(data,data_opts,model_opts,train_opts,None,i) for i in xrange(1,train_opts['trials']+1))
+        delayed(runSingleTrial)(data,data_opts,model_opts,train_opts,seed,i) for i in xrange(1,train_opts['trials']+1))
 
     print "\n"
     print "#"*43

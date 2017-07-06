@@ -23,8 +23,7 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
                                        orderFactorsbyR2=F, showtotalR2=T, showVarComp=F) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel")
-    stop("'object' has to be an instance of MOFAmodel")
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   
   # Define views
   if (paste0(views,sep="",collapse="") =="all") { 
@@ -52,20 +51,22 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
   # Calculate predictions under the  MOFA model using all or a single factor
   Ypred_m <- lapply(views, function(m) Z%*%t(SW[[m]])); names(Ypred_m) <- views
   Ypred_mk <- lapply(views, function(m) {
-                      ltmp <- lapply(factors, function(k) Z[,k]%*%t(SW[[m]][,k]) )
-                      names(ltmp) <- factorNames(object)
-                      ltmp
-                    })
-  names(Ypred_mk) <- views
+                      ltmp <- lapply(factors, function(k) Z[,k]%*%t(SW[[m]][,k]) ); names(ltmp) <- factors; ltmp
+                    }); names(Ypred_mk) <- views
+  
+  # Mask the predictions
+  for (m in views) { 
+    Ypred_m[[m]][which(is.na(Y[[m]]))] <- NA 
+    for (k in factors) {
+      Ypred_mk[[m]][[k]][which(is.na(Y[[m]]))] <- NA 
+    }
+  }
 
   # Calculate prediction under the null model (intercept only)
     #by default the null model is using the intercept LF if present and not the actual mean
-    NullModel <- lapply(views, function(m)  if(object@ModelOpts$learnMean==T) Ypred_mk[[m]][[1]][1,] else apply(Y[[m]],2,mean,na.rm=T))
-    names(NullModel) <- views
-    resNullModel <- lapply(views, function(m) sweep(Y[[m]],2,NullModel[[m]],"-"))
-    partialresNull <- lapply(views, function(m) sweep(Ypred_m[[m]],2,NullModel[[m]],"-"))
-    names(resNullModel) <- views
-    names(partialresNull) <- views
+    NullModel <- lapply(views, function(m)  if(object@ModelOpts$learnMean==T) Ypred_mk[[m]][["intercept"]][sample(which(complete.cases(Ypred_mk[[m]][["intercept"]])),size=1),] else apply(Y[[m]],2,mean,na.rm=T)); names(NullModel) <- views
+    resNullModel <- lapply(views, function(m) sweep(Y[[m]],2,NullModel[[m]],"-")); names(resNullModel) <- views
+    partialresNull <- lapply(views, function(m) sweep(Ypred_m[[m]],2,NullModel[[m]],"-")); names(partialresNull) <- views
     
   # Remove intercept factor if present
   if(object@ModelOpts$learnMean==T) factorsNonconst <- factors[-1] else  factorsNonconst <- factors

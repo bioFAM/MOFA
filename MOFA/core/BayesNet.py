@@ -42,7 +42,7 @@ class BayesNet(object):
         # Training flag
         self.trained = False
 
-    def removeInactiveFactors(self, by_norm=None, by_pvar=None, by_cor=None, by_r2=None):
+    def removeInactiveFactors(self, by_norm=None, by_pvar=None, by_cor=None, by_r2=None, by_sharedness=None):
         # Method to remove inactive factors
         # - by_norm: threshold to shut down factors based on the norm of the latent variable
         # - by_pvar: threshold to shut down factors based on the proportion of variance explained
@@ -54,15 +54,15 @@ class BayesNet(object):
         # Shut down based on norm of latent variable vectors
         #   Advantages: independent of likelihood type, works with pseudodata
         #   Disadvantages: it does not take into account the weights, covariates are never removed.
-        if by_norm is not None:
-            Z = self.nodes["Z"].getExpectation()
-            # Z = Z + 1e-6*stats.norm.rvs(loc=0, scale=1, size=(Z.shape[0],Z.shape[1])) # Add some noise to remove structure (see XX)
-            drop_dic["by_norm"] = s.where((Z**2).mean(axis=0) < by_norm)[0]
-            if len(drop_dic["by_norm"]) > 0:
-                drop_dic["by_norm"] = [ s.random.choice(drop_dic["by_norm"]) ]
+        # if by_norm is not None:
+        #     Z = self.nodes["Z"].getExpectation()
+        #     # Z = Z + 1e-6*stats.norm.rvs(loc=0, scale=1, size=(Z.shape[0],Z.shape[1])) # Add some noise to remove structure (see XX)
+        #     drop_dic["by_norm"] = s.where((Z**2).mean(axis=0) < by_norm)[0]
+        #     if len(drop_dic["by_norm"]) > 0:
+        #         drop_dic["by_norm"] = [ s.random.choice(drop_dic["by_norm"]) ]
 
         ### test ###
-        # print "correlation:"
+        # print "maximum correlation:"
         # Z = self.nodes["Z"].getExpectation()
         # r = s.absolute(corr(Z.T,Z.T))
         # s.fill_diagonal(r,0)
@@ -87,27 +87,53 @@ class BayesNet(object):
         # print Z.max(axis=0)
         ### test ###
 
-        # Shut down based on coefficient of determination
+        # Shut down based on coefficient of determination with respect to the residual variance
         #   Advantages: it takes into account both weights and latent variables, is based on how well the model fits the data
         #   Disadvantages: slow, doesnt work with non-gaussian data
-        # TO-DO: IT DOESNT WORK PROPERLY WITH UNCENTERED DATA
         if by_r2 is not None:
             Z = self.nodes['Z'].getExpectation()
             Y = self.nodes["Y"].getExpectation()
             W = self.nodes["SW"].getExpectation()
             all_r2 = s.zeros([self.dim['M'], self.dim['K']])
             for m in xrange(self.dim['M']):
+
+                # Fetch the mask for missing vlaues
+                mask = self.nodes["Y"].getNodes()[m].getMask()
+
+                # Calculate predictions and mask them
                 Ypred_m = s.dot(Z, W[m].T)
-                for k in xrange(self.dim['K']):
-                    Ypred_mk = s.outer(Z[:,k], W[m][:,k])
-                    # Res = ((Y[m] - Ypred_mk)**2.).sum()
-                    Res = ((Ypred_m - Ypred_mk)**2.).sum()
-                    # Var = ((Y[m] - Y[m].mean())**2.).sum()
-                    Var = (Ypred_m**2.).sum()
-                    all_r2[m,k] = 1. - Res/Var
-            drop_dic["by_r2"] = s.where( (all_r2>by_r2).sum(axis=0) == 0)[0]
-            if len(drop_dic["by_r2"]) > 0:
-                drop_dic["by_r2"] = [ s.random.choice(drop_dic["by_r2"]) ]
+                Ypred_m[mask] = 0.
+
+                if s.all(Z[:,0]==1.):
+                    Ypred_m_intercept = s.outer(Z[:,0], W[m][:,0].T) 
+                    Ypred_m_intercept[mask] = 0.
+                    Ypred_m -= Ypred_m_intercept
+                    all_r2[:,0] = 1.
+                    for k in xrange(1,self.dim['K']):
+                        Ypred_mk = s.outer(Z[:,k], W[m][:,k])
+                        Ypred_mk[mask] = 0.
+                        Res = ((Ypred_m - Ypred_mk)**2.).sum()
+                        Var = (Ypred_m**2.).sum()
+                        all_r2[m,k] = 1. - Res/Var
+                else:
+                    for k in xrange(self.dim['K']):
+                        Ypred_mk = s.outer(Z[:,k], W[m][:,k])
+                        Ypred_mk[mask] = 0.
+                        Res = ((Ypred_m - Ypred_mk)**2.).sum()
+                        Var = (Ypred_m**2.).sum()
+                        all_r2[m,k] = 1. - Res/Var
+
+            if by_r2 is not None:
+                drop_dic["by_r2"] = s.where( (all_r2>by_r2).sum(axis=0) == 0)[0]
+                if len(drop_dic["by_r2"]) > 0:
+                    drop_dic["by_r2"] = [ s.random.choice(drop_dic["by_r2"]) ]
+
+            if by_sharedness is not None:
+                print "Not implemented"
+                exit()
+                # drop_dic["by_sharedness"] = s.where( (all_r2>by_r2).sum(axis=0) < 2)[0]
+                # if len(drop_dic["by_r2"]) > 0:
+                #     drop_dic["by_r2"] = [ s.random.choice(drop_dic["by_r2"]) ]
 
         # Shut down based on the proportion of residual variance explained by each factor
         # IT DOESNT WORK, THERE IS SOME ERROR TO BE FIXED
@@ -186,7 +212,7 @@ class BayesNet(object):
                 # Print first iteration
                 if i==0:
                     if self.options['verbosity'] >=0:
-                        print "Trial %d, Iteration 1: time=%.2f ELBO=%.2f, K=%d" % (self.trial, time()-t,elbo.iloc[i]["total"], self.dim["K"])
+                        print "Trial %d, Iteration 1: time=%.2f ELBO=%.2f, Factors=%d, Covariates=%d" % (self.trial, time()-t,elbo.iloc[i]["total"], (~self.nodes["Z"].covariates).sum(), self.nodes["Z"].covariates.sum() )
                     if self.options['verbosity'] == 2:
                         print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
 
@@ -196,9 +222,8 @@ class BayesNet(object):
 
                     # Print ELBO monitoring
                     if self.options['verbosity'] > 0:
-                        print "Trial %d, Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, K=%d" % (self.trial, i+1, time()-t, elbo.iloc[i]["total"], delta_elbo, self.dim["K"])
-                        if delta_elbo<0: print "Warning, lower bound is decreasing..."
-                        # if delta_elbo<0: print '\a'
+                        print "Trial %d, Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, Factors=%d, Covariates=%d" % (self.trial, i+1, time()-t, elbo.iloc[i]["total"], delta_elbo, (~self.nodes["Z"].covariates).sum(), self.nodes["Z"].covariates.sum() )
+                        if delta_elbo<0: print "Warning, lower bound is decreasing..."; print '\a'
                     if self.options['verbosity'] == 2:
                         print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
 

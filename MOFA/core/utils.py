@@ -47,16 +47,17 @@ def maskData(data, data_opts):
         p2Mask = data_opts['maskAtRandom'][m]
         if p2Mask != 0:
             idxMask = np.zeros(N*D)
-            idxMask[:int(round(N*D*p2Mask))]  = 1
+            idxMask[:int(round(N*D*p2Mask))] = 1
             np.random.shuffle(idxMask)
-            idxMask=np.reshape(idxMask, [N, D])
+            idxMask = np.reshape(idxMask, [N, D])
             data[m] = data[m].mask(idxMask==1)
 
         # Mask samples in a complete view
         Nsamples2Mask = data_opts['maskNSamples'][m]
         if Nsamples2Mask != 0:
-            # idxMask = np.random.choice(N, size=Nsamples2Mask, replace = False)
-            idxMask = np.arange(Nsamples2Mask)
+            idxMask = np.random.choice(N, size=Nsamples2Mask, replace = False)
+            # idxMask = np.arange(Nsamples2Mask)
+            # print idxMask
             tmp = data[m].copy()
             tmp.ix[idxMask, :] = pd.np.nan
             data[m] = tmp
@@ -80,9 +81,13 @@ def loadData(data_opts, verbose=True):
         Y.append( pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"]) )
         print "Loaded %s with dim (%d,%d)..." % (file, Y[m].shape[0], Y[m].shape[1])
 
-        # Center the data
-        if data_opts['center'][m]:
+        # Center the features
+        if data_opts['center_features'][m]:
 			Y[m] = (Y[m] - Y[m].mean(axis=0))
+
+	    # Scale the features
+        if data_opts['scale_features'][m]:
+            Y[m] = Y[m] / np.std(Y[m], axis=0)
 
     return Y
 

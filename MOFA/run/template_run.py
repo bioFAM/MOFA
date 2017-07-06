@@ -30,6 +30,9 @@ p.add_argument( '--ardZ',              action='store_true',                     
 p.add_argument( '--ardW',              type=str, default="mk" ,                             help=' "m" = Per view, "k" = Per factor, "mk" = Per view and factor' )
 p.add_argument( '--dropNorm',          type=float, default=None ,                           help='Threshold to drop latent variables based on norm of the latent variable' )
 p.add_argument( '--dropR2',            type=float, default=None ,                           help='Threshold to drop latent variables based on coefficient of determination' )
+p.add_argument( '--seed',              type=int, default=0 ,                                help='seed' )
+p.add_argument( '--center_features',   action="store_true",                                 help='Center the features?' )
+p.add_argument( '--scale_features',    action="store_true",                                 help='Scale the features to unit variance?' )
 p.add_argument( '-n', '--ntrials',     type=int, default=1,                                 help='Number of trials' )
 p.add_argument( '-c', '--ncores',      type=int, default=1,                                 help='Number of cores' )
 p.add_argument( '-i', '--iter',        type=int, default=10,                                help='Number of iterations' )
@@ -57,15 +60,31 @@ data_opts['ThetaDir'] = args.ThetaDir
 # View names
 data_opts['view_names'] = args.views
 
-# Center the data
-if args.learnMean:
-  data_opts['center'] = [False for l in args.likelihoods]
+#####################
+## Data processing ##
+#####################
+
+# Data processing: center features
+if args.center_features:
+  data_opts['center_features'] = [ True if l=="gaussian" else False for l in args.likelihoods ]
 else:
-  data_opts['center'] = [True if l=="gaussian" else False for l in args.likelihoods]
+  if not args.learnMean: print "Warning... you are not centering the data and not learning the mean..."
+  data_opts['center_features'] = [ False for l in args.likelihoods ]
+# Center the data
+# if args.learnMean:
+#   data_opts['center_features'] = [False for l in args.likelihoods]
+# else:
+#   data_opts['center_features'] = [True if l=="gaussian" else False for l in args.likelihoods]
+
+# Data processing: scale features
+if args.scale_features:
+  data_opts['scale_features'] = [ True if l=="gaussian" else False for l in args.likelihoods ]
+else:
+  data_opts['scale_features'] = [ False for l in args.likelihoods ]
 
 M = len(data_opts['input_files'])
 
-# Mask data
+# Data processing: mask values
 if args.maskAtRandom is not None:
   data_opts['maskAtRandom'] = args.maskAtRandom
 else:
@@ -105,7 +124,7 @@ else:
   data_opts['scale_covariates'] = False
   data_opts['covariates'] = None
 
-# If we want to learn the mean, we add a constant latent variable vector of ones
+# If we want to learn the mean, we add a constant covariate of 1s
 if args.learnMean:
   if data_opts['covariates'] is not None:
     # data_opts['covariates'].insert(0, "mean", s.ones(N,))
@@ -184,7 +203,7 @@ model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.na
 if model_opts['ardW'] == "m":
   model_opts["priorAlphaW"] = { 'a':[1e-3]*M, 'b':[1e-3]*M }
 elif model_opts['ardW'] == "mk":
-  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-14]*M, 'b':[s.ones(K)*1e-14]*M }
+  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-3]*M, 'b':[s.ones(K)*1e-3]*M }
 elif model_opts['ardW'] == "k":
   model_opts["priorAlphaW"] = { 'a':s.ones(K)*1e-3, 'b':s.ones(K)*1e-3 }
 
@@ -217,7 +236,7 @@ if model_opts['ardW'] == "m":
   # model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
   model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[ K*D[m]/(data[m].std(axis=0)**2 - 1./model_opts["initTau"]["E"][m]).sum() for m in xrange(M) ] }
 elif model_opts['ardW'] == "mk":
-  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*1. for m in xrange(M)] }
+  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*10. for m in xrange(M)] }
 elif model_opts['ardW'] == "k":
   model_opts["initAlphaW"] = { 'a':s.nan*s.ones(K), 'b':s.nan*s.ones(K), 'E':s.ones(K)*100. }
 
@@ -349,6 +368,7 @@ keep_best_run = False
 # Go!
 # runSingleTrial(data, data_opts, model_opts, train_opts, seed=None)
 # t1 = t = time()
-runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run)
+
+runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, args.seed)
 # t2 = time() - t1
 # s.savetxt(args.outFile, t2*np.ones(1), fmt='%.3f')

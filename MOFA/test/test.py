@@ -58,12 +58,12 @@ data['alpha'][2] = [1,1e6,1,1,1e6,1e6,1]
 data['theta'] = [ s.ones((D[m],K))*1.0 for m in xrange(M) ]
 # data['theta'] = [ s.repeat(s.linspace(0.1, 1.0, K)[None,:],D[m],0) for m in xrange(M) ]
 data['S'], data['W'], data['W_hat'], _ = tmp.initW_spikeslab(theta=data['theta'], alpha=data['alpha'], annotation=False)
-data['mu'] = [ s.ones(D[m])*5. for m in xrange(M)]
+data['mu'] = [ s.ones(D[m])*10. for m in xrange(M)]
 data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 # data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
 
 missingness = 0.0
-missing_view = 0.05
+missing_view = 0.00
 # Y_warp = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 #   likelihood="warp", missingness=missingness, missing_view=missing_view)
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -91,28 +91,27 @@ data["Y"] = [ Y_gaussian[0], Y_gaussian[1], Y_gaussian[2] ]
 data_opts = {}
 data_opts["outfile"] = "/tmp/test.h5"
 data_opts['view_names'] = ["View 1","View 2","View 3"]
-data_opts['center'] = [False]*M
-data_opts['scale_views'] = [False]*M
+data_opts['center'] = [True]*M
+data_opts['scale_features'] = [True]*M
 # data_opts['covariates'] = stats.bernoulli.rvs(0.5, size=N)[:,None]
 data_opts['covariates'] = None
 # data_opts['scale_covariates'] = [True]
 data_opts['scale_covariates'] = None
 
 
-# Center the data
-if data_opts['center'][m]:
-  data["Y"][m] = (data["Y"][m] - data["Y"][m].mean(axis=0))
+#####################
+## Data processing ##
+#####################
 
+for m in xrange(M):
+  
+  # Center the features
+  if data_opts['center'][m]:
+    data["Y"][m] = (data["Y"][m] - data["Y"][m].mean(axis=0))
 
-# Scale the views
-# NOT WORKING YET
-# if data_opts['scale_views'][m]:
-#   print type(data["Y"][m])
-#   print s.std(data["Y"][m], axis=0).sum()
-#   print data["Y"][m] / s.std(data["Y"][m], axis=0).sum()
-#   exit()
-#   data["Y"][m] = data["Y"][m].multiply(1./s.std(data["Y"][m], axis=0).sum())
-#   exit()
+  # Scale the features
+  if data_opts['scale_features'][m]:
+    data["Y"][m] = data["Y"][m] / s.std(data["Y"][m], axis=0)
 
 #################################
 ## Initialise Bayesian Network ##
@@ -165,14 +164,13 @@ model_opts['likelihood'] = ['gaussian']* M
 model_opts['k'] = K
 
 # Define sparsities
-model_opts['ardZ'] = True
+model_opts['ardZ'] = False
 model_opts['ardW'] = "mk"
 
 # Define for which factors to learn Theta
 model_opts['learnTheta'] = [0.*s.ones(K) for m in xrange(M)]
 
 # Define schedule of updates
-# model_opts['schedule'] = ["Y","SW","Z","AlphaW","Theta","Tau"]
 model_opts['schedule'] = ["Y","SW","Z","AlphaW","Theta","Tau"]
 
 ####################################
@@ -331,7 +329,7 @@ train_opts['maxiter'] = 1000
 train_opts['tolerance'] = 0.01
 train_opts['forceiter'] = True
 train_opts['drop'] = { "by_norm":None, "by_pvar":None, "by_cor":None, "by_r2":0.01 }
-train_opts['startdrop'] = 10
+train_opts['startdrop'] = 3
 train_opts['freqdrop'] = 1
 train_opts['savefreq'] = s.nan
 train_opts['savefolder'] = s.nan
@@ -346,5 +344,6 @@ train_opts['cores'] = 1
 ####################
 
 keep_best_run = False
+
 runMultipleTrials(data["Y"], data_opts, model_opts, train_opts, keep_best_run)
 # runSingleTrial(data["Y"], data_opts, model_opts, train_opts)

@@ -65,6 +65,9 @@ class Y_Node(Constant_Variational_Node):
         # Mask the observations if they have missing values
         self.value = ma.masked_invalid(self.value)
 
+    def getMask(self):
+        return ma.getmask(self.value)
+
     def calculateELBO(self):
         # Calculate evidence lower bound
         # We use the trick that the update of Tau already contains the Gaussian likelihod.
@@ -482,7 +485,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         latent_variables = self.getLvIndex() # excluding covariates from the list of latent variables
         mask = [ma.getmask(Y[m]) for m in xrange(len(Y))]
 
-
+        # Collect parameters from the prior or expectations from the markov blanket
         if "Mu" in self.markov_blanket:
             Mu = self.markov_blanket['Mu'].getExpectation()
         else:

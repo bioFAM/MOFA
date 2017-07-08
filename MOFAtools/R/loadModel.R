@@ -16,7 +16,7 @@
 
 loadModel <- function(file, object=NULL, sortFactors=F) {
   
-  message(paste0("Loading the following MOFA model: ", file))
+  # message(paste0("Loading the following MOFA model: ", file))
   
   if (is.null(object)) object <- new("MOFAmodel")
   
@@ -86,9 +86,9 @@ loadModel <- function(file, object=NULL, sortFactors=F) {
   if (sortFactors) {
     r2 <- rowSums(calculateVarianceExplained(object,plotit=F,showtotalR2=T)$R2PerFactor)
     order_factors <- c(names(r2)[order(r2, decreasing = T)])
-    if (object@ModelOpts$learnMean) { order_factors <- c("intercept",order_factors) }
+    if (object@ModelOpts$learnMean==T) { order_factors <- c("intercept",order_factors) }
     object <- subsetFactors(object,order_factors)
-    if (object@ModelOpts$learnMean) { 
+    if (object@ModelOpts$learnMean==T) { 
       factorNames(object) <- c("intercept",1:(object@Dimensions$K-1))
     } else {
       factorNames(object) <- c(1:object@Dimensions$K) 

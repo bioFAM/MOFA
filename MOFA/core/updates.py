@@ -124,6 +124,7 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         Qa = Pa + (Y.shape[0] - mask.sum(axis=0))/2.
         Qb = Pb + tmp/2.
 
+
         # Save updated parameters of the Q distribution
         self.Q.setParameters(a=Qa, b=Qb)
 

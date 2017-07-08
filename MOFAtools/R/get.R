@@ -3,6 +3,19 @@
 ## User-friendly functions to fetch data from the model ##
 ##########################################################
 
+#' @rdname getDimensions
+#' @name getDimensions
+#' @title wraper to extract dimensionalities from the MOFAmodel
+#' @description to-fill
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @export
+#' 
+getDimensions <- function(object) {
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
+  return(object@Dimensions)
+  
+}
+
 #' @rdname getCovariates
 #' @name getCovariates
 #' @title wraper to extract covariates from the MultiAssayExperiment stored in the InputData slot
@@ -13,9 +26,9 @@
 #' 
 getCovariates <- function(object, names) {
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
+  # TO-DO: CHECK THAT WE HAVE A MULTIASSAYEXPERIMENT SLOT
   stopifnot(all(names %in% colnames(colData(object@InputData))))
   return(colData(object@InputData)[,names])
-  
 }
 
 
@@ -28,7 +41,7 @@ getCovariates <- function(object, names) {
 #' 
 getFactors <- function(object, as.data.frame=F) {
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
-  return(getExpectations(model,"Z","E",as.data.frame))
+  return(getExpectations(object,"Z","E",as.data.frame))
 }
 
 
@@ -46,7 +59,7 @@ getWeights <- function(object, views="all", factors="all", as.data.frame=F) {
   if (paste0(views,collapse="") == "all") { views <- viewNames(object) } else { stopifnot(all(views %in% viewNames(object))) }
   if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } else { stopifnot(all(factors %in% factorNames(object))) }
   
-  weights <- getExpectations(model,"SW","E",as.data.frame)
+  weights <- getExpectations(object,"SW","E",as.data.frame)
   if (as.data.frame) {
     weights <- weights[weights$view%in%views & weights$factor%in%factors, ]
   } else {
@@ -56,15 +69,17 @@ getWeights <- function(object, views="all", factors="all", as.data.frame=F) {
   return(weights)
 }
 
+
 #' @rdname getTrainData
 #' @name getTrainData
 #' @title wraper to fetch training data from the model
 #' @description to-fill
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param views: views (default is "all")
+#' @param features: list with feature names, with the same order as views (default is "all")
 #' @param as.data.frame: output the result as a long data frame?
 #' @export
-getTrainData <- function(object, views="all", as.data.frame=F) {
+getTrainData <- function(object, views="all", features="all", as.data.frame=F) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -76,13 +91,27 @@ getTrainData <- function(object, views="all", as.data.frame=F) {
     stopifnot(all(views %in% viewNames(object)))
   }
   
+  # Get features
+  if (class(features)=="list") {
+    stopifnot(all(sapply(1:length(features), function(i) all(features[[i]] %in% featureNames(object)[[views[i]]]))))
+  } else {
+    if (paste0(features,collapse="") == "all") { 
+      features <- featureNames(object)[views]
+    } else {
+      stop("features not recognised, please read the documentation")
+    }
+  }
+  
   # Get data
   trainData <- object@TrainData[views]
+  trainData <- lapply(1:length(trainData), function(m) trainData[[m]][features[[m]],])
   
   # Convert to long data frame
   if (as.data.frame) {
-    tmp <- lapply(views, function(m) { tmp <- reshape2::melt(trainData[[m]]); colnames(tmp) <- c("sample","feature","value"); tmp <- cbind(view=m,tmp); return(tmp) })
+    # tmp <- lapply(views, function(m) { tmp <- reshape2::melt(trainData[[m]]); colnames(tmp) <- c("sample","feature","value"); tmp <- cbind(view=m,tmp); return(tmp) })
+    tmp <- lapply(1:length(trainData), function(m) { tmp <- reshape2::melt(trainData[[m]]); colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
     trainData <- do.call(rbind,tmp)
+    trainData[,c("view","feature","sample")] <- sapply(trainData[,c("view","feature","sample")], as.character)
   } else if ((length(views)==1) && (as.data.frame==F)) {
     trainData <- trainData[[views]]
   }

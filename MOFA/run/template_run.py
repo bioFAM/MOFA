@@ -33,6 +33,7 @@ p.add_argument( '--dropR2',            type=float, default=None ,               
 p.add_argument( '--seed',              type=int, default=0 ,                                help='seed' )
 p.add_argument( '--center_features',   action="store_true",                                 help='Center the features?' )
 p.add_argument( '--scale_features',    action="store_true",                                 help='Scale the features to unit variance?' )
+p.add_argument( '--scale_views',       action="store_true",                                 help='Scale the views to unit variance?' )
 p.add_argument( '-n', '--ntrials',     type=int, default=1,                                 help='Number of trials' )
 p.add_argument( '-c', '--ncores',      type=int, default=1,                                 help='Number of cores' )
 p.add_argument( '-i', '--iter',        type=int, default=10,                                help='Number of iterations' )
@@ -68,16 +69,18 @@ data_opts['view_names'] = args.views
 if args.center_features:
   data_opts['center_features'] = [ True if l=="gaussian" else False for l in args.likelihoods ]
 else:
-  if not args.learnMean: print "Warning... you are not centering the data and not learning the mean..."
+  if not args.learnMean: print "Warning... you are not centering the data and not learning the mean..."; exit()
   data_opts['center_features'] = [ False for l in args.likelihoods ]
-# Center the data
-# if args.learnMean:
-#   data_opts['center_features'] = [False for l in args.likelihoods]
-# else:
-#   data_opts['center_features'] = [True if l=="gaussian" else False for l in args.likelihoods]
+
+# Data processing: scale views
+if args.scale_views:
+  data_opts['scale_views'] = [ True if l=="gaussian" else False for l in args.likelihoods ]
+else:
+  data_opts['scale_views'] = [ False for l in args.likelihoods ]
 
 # Data processing: scale features
 if args.scale_features:
+  assert args.scale_views==False, "Scale either entire views or features, not both"
   data_opts['scale_features'] = [ True if l=="gaussian" else False for l in args.likelihoods ]
 else:
   data_opts['scale_features'] = [ False for l in args.likelihoods ]
@@ -203,7 +206,7 @@ model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.na
 if model_opts['ardW'] == "m":
   model_opts["priorAlphaW"] = { 'a':[1e-3]*M, 'b':[1e-3]*M }
 elif model_opts['ardW'] == "mk":
-  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-3]*M, 'b':[s.ones(K)*1e-3]*M }
+  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-14]*M, 'b':[s.ones(K)*1e-14]*M }
 elif model_opts['ardW'] == "k":
   model_opts["priorAlphaW"] = { 'a':s.ones(K)*1e-3, 'b':s.ones(K)*1e-3 }
 
@@ -236,7 +239,7 @@ if model_opts['ardW'] == "m":
   # model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
   model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[ K*D[m]/(data[m].std(axis=0)**2 - 1./model_opts["initTau"]["E"][m]).sum() for m in xrange(M) ] }
 elif model_opts['ardW'] == "mk":
-  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*10. for m in xrange(M)] }
+  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*1. for m in xrange(M)] }
 elif model_opts['ardW'] == "k":
   model_opts["initAlphaW"] = { 'a':s.nan*s.ones(K), 'b':s.nan*s.ones(K), 'E':s.ones(K)*100. }
 
@@ -262,7 +265,8 @@ for m in xrange(M):
 
 # Weights
 model_opts["initSW"] = { 
-  'Theta':[s.ones((D[m],K)) for m in xrange(M)], # THIS SHOULDN BE USED
+  # 'Theta':[s.ones((D[m],K)) for m in xrange(M)], # THIS SHOULDN BE USED
+  'Theta':[ model_opts['initTheta']['E'][m] for m in xrange(M)],
   'mean_S0':[s.zeros((D[m],K)) for m in xrange(M)],
   'var_S0':[s.nan*s.ones((D[m],K)) for m in xrange(M)],
   'mean_S1':[s.zeros((D[m],K)) for m in xrange(M)],

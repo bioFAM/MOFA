@@ -177,7 +177,7 @@ scatterPlot <- function (object, factors, title = "", titlesize = 16, xlabel = N
     # It is a vector of length N
     } else if (length(color_by) > 1) {
       stopifnot(length(color_by) == N)
-      color_by <- as.factor(color_by)
+      # color_by <- as.factor(color_by)
     } else {
       stop("'color_by' was specified but it was not recognised, please read the documentation")
     }
@@ -289,8 +289,8 @@ scatterPairs <- function(object, factors = "all", showMissing=T,
       color_by <- getCovariates(object, color_by)
       # It is a vector of length N
     } else if (length(color_by) > 1) {
-      color_by <- as.factor(color_by)
       stopifnot(length(color_by) == N)
+      # color_by <- as.factor(color_by)
     } else {
       stop("'color_by' was specified but it was not recognised, please read the documentation")
     }

@@ -2,7 +2,6 @@ from __future__ import division
 from time import time
 import os
 import scipy as s
-import cPickle as pkl
 import pandas as pd
 import sys
 
@@ -104,6 +103,8 @@ class BayesNet(object):
                 Ypred_m = s.dot(Z, W[m].T)
                 Ypred_m[mask] = 0.
 
+                Var = (Ypred_m**2.).sum()
+                
                 if s.all(Z[:,0]==1.):
                     Ypred_m_intercept = s.outer(Z[:,0], W[m][:,0].T) 
                     Ypred_m_intercept[mask] = 0.
@@ -113,14 +114,12 @@ class BayesNet(object):
                         Ypred_mk = s.outer(Z[:,k], W[m][:,k])
                         Ypred_mk[mask] = 0.
                         Res = ((Ypred_m - Ypred_mk)**2.).sum()
-                        Var = (Ypred_m**2.).sum()
                         all_r2[m,k] = 1. - Res/Var
                 else:
                     for k in xrange(self.dim['K']):
                         Ypred_mk = s.outer(Z[:,k], W[m][:,k])
                         Ypred_mk[mask] = 0.
                         Res = ((Ypred_m - Ypred_mk)**2.).sum()
-                        Var = (Ypred_m**2.).sum()
                         all_r2[m,k] = 1. - Res/Var
 
             if by_r2 is not None:
@@ -238,13 +237,6 @@ class BayesNet(object):
             # Do not calculate lower bound
             else:
                 if self.options['verbosity'] > 0: print "Iteration %d: time=%.2f, K=%d\n" % (i+1,time()-t,self.dim["K"])
-
-            # Save temporary model
-            if (self.options['savefreq'] is not s.nan) and (i % self.options['savefreq'] == 0):
-                savefile = "%s/%d_model.pkl" % (self.options['savefolder'], i)
-                if self.options['verbosity'] == 2: print "Saving the model in %s\n" % savefile
-                pkl.dump(self, open(savefile,"wb"))
-
 
             # Flush (we need this to print when running on the cluster)
             sys.stdout.flush()

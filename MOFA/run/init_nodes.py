@@ -164,7 +164,7 @@ class initModel(object):
         #  qE (float): initial expectation of the variational distribution
         alpha_list = [None]*self.M
         for m in xrange(self.M):
-            alpha_list[m] = AlphaW_Node_w(dim=(1,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
+            alpha_list[m] = AlphaW_Node_m(dim=(1,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
             # alpha_list[m] = Constant_Node(dim=(1,), value=qE[m])
         self.AlphaW = Multiview_Variational_Node(self.M, *alpha_list)
         # self.AlphaW = Multiview_Constant_Node(self.M, *alpha_list)

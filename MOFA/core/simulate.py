@@ -72,7 +72,15 @@ class Simulate(object):
 
         else:
             for m in xrange(self.M):
-                S[m] = bernoulli.rvs(p=theta[m].flatten(), size=self.D[m]*self.K).reshape((self.D[m],self.K))
+
+                # Completely vectorised, not sure if it works
+                # S[m] = bernoulli.rvs(p=theta[m].flatten(), size=self.D[m]*self.K).reshape((self.D[m],self.K))
+
+                # Partially vectorised
+                for k in xrange(self.K):
+                    S[m][:,k] = bernoulli.rvs(p=theta[m][k], size=self.D[m])
+                
+                # Unvectorised
                 # for d in xrange(self.D[m]):
                 #     for k in xrange(self.K):
                 #         S[m][d,k] = bernoulli.rvs(p=theta[m][d,k], size=1)
@@ -125,9 +133,9 @@ class Simulate(object):
 
             # Non-vectorised, slow
             # for m in xrange(self.M):
-            #     for n in xrange(self.N):
-            #         for d in xrange(self.D[m]):
-            #             Y[m][n,d] = s.dot(Z[n,:],W[m][d,:].T) + Mu[m][d] + norm.rvs(loc=0,scale=1/s.sqrt(Tau[m][d]))
+                # for n in xrange(self.N):
+                    # for d in xrange(self.D[m]):
+                        # Y[m][n,d] = s.dot(Z[n,:],W[m][d,:].T) + Mu[m][d] + norm.rvs(loc=0,scale=1/s.sqrt(Tau[m][d]))
 
         elif likelihood == "warp":
             for m in xrange(self.M):
@@ -197,16 +205,13 @@ class Simulate(object):
                 tmp = Y[m].flatten()
                 tmp[nas] = s.nan
                 Y[m] = tmp.reshape((self.N,self.D[m]))
-
         if missing_view > 0.0:   # percentage of samples missing a view
             # select samples missing one view
             n_missing = s.random.choice(range(self.N), int(missing_view * self.N), replace=False)
             Y[0][n_missing,:] = s.nan
 
-        # Create a mask
-        # for m in xrange(self.M):
-            # Y[m] = ma.masked_invalid(Y[m])
         # Convert data to pandas data frame
         for m in xrange(self.M):
             Y[m] = pd.DataFrame(data=Y[m])
+
         return Y

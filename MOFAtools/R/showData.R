@@ -54,9 +54,10 @@ showDataHeatmap <- function(object, view, factor, nfeatures=50, main=NULL, ...) 
 #' @details fill this
 #' @return ggplot2 model
 #' @import ggplot2
+#' @import dplyr
 #' @export
 
-showDataScatter <- function(object, view, factor, nfeatures=50, colour_by=NULL, shape_by=NULL,
+showDataScatter <- function(object, view, factor, nfeatures=50, color_by=NULL, shape_by=NULL,
                             xlabel="", ylabel="") {
   
   # Sanity checcks
@@ -79,44 +80,58 @@ showDataScatter <- function(object, view, factor, nfeatures=50, colour_by=NULL, 
   
   
   # Set color
-  if (!is.null(colour_by)) {
-    stopifnot(length(unique(colour_by)) > 1)
-    stopifnot(length(colour_by) == N)
+  if (!is.null(color_by)) {
+    if (length(color_by) == 1 & is.character(color_by)) { # It is the name of a covariate 
+      color_by <- as.factor(getCovariates(object, color_by))
+    } else if (length(color_by) > 1) { # It is a vector of length N
+      stopifnot(length(color_by) == N)
+    } else {
+      stop("'color_by' was specified but it was not recognised, please read the documentation")
+    }
     colorLegend <- T
   } else {
-    colour_by <- rep(TRUE,N)
+    color_by <- rep(TRUE,N)
     colorLegend <- F
   }
   
   # Set shape
   if (!is.null(shape_by)) {
-    stopifnot(length(unique(shape_by)) > 1)
-    stopifnot(length(shape_by) == N)
-    stopifnot(is.character(shape_by) | is.factor(shape_by))
+    if (length(shape_by) == 1 & is.character(shape_by)) { # It is the name of a covariate 
+      shape_by <- as.factor(getCovariates(object, shape_by))
+    } else if (length(shape_by) > 1) { # It is a vector of length N
+      stopifnot(length(shape_by) == N)
+      shape_by <- as.factor(shape_by)
+    } else {
+      stop("'shape_by' was specified but it was not recognised, please read the documentation")
+    }
     shapeLegend <- T
   } else {
-    shape_by <- rep(TRUE, N)
+    shape_by <- rep(TRUE,N)
     shapeLegend <- F
   }
   
+  
   # Create data frame 
-  # df = data.frame(x = z, shape_by = shape_by, colour_by = colour_by)
-  # df <- cbind(df,t(Y))
+  df1 <- data.frame(sample=names(z), x = z, shape_by = shape_by, color_by = color_by, stringsAsFactors=F)
+  df2 <- getTrainData(object, views=view, features = list(features), as.data.frame=T)
+  df <- left_join(df1,df2, by="sample")
   
   #remove values missing color or shape annotation
-  # if(!showMissing) df <- df[!(is.nan(df$shape_by) & !(is.nan(df$colour_by))]
+  # if(!showMissing) df <- df[!(is.nan(df$shape_by) & !(is.nan(df$color_by))]
   
-  p <- ggplot(df, aes(x, y, color = colour_by, shape = shape_by)) + 
-    geom_point() + 
+  p <- ggplot(df, aes(x, value, color = color_by, shape = shape_by)) + 
+    geom_point(color="black") + 
     ggtitle("") + xlab(xlabel) + ylab(ylabel) + 
+    stat_smooth(method="lm", color="blue", alpha=0.5) +
+    facet_wrap(~feature, scales="free_y") +
     scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))]) +
     theme(plot.margin = margin(20, 20, 10, 10), 
           axis.text = element_text(size = rel(1), color = "black"), 
           axis.title = element_text(size = 16), 
           axis.title.y = element_text(size = rel(1.1), margin = margin(0, 15, 0, 0)), 
           axis.title.x = element_text(size = rel(1.1), margin = margin(15, 0, 0, 0)), 
-          axis.line = element_line(colour = "black", size = 0.5), 
-          axis.ticks = element_line(colour = "black", size = 0.5),
+          axis.line = element_line(color = "black", size = 0.5), 
+          axis.ticks = element_line(color = "black", size = 0.5),
           panel.border = element_blank(), 
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(), 
@@ -125,7 +140,7 @@ showDataScatter <- function(object, view, factor, nfeatures=50, colour_by=NULL, 
           # legend.text = element_text(size = titlesize),
           # legend.title = element_text(size =titlesize)
           )
-  if (colorLegend) { p <- p + labs(color = name_colour) } else { p <- p + guides(color = FALSE) }
+  if (colorLegend) { p <- p + labs(color = name_color) } else { p <- p + guides(color = FALSE) }
   if (shapeLegend) { p <- p + labs(shape = name_shape) }  else { p <- p + guides(shape = FALSE) }
   
   return(p)

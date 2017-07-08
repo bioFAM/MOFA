@@ -24,12 +24,12 @@ subsetFactors <- function(object, factors) {
   object@Expectations$Z$E <- object@Expectations$Z$E[,factors]
   object@Expectations$AlphaW <- sapply(object@Expectations$AlphaW, function(m) sapply(m, function(x) x[factors], simplify = F, USE.NAMES = T), simplify = F, USE.NAMES = T)
   object@Expectations$SW <- sapply(object@Expectations$SW, function(m) sapply(m, function(x) x[,factors], simplify = F, USE.NAMES = T), simplify = F, USE.NAMES = T)
-  object@Expectations$Theta <- sapply(object@Expectations$Theta, function(m) sapply(m, function(x) x[,factors], simplify = F, USE.NAMES = T), simplify = F, USE.NAMES = T)
+  object@Expectations$Theta <- sapply(object@Expectations$Theta, function(m) sapply(m, function(x) x[factors], simplify = F, USE.NAMES = T), simplify = F, USE.NAMES = T)
   
   # Sort Parameters
   object@Parameters$Z <- sapply(object@Parameters$Z, function(x) x[,factors], simplify = F, USE.NAMES = T)
   object@Parameters$SW <- sapply(object@Parameters$SW, function(m) sapply(m, function(x) x[,factors], simplify = F, USE.NAMES = T), simplify = F, USE.NAMES = T)
-  # object@Parameters$Theta <- sapply(object@Parameters$Theta, function(m) sapply(m, function(x) x[,factors], simplify = F, USE.NAMES = T), simplify = F, USE.NAMES = T)
+  object@Parameters$Theta <- sapply(object@Parameters$Theta, function(m) sapply(m, function(x) x[factors], simplify = F, USE.NAMES = T), simplify = F, USE.NAMES = T)
   object@Parameters$AlphaW <- sapply(object@Parameters$AlphaW, function(m) sapply(m, function(x) x[factors], simplify = F, USE.NAMES = T), simplify = F, USE.NAMES = T)
   
   # Sort factor names

@@ -46,25 +46,29 @@
 ## Non-vectorised update of Tau ##
 ##################################
 
-# N = Y.shape[0]
-# K = Z.shape[1]
+        ### START UNVECTORISED ##
+        # N = Y.shape[0]
+        # K = Z.shape[1]
+        # D = Y.shape[1]
 
-# Qa = s.zeros(self.D)
-# Qb = s.zeros(self.D)
-# mask = ma.getmask(Y)
-# for d in xrange(self.D):
-#     tmp = 0
-#     for n in xrange(N):
-#             tmptmp = 0
-#             for k in xrange(K):
-#                 if not mask[n,d]: tmptmp += SWW[d,k]*ZZ[n,k]
-#                 if k < (K-1):
-#                     for j in xrange(k+1,K):
-#                         if not mask[n,d]: tmptmp += 2*(SW[d,k]*Z[n,k])*(SW[d,j]*Z[n,j])
-#             if not mask[n,d]: tmp += Y[n,d]**2 - 2*Y[n,d]*s.sum(SW[d,:]*Z[n,:])
-#             tmp += tmptmp
-#     Qa[d] = Pa[d] + s.sum(~mask[:,d])/2
-#     Qb[d] = Pb[d] + tmp/2
+        # Qa = s.zeros(D)
+        # Qb = s.zeros(D)
+        # for d in xrange(self.D):
+        #     tmp = 0
+        #     for n in xrange(N):
+        #             tmptmp = 0
+        #             for k in xrange(K):
+        #                 if not mask[n,d]: tmptmp += SWW[d,k]*ZZ[n,k]
+        #                 if k < (K-1):
+        #                     for j in xrange(k+1,K):
+        #                         if not mask[n,d]: tmptmp += 2*(SW[d,k]*Z[n,k])*(SW[d,j]*Z[n,j])
+        #             if not mask[n,d]: tmp += Y[n,d]**2 - 2*Y[n,d]*s.sum(SW[d,:]*Z[n,:])
+        #             tmp += tmptmp
+        #     Qa[d] = Pa[d] + s.sum(~mask[:,d])/2
+        #     Qb[d] = Pb[d] + tmp/2
+
+        # print Qa[:5]
+        ### END UNVECTORISED ##
 
 ##################################
 ## Non-vectrosied calculation of likelihood ##

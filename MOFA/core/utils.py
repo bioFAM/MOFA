@@ -73,21 +73,39 @@ def loadData(data_opts, verbose=True):
     print "#"*18
     print "\n"
 
-    Y = list()
-    for m in xrange(len(data_opts['input_files'])):
+    M = len(data_opts['input_files'])
+
+    Y =  [None]*M
+    for m in xrange(M):
         file = data_opts['input_files'][m]
 
         # Read file (with row and column names)
-        Y.append( pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"]) )
+        Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"]) 
         print "Loaded %s with dim (%d,%d)..." % (file, Y[m].shape[0], Y[m].shape[1])
+
+        # Removing features with no variance
+        var = Y[m].std(axis=0) 
+        if np.any(var==0.):
+        	print "Warning: %d features(s) have zero variance, removing them..." % (var==0.).sum()
+        	Y[m].drop(Y[m].columns[np.where(var==0.)], axis=1, inplace=True)
 
         # Center the features
         if data_opts['center_features'][m]:
-			Y[m] = (Y[m] - Y[m].mean(axis=0))
+            print "Centering features for view " + str(m) + "..."
+            Y[m] = (Y[m] - Y[m].mean(axis=0))
 
-	    # Scale the features
+	    # Scale the views to unit variance
+        if data_opts['scale_views'][m]:
+            print "Scaling view " + str(m) + " to unit variance..."
+            Y[m] = Y[m] / np.nanstd(Y[m].as_matrix())
+
+
+	    # Scale the features to unit variance
         if data_opts['scale_features'][m]:
-            Y[m] = Y[m] / np.std(Y[m], axis=0)
+            print "Scaling features for view " + str(m) + " to unit variance..."
+            Y[m] = Y[m] / np.std(Y[m], axis=0, )
+
+        print "\n"
 
     return Y
 
@@ -235,7 +253,12 @@ def saveExpectations(model, hdf5, view_names=None, only_first_moments=True):
 				view_subgrp = node_subgrp.create_group(tmp)
 
 				# Loop through the expectations
-				if only_first_moments: expectations[m] = {'E':expectations[m]["E"]}
+				if only_first_moments: 
+					if node == "SW":
+						expectations[m] = {'E':expectations[m]["E"], 'ES':expectations[m]["ES"], 'EW':expectations[m]["EW"]}
+					else:
+						expectations[m] = {'E':expectations[m]["E"]}
+
 				if expectations[m] is not None:
 					for exp_name in expectations[m].keys():
 						view_subgrp.create_dataset(exp_name, data=expectations[m][exp_name].T)

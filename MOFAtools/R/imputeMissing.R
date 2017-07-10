@@ -27,7 +27,7 @@ imputeMissing <- function(object, viewnms="all", type = c("inRange","response", 
   
   if(factors=="all"){
     factors = factorNames(object)
-  } else factors <- c("0", factors)
+  } else factors <- c("intercept", factors)
   
   type = match.arg(type)
   stopifnot(all(viewnms %in% viewNames(object)))
@@ -38,7 +38,7 @@ imputeMissing <- function(object, viewnms="all", type = c("inRange","response", 
   imputedData<-lapply(sapply(viewnms, grep, viewNames(object)), function(viewidx){
     
     # make imputation based on linear model
-    imputedView <- t(Z%*% t(W[[viewidx]]$E)) 
+    imputedView <- t(Z%*% t(W[[viewidx]])) 
     
     # make predicitons based on underlying model
     if(type!="link"){

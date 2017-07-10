@@ -19,7 +19,7 @@ To-do: initialuse MuZ
 def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, verbose=False):
 
     # set the seed
-    if seed is None:
+    if seed is None or seed==0:
         seed = int(round(time()*1000)%1e6)
     s.random.seed(seed)
 

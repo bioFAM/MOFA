@@ -51,8 +51,8 @@ data_opts = {}
 # I/O
 data_opts['input_files'] = args.inFiles
 data_opts['outfile'] = args.outFile
-data_opts['rownames'] = 0
-data_opts['colnames'] = 0
+# data_opts['rownames'] = 0
+# data_opts['colnames'] = 0
 # data_opts['rownames'] = None
 # data_opts['colnames'] = None
 data_opts['delimiter'] = " "
@@ -64,6 +64,9 @@ data_opts['view_names'] = args.views
 #####################
 ## Data processing ##
 #####################
+
+M = len(data_opts['input_files'])
+assert M == len(data_opts['view_names']), "Length of view names and input files does not match"
 
 # Data processing: center features
 if args.center_features:
@@ -85,23 +88,20 @@ if args.scale_features:
 else:
   data_opts['scale_features'] = [ False for l in args.likelihoods ]
 
-M = len(data_opts['input_files'])
 
 # Data processing: mask values
 if args.maskAtRandom is not None:
   data_opts['maskAtRandom'] = args.maskAtRandom
+  assert M == len(data_opts['maskAtRandom']), "Length of MaskAtRandom and input files does not match"
 else:
   data_opts['maskAtRandom'] = [0]*M
 
 if args.maskNSamples is not None:
   data_opts['maskNSamples'] = args.maskNSamples
+  assert M == len(data_opts['maskNSamples']), "Length of MaskAtRandom and input files does not match"
 else:
   data_opts['maskNSamples'] = [0]*M
 
-# Sanity checks
-assert M == len(data_opts['view_names']), "Length of view names and input files does not match"
-assert M == len(data_opts['maskAtRandom']), "Length of MaskAtRandom and input files does not match"
-assert M == len(data_opts['maskNSamples']), "Length of MaskAtRandom and input files does not match"
 
 ###############
 ## Load data ##

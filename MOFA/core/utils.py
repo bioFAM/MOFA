@@ -59,7 +59,7 @@ def maskData(data, data_opts):
             # idxMask = np.arange(Nsamples2Mask)
             # print idxMask
             tmp = data[m].copy()
-            tmp.ix[idxMask, :] = pd.np.nan
+            tmp.ix[idxMask,:] = pd.np.nan
             data[m] = tmp
 
     return data
@@ -77,10 +77,11 @@ def loadData(data_opts, verbose=True):
 
     Y =  [None]*M
     for m in xrange(M):
-        file = data_opts['input_files'][m]
 
-        # Read file (with row and column names)
-        Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"]) 
+        # Read file
+        file = data_opts['input_files'][m]
+        # Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"]) 
+        Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"])
         print "Loaded %s with dim (%d,%d)..." % (file, Y[m].shape[0], Y[m].shape[1])
 
         # Removing features with no variance
@@ -98,7 +99,6 @@ def loadData(data_opts, verbose=True):
         if data_opts['scale_views'][m]:
             print "Scaling view " + str(m) + " to unit variance..."
             Y[m] = Y[m] / np.nanstd(Y[m].as_matrix())
-
 
 	    # Scale the features to unit variance
         if data_opts['scale_features'][m]:
@@ -261,7 +261,11 @@ def saveExpectations(model, hdf5, view_names=None, only_first_moments=True):
 
 				if expectations[m] is not None:
 					for exp_name in expectations[m].keys():
-						view_subgrp.create_dataset(exp_name, data=expectations[m][exp_name].T)
+						if type(expectations[m][exp_name]) == ma.core.MaskedArray:
+							tmp = ma.filled(expectations[m][exp_name], fill_value=np.nan)
+							view_subgrp.create_dataset(exp_name, data=tmp.T)
+						else:
+							view_subgrp.create_dataset(exp_name, data=expectations[m][exp_name].T)
 
 		# Single-view nodes
 		else:

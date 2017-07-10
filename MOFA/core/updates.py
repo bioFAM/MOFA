@@ -48,7 +48,7 @@ class Y_Node(Constant_Variational_Node):
     def __init__(self, dim, value):
         Constant_Variational_Node.__init__(self, dim, value)
 
-        # Create a boolean mask of the data to hidden missing values
+        # Create a boolean mask of the data to hide missing values
         if type(self.value) != ma.MaskedArray:
             self.mask()
 

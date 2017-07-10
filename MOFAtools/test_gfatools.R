@@ -1,11 +1,12 @@
 
+devtools::load_all("/Users/ricard/mofa/MOFAtools")
 library(MOFAtools)
 library(purrr)
 
-file = "/Users/ricard/data/CLL/out/imputation/FullCases/1Jul/allPats_smallnoXY_N50_drug_k25_1.hdf5"
+file = "/Users/ricard/data/CLL/out/downsample/all_N10_1.hdf5"
 # file = "/Users/ricard/scMT/mofa/out/model_test.hdf5"
 # file = "/tmp/test.h5"
-model <- loadModel(file, sortFactors = F)
+model <- loadModel(file, sortFactors = T)
 
 calculateVarianceExplained(model)
 
@@ -15,10 +16,10 @@ showDataHeatmap(model, view="met_genebody", factor="9", nfeatures = 200)
 
 Ypred <- t(model@Expectations$SW$expr$E %*% t(model@Expectations$Z$E))
 
+View(model@TrainData$mut)
+View(model@Expectations$Y$mut$E)
 
 Z <- getExpectations(model,"Z","E")
-rownames(Z) <- 
-Y <- model@TrainData
 
 SW <- getExpectations(model,"SW","E")
 

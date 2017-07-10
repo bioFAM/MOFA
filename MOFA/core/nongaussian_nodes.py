@@ -62,6 +62,9 @@ class PseudoY(Unobserved_Variational_Node):
         # Mask the observations if they have missing values
         self.obs = ma.masked_invalid(self.obs)
 
+    def getMask(self):
+        return ma.getmask(self.obs)
+
     def precompute(self):
         # Precompute some terms to speed up the calculations
         pass
@@ -288,7 +291,7 @@ class Tau_Jaakkola(Node):
 
     def removeFactors(self, idx, axis=None):
         pass
-class Bernoulli_PseudoY_Jaakkola(PseudoY_Seeger):
+class Bernoulli_PseudoY_Jaakkola(PseudoY):
     """
     Class for a Bernoulli (0,1 data) pseudodata node with the following likelihood:
         p(y|x) = (e^{yx}) / (1+e^x)
@@ -311,20 +314,19 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY_Seeger):
         tau_ij <- 2*lambadfn(xi_ij)
     """
     def __init__(self, dim, obs, params=None, E=None):
-        PseudoY_Seeger.__init__(self, dim=dim, obs=obs, params=params, E=E)
+        PseudoY.__init__(self, dim=dim, obs=obs, params=params, E=E)
 
         # Initialise the observed data
         assert s.all( (self.obs==0) | (self.obs==1) ), "Data must be binary"
 
     def updateExpectations(self):
-        # TODO check lambdafn
         self.E = (2.*self.obs - 1.)/(4.*lambdafn(self.params["zeta"]))
 
     def updateParameters(self):
-        # SHOULD WE MASK SOMETHING HERE?
         Z = self.markov_blanket["Z"].getExpectations()
         SW = self.markov_blanket["SW"].getExpectations()
         self.params["zeta"] = s.sqrt( s.square(Z["E"].dot(SW["E"].T)) - s.dot(s.square(Z["E"]),s.square(SW["E"].T)) + s.dot(Z["E2"], SW["ESWW"].T) )
+        self.params["zeta"] = ma.masked_invalid(self.params["zeta"])
 
     def calculateELBO(self):
         # Compute Lower Bound using the Bernoulli likelihood with observed data

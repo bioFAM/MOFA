@@ -10,12 +10,13 @@
 #' @param viewnms character vector containing the names of views to be imputed (default: all)
 #' @param type of imputations returned. By default values are imputed using "inRange". "response" gives mean for gaussian and poisson and probabilities for bernoulli , 
 #' "link" gives the linear predictions, "inRange" rounds the fitted values from "terms" for integer-valued distributions to the next integer.
-#' @param onlyMissing By default, only values missing in Training Data are replaced by imputed ones. If all predicitons based on MOFA are wanted, this needs to be set to FALSE. 
+#' @param onlyMissing By default, only values missing in Training Data are replaced by imputed ones. If all predicitons based on MOFA are wanted, this needs to be set to FALSE.
+#' @param r2_threshold minimal level of rel. R2 for a factor to be considered active one a view
 #' @details asd
 #' @return List of imputed data, each list element corresponding to specified views.
 #' @references fill this
 #' @export
-imputeMissing <- function(object, viewnms="all", type = c("inRange","response", "link"), onlyMissing =T, factors = "all"){
+imputeMissing <- function(object, viewnms="all", type = c("inRange","response", "link"), onlyMissing =T, factors = "all", r2_threshold=0.03){
   
   # Sanity checks
   if (class(object) != "MOFAmodel")
@@ -33,7 +34,7 @@ imputeMissing <- function(object, viewnms="all", type = c("inRange","response", 
   stopifnot(all(viewnms %in% viewNames(object)))
   
   #mask passenger factors
-  object <- detectPassengers(object)
+  object <- detectPassengers(object, r2_threshold=r2_threshold)
   
   Z <- object@Expectations$Z$E[, factors]
   # set missing values in Z to 0 to exclude from imputations

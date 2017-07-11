@@ -48,7 +48,7 @@ detectPassengers <- function(object, views = "all", factors = "all", r2_threshol
     view <- names(which(r2[factor,]>=r2_threshold))
     missing_samples <- missing[[view]]
     if (length(missing_samples)>0) {
-      Z[missing_samples,factor] <- 0
+      Z[missing_samples,factor] <- NA
     }
   }
   object@Expectations$Z$E <- Z

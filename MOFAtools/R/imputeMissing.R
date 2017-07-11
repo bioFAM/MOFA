@@ -15,7 +15,8 @@
 #' @return List of imputed data, each list element corresponding to specified views.
 #' @references fill this
 #' @export
-imputeMissing <- function(object, viewnms="all", type = c("inRange","response", "link"), onlyMissing =T, factors = "all"){
+imputeMissing <- function(object, viewnms="all", type = c("inRange","response", "link"), onlyMissing =T, factors = "all",
+                          requireSharedness=T){
   
   # Sanity checks
   if (class(object) != "MOFAmodel")
@@ -32,7 +33,12 @@ imputeMissing <- function(object, viewnms="all", type = c("inRange","response", 
   type = match.arg(type)
   stopifnot(all(viewnms %in% viewNames(object)))
   
+  #mask passenger factors
+  object <- detectPassengers(object)
+  
   Z <- object@Expectations$Z$E[, factors]
+  # set missing values in Z to 0 to exclude from imputations
+  Z[is.na(Z)] <- 0
   W <- lapply(object@Expectations$SW, function(list) list$E[,factors])
   
   imputedData<-lapply(sapply(viewnms, grep, viewNames(object)), function(viewidx){

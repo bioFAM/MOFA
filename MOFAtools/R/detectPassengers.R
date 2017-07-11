@@ -10,7 +10,7 @@
 #' @param object a MOFA model
 #' @param views all
 #' @param factors all
-#' @param ... further arguments that can be passed to pheatmap
+#' @param r2_threshold minimal level of rel. R2 for a factor to be considered active one a view
 #' @details fill this
 #' @return fill this
 #' @export
@@ -44,11 +44,13 @@ detectPassengers <- function(object, views = "all", factors = "all", r2_threshol
   
   # Mask samples that have full missing views
   missing <- sapply(getTrainData(object,views), function(view) sampleNames(object)[apply(view, 2, function(x) all(is.na(x)))] )
+  names(missing) <- viewNames(object)
+  
   for (factor in unique_factors) {
     view <- names(which(r2[factor,]>=r2_threshold))
     missing_samples <- missing[[view]]
     if (length(missing_samples)>0) {
-      Z[missing_samples,factor] <- 0
+      Z[missing_samples,factor] <- NA
     }
   }
   object@Expectations$Z$E <- Z

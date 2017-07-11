@@ -27,18 +27,23 @@ imputeMissing <- function(object, viewnms="all", type = c("inRange","response", 
   
   if(factors=="all"){
     factors = factorNames(object)
-  } else factors <- c("0", factors)
+  } else factors <- c("intercept", factors)
   
   type = match.arg(type)
   stopifnot(all(viewnms %in% viewNames(object)))
   
+  #mask passenger factors
+  object <- detectPassengers(object)
+  
   Z <- object@Expectations$Z$E[, factors]
+  # set missing values in Z to 0 to exclude from imputations
+  Z[is.na(Z)] <- 0
   W <- lapply(object@Expectations$SW, function(list) list$E[,factors])
   
   imputedData<-lapply(sapply(viewnms, grep, viewNames(object)), function(viewidx){
     
     # make imputation based on linear model
-    imputedView <- t(Z%*% t(W[[viewidx]]$E)) 
+    imputedView <- t(Z%*% t(W[[viewidx]])) 
     
     # make predicitons based on underlying model
     if(type!="link"){

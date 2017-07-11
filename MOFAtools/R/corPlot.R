@@ -50,19 +50,20 @@ FeaturesCorPlot <- function(object, view, method="pearson", regress_factors=NULL
 #' @description fill this
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param method a character string indicating which correlation coefficient is to be computed: pearson (default), kendall, or spearman.
+#' @param use handling of NAs when computing correaltion of latent factors (s. cor)
 #' @param ... arguments passed to \code{corrplot}
 #' @details asd
 #' @return fill this
 #' @references fill this
 #' @import corrplot
 #' @export
-FactorsCorPlot <- function(object, method="pearson", ...) {
+FactorsCorPlot <- function(object, method="pearson", use = "complete.obs", ...) {
   if (class(object) != "MOFAmodel")
     stop("'object' has to be an instance of MOFAmodel")
   
   Z <- getExpectations(object,"Z","E")
   if(object@ModelOpts$learnMean==T) Z <- Z[,-1]
-  h <- cor(x=Z, y=Z, method=method)
+  h <- cor(x=Z, y=Z, method=method, use=use)
   p <- corrplot::corrplot(h, tl.col="black", ...)
   return(p)
 }

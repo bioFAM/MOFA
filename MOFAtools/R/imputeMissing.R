@@ -15,8 +15,7 @@
 #' @return List of imputed data, each list element corresponding to specified views.
 #' @references fill this
 #' @export
-imputeMissing <- function(object, viewnms="all", type = c("inRange","response", "link"), onlyMissing =T, factors = "all",
-                          requireSharedness=T){
+imputeMissing <- function(object, viewnms="all", type = c("inRange","response", "link"), onlyMissing =T, factors = "all"){
   
   # Sanity checks
   if (class(object) != "MOFAmodel")

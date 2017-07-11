@@ -75,7 +75,6 @@ histPlot <- function(object, factor, xlabel = NULL, fill=NULL, name_fill="", alp
 #' @details asd
 #' @return fill this
 #' @references fill this
-#' @import ggbeeswarm
 #' @export
 beeswarmPlot <- function(object, factors, color_by = NULL, color_name="", colorLegend=T, showNA=F) {
   

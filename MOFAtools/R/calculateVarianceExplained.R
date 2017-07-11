@@ -15,7 +15,7 @@
 #' @param showVarComp if True plot additional barplots showing the contribution of ea
 #' @details fill this
 #' @return fill this
-#' @import pheatmap gridExtra ggplot2 reshape2
+#' @import pheatmap ggplot2 reshape2
 #' @importFrom cowplot plot_grid
 #' @export
 

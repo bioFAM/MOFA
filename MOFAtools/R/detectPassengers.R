@@ -10,7 +10,7 @@
 #' @param object a MOFA model
 #' @param views all
 #' @param factors all
-#' @param ... further arguments that can be passed to pheatmap
+#' @param r2_threshold minimal level of rel. R2 for a factor to be considered active one a view
 #' @details fill this
 #' @return fill this
 #' @export

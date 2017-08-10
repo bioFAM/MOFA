@@ -70,7 +70,7 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
     #by default the null model is using the intercept LF if present and not the actual mean
     NullModel <- lapply(views, function(m)  {
       # take intercept from samples which are not missing (same for all patients)
-      if(object@ModelOpts$learnMean==T) apply(Ypred_mk[[m]][["intercept"]],2, function(c) unique(c[!is.na(c)]))
+      if(object@ModelOpts$learnMean==T) apply(Ypred_mk[[m]][["0"]],2, function(c) unique(c[!is.na(c)]))
         else apply(Y[[m]],2,mean,na.rm=T)
       })
     names(NullModel) <- views

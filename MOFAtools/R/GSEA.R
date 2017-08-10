@@ -45,7 +45,7 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
   Z <- getExpectations(model,"Z","E")[,factors, drop=FALSE]
   
   # Check that there is no constant factor
-  stopifnot( all(apply(Z,2,var)>0) )
+  stopifnot( all(apply(Z,2,var, na.rm=T)>0) )
   
   # To-do: check feature.sets input format
   

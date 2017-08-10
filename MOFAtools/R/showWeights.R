@@ -232,8 +232,8 @@ showTopWeights <- function(model, view, factor, nfeatures = 5, manual_features=N
       )
   
   if (sign=="negative") p <- p + scale_x_discrete(position = "top")
-  if(abs) p <-  p + ylab(paste("Absolute Loading on factor", factor))  
-    else  p <- p + ylab(paste("Absolute Loading on factor", factor))
+  if(abs) p <-  p + ylab(paste("Absolute loading on factor", factor))  
+    else  p <- p + ylab(paste("Absolute loading on factor", factor))
   return(p)
   
 }

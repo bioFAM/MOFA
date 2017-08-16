@@ -4,7 +4,7 @@ import pandas as pd
 import numpy.ma as ma
 import os
 import h5py
-from glob import glob
+import glob
 
 """
 Module to define some useful util functions

@@ -62,7 +62,7 @@ FactorsCorPlot <- function(object, method="pearson", ...) {
   
   Z <- getExpectations(object,"Z","E")
   if(object@ModelOpts$learnMean==T) Z <- Z[,-1]
-  h <- cor(x=Z, y=Z, method=method)
+  h <- cor(x=Z, y=Z, method=method, use="complete.obs")
   p <- corrplot::corrplot(h, tl.col="black", ...)
   return(p)
 }
@@ -133,9 +133,9 @@ CorrplotLFvsPC <- function(model, views="all", noPCs=5, method="svd") {
   # Perform PCAs
   listPCs <- lapply(views, function(m) {
     data <- getTrainData(model,m)
-    # Replace Nan by NA
+    # Replace NaN by NA
     data[is.nan(data)] <- NA
-    # Remove samples with missing views
+    # Remove missing samples
     data <- data[,apply(data,2, function(x) mean(is.na(x))) < 1]
     # Perform PCA
     pc.out <- pcaMethods::pca(t(data), method=method, center=TRUE, scale="none", nPcs=noPCs)

@@ -103,24 +103,27 @@ class BayesNet(object):
                 Ypred_m = s.dot(Z, W[m].T)
                 Ypred_m[mask] = 0.
 
-                Var = (Ypred_m**2.).sum()
-                
+                # If there is an intercept term, regress it out, as it greatly decreases the fraction of variance explained by the other factors
+                # (THIS IS NOT IDEAL...)
                 if s.all(Z[:,0]==1.):
                     Ypred_m_intercept = s.outer(Z[:,0], W[m][:,0].T) 
-                    Ypred_m_intercept[mask] = 0.
+                    Ypred_m_intercept[mask] = 0. # DO WE NEED TO DO THIS???
                     Ypred_m -= Ypred_m_intercept
                     all_r2[:,0] = 1.
+                    SS = (Ypred_m**2.).sum()
                     for k in xrange(1,self.dim['K']):
                         Ypred_mk = s.outer(Z[:,k], W[m][:,k])
                         Ypred_mk[mask] = 0.
                         Res = ((Ypred_m - Ypred_mk)**2.).sum()
-                        all_r2[m,k] = 1. - Res/Var
+                        all_r2[m,k] = 1. - Res/SS
+                # No intercept term
                 else:
+                    SS = (Ypred_m**2.).sum()
                     for k in xrange(self.dim['K']):
                         Ypred_mk = s.outer(Z[:,k], W[m][:,k])
                         Ypred_mk[mask] = 0.
                         Res = ((Ypred_m - Ypred_mk)**2.).sum()
-                        all_r2[m,k] = 1. - Res/Var
+                        all_r2[m,k] = 1. - Res/SS
 
             if by_r2 is not None:
                 drop_dic["by_r2"] = s.where( (all_r2>by_r2).sum(axis=0) == 0)[0]

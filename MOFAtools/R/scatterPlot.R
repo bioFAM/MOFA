@@ -232,7 +232,8 @@ scatterPlot <- function (object, factors, title = "", titlesize = 16, xlabel = N
             panel.background = element_blank(),
             legend.key = element_rect(fill = "white"),
             legend.text = element_text(size = titlesize),
-            legend.title = element_text(size =titlesize))
+            legend.title = element_text(size =titlesize)
+            )
   if (colorLegend) { p <- p + labs(color = name_color) } else { p <- p + guides(color = FALSE) }
   if (shapeLegend) { p <- p + labs(shape = name_shape) }  else { p <- p + guides(shape = FALSE) }
   return(p)
@@ -274,7 +275,7 @@ scatterPairs <- function(object, factors = "all", showMissing=T,
   Z <- Z[,factors]
 
   # Remove constant factors 
-  tmp <- apply(Z,2,var)
+  tmp <- apply(Z,2,var,na.rm=T)
   if (any(tmp==0)) {
     message(paste0("Removing constant factors: ", paste(which(tmp==0), collapse="")))
     Z <- Z[,!tmp==0]

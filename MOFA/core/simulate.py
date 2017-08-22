@@ -78,7 +78,7 @@ class Simulate(object):
 
                 # Partially vectorised
                 for k in xrange(self.K):
-                    S[m][:,k] = bernoulli.rvs(p=theta[m][k], size=self.D[m])
+                    S[m][:,k] = bernoulli.rvs(p=theta[m][:,k], size=self.D[m])
                 
                 # Unvectorised
                 # for d in xrange(self.D[m]):
@@ -201,7 +201,7 @@ class Simulate(object):
         # DOESNT WORK FOR BINOMIAL RIGHT NOW
         if missingness > 0.0:
             for m in xrange(self.M):
-                nas = s.random.randint(0, self.N*self.D[m], int(missingness*self.N*self.D[m]))
+                nas = s.random.choice(range(self.N*self.D[m]), size=int(missingness*self.N*self.D[m]), replace=False)
                 tmp = Y[m].flatten()
                 tmp[nas] = s.nan
                 Y[m] = tmp.reshape((self.N,self.D[m]))

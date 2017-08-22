@@ -31,6 +31,30 @@ def loadTheta(data_opts):
 
 	return ThetaPrior
 
+
+def removeIncompleteSamples(data):
+	print "Removing incomplete samples..."
+
+	M = len(data)
+	N = data[0].shape[0]
+	samples_to_remove = []
+	for n in xrange(N):
+		for m in xrange(M):
+			if pd.isnull(data[m].iloc[n][0]):
+				samples_to_remove.append(n)
+				break
+
+	print "A total of " + str(len(samples_to_remove)) + " sample(s) have at least a missing view and will be removed"
+
+	data_filt = [None]*M
+	samples_to_keep = np.setdiff1d(range(N),samples_to_remove)
+	for m in xrange(M):
+		data_filt[m] = data[m].iloc[samples_to_keep]
+
+	return data_filt
+
+
+
 # Function to mask the data, mainly to test missing values and imputation
 def maskData(data, data_opts):
     print "Masking data with the following options:"
@@ -80,8 +104,9 @@ def loadData(data_opts, verbose=True):
 
         # Read file
         file = data_opts['input_files'][m]
-        # Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"]) 
-        Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"])
+        Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"]).astype(pd.np.float32)
+
+        # Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"])
         print "Loaded %s with dim (%d,%d)..." % (file, Y[m].shape[0], Y[m].shape[1])
 
         # Removing features with no variance

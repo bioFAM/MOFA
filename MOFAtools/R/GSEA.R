@@ -33,10 +33,10 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
   # Collect factors
   if (paste0(factors,sep="",collapse="") == "all") { 
     factors <- factorNames(model)
-    if (model@ModelOpts$learnMean) { factors <- factors[-1] }
+    if (model@ModelOpts$learnMean == T) { factors <- factors[-1] }
   } else if(!all(factors %in% factorNames(model))) stop("Factors do not match factor names in model")
   
-  # Collect observed data and turn it to a sample x features format
+  # Collect observed data
   data <- model@TrainData[[view]]
   data <- t(data)
   
@@ -45,9 +45,10 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
   Z <- getExpectations(model,"Z","E")[,factors, drop=FALSE]
   
   # Check that there is no constant factor
-  stopifnot( all(apply(Z,2,var)>0) )
+  stopifnot( all(apply(Z,2,var,na.rm=T)>0) )
   
   # To-do: check feature.sets input format
+  # to-do: to reduce FDR problems, extract only factors that are active in that view
   
   # turn feature.sets into binary membership matrices if provided as list
   if(class(feature.sets) == "list") {
@@ -70,11 +71,11 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
   # Filter feature sets with small number of features
   feature.sets <- feature.sets[rowSums(feature.sets)>=min.size,]
   
-  #Match test options
-  local.statistic <- match.arg(local.statistic)
-  transformation <- match.arg(transformation)
-  global.statistic <- match.arg(global.statistic)
-  statistical.test <- match.arg(statistical.test)
+  # Match test options
+  # local.statistic <- match.arg(local.statistic)
+  # transformation <- match.arg(transformation)
+  # global.statistic <- match.arg(global.statistic)
+  # statistical.test <- match.arg(statistical.test)
   
   # Print options
   message("Doing feature Ontology Enrichment Analysis with the following options...")
@@ -202,7 +203,7 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, factor, threshold=0.
   tmp$pathway <- factor(tmp$pathway <- rownames(tmp), levels = tmp$pathway[order(tmp$pvalue, decreasing = T)])
   
   p <- ggplot(tmp, aes(x=pathway, y=log)) +
-    ggtitle(paste("Enriched sets in factor", factor)) +
+    # ggtitle(paste("Enriched sets in factor", factor)) +
     geom_point(size=5) +
     geom_hline(yintercept=-log10(threshold), linetype="longdash") +
     scale_y_continuous(limits=c(0,7)) +
@@ -212,6 +213,7 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, factor, threshold=0.
     coord_flip() +
     theme(
       axis.text.y = element_text(size=rel(1.2), hjust=1, color='black'),
+      axis.text.x = element_text(size=rel(1.2), vjust=0.5, color='black'),
       axis.title.y=element_blank(),
       legend.position='none',
       panel.background = element_blank()
@@ -265,9 +267,9 @@ pcgse = function(data,
 ) {
   current.warn = getOption("warn")
   options(warn=-1)
-  if (is.na(data)) {
-    stop("'data must' be specified!")
-  }  
+  # if (is.na(data)) {
+  #   stop("'data must' be specified!")
+  # }  
   if (is.na(feature.sets)) {
     stop("'feature.sets' must be specified!")
   }   

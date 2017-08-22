@@ -84,7 +84,7 @@ showWeightHeatmap <- function(model, view, features = "all", factors = "all", Re
 #' @details fill this
 #' @import ggplot2 ggrepel
 #' @export
-showAllWeights <- function(model, view, factor, nfeatures = 0, abs=FALSE, threshold = NULL, 
+showAllWeights <- function(model, view, factor, nfeatures = "all", abs=FALSE, threshold = NULL, 
                                     manual = NULL, color_manual=NULL, main = NULL) {
   
   # Sanity checks
@@ -98,13 +98,23 @@ showAllWeights <- function(model, view, factor, nfeatures = 0, abs=FALSE, thresh
   W <- getExpectations(model,"SW","E", as.data.frame = T)
   W <- W[W$factor==factor & W$view==view,]
   
+  
+  # Parse the weights
   if (abs) W$value <- abs(W$value)
   
+  # Filter the weights
+  if(nfeatures=="all") {
+    nfeatures <- nrow(W)
+  } else {
+    stopifnot(class(nfeatures)=="numeric")
+  }
+  W <- head(W[order(W$value, decreasing=T),], n=nfeatures)
+    
   # Define groups for labelling
   W$group <- "0"
   
   # Define group of features to color according to the loading
-  if(nfeatures>0) W$group[abs(W$value) >= sort(abs(W$value), decreasing = T)[nfeatures]] <- "1"
+  # if(nfeatures>0) W$group[abs(W$value) >= sort(abs(W$value), decreasing = T)[nfeatures]] <- "1"
   if(!is.null(threshold)) W$group[abs(W$value) >= threshold] <- "1"
   
   # Define group of features to label manually

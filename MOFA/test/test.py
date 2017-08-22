@@ -63,7 +63,7 @@ data['tau']= [ stats.uniform.rvs(loc=1,scale=3,size=D[m]) for m in xrange(M) ]
 # data['tau']= [ stats.uniform.rvs(loc=0.1,scale=3,size=D[m]) for m in xrange(M) ]
 
 missingness = 0.0
-missing_view = 0.00
+missing_view = 0.10
 # Y_warp = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
 #   likelihood="warp", missingness=missingness, missing_view=missing_view)
 Y_gaussian = tmp.generateData(W=data['W'], Z=data['Z'], Tau=data['tau'], Mu=data['mu'],
@@ -97,6 +97,7 @@ data_opts['scale_features'] = [True]*M
 data_opts['covariates'] = None
 # data_opts['scale_covariates'] = [True]
 data_opts['scale_covariates'] = None
+data_opts['RemoveIncompleteSamples'] = True
 
 
 #####################

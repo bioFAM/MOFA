@@ -10,19 +10,22 @@ from run_utils import *
 p = argparse.ArgumentParser( description='Run script for MOFA' )
 p.add_argument( '--inFiles',           type=str, nargs='+', required=True,                  help='Input data files (including extension)' )
 p.add_argument( '--outFile',           type=str, required=True,                             help='Output data file (hdf5 format)' )
+p.add_argument( '--delimiter',         type=str, default=" ",                               help='Delimiter for input files' )
+p.add_argument( '--header_cols',       action='store_true',                                 help='Do the input file(s) contain a header with column names?' )
+p.add_argument( '--header_rows',       action='store_true',                                 help='Do the input file(s) contain row names?' )
 p.add_argument( '--likelihoods',       type=str, nargs='+', required=True,                  help='Likelihoods (bernoulli, gaussian, poisson, binomial)')
 p.add_argument( '--views',             type=str, nargs='+', required=True,                  help='View names')
 p.add_argument( '--covariatesFile',    type=str,                                            help='Input covariate data' )
-p.add_argument( '--scale_covariates',  type=int, nargs='+', default=0,                   help='' )
+p.add_argument( '--scale_covariates',  type=int, nargs='+', default=0,                      help='' )
 p.add_argument( '--schedule',          type=str, nargs="+", required=True,                  help='Update schedule' )
 p.add_argument( '--learnTheta',        type=int, nargs="+", default=0,                      help='learn the sparsity parameter from the spike and slab?' )
 p.add_argument( '--learnMean',         action='store_true',                                 help='learn the feature mean?' )
-p.add_argument( '--initTheta',         type=float, nargs="+", default=1. ,                 help='hyperparameter theta in case that learnTheta is set to False')
-p.add_argument( '--startSparsity',     type=int, default=1,                                  help='')
+p.add_argument( '--initTheta',         type=float, nargs="+", default=1. ,                  help='hyperparameter theta in case that learnTheta is set to False')
+p.add_argument( '--startSparsity',     type=int, default=1,                                 help='')
 p.add_argument( '--ThetaDir',          type=str, default="" ,                               help='BLABLA')
 p.add_argument( '--tolerance',         type=float, default=0.1 ,                            help='tolerance for convergence (deltaELBO)')
-p.add_argument( '--startDrop',         type=int, default=999999 ,                                help='First iteration to start dropping factors')
-p.add_argument( '--freqDrop',          type=int, default=999999 ,                                help='Frequency for dropping factors')
+p.add_argument( '--startDrop',         type=int, default=999999 ,                           help='First iteration to start dropping factors')
+p.add_argument( '--freqDrop',          type=int, default=999999 ,                           help='Frequency for dropping factors')
 p.add_argument( '--maskAtRandom',      type=float,nargs="+", default=None,                  help='Fraction of data to mask per view')
 p.add_argument( '--maskNSamples',      type=int,nargs="+", default=None,                    help='Number of patients to mask per view')
 p.add_argument( '--nostop',            action='store_true',                                 help='Do not stop even when convergence criterion is met?' )
@@ -34,6 +37,7 @@ p.add_argument( '--seed',              type=int, default=0 ,                    
 p.add_argument( '--center_features',   action="store_true",                                 help='Center the features?' )
 p.add_argument( '--scale_features',    action="store_true",                                 help='Scale the features to unit variance?' )
 p.add_argument( '--scale_views',       action="store_true",                                 help='Scale the views to unit variance?' )
+p.add_argument( '--RemoveIncompleteSamples',action="store_true",                            help='Remove samples with incomplete views?' )
 p.add_argument( '-n', '--ntrials',     type=int, default=1,                                 help='Number of trials' )
 p.add_argument( '-c', '--ncores',      type=int, default=1,                                 help='Number of cores' )
 p.add_argument( '-i', '--iter',        type=int, default=10,                                help='Number of iterations' )
@@ -51,15 +55,24 @@ data_opts = {}
 # I/O
 data_opts['input_files'] = args.inFiles
 data_opts['outfile'] = args.outFile
-# data_opts['rownames'] = 0
-# data_opts['colnames'] = 0
-# data_opts['rownames'] = None
-# data_opts['colnames'] = None
-data_opts['delimiter'] = " "
+data_opts['delimiter'] = args.delimiter
 data_opts['ThetaDir'] = args.ThetaDir
 
 # View names
 data_opts['view_names'] = args.views
+
+# ...
+if args.header_rows:
+  data_opts['rownames'] = 0
+else:
+  data_opts['rownames'] = None
+
+if args.header_cols:
+  data_opts['colnames'] = 0
+else:
+  data_opts['colnames'] = None
+
+data_opts['RemoveIncompleteSamples'] = args.RemoveIncompleteSamples
 
 #####################
 ## Data processing ##
@@ -72,7 +85,7 @@ assert M == len(data_opts['view_names']), "Length of view names and input files 
 if args.center_features:
   data_opts['center_features'] = [ True if l=="gaussian" else False for l in args.likelihoods ]
 else:
-  if not args.learnMean: print "Warning... you are not centering the data and not learning the mean..."; exit()
+  if not args.learnMean: print "\nWarning... you are not centering the data and not learning the mean...\n"
   data_opts['center_features'] = [ False for l in args.likelihoods ]
 
 # Data processing: scale views
@@ -109,6 +122,12 @@ else:
 
 # Load observations
 data = loadData(data_opts)
+
+# Remove samples with missing views
+if data_opts['RemoveIncompleteSamples']:
+  data = removeIncompleteSamples(data)
+
+# Calculate dimensionalities
 N = data[0].shape[0]
 D = [data[m].shape[1] for m in xrange(M)]
 

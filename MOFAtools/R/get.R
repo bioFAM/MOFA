@@ -39,9 +39,20 @@ getCovariates <- function(object, names) {
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @export
 #' 
-getFactors <- function(object, as.data.frame=F) {
+getFactors <- function(object, as.data.frame=F, include_intercept=T) {
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
-  return(getExpectations(object,"Z","E",as.data.frame))
+  
+  Z <- getExpectations(object,"Z","E",as.data.frame)
+  
+  if (!include_intercept) {
+    if (as.data.frame==F) {
+      Z <- Z[,colnames(Z)!="intercept"]
+    } else {
+      Z <- Z[Z$factor!="intercept",]
+    }
+  }
+  
+  return(Z)
 }
 
 
@@ -104,12 +115,11 @@ getTrainData <- function(object, views="all", features="all", as.data.frame=F) {
   
   # Get data
   trainData <- object@TrainData[views]
-  trainData <- lapply(1:length(trainData), function(m) trainData[[m]][features[[m]],])
+  trainData <- lapply(1:length(trainData), function(m) trainData[[m]][features[[m]],,drop=F]); names(trainData) <- views
   
   # Convert to long data frame
   if (as.data.frame) {
-    # tmp <- lapply(views, function(m) { tmp <- reshape2::melt(trainData[[m]]); colnames(tmp) <- c("sample","feature","value"); tmp <- cbind(view=m,tmp); return(tmp) })
-    tmp <- lapply(1:length(trainData), function(m) { tmp <- reshape2::melt(trainData[[m]]); colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
+    tmp <- lapply(views, function(m) { tmp <- reshape2::melt(trainData[[m]]); colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
     trainData <- do.call(rbind,tmp)
     trainData[,c("view","feature","sample")] <- sapply(trainData[,c("view","feature","sample")], as.character)
   } else if ((length(views)==1) && (as.data.frame==F)) {

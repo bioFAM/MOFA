@@ -15,7 +15,7 @@
 #' @return fill this
 #' @import pheatmap
 #' @export
-showDataHeatmap <- function(object, view, factor, nfeatures=50, main=NULL, ...) {
+showDataHeatmap <- function(object, view, factor, nfeatures=50, manual_features=NULL, main=NULL, include_weights=F, ...) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -26,8 +26,16 @@ showDataHeatmap <- function(object, view, factor, nfeatures=50, main=NULL, ...) 
   W <- getExpectations(object,"SW","E")[[view]][,factor]
   
   # Define features
-  features <- names(tail(sort(abs(W)), n=nfeatures))
-  stopifnot(all(features %in% featureNames(object)[[view]]))
+  features <- c()
+  if (nfeatures>0) {
+    tmp <- names(tail(sort(abs(W)), n=nfeatures))
+    stopifnot(all(tmp %in% featureNames(object)[[view]]))
+    features <- c(features,tmp)
+  }
+  if (length(manual_features)>0) {
+    stopifnot(all(manual_features %in% featureNames(object)[[view]]))
+    features <- c(features,manual_features)
+  }
   
   # Get train data
   data <- getTrainData(object, view)
@@ -37,7 +45,13 @@ showDataHeatmap <- function(object, view, factor, nfeatures=50, main=NULL, ...) 
   
   # Plot heatmap
   if(is.null(main)) main <- paste(view, "observations for the top weighted features of factor", factor)
-  pheatmap::pheatmap(t(data[features,]), main=main, ...)
+  if (include_weights) { 
+    anno_col <- data.frame(row.names=names(W[features]), weight=W[features]) 
+    pheatmap::pheatmap(t(data[features,]), main=main, annotation_col=anno_col, ...)
+  } else {
+    pheatmap::pheatmap(t(data[features,]), main=main, ...)
+  }
+  
 }
 
 

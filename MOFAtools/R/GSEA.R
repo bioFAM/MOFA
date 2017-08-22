@@ -45,7 +45,7 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
   Z <- getExpectations(model,"Z","E")[,factors, drop=FALSE]
   
   # Check that there is no constant factor
-  stopifnot( all(apply(Z,2,var,na.rm=T)>0) )
+  stopifnot( all(apply(Z,2,var, na.rm=T)>0) )
   
   # To-do: check feature.sets input format
   # to-do: to reduce FDR problems, extract only factors that are active in that view
@@ -194,7 +194,7 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, factor, threshold=0.
     tmp <- head(tmp[order(tmp$pvalue),],n=max.pathways)
   
   # Convert pvalues to log scale (add a small regulariser to avoid numerical errors)
-  tmp$log <- -log10(tmp$pvalue + 1e-6)
+  tmp$log <- -log10(tmp$pvalue)
   
   # Annotate significcant pathways
   # tmp$sig <- factor(tmp$pvalue<threshold)
@@ -206,7 +206,7 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, factor, threshold=0.
     # ggtitle(paste("Enriched sets in factor", factor)) +
     geom_point(size=5) +
     geom_hline(yintercept=-log10(threshold), linetype="longdash") +
-    scale_y_continuous(limits=c(0,7)) +
+    # scale_y_continuous(limits=c(0,7)) +
     scale_color_manual(values=c("black","red")) +
     geom_segment(aes(xend=pathway, yend=0)) +
     ylab("-log pvalue") +
@@ -236,7 +236,7 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, factor, threshold=0.
 Heatmap_FeatureSetEnrichmentAnalysis <- function(p.values, threshold=0.05, log=T, ...) {
   p.values <- p.values[!apply(p.values, 1, function(x) sum(x>=threshold)) == ncol(p.values),]
   if (log) {
-    p.values <- -log10(p.values+0.001)
+    p.values <- -log10(p.values)
     threshold <- -log10(threshold)
     col <- colorRampPalette(c("lightgrey", "red"))(n=10)
   } else {

@@ -180,7 +180,7 @@ showAllWeights <- function(model, view, factor, nfeatures = "all", abs=FALSE, th
 #' @details fill this
 #' @import ggplot2
 #' @export
-showTopWeights <- function(model, view, factor, nfeatures = 0, manual_features=NULL, sign="positive", abs=TRUE) {
+showTopWeights <- function(model, view, factor, nfeatures = 5, manual_features=NULL, sign="positive", abs=TRUE) {
   
   # Sanity checks
   if (class(model) != "MOFAmodel") stop("'model' has to be an instance of MOFAmodel")
@@ -193,10 +193,11 @@ showTopWeights <- function(model, view, factor, nfeatures = 0, manual_features=N
   # Collect expectations  
   W <- getExpectations(model,"SW","E", as.data.frame = T)
   W <- W[W$factor==factor & W$view==view,]
-  if (sign=="positive") { W <- W[W$value>0,] } else if (sign=="negative") { W <- W[W$value<0,] }
-  
-  # Absolute value
+
+   # Absolute value
   if (abs) W$value <- abs(W$value)
+
+  if (sign=="positive") { W <- W[W$value>0,] } else if (sign=="negative") { W <- W[W$value<0,] }
   
   # Extract relevant features
   W <- W[with(W, order(-abs(value))), ]
@@ -224,7 +225,6 @@ showTopWeights <- function(model, view, factor, nfeatures = 0, manual_features=N
     # scale_colour_manual(values=c("#F8766D","#00BFC4")) +
     # guides(colour = guide_legend(title.position="top", title.hjust = 0.5)) +
     coord_flip() +
-    ylab("Loading") +
     theme(
       axis.title.x = element_text(size=rel(1.5), color='black'),
       axis.title.y = element_blank(),
@@ -242,8 +242,11 @@ showTopWeights <- function(model, view, factor, nfeatures = 0, manual_features=N
       )
   
   if (sign=="negative") p <- p + scale_x_discrete(position = "top")
+  if(abs) p <-  p + ylab(paste("Absolute loading on factor", factor))  
+    else  p <- p + ylab(paste("Absolute loading on factor", factor))
   return(p)
   
 }
+
 
 

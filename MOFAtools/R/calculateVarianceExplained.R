@@ -47,20 +47,24 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
   SW <- getExpectations(object,"SW","E")
   Z <- getExpectations(object,"Z","E")
   Y <- getExpectations(object,"Y","E")
-
+  # bug was fixed in newer versions of MOFA, following line can be used as work-around for old model
+  Y[[which(object@ModelOpts$likelihood=="bernoulli")]][Y[[which(object@ModelOpts$likelihood=="bernoulli")]]==2] <- NA
+  
   # Calculate predictions under the  MOFA model using all or a single factor
+  #replace masked values on Z by 0 (do not contribute to predicitons)
+  Z[is.na(Z)] <- 0
   Ypred_m <- lapply(views, function(m) Z%*%t(SW[[m]])); names(Ypred_m) <- views
   Ypred_mk <- lapply(views, function(m) {
                       ltmp <- lapply(factors, function(k) Z[,k]%*%t(SW[[m]][,k]) ); names(ltmp) <- factors; ltmp
                     }); names(Ypred_mk) <- views
   
-  # Mask the predictions
-  for (m in views) { 
-    Ypred_m[[m]][which(is.na(Y[[m]]))] <- NA 
-    for (k in factors) {
-      Ypred_mk[[m]][[k]][which(is.na(Y[[m]]))] <- NA 
-    }
-  }
+  # # Mask the predictions (unnecessary as difference below is NA already)
+  # for (m in views) { 
+  #   Ypred_m[[m]][which(is.na(Y[[m]]))] <- NA 
+  #   for (k in factors) {
+  #     Ypred_mk[[m]][[k]][which(is.na(Y[[m]]))] <- NA 
+  #   }
+  # }
 
   # Calculate prediction under the null model (intercept only)
     #by default the null model is using the intercept LF if present and not the actual mean

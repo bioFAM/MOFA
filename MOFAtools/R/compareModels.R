@@ -11,6 +11,8 @@
 #' used for a comparison. 
 #' @param ModelList a list containing \code{\link{MOFAmodel}} objects.
 #' @param comparison tye of comparison either 'pairwise' or 'all'
+#' @param use handling of NAs when computing correaltion of latent factors (s. cor)
+
 #' @details asd
 #' @return Plots a heatmap of correlation of Latent Factors in all models when 'comparison' is 'all'. 
 #' Otherwise, for each pair of models, a seperate heatmap is produced comparing one model againt the other.
@@ -21,7 +23,7 @@
 #' @importFrom grDevices colorRampPalette
 #' @export
 
-compareModels <- function(ModelList, comparison="all", main=NULL, ...) {
+compareModels <- function(ModelList, comparison="all",use ="complete.obs", main=NULL, ...) {
   #check inputs
   if(class(ModelList)!="list")
     stop("'ModelList' has to be a list")
@@ -59,7 +61,7 @@ compareModels <- function(ModelList, comparison="all", main=NULL, ...) {
     LFscommon <- Reduce(cbind, lapply(LFs, function(Z) Z[commonSamples,]))
 
     # calculate correlation
-    corLFs <- cor(LFscommon)
+    corLFs <- cor(LFscommon, use=use)
     
     #annotation by model
     modelAnnot <- data.frame(model = rep(names(ModelList), times=sapply(LFs, ncol)))

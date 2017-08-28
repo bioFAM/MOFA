@@ -8,11 +8,11 @@
 #' @name showWeightHeatmap
 #' @description Function to visualize loadings for a given set of factors in a given view. This is useful to see the overall pattern of the weights but it is not very useful to characterise the factors.
 #'  If you want to individually look at the top weights for a given factor we recommend the function showAllWeights and showTopWeights
-#' @param model a MOFA model
+#' @param object a \code{\link{MOFAmodel}} object.
 #' @param view view name
 #' @param features name of the features to include (default: "all")
 #' @param factors name of the factors to include (default: "all")
-#' @param RemoveIntercept boolean wether to include the intercept factor if present in the model (by default not included)
+#' @param RemoveIntercept boolean wether to include the intercept factor if present in the object (by default not included)
 #' @param main asd 
 #' @param color asd 
 #' @param breaks asd 
@@ -23,33 +23,33 @@
 #' @importFrom RColorBrewer brewer.pal 
 #' @importFrom grDevices colorRampPalette
 #' @export
-showWeightHeatmap <- function(model, view, features = "all", factors = "all", RemoveIntercept = T, main=NULL, color=NULL, breaks=NULL, ...) {
+showWeightHeatmap <- function(object, view, features = "all", factors = "all", RemoveIntercept = T, main=NULL, color=NULL, breaks=NULL, ...) {
   
   # Sanity checks
-  if (class(model) != "MOFAmodel") stop("'model' has to be an instance of MOFAmodel")
-  stopifnot(all(view %in% viewNames(model)))  
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  stopifnot(all(view %in% viewNames(object)))  
   
   # Define factors
   factors <- as.character(factors)
   if (paste0(factors,collapse="")=="all") { 
-    factors <- factorNames(model) 
-    # if(is.null(factors)) factors <- 1:ncol(getExpectations(model,"Z","E"))
+    factors <- factorNames(object) 
+    # if(is.null(factors)) factors <- 1:ncol(getExpectations(object,"Z","E"))
   } else {
-    stopifnot(all(factors %in% factorNames(model)))  
+    stopifnot(all(factors %in% factorNames(object)))  
   }
   
   # Remove intercept factor
-  if(model@ModelOpts$learnMean==T & RemoveIntercept) { factors <- factors[factors != factorNames(model)[1]] }
+  if(object@ModelOpts$learnMean==T & RemoveIntercept) { factors <- factors[factors != factorNames(object)[1]] }
   
   # Define features
   if (paste(features,collapse="")=="all") { 
-    features <- featureNames(model)[[view]]
+    features <- featureNames(object)[[view]]
   } else {
-    stopifnot(all(features %in% featureNames(model)[[view]]))  
+    stopifnot(all(features %in% featureNames(object)[[view]]))  
   }
 
   # Get relevant data
-  W <- getExpectations(model,"SW","E")[[view]][features,factors]
+  W <- getExpectations(object,"SW","E")[[view]][features,factors]
 
   # Set title
   if (is.null(main)) { main <- paste("Loadings of Latent Factors on", view) }
@@ -72,8 +72,10 @@ showWeightHeatmap <- function(model, view, features = "all", factors = "all", Re
 
 #' @title showAllWeights: visualise the distribution of loadings for a certain factor in a given view
 #' @name showAllWeights
-#' @description Function to visualize the distribution of weights in a dotplot with the possibility of highlighting specific features
-#' @param model a fitted MOFA model
+#' @description The first step to annotate factors is to visualise the corresponding feature loadings. \cr
+#' This function shows all loadings for a given latent factor and view. . \cr
+#' In contrast, the function \code{showTopWeights} zooms and displays the features with highest loading.
+#' @param object a \code{\link{MOFAmodel}} object.
 #' @param view name of view from which to get the corresponding weights
 #' @param factor name of the factor
 #' @param nfeatures number of features to label based on weight
@@ -85,18 +87,18 @@ showWeightHeatmap <- function(model, view, features = "all", factors = "all", Re
 #' @details fill this
 #' @import ggplot2 ggrepel
 #' @export
-showAllWeights <- function(model, view, factor, nfeatures = "all", abs=FALSE, threshold = NULL, 
+showAllWeights <- function(object, view, factor, nfeatures = "all", abs=FALSE, threshold = NULL, 
                                     manual = NULL, color_manual=NULL, main = NULL) {
   
   # Sanity checks
-  if (class(model) != "MOFAmodel") stop("'model' has to be an instance of MOFAmodel")
-  stopifnot(all(view %in% viewNames(model)))  
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  stopifnot(all(view %in% viewNames(object)))  
   factor <- as.character(factor)
-  stopifnot(factor %in% factorNames(model))
-  if(!is.null(manual)) { stopifnot(class(manual)=="list"); stopifnot(all(Reduce(intersect,manual) %in% featureNames(model)[[view]]))  }
+  stopifnot(factor %in% factorNames(object))
+  if(!is.null(manual)) { stopifnot(class(manual)=="list"); stopifnot(all(Reduce(intersect,manual) %in% featureNames(object)[[view]]))  }
   
   # Collect expectations  
-  W <- getExpectations(model,"SW","E", as.data.frame = T)
+  W <- getExpectations(object,"SW","E", as.data.frame = T)
   W <- W[W$factor==factor & W$view==view,]
   
   
@@ -172,28 +174,26 @@ showAllWeights <- function(model, view, factor, nfeatures = "all", abs=FALSE, th
 
 #' @title showTopWeights: visualise the top weights for a certain factor in a given view
 #' @name showTopWeights
-#' @description Function to visualize the top weights
-#' @param model a fitted MOFA model
-#' @param view name of view from which to get the corresponding weights
-#' @param factor name of the factor
+#' @description The first step to annotate factors is to visualise the corresponding feature loadings. \cr
+#' This function zooms and displays the features with highest loading in a given latent factor and a given view. \cr
+#' In contrast, the function \code{showAllWeights} displays the entire distribution of weights.
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @param view character vector with the view name or numeric vector with the index of the view.
+#' @param factor character vector with the factor name or numeric vector with the index of the factor.
 #' @param nfeatures number of features
 #' @param abs take absolute value of the weights?
-#' @details fill this
 #' @import ggplot2
 #' @export
-showTopWeights <- function(model, view, factor, nfeatures = 5, manual_features=NULL, sign="positive", abs=TRUE) {
+showTopWeights <- function(object, view, factor, nfeatures = 5, manual_features=NULL, sign="positive", abs=TRUE) {
   
   # Sanity checks
-  if (class(model) != "MOFAmodel") stop("'model' has to be an instance of MOFAmodel")
-  stopifnot(all(view %in% viewNames(model)))  
-  factor <- as.character(factor)
-  stopifnot(factor %in% factorNames(model))
-  if(!is.null(manual_features)) { stopifnot(class(manual_features)=="list"); stopifnot(all(Reduce(intersect,manual_features) %in% featureNames(model)[[view]]))  }
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  stopifnot(view %in% viewNames(object))
+  if(!is.null(manual_features)) { stopifnot(class(manual_features)=="list"); stopifnot(all(Reduce(intersect,manual_features) %in% featureNames(object)[[view]]))  }
   if (sign=="negative") stopifnot(abs==FALSE)
   
   # Collect expectations  
-  W <- getExpectations(model,"SW","E", as.data.frame = T)
-  W <- W[W$factor==factor & W$view==view,]
+  W <- getWeights(object, factor=factor, view=view, as.data.frame=T)
 
    # Absolute value
   if (abs) W$value <- abs(W$value)
@@ -210,16 +210,7 @@ showTopWeights <- function(model, view, factor, nfeatures = 5, manual_features=N
   W <- W[with(W, order(-value, decreasing = T)), ]
   W$feature <- factor(W$feature, levels=W$feature)
   
-  # Define plot limits
-  # if (sign=="positive") {
-  #   lim <- min(W$value) - 0.05
-  # } else if (sign=="negative") {
-  #   lim <- max(W$value) + 0.05
-  # } else {
-  #   lim <- 0 
-  # }
-  
-  p <- ggplot(W,aes(x=feature, y=value)) +
+  p <- ggplot(W, aes(x=feature, y=value)) +
     geom_point(size=2) +
     geom_segment(aes(xend=feature, yend=0), size=0.75) +
     scale_colour_gradient(low="grey", high="black") +
@@ -248,6 +239,3 @@ showTopWeights <- function(model, view, factor, nfeatures = 5, manual_features=N
   return(p)
   
 }
-
-
-

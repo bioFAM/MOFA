@@ -8,8 +8,6 @@ We believe that MOFA has the potential to become a standard tool for simultaneou
 
 For more details you can read our preprint:
 
-<![Alt text](logo.png?raw=true "Title")>
-
 
 ## News
 - 01/09/2017 Paper uploaded to bioRxiv and submitted for review

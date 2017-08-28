@@ -7,8 +7,8 @@
 #' @name showDataHeatmap
 #' @description Function to plot a heatmap of the original data using the most relevant features for a given latent variable.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param view character vector with a view name or numeric vector with the index of the view.
-#' @param factor character vector with a factor name or numeric vector with the index of the factor.
+#' @param view character vector with the view name or numeric vector with the index of the view.
+#' @param factor character vector with the factor name or numeric vector with the index of the factor.
 #' @param features if an integer, the total number of features to plot sorted by the corresponding weight.
 #' If a character vector, the manually-defined features to plot by the given order.
 #' @param plotWeights: boolean indicating whether to include the weight of each feature in the heatmap.

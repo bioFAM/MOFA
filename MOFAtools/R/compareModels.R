@@ -4,15 +4,14 @@
 ################################################
 
 
-#' @title Compare the latent factors of different \code{\link{MOFAmodel}} 
+#' @title Plot the robustness of the latent factors across diferent trials
 #' @name compareModels
 #' @description Different objects of \code{\link{MOFAmodel}} are compared in terms of correlation between 
-#' their latent factors. The correlation is calculated only on those samples which are present in all models 
-#' used for a comparison. 
-#' @param ModelList a list containing \code{\link{MOFAmodel}} objects.
-#' @param comparison tye of comparison either 'pairwise' or 'all'
-#' @param use handling of NAs when computing correaltion of latent factors (s. cor)
-
+#' their latent factors. The correlation is calculated only on those samples which are present in all models.
+#' Ideally, the output should look like a block diagonal matrix, suggesting that all detected factors are robust under different initialisations.
+#' If not, it suggests that some factors are weak and not captured by all models.
+#' @param models a list containing \code{\link{MOFAmodel}} objects.
+#' @param comparison tye of comparison, either 'pairwise' or 'all'
 #' @details asd
 #' @return Plots a heatmap of correlation of Latent Factors in all models when 'comparison' is 'all'. 
 #' Otherwise, for each pair of models, a seperate heatmap is produced comparing one model againt the other.
@@ -23,21 +22,22 @@
 #' @importFrom grDevices colorRampPalette
 #' @export
 
-compareModels <- function(ModelList, comparison="all",use ="complete.obs", main=NULL, ...) {
-  #check inputs
-  if(class(ModelList)!="list")
-    stop("'ModelList' has to be a list")
-  if (!all(sapply(ModelList, function (l) class(l)=="MOFAmodel")))
-    stop("List elements of 'ModelList' have to be an instance of MOFAmodel")
+compareModels <- function(models, comparison = "all", ...) {
+  
+  # Sanity checks
+  if(class(models)!="list")
+    stop("'models' has to be a list")
+  if (!all(sapply(models, function (l) class(l)=="MOFAmodel")))
+    stop("Each element of the the list 'models' has to be an instance of MOFAmodel")
   if (!comparison %in% c("all", "pairwise"))
     stop("'comparison' has to be either 'all' or 'pairwise'")
   
   # give generic names if no names present
-  if(is.null(names(ModelList))) names(ModelList) <- paste("model", 1: length(ModelList), sep="")
+  if(is.null(names(models))) names(models) <- paste("model", 1: length(models), sep="")
   
-  #get latent factors
-  LFs <- lapply(seq_along(ModelList), function(modelidx){
-    model <- ModelList[[modelidx]]
+  # get latent factors
+  LFs <- lapply(seq_along(models), function(modelidx){
+    model <- models[[modelidx]]
     Z <- getExpectations(model, 'Z', 'E')
     if(!is.null(model@ModelOpts$learnMean)) if(model@ModelOpts$learnMean) Z <- Z[,-1]
     if(is.null(rownames(Z))) rownames(Z) <- rownames(model@TrainData[[1]])
@@ -49,7 +49,7 @@ compareModels <- function(ModelList, comparison="all",use ="complete.obs", main=
     Z
     })
   for(i in seq_along(LFs)) 
-    colnames(LFs[[i]]) <- paste(names(ModelList)[i], colnames(LFs[[i]]), sep="_")
+    colnames(LFs[[i]]) <- paste(names(models)[i], colnames(LFs[[i]]), sep="_")
   
     if(comparison=="all"){
     #get common samples between models
@@ -61,19 +61,19 @@ compareModels <- function(ModelList, comparison="all",use ="complete.obs", main=
     LFscommon <- Reduce(cbind, lapply(LFs, function(Z) Z[commonSamples,]))
 
     # calculate correlation
-    corLFs <- cor(LFscommon, use=use)
+    corLFs <- cor(LFscommon, use="complete.obs")
     
     #annotation by model
-    # modelAnnot <- data.frame(model = rep(names(ModelList), times=sapply(LFs, ncol)))
+    # modelAnnot <- data.frame(model = rep(names(models), times=sapply(LFs, ncol)))
     # rownames(modelAnnot) <- colnames(LFscommon)
     
     #plot heatmap
-    if(is.null(main)) main <- "Absolute correlation between latent factors"
+    # if(is.null(main)) main <- "Absolute correlation between latent factors"
     pheatmap(abs(corLFs), show_rownames = F,
              color = colorRampPalette(c("white",RColorBrewer::brewer.pal(9,name="YlOrRd")))(100),
              # color=colorRampPalette(c("white", "orange" ,"red"))(100), 
              # annotation_col = modelAnnot, main= main , ...)
-             main= main , ...)
+             ...)
     
     return(corLFs)
     }
@@ -96,10 +96,10 @@ compareModels <- function(ModelList, comparison="all",use ="complete.obs", main=
           corLFs_pairs
           }
         })
-        names(sublist) <- names(ModelList)[(i+1):length(LFs)]
+        names(sublist) <- names(models)[(i+1):length(LFs)]
         sublist
     })
-    names(PairWiseCor) <- names(ModelList[-length(ModelList)])
+    names(PairWiseCor) <- names(models[-length(models)])
     return(PairWiseCor)
   }
 }

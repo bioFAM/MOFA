@@ -3,18 +3,17 @@
 #' @name calculateVarianceExplained
 #' @description Method to calculate variance explained by the MOFA model for each view and latent factor, and optionally also for each feature.
 #' As a measure of variance explained we adopt the coefficient of determination (R2).
-#' For non-gaussian views the calculations are based on the normally-distributed pseudo-data (see REF).
-#' If the data is non-centered and the model had to learn the mean then we regress it out before computing the R2
+#' For non-gaussian views the calculations are based on the normally-distributed pseudo-data (for more information on the non-gaussian model see Seeger & Bouchard, 2012).
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param views Views to use, default is "all"
-#' @param factors Latent variables or factores to use, default is "all"
-#' @param plotit boolean, wether to produce a plot (default true)
+#' @param factors Latent factores to use, default is "all"
+#' @param plotit boolean, wether to produce a plot (default True)
 #' @param perFeature boolean, whether to calculate in addition variance explained per feature (and factor) (default FALSE)
-#' @param orderFactorsbyR2 if T, facotrs are order according to sum of variance explained across views
-#' @param showtotalR2 (REWRITE) if FALSE, R2 with respect to total prediciton instead of observations is considered instead of total R2 showing each factors contribution to the full prediction
-#' @param showVarComp if True plot additional barplots showing the contribution of ea
+#' @param orderFactorsbyR2 order factors according to sum of variance explained across views (default TRUE)
+#' @param showtotalR2 Calculate R2 with respect to the total variance (TRUE) or the residual variance (FALSE? 
+#' @param showVarComp Calculate R2 per view using all factors (default TRUE)
 #' @details fill this
-#' @return fill this
+#' @return a list with matrices with the amount of variation explained per factor and view, and optionally total variance explained per view and variance explained by each feature alone
 #' @import pheatmap ggplot2 reshape2
 #' @importFrom cowplot plot_grid
 #' @export
@@ -48,7 +47,7 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
   Z <- getExpectations(object,"Z","E")
   Y <- getExpectations(object,"Y","E")
   # bug was fixed in newer versions of MOFA, following line can be used as work-around for old model
-  Y[[which(object@ModelOpts$likelihood=="bernoulli")]][Y[[which(object@ModelOpts$likelihood=="bernoulli")]]==2] <- NA
+  # Y[[which(object@ModelOpts$likelihood=="bernoulli")]][Y[[which(object@ModelOpts$likelihood=="bernoulli")]]==2] <- NA
   
   # Calculate predictions under the  MOFA model using all or a single factor
   #replace masked values on Z by 0 (do not contribute to predicitons)

@@ -6,7 +6,8 @@
 
 #' @title showWeightHeatmap: show heatmap of the factor loadings in a specific view
 #' @name showWeightHeatmap
-#' @description Function to visualize the weights for each feature in each factor for a given view
+#' @description Function to visualize loadings for a given set of factors in a given view. This is useful to see the overall pattern of the weights but it is not very useful to characterise the factors.
+#'  If you want to individually look at the top weights for a given factor we recommend the function showAllWeights and showTopWeights
 #' @param model a MOFA model
 #' @param view view name
 #' @param features name of the features to include (default: "all")
@@ -220,7 +221,7 @@ showTopWeights <- function(model, view, factor, nfeatures = 5, manual_features=N
   
   p <- ggplot(W,aes(x=feature, y=value)) +
     geom_point(size=2) +
-    geom_segment(aes(xend=feature, yend=0), size=0.5) +
+    geom_segment(aes(xend=feature, yend=0), size=0.75) +
     scale_colour_gradient(low="grey", high="black") +
     # scale_colour_manual(values=c("#F8766D","#00BFC4")) +
     # guides(colour = guide_legend(title.position="top", title.hjust = 0.5)) +

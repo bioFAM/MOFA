@@ -15,7 +15,7 @@
 #' @return fill this
 #' @import pheatmap
 #' @export
-showDataHeatmap <- function(object, view, factor, nfeatures=50, manual_features=NULL, main=NULL, include_weights=F, ...) {
+showDataHeatmap <- function(object, view, factor, nfeatures=50, manual_features=NULL, include_weights=F, transpose=F, ...) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -24,6 +24,7 @@ showDataHeatmap <- function(object, view, factor, nfeatures=50, manual_features=
   
   # Collect relevant expectations
   W <- getExpectations(object,"SW","E")[[view]][,factor]
+  Z <- getFactors(object)[,factor]
   
   # Define features
   features <- c()
@@ -43,13 +44,26 @@ showDataHeatmap <- function(object, view, factor, nfeatures=50, manual_features=
   # Ignore samples with full missing views
   data <- data[,apply(data, 2, function(x) !all(is.na(x)))]
   
+  # Sort samples according to latent factors
+  order_samples <- names(sort(Z, decreasing=T))
+  order_samples <- order_samples[order_samples %in% colnames(data)]
+  data <- data[features,order_samples]
+  
+  if (transpose==T) {
+    data <- t(data)
+  }
+  
   # Plot heatmap
-  if(is.null(main)) main <- paste(view, "observations for the top weighted features of factor", factor)
+  # if(is.null(main)) main <- paste(view, "observations for the top weighted features of factor", factor)
   if (include_weights) { 
-    anno_col <- data.frame(row.names=names(W[features]), weight=W[features]) 
-    pheatmap::pheatmap(t(data[features,]), main=main, annotation_col=anno_col, ...)
+    anno <- data.frame(row.names=names(W[features]), weight=W[features]) 
+    if (transpose) {
+      pheatmap::pheatmap(t(data), annotation_col=anno, ...)
+    } else {
+      pheatmap::pheatmap(t(data), annotation_row=anno, ...)
+    }
   } else {
-    pheatmap::pheatmap(t(data[features,]), main=main, ...)
+    pheatmap::pheatmap(t(data), ...)
   }
   
 }

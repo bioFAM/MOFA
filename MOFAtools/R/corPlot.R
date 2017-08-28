@@ -1,27 +1,35 @@
 
-##########################################################################################
-## Functions to analyse the correlation between latent factors and principal components ##
-##########################################################################################
+#################################################################
+## Functions to analyse the correlation between latent factors ##
+#################################################################
 
 #' @title Visualize correlation matrix between the features
 #' @name FeaturesCorPlot
-#' @description fill this
+#' @description the function plots the correlation between all features in a given view. 
+#' This is useful to see if the factors learnt by the model do capture the correlations between features, as the residuals should be uncorrelated.
+#' To check this, run the function twice: first without regressing out any factor (regress_facotrs=NULL) and then regress all factors (regress_factors="all").
+#' The first plot should be enriched by correlations whereas the second should be uncorrelated. 
+#' If not, it suggests that there is more signal to be learnt and you should increase the number of factors.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @details asd
-#' @return fill this
-#' @references fill this
+#' @param view view name
+#' @param features feature names (default is "all")
+#' @param method a character string indicating which correlation coefficient is to be computed: pearson (default), kendall, or spearman.
+#' @param regress_factors character or numeric vector with the factors to regress (default is NULL)
+#' @param ... arguments to be passed to \link{pheatmap} function
 #' @importFrom pheatmap pheatmap
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom grDevices colorRampPalette
 #' @export
-FeaturesCorPlot <- function(object, view, method="pearson", regress_factors=NULL, top=500, ...) {
+FeaturesCorPlot <- function(object, view, features="all", method="pearson", regress_factors=NULL, ...) {
+  
+  # Sanity check
   if (class(object) != "MOFAmodel")
     stop("'object' has to be an instance of MOFAmodel")
   
-  # Select 'top' most variable features
+  # Feature selection
   data <- object@TrainData[[view]]
-  top_features <- names(tail(sort(apply(data,2,var)),n=top))
-  data <- data[,top_features]
+  # top_features <- names(tail(sort(apply(data,2,var)),n=top))
+  # data <- data[,top_features]
   
   # Regress out latent variables
   if (!is.null(regress_factors)) {
@@ -47,72 +55,73 @@ FeaturesCorPlot <- function(object, view, method="pearson", regress_factors=NULL
 
 #' @title Visualize correlation matrix between the latent variables
 #' @name FactorsCorPlot
-#' @description fill this
+#' @description plot the correlation matrix between the latent variables. The model encourages factors to be uncorrelated, but it is nos hard constraint such as in PCA.
+#' Ideally all learnt factors should be uncorrelated to make interpretation easier, but correlations can happen, particularly with large number factors or with non-linear relationship.
+#' If you have too many correlated factors try to train the model again reducing the number of factors.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param method a character string indicating which correlation coefficient is to be computed: pearson (default), kendall, or spearman.
-#' @param use handling of NAs when computing correaltion of latent factors (s. cor)
 #' @param ... arguments passed to \code{corrplot}
-#' @details asd
-#' @return fill this
-#' @references fill this
+#' @return symmetric matrix with the correlation coefficient between factors
 #' @import corrplot
 #' @export
-FactorsCorPlot <- function(object, method="pearson", use = "complete.obs", ...) {
+FactorsCorPlot <- function(object, method="pearson", ...) {
   if (class(object) != "MOFAmodel")
     stop("'object' has to be an instance of MOFAmodel")
   
   Z <- getExpectations(object,"Z","E")
   if(object@ModelOpts$learnMean==T) Z <- Z[,-1]
-  h <- cor(x=Z, y=Z, method=method, use=use)
+  h <- cor(x=Z, y=Z, method=method, use = "complete.obs")
   p <- corrplot::corrplot(h, tl.col="black", ...)
-  return(p)
+  return(h)
 }
 
 
-#' @title Faced scatterplot between latent variables
-#' @name FactorsScatterPlot
-#' @description fill this
-#' @param object a \code{\link{MOFAmodel}} object.
-#' @param z_order ...
-#' @param title fill this
-#' @details asd
-#' @return fill this
-#' @import ggplot2 dplyr tidyr
-#' @export
-FactorsScatterPlot <- function(object, z_order=NULL, title="") {
-  # THIS HAS TO BE FINISHED, WE SHOULDNT USE PIPES OR DPLYR 
-  if (is.null(z_order))
-    z_order <- 1:object@Dimensions[["K"]]
-  
-  # Convert latent variable matrix into dataframe
-  Z <- Z[,z_order]; colnames(Z) <- z_order
-  Z_long <- as.data.frame(t(Z)) %>% dplyr::tbl_df %>% dplyr::mutate(Z=factor(1:n())) %>%
-    tidyr::gather(sample,value,-Z)
-  
-  # Concate PCs
-  joined <- Z_long %>% inner_join(Z_long, by='sample') %>%
-    dplyr::rename(Z1=Z.x, Z2=Z.y, value1=value.x, value2=value.y)
-  
-  # Plot
-  p <- ggplot(joined, aes(x=value1, y=value2)) +
-    ggtitle(title) +
-    stat_smooth(method=lm, color='black') +
-    geom_point(aes(color=sample), size=0.5, alpha=0.5) +
-    xlab('') + ylab('') +
-    facet_grid(Z1~Z2) +
-    guides(color=F)
-  
-  return(p)
-}
+#' #' @title Faced scatterplot between latent variables
+#' #' @name FactorsScatterPlot
+#' #' @description plot a faced scatterplot with combinations of latent variables
+#' #' @param object a \code{\link{MOFAmodel}} object.
+#' #' @param factors factors to plot (default="all")
+#' #' @details asd
+#' #' @return fill this
+#' #' @import ggplot2 dplyr tidyr
+#' #' @export
+#' FactorsScatterPlot <- function(object, factors="all") {
+#'   # THIS HAS TO BE FINISHED, WE SHOULDNT USE PIPES OR DPLYR
+#'   if (is.null(factors))
+#'     factors <- 1:object@Dimensions[["K"]]
+#' 
+#'   # Convert latent variable matrix into dataframe
+#'   Z <- Z[,factors]; colnames(Z) <- factors
+#'   Z_long <- as.data.frame(t(Z)) %>% dplyr::tbl_df %>% dplyr::mutate(Z=factor(1:n())) %>%
+#'     tidyr::gather(sample,value,-Z)
+#' 
+#'   # Concate PCs
+#'   joined <- Z_long %>% inner_join(Z_long, by='sample') %>%
+#'     dplyr::rename(Z1=Z.x, Z2=Z.y, value1=value.x, value2=value.y)
+#' 
+#'   # Plot
+#'   p <- ggplot(joined, aes(x=value1, y=value2)) +
+#'     ggtitle(title) +
+#'     stat_smooth(method=lm, color='black') +
+#'     geom_point(aes(color=sample), size=0.5, alpha=0.5) +
+#'     xlab('') + ylab('') +
+#'     facet_grid(Z1~Z2) +
+#'     guides(color=F)
+#' 
+#'   return(p)
+#' }
 
-#' @title Correlate latent factors to principal components on single views
+#' @title Correlation plot of latent factors to principal components on single views
 #' @name CorrplotLFvsPC
-#' @description fill this
+#' @description This function is used to identify the relationship between latent factors and principal components.
+#' Usually the first latent factors also correspond to the main principal components,
+#' We only recommend to run this function with complete data or with small number of missing values (with method="nipals"). 
+#' PCA is very inaccurate with large number of missing values.
+#' This function uses the package \link{pcaMethods} to calculate the PCA solution
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param views fill
-#' @param noPCs fill
-#' @param method fill, can be svd, ppca, bpca
-#' @details fill
+#' @param views view names (default is "all")
+#' @param noPCs Number of principal components to calculate
+#' @param method method to compute PCA, we recommend svd (traditional PCA no missing values) or nipals (small number of missing values)
 #' @return Correlation matrix of latent factors versus principal components
 #' @references fill this
 #' @import corrplot pcaMethods

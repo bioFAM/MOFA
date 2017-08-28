@@ -64,15 +64,16 @@ compareModels <- function(ModelList, comparison="all",use ="complete.obs", main=
     corLFs <- cor(LFscommon, use=use)
     
     #annotation by model
-    modelAnnot <- data.frame(model = rep(names(ModelList), times=sapply(LFs, ncol)))
-    rownames(modelAnnot) <- colnames(LFscommon)
+    # modelAnnot <- data.frame(model = rep(names(ModelList), times=sapply(LFs, ncol)))
+    # rownames(modelAnnot) <- colnames(LFscommon)
     
     #plot heatmap
     if(is.null(main)) main <- "Absolute correlation between latent factors"
     pheatmap(abs(corLFs), show_rownames = F,
              color = colorRampPalette(c("white",RColorBrewer::brewer.pal(9,name="YlOrRd")))(100),
              # color=colorRampPalette(c("white", "orange" ,"red"))(100), 
-             annotation_col = modelAnnot, main= main , ...)
+             # annotation_col = modelAnnot, main= main , ...)
+             main= main , ...)
     
     return(corLFs)
     }

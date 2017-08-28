@@ -229,6 +229,7 @@ scatterPlot <- function (object, factors, title = "", titlesize = 16, xlabel = N
   if (!showMissing) df <- df[!is.na(df$shape_by) & !is.na(df$color_by),]
 
    #turn into factors
+   df$shape_by[is.na(df$shape_by)] <- "NA"
    df$shape_by <- as.factor(df$shape_by)
    if(length(unique(df$color_by)) < 5) df$color_by <- as.factor(df$color_by)
  

@@ -147,16 +147,19 @@ beeswarmPlot <- function(object, factors, color_by = NULL, color_name="", colorL
 #' @name scatterPlot
 #' @description fill this
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param factorx latent variable on the x axis
-#' @param factory latent variable on the y axis
+#' @param factors vector of two factor to plot
+#' @param color_by specifies groups or values used to color points. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.
+#' @param shape_by specifies groups or values used for point shapes. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.
+#' @param name_color name for color legend (usually only used if color_by is not a character itself)
+#' @param name_shape name for shape legend (usually only used if shape_by is not a character itself)
+#' @param showMissing boolean, if true, removes sample for which shape_by or color_by is missing
 #' @details asd
 #' @return fill this
 #' @references fill this
 #' @import ggplot2
 #' @export
-scatterPlot <- function (object, factors, title = "", titlesize = 16, xlabel = NULL, 
-      ylabel = NULL, xlim_down = NA, xlim_up = NA, ylim_down = NA, ylim_up = NA, 
-      dotsize = 2.5, color_by = NULL, shape_by = NULL, name_color="", name_shape="", showMissing = T) {
+scatterPlot <- function (object, factors, color_by = NULL, shape_by = NULL, name_color="",
+                         name_shape="", showMissing = T) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -234,18 +237,15 @@ scatterPlot <- function (object, factors, title = "", titlesize = 16, xlabel = N
    if(length(unique(df$color_by)) < 5) df$color_by <- as.factor(df$color_by)
  
   
-  if (is.null(xlabel)) xlabel <- paste("Latent factor", factors[1])
-  if (is.null(ylabel)) ylabel <- paste("Latent factor", factors[2])
+  xlabel <- paste("Latent factor", factors[1])
+  ylabel <- paste("Latent factor", factors[2])
                                 
   p <- ggplot(df, aes(x, y, color = color_by, shape = shape_by)) + 
-      geom_point(size = dotsize) + 
-      ggtitle(title) + xlab(xlabel) + ylab(ylabel) + 
-      scale_y_continuous(limits = c(ylim_down, ylim_up)) + 
-      scale_x_continuous(limits = c(xlim_down, xlim_up)) +
+      geom_point() + xlab(xlabel) + ylab(ylabel) +
       # scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))]) +
       theme(plot.margin = margin(20, 20, 10, 10), 
             axis.text = element_text(size = rel(1), color = "black"), 
-            axis.title = element_text(size = titlesize), 
+            axis.title = element_text(size = 16), 
             axis.title.y = element_text(size = rel(1.1), margin = margin(0, 10, 0, 0)), 
             axis.title.x = element_text(size = rel(1.1), margin = margin(10, 0, 0, 0)), 
             axis.line = element_line(color = "black", size = 0.5), 
@@ -255,8 +255,8 @@ scatterPlot <- function (object, factors, title = "", titlesize = 16, xlabel = N
             panel.grid.minor = element_blank(), 
             panel.background = element_blank(),
             legend.key = element_rect(fill = "white"),
-            legend.text = element_text(size = titlesize),
-            legend.title = element_text(size =titlesize)
+            legend.text = element_text(size = 16),
+            legend.title = element_text(size =16)
             )
   if (colorLegend) { p <- p + labs(color = name_color) } else { p <- p + guides(color = FALSE) }
   if (shapeLegend) { p <- p + labs(shape = name_shape) }  else { p <- p + guides(shape = FALSE) }

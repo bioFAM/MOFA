@@ -22,18 +22,27 @@ getDimensions <- function(object) {
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param as.data.frame: boolean indicating whether to return factors as a long data frame with columns (sample,factor,value), default is FALSE.
 #' @param include_intercept: boolean indicating where to include the intercept term of the model, default is TRUE.
+#' @param factors: vector with the factors indices (numeric) or factor names (character) to fetch.
 #' @return by default returns a matrix of dimensionality (N,K) where N is number of samples and k is number of factors. 
 #' Alternatively, with as.data.frame=TRUE, it returns a data frame with columns (sample,factor,value)
 #' @export
 #' 
-getFactors <- function(object, as.data.frame = FALSE, include_intercept = TRUE) {
+getFactors <- function(object, as.data.frame = FALSE, include_intercept = TRUE, factors = "all") {
   
   # Sanity check
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
   
+  # Get factors
+  if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } else { stopifnot(all(factors %in% factorNames(object))) }
+
   # Collect factors
   Z <- getExpectations(object,"Z","E",as.data.frame)
-  
+    if (as.data.frame==F) {
+      Z <- Z[,factors]
+    } else {
+      Z <- Z[Z$factor %in% factors,]
+    }
+
   # Remove intercept
   if (include_intercept == F) {
     if (as.data.frame==F) {

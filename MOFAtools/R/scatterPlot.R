@@ -227,14 +227,10 @@ scatterPlot <- function (object, factors, title = "", titlesize = 16, xlabel = N
   
   # remove values missing color or shape annotation
   if (!showMissing) df <- df[!is.na(df$shape_by) & !is.na(df$color_by),]
-    else {
-      df$shape_by[is.na(df$shape_by)] <- "missing"
-      df$color_by[is.na(df$color_by)] <- "missing"
-    }
 
    #turn into factors
-   shape_by <- as.factor(shape_by)
-   if(length(unique(color_by)) < 5) color_by <- as.factor(color_by)
+   df$shape_by <- as.factor(df$shape_by)
+   if(length(unique(df$color_by)) < 5) df$color_by <- as.factor(df$color_by)
  
   
   if (is.null(xlabel)) xlabel <- paste("Latent factor", factors[1])

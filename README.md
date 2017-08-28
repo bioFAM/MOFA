@@ -7,7 +7,8 @@ MOFA is a factor analysis model that integrates multi-omic data sets in an unsup
 MOFA builds upon the Group Factor Analysis (GFA) statistical framework (Virtanen 2012, Klami 2015, Zhao 2016, Khan 2014, Bunte 2016) and introduces a set of key extensions that enable the broad applicability in multi-omic studies (Table S1). In particular, we combine a two-level sparse model providing interpretability with a scalable inference approach. In addition, we enable non-Gaussian views in the model as these are frequently encountered in multi-omic studies (e.g. binary data such as somatic mutations or count data such as copy number variation). Importantly, as biological data is often incomplete and samples might be missing in a subset of views we allow for presence of missing values, including absence of entire views. Finally, we provide accessible and user-friendly software and downstream analysis functions for a semi-automated annotation of factors, facilitating the wide-ranging application of this method to any kind of multi-omic data set.
 
 
-![alt text](logo.pdf)
+![Alt text](logo.png?raw=true "Title")
+
 
 
 ## Why did we develop MOFA?

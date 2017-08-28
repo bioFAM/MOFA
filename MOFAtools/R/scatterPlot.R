@@ -169,10 +169,20 @@ scatterPlot <- function (object, factors, title = "", titlesize = 16, xlabel = N
   factors <- as.character(factors)
   
   # Set color
+  colorLegend <- T
   if (!is.null(color_by)) {
-    # It is the name of a covariate 
+    # It is the name of a covariate or a feature in the TrainData
     if (length(color_by) == 1 & is.character(color_by)) {
-      color_by <- as.factor(getCovariates(object, color_by))
+      if(name_color=="") name_color <- color_by
+      TrainData <- getTrainData(object)
+      featureNames <- lapply(TrainData(object), rownames)
+      if(color_by %in% Reduce(union,featureNames)) {
+        viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
+        color_by <- TrainData[[viewidx]][color_by,]
+      } else if(class(object@InputData) == "MultiAssayExperiment"){
+        color_by <- getCovariates(object, color_by)
+    }
+    else stop("'color_by' was specified but it was not recognised, please read the documentation")
     # It is a vector of length N
     } else if (length(color_by) > 1) {
       stopifnot(length(color_by) == N)
@@ -180,25 +190,33 @@ scatterPlot <- function (object, factors, title = "", titlesize = 16, xlabel = N
     } else {
       stop("'color_by' was specified but it was not recognised, please read the documentation")
     }
-    colorLegend <- T
   } else {
     color_by <- rep(TRUE,N)
     colorLegend <- F
   }
-  
+
   # Set shape
+  shapeLegend <- T
   if (!is.null(shape_by)) {
     # It is the name of a covariate 
     if (length(shape_by) == 1 & is.character(shape_by)) {
-      shape_by <- as.factor(getCovariates(object, shape_by))
+      if(name_shape=="") name_shape <- shape_by
+      TrainData <- getTrainData(object)
+      featureNames <- lapply(TrainData(object), rownames)
+      if(shape_by %in% Reduce(union,featureNames)) {
+        viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
+        shape_by <- TrainData[[viewidx]][shape_by,]
+      } else if(class(object@InputData) == "MultiAssayExperiment"){
+        shape_by <- getCovariates(object, shape_by)
+    }
+    else stop("'shape_by' was specified but it was not recognised, please read the documentation")
+    # It is a vector of length N
     # It is a vector of length N
     } else if (length(shape_by) > 1) {
       stopifnot(length(shape_by) == N)
-      shape_by <- as.factor(shape_by)
     } else {
       stop("'shape_by' was specified but it was not recognised, please read the documentation")
     }
-    shapeLegend <- T
   } else {
     shape_by <- rep(TRUE,N)
     shapeLegend <- F
@@ -208,7 +226,16 @@ scatterPlot <- function (object, factors, title = "", titlesize = 16, xlabel = N
   df = data.frame(x = Z[, factors[1]], y = Z[, factors[2]], shape_by = shape_by, color_by = color_by)
   
   # remove values missing color or shape annotation
-  if (!showMissing) df <- df[!((df$color_by=="NaN") | (df$shape_by=="NaN")),]
+  if (!showMissing) df <- df[!is.na(df$shape_by) & !is.na(df$color_by),]
+    else {
+      df$shape_by[is.na(df$shape_by)] <- "missing"
+      df$color_by[is.na(df$color_by)] <- "missing"
+    }
+
+   #turn into factors
+   shape_by <- as.factor(shape_by)
+   if(length(unique(color_by)) < 5) color_by <- as.factor(color_by)
+ 
   
   if (is.null(xlabel)) xlabel <- paste("Latent factor", factors[1])
   if (is.null(ylabel)) ylabel <- paste("Latent factor", factors[2])

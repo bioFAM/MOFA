@@ -1,21 +1,23 @@
 
-#####################################
-## Functions to visualise the data ##
-#####################################
+##############################################
+## Functions to visualise the training data ##
+##############################################
 
-#' @title showDataHeatmap: heatmap of the observed data of the most relevant features for a given factor
+#' @title showDataHeatmap: plot heatmap of the observed data for the top weighted features
 #' @name showDataHeatmap
-#' @description Function to plot a heatmap of the original data using the most relevant features of a given latent variables
-#' @param object a fitted MOFA model
-#' @param view name of view
-#' @param factor factor
-#' @param nfeatures total number of features, sorted by weight (default=???)
+#' @description Function to plot a heatmap of the original data using the most relevant features for a given latent variable.
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @param view character vector with a view name or numeric vector with the index of the view.
+#' @param factor character vector with a factor name or numeric vector with the index of the factor.
+#' @param features if an integer, the total number of features to plot sorted by the corresponding weight.
+#' If a character vector, the manually-defined features to plot by the given order.
+#' @param plotWeights: boolean indicating whether to include the weight of each feature in the heatmap.
+#' @param transpose: boolean indicating whether to transpose the output heatmap (by default features as rows and samples as columns)
 #' @param ... further arguments that can be passed to pheatmap
 #' @details fill this
-#' @return fill this
 #' @import pheatmap
 #' @export
-showDataHeatmap <- function(object, view, factor, nfeatures=50, manual_features=NULL, include_weights=F, transpose=F, ...) {
+showDataHeatmap <- function(object, view, factor, features = 50, plotWeights = FALSE, transpose = FALSE, ...) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -27,15 +29,13 @@ showDataHeatmap <- function(object, view, factor, nfeatures=50, manual_features=
   Z <- getFactors(object)[,factor]
   
   # Define features
-  features <- c()
-  if (nfeatures>0) {
-    tmp <- names(tail(sort(abs(W)), n=nfeatures))
+  if (class(features) == "numeric") {
+    tmp <- names(tail(sort(abs(W)), n=features))
     stopifnot(all(tmp %in% featureNames(object)[[view]]))
-    features <- c(features,tmp)
-  }
-  if (length(manual_features)>0) {
+  } else if (class(features)=="character") {
     stopifnot(all(manual_features %in% featureNames(object)[[view]]))
-    features <- c(features,manual_features)
+  } else {
+    stop("Features need to be either a numeric or character vector")
   }
   
   # Get train data
@@ -49,15 +49,14 @@ showDataHeatmap <- function(object, view, factor, nfeatures=50, manual_features=
   order_samples <- order_samples[order_samples %in% colnames(data)]
   data <- data[features,order_samples]
   
-  if (transpose==T) {
-    data <- t(data)
-  }
+  # Transpose the data
+  if (transpose==T) { data <- t(data) }
   
   # Plot heatmap
   # if(is.null(main)) main <- paste(view, "observations for the top weighted features of factor", factor)
-  if (include_weights) { 
+  if (plotWeights) { 
     anno <- data.frame(row.names=names(W[features]), weight=W[features]) 
-    if (transpose) {
+    if (transpose==T) {
       pheatmap::pheatmap(t(data), annotation_col=anno, ...)
     } else {
       pheatmap::pheatmap(t(data), annotation_row=anno, ...)
@@ -73,19 +72,20 @@ showDataHeatmap <- function(object, view, factor, nfeatures=50, manual_features=
 #' @title showDataScatter: scatterplot of the observed data for the most relevant features for a given factor
 #' @name showDataScatter
 #' @description Function to plot a scatterplot of the observed values for the most relevant features for a given factor
-#' @param object a fitted MOFA model
-#' @param view name of view
-#' @param factor factor
-#' @param nfeatures total number of features (default=???)
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @param view character vector with a view name or numeric vector with the index of the view.
+#' @param factor character vector with a factor name or numeric vector with the index of the factor.
+#' @param features if an integer, the total number of features to plot sorted by the corresponding weight.
+#' If a character vector, the manually-defined features to plot by the given order.
 #' @param color_by vector
 #' @param shape_by vector
 #' @details fill this
-#' @return ggplot2 model
+#' @return fill this
 #' @import ggplot2
 #' @import dplyr
 #' @export
 
-showDataScatter <- function(object, view, factor, nfeatures=50, color_by=NULL, shape_by=NULL,
+showDataScatter <- function(object, view, factor, features=50, color_by=NULL, shape_by=NULL,
                             xlabel="", ylabel="") {
   
   # Sanity checcks
@@ -96,14 +96,22 @@ showDataScatter <- function(object, view, factor, nfeatures=50, color_by=NULL, s
   if (!view %in% viewNames(object)) stop(sprintf("The view %s is not present in the object",view))
   
   # Collect data
-  N <- object@Dimensions[["N"]]
-  z <- getExpectations(object, "Z", "E")[,factor]
-  w <- getExpectations(object, "SW", "E")[[view]][,factor]
+  N <- getDimensions(object)[["N"]]
+  
+  Z <- getFactors(object)[,factor]
+  W <- getWeights(views=view, factors=factor)
   Y <- object@TrainData[[view]]
   
-  # Select top features (by absolute value)
-  features <- names(tail(sort(abs(w)), n=nfeatures))
-  w <- w[features]
+  # Get features
+  if (class(features) == "numeric") {
+    tmp <- names(tail(sort(abs(W)), n=features))
+    stopifnot(all(tmp %in% featureNames(object)[[view]]))
+  } else if (class(features)=="character") {
+    stopifnot(all(manual_features %in% featureNames(object)[[view]]))
+  } else {
+    stop("Features need to be either a numeric or character vector")
+  }
+  W <- W[features]
   Y <- Y[features,]
   
   
@@ -140,7 +148,7 @@ showDataScatter <- function(object, view, factor, nfeatures=50, color_by=NULL, s
   
   
   # Create data frame 
-  df1 <- data.frame(sample=names(z), x = z, shape_by = shape_by, color_by = color_by, stringsAsFactors=F)
+  df1 <- data.frame(sample=names(Z), x = Z, shape_by = shape_by, color_by = color_by, stringsAsFactors=F)
   df2 <- getTrainData(object, views=view, features = list(features), as.data.frame=T)
   df <- left_join(df1,df2, by="sample")
   

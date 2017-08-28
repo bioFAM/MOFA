@@ -1,47 +1,54 @@
 
-####################################################
-## Functions perform imputation of missing values ##
-####################################################
+#######################################################
+## Functions to perform imputation of missing values ##
+#######################################################
 
-#' @title Impute missing value from a fitted MOFA model
+#' @title Impute missing values from a fitted MOFA model
 #' @name imputeMissing
-#' @description fill this
+#' @description This function uses the latent factors and the weights infered from MOFA to impute missing values in the input views.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param viewnms character vector containing the names of views to be imputed (default: all)
-#' @param type of imputations returned. By default values are imputed using "inRange". "response" gives mean for gaussian and poisson and probabilities for bernoulli , 
+#' @param views vector containing the names of views (character) or index of views (numeric) to be imputed (default: "all")
+#' @param factors vector with the factors indices (numeric) or factor names (character) to use (default is "all")
+#' @param type type of imputations returned. By default values are imputed using "inRange". "response" gives mean for gaussian and poisson and probabilities for bernoulli , 
 #' "link" gives the linear predictions, "inRange" rounds the fitted values from "terms" for integer-valued distributions to the next integer.
 #' @param onlyMissing By default, only values missing in Training Data are replaced by imputed ones. If all predicitons based on MOFA are wanted, this needs to be set to FALSE.
-#' @param r2_threshold minimal level of rel. R2 for a factor to be considered active one a view
 #' @details asd
 #' @return List of imputed data, each list element corresponding to specified views.
 #' @references fill this
 #' @export
-imputeMissing <- function(object, viewnms="all", type = c("inRange","response", "link"), onlyMissing =T, factors = "all", r2_threshold=0.03){
+imputeMissing <- function(object, views="all", factors = "all", type = c("inRange","response", "link"), onlyMissing = T){
   
   # Sanity checks
   if (class(object) != "MOFAmodel")
     stop("'object' has to be an instance of MOFAmodel")
   
-  if(viewnms=="all"){
-    viewnms = viewNames(object)
+  # Get views  
+  if (views=="all") {
+    views = viewNames(object)
+  } else {
+    stopifnot(all(views%in%viewNames(object)))
   }
   
-  if(factors=="all"){
+  # Get factors
+  if (factors=="all") {
     factors = factorNames(object)
-  } else factors <- c("intercept", factors)
+  } else {
+    stopifnot(all(factors%in%factorNames(object)))
+    factors <- c("intercept", factors)
+  } 
+  
+  # Get weights
+  W <- getWeights(object, views=views, factors=factors)
   
   type = match.arg(type)
-  stopifnot(all(viewnms %in% viewNames(object)))
   
-  #mask passenger factors
-  object <- detectPassengers(object, r2_threshold=r2_threshold)
+  # mask passenger factors
+  object <- detectPassengers(object)
+  Z <- getFactors(object)[,factors]
+  Z[is.na(Z)] <- 0 # set missing values in Z to 0 to exclude from imputations
   
-  Z <- object@Expectations$Z$E[, factors]
-  # set missing values in Z to 0 to exclude from imputations
-  Z[is.na(Z)] <- 0
-  W <- lapply(object@Expectations$SW, function(list) list$E[,factors])
-  
-  imputedData<-lapply(sapply(viewnms, grep, viewNames(object)), function(viewidx){
+  # Impute data
+  imputedData <- lapply(sapply(views, grep, viewNames(object)), function(viewidx){
     
     # make imputation based on linear model
     imputedView <- t(Z%*% t(W[[viewidx]])) 
@@ -60,13 +67,13 @@ imputeMissing <- function(object, viewnms="all", type = c("inRange","response", 
       imputedView[observed] <- object@TrainData[[viewidx]][observed]
     }
     imputedView
-  })    
+  })
 
   # re- arrange list in accordance with other data slots in the model
-  names(imputedData) <- viewnms
+  names(imputedData) <- views
   imputedData <- imputedData[viewNames(object)]
 
   # save in model slot  
   object@ImputedData <- imputedData
   object
-  }
+}

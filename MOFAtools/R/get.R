@@ -5,53 +5,43 @@
 
 #' @rdname getDimensions
 #' @name getDimensions
-#' @title wraper to extract dimensionalities from the MOFAmodel
-#' @description to-fill
+#' @title wraper to extract dimensionalities from the MOFAmodel. 
+#' @description K indicates the number of factors, D indicates the number of features, N indicates the number of samples and M indicates the number of views.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @export
 #' 
 getDimensions <- function(object) {
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
   return(object@Dimensions)
-  
-}
-
-#' @rdname getCovariates
-#' @name getCovariates
-#' @title wraper to extract covariates from the MultiAssayExperiment stored in the InputData slot
-#' @description to-fill
-#' @param object a \code{\link{MOFAmodel}} object.
-#' @param names: names of the covariates
-#' @export
-#' 
-getCovariates <- function(object, names) {
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
-  # TO-DO: CHECK THAT WE HAVE A MULTIASSAYEXPERIMENT SLOT
-  stopifnot(all(names %in% colnames(colData(object@InputData))))
-  return(colData(object@InputData)[,names])
 }
 
 
 #' @rdname getFactors
 #' @name getFactors
 #' @title wraper to extract the latent factors from the model
-#' @description to-fill
 #' @param object a \code{\link{MOFAmodel}} object.
+#' @param as.data.frame: boolean indicating whether to return factors as a long data frame with columns (sample,factor,value), default is FALSE.
+#' @param include_intercept: boolean indicating where to include the intercept term of the model, default is TRUE.
+#' @return by default returns a matrix of dimensionality (N,K) where N is number of samples and k is number of factors. 
+#' Alternatively, with as.data.frame=TRUE, it returns a data frame with columns (sample,factor,value)
 #' @export
 #' 
-getFactors <- function(object, as.data.frame=F, include_intercept=T) {
+getFactors <- function(object, as.data.frame = FALSE, include_intercept = TRUE) {
+  
+  # Sanity check
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
   
+  # Collect factors
   Z <- getExpectations(object,"Z","E",as.data.frame)
   
-  if (!include_intercept) {
+  # Remove intercept
+  if (include_intercept == F) {
     if (as.data.frame==F) {
       Z <- Z[,colnames(Z)!="intercept"]
     } else {
       Z <- Z[Z$factor!="intercept",]
     }
   }
-  
   return(Z)
 }
 
@@ -61,15 +51,23 @@ getFactors <- function(object, as.data.frame=F, include_intercept=T) {
 #' @title wraper to extract the weights from the model
 #' @description to-fill
 #' @param object a \code{\link{MOFAmodel}} object.
+#' @param views vector containing the names of views (character) or index of views (numeric) to be fetched.
+#' @param factors vector with the factors indices (numeric) or factor names (character) to fetch.
+#' @param as.data.frame: boolean indicating whether to return factors as a long data frame with columns (view,feature,factor,value), default is FALSE.
+#' @return by default returns a list of length M, where M is the number of views, of matrices with dimensionality (Dm,K) where Dm is number of features in view m and k is number of factors. 
+#' Alternatively, with as.data.frame=TRUE, it returns a data frame with columns (view,feature,factor,value)
 #' @export
 #' 
-getWeights <- function(object, views="all", factors="all", as.data.frame=F) {
+getWeights <- function(object, views = "all", factors = "all", as.data.frame = F) {
+  
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  
   # Get views and factors
   if (paste0(views,collapse="") == "all") { views <- viewNames(object) } else { stopifnot(all(views %in% viewNames(object))) }
   if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } else { stopifnot(all(factors %in% factorNames(object))) }
   
+  # Fetch weights
   weights <- getExpectations(object,"SW","E",as.data.frame)
   if (as.data.frame) {
     weights <- weights[weights$view%in%views & weights$factor%in%factors, ]
@@ -86,21 +84,19 @@ getWeights <- function(object, views="all", factors="all", as.data.frame=F) {
 #' @title wraper to fetch training data from the model
 #' @description to-fill
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param views: views (default is "all")
-#' @param features: list with feature names, with the same order as views (default is "all")
-#' @param as.data.frame: output the result as a long data frame?
+#' @param views vector containing the names of views (character) or index of views (numeric) to be fetched.
+#' @param features: list with feature indices (numeric) or names (character), with the same order as views (default is "all")
+#' @param as.data.frame: boolean indicating whether to return factors as a long data frame with columns (view,feature,sample,value), default is FALSE.
+#' @return if as.data.frame == FALSE it return a list of length M, where M is the number of views, with matrices of dimensionality (N,Dm) where N is the number of samples and Dm is the numher of features in view m.
+#' Alternatively, if as.data.frame == TRUE, it returns long data frame with columns (view,feature,sample,value).
 #' @export
-getTrainData <- function(object, views="all", features="all", as.data.frame=F) {
+getTrainData <- function(object, views = "all", features = "all", as.data.frame = F) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   
   # Get views
-  if (paste0(views,collapse="") == "all") { 
-    views <- viewNames(object) 
-  } else {
-    stopifnot(all(views %in% viewNames(object)))
-  }
+  if (paste0(views,collapse="") == "all") { views <- viewNames(object) } else { stopifnot(all(views %in% viewNames(object))) }
   
   # Get features
   if (class(features)=="list") {
@@ -113,7 +109,7 @@ getTrainData <- function(object, views="all", features="all", as.data.frame=F) {
     }
   }
   
-  # Get data
+  # Fetch data
   trainData <- object@TrainData[views]
   trainData <- lapply(1:length(trainData), function(m) trainData[[m]][features[[m]],,drop=F]); names(trainData) <- views
   
@@ -135,9 +131,10 @@ getTrainData <- function(object, views="all", features="all", as.data.frame=F) {
 #' @title wraper to fetch particular expectations from the model
 #' @description to-fill
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param variable: variable name ('SW')
-#' @param expectation: expectation name ('E')
+#' @param variable: variable name ('Z,'SW','Tau','Y','Theta' or 'Alpha')
+#' @param expectation: expectation name ('E' for the first moment and 'E2' for the second moment (not implemented))
 #' @param as.data.frame: output the result as a long data frame?
+#' @return to-fill
 #' @export
 getExpectations <- function(object, variable, expectation, as.data.frame=F) {
   

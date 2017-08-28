@@ -6,37 +6,46 @@
 #' @title Visualize correlation matrix between the features
 #' @name FeaturesCorPlot
 #' @description the function plots the correlation between all features in a given view. 
-#' This is useful to see if the factors learnt by the model do capture the correlations between features, as the residuals should be uncorrelated.
-#' To check this, run the function twice: first without regressing out any factor (regress_facotrs=NULL) and then regress all factors (regress_factors="all").
-#' The first plot should be enriched by correlations whereas the second should be uncorrelated. 
+#' This is useful to see if the factors learnt by the model capture the correlations between features, as the residuals should be uncorrelated.
+#' To check this, run the function twice, first without regressing out any factor (regress_factors=NULL) and then regress all factors (regress_factors="all").
+#' The first plot should be enriched by correlations whereas the second should be fairly uncorrelated. 
 #' If not, it suggests that there is more signal to be learnt and you should increase the number of factors.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param view view name
-#' @param features feature names (default is "all")
+#' @param features character vector with the feature names or numeric vector with the feature indices (default is "all").
 #' @param method a character string indicating which correlation coefficient is to be computed: pearson (default), kendall, or spearman.
 #' @param regress_factors character or numeric vector with the factors to regress (default is NULL)
 #' @param ... arguments to be passed to \link{pheatmap} function
+#' @return correlation matrix between features
 #' @importFrom pheatmap pheatmap
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom grDevices colorRampPalette
 #' @export
-FeaturesCorPlot <- function(object, view, features="all", method="pearson", regress_factors=NULL, ...) {
+FeaturesCorPlot <- function(object, view, features = "all", method = "pearson", regress_factors = NULL, ...) {
   
   # Sanity check
-  if (class(object) != "MOFAmodel")
-    stop("'object' has to be an instance of MOFAmodel")
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  
+  # Fetch data
+  data <- object@TrainData[[view]]
   
   # Feature selection
-  data <- object@TrainData[[view]]
+  if (paste0(features,collapse="") == "all") { 
+    features <- featureNames(object)[[view]]
+  } else {
+    stopifnot(all(features %in% featureNames(model)[[view]]))  
+  }
   # top_features <- names(tail(sort(apply(data,2,var)),n=top))
-  # data <- data[,top_features]
+  data <- data[,features]
   
   # Regress out latent variables
   if (!is.null(regress_factors)) {
-    if (regress_factors=="all") { regress_factors <- 1:object@Dimensions$K }
-    SW <- getExpectations(object,"SW","E")[[view]]#; rownames(SW) <- colnames(object@TrainData[[view]])
-    Z <- getExpectations(object,"Z","E")
-    data <- data - t(SW[top_features,] %*% t(Z[,regress_factors]))
+    if (regress_factors=="all") { regress_factors <- 1:getDimensions(object)[["K"]] }
+    SW <- getWeights(views=view)
+    # SW <- getExpectations(object,"SW","E")[[view]]
+    # Z <- getExpectations(object,"Z","E")
+    Z <- getFactors(object)
+    data <- data - t(SW[features,] %*% t(Z[,regress_factors]))
   }
   
   # Compute correlation
@@ -44,12 +53,14 @@ FeaturesCorPlot <- function(object, view, features="all", method="pearson", regr
   
   # Draw heatmap
   breaksList = seq(-1,1, by=0.01)
-  pheatmap(r, 
+  pheatmap::pheatmap(r, 
     color=colorRampPalette(rev(brewer.pal(n=10, name="RdYlBu")))(length(breaksList)),
     breaks=breaksList,
     cluster_cols=F, cluster_rows=F, 
     show_colnames=F, show_rownames=F, ...
   )
+  
+  return(r)
 }
 
 
@@ -64,15 +75,22 @@ FeaturesCorPlot <- function(object, view, features="all", method="pearson", regr
 #' @return symmetric matrix with the correlation coefficient between factors
 #' @import corrplot
 #' @export
-FactorsCorPlot <- function(object, method="pearson", ...) {
-  if (class(object) != "MOFAmodel")
-    stop("'object' has to be an instance of MOFAmodel")
+FactorsCorPlot <- function(object, method = "pearson", ...) {
   
-  Z <- getExpectations(object,"Z","E")
+  # Sanity checks
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  
+  # Fetch factors
+  Z <- getFactors(object)
+  
+  # Remove intercept
   if(object@ModelOpts$learnMean==T) Z <- Z[,-1]
-  h <- cor(x=Z, y=Z, method=method, use = "complete.obs")
-  p <- corrplot::corrplot(h, tl.col="black", ...)
-  return(h)
+  
+  # Compute and plot correlation
+  r <- cor(x=Z, y=Z, method=method, use = "complete.obs")
+  p <- corrplot::corrplot(r, tl.col="black", ...)
+  
+  return(r)
 }
 
 
@@ -111,7 +129,7 @@ FactorsCorPlot <- function(object, method="pearson", ...) {
 #'   return(p)
 #' }
 
-#' @title Correlation plot of latent factors to principal components on single views
+#' @title Correlation plot of latent factors to principal components of single views
 #' @name CorrplotLFvsPC
 #' @description This function is used to identify the relationship between latent factors and principal components.
 #' Usually the first latent factors also correspond to the main principal components,

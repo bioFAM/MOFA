@@ -1,15 +1,13 @@
 
-###############################
-## Function to do subsetting ##
-###############################
+################################
+## Functions to do subsetting ##
+################################
 
 #' @title subsetFactors: subset factors
 #' @name subsetFactors
-#' @description Method to subset factors
+#' @description Method to subset or sort factors
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param factors numeric or character vector with the factors indices (numeric) or factor names (character) to subset (or sort)
-#' @details fill this
-#' @return nothing
+#' @param factors vector with the factors indices (numeric) or factor names (character) to subset.
 #' @export
 
 subsetFactors <- function(object, factors) {
@@ -44,11 +42,9 @@ subsetFactors <- function(object, factors) {
 
 #' @title subsetSamples: subset samples
 #' @name subsetSamples
-#' @description Method to subset samples
+#' @description Method to subset (or sort) samples
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param samples numeric or character vector with the sample indices (numeric) or sample names (character) to subset (or sort)
-#' @details fill this
-#' @return nothing
 #' @export
 
 subsetSamples <- function(object, samples) {

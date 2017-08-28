@@ -181,6 +181,20 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
   return(ImputedData)
 }
 
+#' @rdname getCovariates
+#' @name getCovariates
+#' @title wraper to extract covariates from the MultiAssayExperiment stored in the InputData slot
+#' @description to-fill
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @param names: names of the covariates
+#' @export
+#' 
+getCovariates <- function(object, names) {
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
+  if(class(object@InputData) != "MultiAssayExperiment") stop("To work with covariates, InputData has to be specified in form of a MultiAssayExperiment")  
+  stopifnot(all(names %in% colnames(colData(object@InputData))))
+  return(colData(object@InputData)[,names])
+}
 
 #' @rdname getExpectations
 #' @name getExpectations

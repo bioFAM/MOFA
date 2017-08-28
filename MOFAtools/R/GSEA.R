@@ -28,7 +28,7 @@
 FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all", local.statistic=c("loading", "cor", "z"),
                                          transformation=c("abs.value", "none"), global.statistic=c("mean.diff", "rank.sum"),
                                          statistical.test=c("parametric", "cor.adj.parametric", "permutation"),
-                                         nperm=100, min.size=10, cores=1, p.adj.method = "BH", alpha=0.1) {
+                                         nperm=100, min.size=15, cores=1, p.adj.method = "BH", alpha=0.1) {
   
   # Collect factors
   if (paste0(factors,sep="",collapse="") == "all") { 

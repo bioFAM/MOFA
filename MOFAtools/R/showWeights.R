@@ -65,7 +65,7 @@ showWeightHeatmap <- function(object, view, features = "all", factors = "all", R
   }
   
   # Plot heatmap
-  pheatmap::pheatmap(W, fontsize=15, ...)
+  pheatmap::pheatmap(W, color=color, breaks=breaks, fontsize=15, ...)
 }
 
 

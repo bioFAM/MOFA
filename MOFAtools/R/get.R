@@ -125,6 +125,52 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
   return(trainData)
 }
 
+#' @rdname getImputedData
+#' @name getImputedData
+#' @title wraper to fetch imputed data from the model
+#' @description to-fill
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @param views vector containing the names of views (character) or index of views (numeric) to be fetched.
+#' @param features: list with feature indices (numeric) or names (character), with the same order as views (default is "all")
+#' @param as.data.frame: boolean indicating whether to return factors as a long data frame with columns (view,feature,sample,value), default is FALSE.
+#' @return if as.data.frame == FALSE it return a list of length M, where M is the number of views, with matrices of dimensionality (N,Dm) where N is the number of samples and Dm is the numher of features in view m.
+#' Alternatively, if as.data.frame == TRUE, it returns long data frame with columns (view,feature,sample,value).
+#' @export
+getImputedData <- function(object, views = "all", features = "all", as.data.frame = F) {
+  
+  # Sanity checks
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  
+  # Get views
+  if (paste0(views,collapse="") == "all") { views <- viewNames(object) } else { stopifnot(all(views %in% viewNames(object))) }
+  
+  # Get features
+  if (class(features)=="list") {
+    stopifnot(all(sapply(1:length(features), function(i) all(features[[i]] %in% featureNames(object)[[views[i]]]))))
+  } else {
+    if (paste0(features,collapse="") == "all") { 
+      features <- featureNames(object)[views]
+    } else {
+      stop("features not recognised, please read the documentation")
+    }
+  }
+  
+  # Fetch data
+  ImputedData <- object@ImputedData[views]
+  ImputedData <- lapply(1:length(ImputedData), function(m) ImputedData[[m]][features[[m]],,drop=F]); names(ImputedData) <- views
+  
+  # Convert to long data frame
+  if (as.data.frame) {
+    tmp <- lapply(views, function(m) { tmp <- reshape2::melt(ImputedData[[m]]); colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
+    ImputedData <- do.call(rbind,tmp)
+    ImputedData[,c("view","feature","sample")] <- sapply(ImputedData[,c("view","feature","sample")], as.character)
+  } else if ((length(views)==1) && (as.data.frame==F)) {
+    ImputedData <- ImputedData[[views]]
+  }
+  
+  return(ImputedData)
+}
+
 
 #' @rdname getExpectations
 #' @name getExpectations

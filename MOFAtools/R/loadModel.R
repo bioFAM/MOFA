@@ -82,6 +82,9 @@ loadModel <- function(file, object=NULL, sortFactors=T) {
     }
   }
   
+  # Mask pasenger factors and set to NA
+  object <- detectPassengers(object)
+
   # Re-name and order factors in order of variance explained
   if (sortFactors) {
     r2 <- rowSums(calculateVarianceExplained(object,plotit=F,showtotalR2=T)$R2PerFactor)

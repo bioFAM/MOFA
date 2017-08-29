@@ -78,7 +78,7 @@ showWeightHeatmap <- function(object, view, features = "all", factors = "all", R
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param view name of view from which to get the corresponding weights
 #' @param factor name of the factor
-#' @param nfeatures number of features to label based on weight
+#' @param nfeatures number of features to include (by default all, otherwise only those with highest absolute values are included)
 #' @param abs take absolute value of the weights?
 #' @param threshold threshold on the absolute value beyond which weigths are labeled
 #' @param manual features to be manually labelled. A list of character vectors
@@ -111,7 +111,7 @@ showAllWeights <- function(object, view, factor, nfeatures = "all", abs=FALSE, t
   } else {
     stopifnot(class(nfeatures)=="numeric")
   }
-  W <- head(W[order(W$value, decreasing=T),], n=nfeatures)
+  W <- head(W[order(abs(W$value), decreasing=T),], n=nfeatures)
     
   # Define groups for labelling
   W$group <- "0"

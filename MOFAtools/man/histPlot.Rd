@@ -4,13 +4,23 @@
 \alias{histPlot}
 \title{Visualize histogram of one latent variable}
 \usage{
-histPlot(object, factor, xlabel = NULL, fill = NULL, name_fill = "",
-  alpha = 0.6, binwidth = NULL, showNA = F)
+histPlot(object, factor, groups = NULL, name_groups = "", alpha = 0.6,
+  binwidth = NULL, showMissing = FALSE)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{id}{name of latent variable to plot}
+\item{factor}{one factors to plot}
+
+\item{groups}{specifies groups or values used to split histogram into groups and color. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.}
+
+\item{name_groups}{name for groups (usually only used if groups is not a character itself)}
+
+\item{alpha}{transparency parameter}
+
+\item{binwidth}{binwidth for histogram}
+
+\item{showMissing}{boolean, if false, removes sample for which shape_by or color_by is missing}
 }
 \value{
 fill this

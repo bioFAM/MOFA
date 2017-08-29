@@ -71,33 +71,43 @@ histPlot <- function(object, factor, xlabel = NULL, fill=NULL, name_fill="", alp
 #' @name beeswarmPlot
 #' @description fill this
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param id latent variable
+#' @param factors factors to plot
+#' @param color_by specifies groups or values used to color points. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.
+#' @param name_color name for color legend (usually only used if color_by is not a character itself)
 #' @details asd
 #' @return fill this
 #' @references fill this
 #' @export
-beeswarmPlot <- function(object, factors, color_by = NULL, color_name="", colorLegend=T, showNA=F) {
+beeswarmPlot <- function(object, factors, color_by = NULL, name_color="", showMissing=F) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel")  stop("'object' has to be an instance of MOFAmodel")
-  factors <- as.character(factors)
-  stopifnot(all(factors %in% factorNames(object)))
-  
+
   # Collect relevant data
   N <- object@Dimensions[["N"]]
-  Z <- getExpectations(object, "Z", "E", as.data.frame=T)
-  Z <- Z[Z$factor %in% factors,]
+  Z <- getFactors(object, factors=factors, include_intercept=FALSE, as.data.frame=T)
   
   # Z <- getExpectations(object, "Z", "E")
   
-  # Set color
+ # Set color
+  colorLegend <- T
   if (!is.null(color_by)) {
-    # It is the name of a covariate 
+    # It is the name of a covariate or a feature in the TrainData
     if (length(color_by) == 1 & is.character(color_by)) {
-      color_by <- getCovariates(object, color_by)
+      if(name_color=="") name_color <- color_by
+      TrainData <- getTrainData(object)
+      featureNames <- lapply(TrainData(object), rownames)
+      if(color_by %in% Reduce(union,featureNames)) {
+        viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
+        color_by <- TrainData[[viewidx]][color_by,]
+      } else if(class(object@InputData) == "MultiAssayExperiment"){
+        color_by <- getCovariates(object, color_by)
+    }
+    else stop("'color_by' was specified but it was not recognised, please read the documentation")
     # It is a vector of length N
     } else if (length(color_by) > 1) {
       stopifnot(length(color_by) == N)
+      # color_by <- as.factor(color_by)
     } else {
       stop("'color_by' was specified but it was not recognised, please read the documentation")
     }
@@ -105,12 +115,14 @@ beeswarmPlot <- function(object, factors, color_by = NULL, color_name="", colorL
     color_by <- rep(TRUE,N)
     colorLegend <- F
   }
-  
+  names(color_by) <- sampleNames(object)
+  if(length(unique(color_by)) < 5) color_by <- as.factor(color_by)
+
   # Remove samples with missing values
-  if (!showNA) {
+  if (!showMissing) {
     Z <- Z[!is.nan(Z$value),]
   }
-  
+  Z$color_by <- color_by[Z$sample]
   
   # Generate plot
   p <- ggplot(Z, aes(factor, value)) + 
@@ -132,13 +144,13 @@ beeswarmPlot <- function(object, factors, color_by = NULL, color_name="", colorL
       legend.position = "right", 
       legend.direction = "vertical",
       legend.key = element_blank()
-      )
+      ) + facet_wrap(~factor)
   
   # If color_by is numeric, define the default gradient
   if (is.numeric(color_by)) { p <- p + scale_color_gradientn(colors=terrain.colors(10)) }
   
   # Add legend
-  if (colorLegend) { p <- p + labs(color=color_name) } else { p <- p + guides(color = FALSE) }
+  if (colorLegend) { p <- p + labs(color=name_color) } else { p <- p + guides(color = FALSE) }
   
   return(p)
 }

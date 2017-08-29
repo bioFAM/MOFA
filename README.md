@@ -42,12 +42,12 @@ R CMD install MOFAtools
 ## MOFA workflow
 
 ### Training the model
-The training of the model is performed using the python framework. It can also be rin within the R framework (by indirectly calling python), but is not as fast or stable.
+The training of the model is performed using the Python framework ([MOFA](MOFA)).
 
-To train the model, simply store your input matrices as text files and modify the following script accordingly:
+To train the model, simply store your input matrices as text files and modify the following script accordingly:  
 [run_basic.sh](MOFA/run/run_basic.sh)
 
-If you are very familar with the model and want to play with more advaned options, you can edit and run the following script:
+If you are very familar with the model and want to play with more advaned options, you can edit and run the following script:  
 [run_advanced.sh](MOFA/run/run_advanced.sh)
 
 Once the model has converged and is saved as an .hdf5 file, then you should move to our R framework ([MOFAtools](MOFAtools)), where we implemented a pipeline for a semi-automated factor annotation.

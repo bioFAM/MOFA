@@ -193,7 +193,7 @@ scatterPairs(MOFAobject, factors = c("1", "2", "3", "4"))
 A single factor can be visualised using the 'beeswarmPlot' function
 ```{r}
 # TO-DO covariates
-beeswarmPlot(MOFAobject, factors = "1")
+beeswarmPlot(MOFAobject, factors = "1", color_by = "IGHV")
 ```
 
 ## Customized analysis

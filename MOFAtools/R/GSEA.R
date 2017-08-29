@@ -164,19 +164,23 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
 #' @title Line plot of Feature Set Enrichment Analysis results
 #' @name LinePlot_FeatureSetEnrichmentAnalysis
 #' @description Line plot of the Feature Set Enrichment Analyisis results for a specific latent variable
-#' @param p.values output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are feature sets and columns are latent variables
+#' @param fsea.out output of \link{FeatureSetEnrichmentAnalysis} function
 #' @param factor Factor for which to show wnriched pathways in the lineplot
 #' @param threshold p.value threshold to filter out feature sets
 #' @param max.pathways maximum number of enriched pathways to display
+#' @param adjust use multiple testing correction
 #' @details fill this
 #' @return nothing
 #' @import ggplot2
 #' @export
-LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, factor, threshold=0.1, max.pathways=25, ...) {
+LinePlot_FeatureSetEnrichmentAnalysis <- function(fsea.out, factor, threshold=0.1, max.pathways=25, adjust=T, ...) {
   
   # Sanity checks
   # (...)
   
+  # get p-values
+  if(adjust) p.values <- fsea.out$pval.adj else p.values <- fsea.out$pval
+
   # Get data  
   tmp <- as.data.frame(p.values[,factor, drop=F])
   tmp$pathway <- rownames(tmp)
@@ -225,15 +229,20 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(p.values, factor, threshold=0.
 #' @title Heatmap of Feature Set Enrichment Analysis results
 #' @name Heatmap_FeatureSetEnrichmentAnalysis
 #' @description Heatmap of the Feature Set Enrichment Analyisis results
-#' @param p.values output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are gene sets and columns are latent variables
+#' @param fsea.out output of \link{FeatureSetEnrichmentAnalysis} function
 #' @param threshold p.value threshold to filter out feature sets. If a feature set has a p.value lower than 'threshold'
+#' @param adjust use multiple testing correction
 #' @param ... Parameters to be passed to pheatmap function
 #' @details fill this
 #' @return vector of factors being enriched for at least one feautre set at the threshold specified 
 #' @import pheatmap
 #' @importFrom grDevices colorRampPalette
 #' @export
-Heatmap_FeatureSetEnrichmentAnalysis <- function(p.values, threshold=0.05, log=T, ...) {
+Heatmap_FeatureSetEnrichmentAnalysis <- function(fsea.out, threshold=0.05, log=T, adjust=TRUE, ...) {
+
+  # get p-values
+  if(adjust) p.values <- fsea.out$pval.adj else p.values <- fsea.out$pval
+
   p.values <- p.values[!apply(p.values, 1, function(x) sum(x>=threshold)) == ncol(p.values),]
   if (log) {
     p.values <- -log10(p.values)

@@ -48,7 +48,6 @@ loadModel <- function(file, object=NULL, sortFactors=T) {
   }
   
   # Load training data
-  if (length(object@TrainData) == 0) {
   tryCatch( {
     TrainData <- h5read(file,"data")
     featureData <- h5read(file,"features")
@@ -61,7 +60,7 @@ loadModel <- function(file, object=NULL, sortFactors=T) {
     TrainData <- lapply(TrainData, t)
     object@TrainData <- TrainData
     }, error = function(x) { print("Error loading the training data...") })
-  }
+  
   
   # Load dimensions and names
   object@Dimensions[["M"]] <- length(object@TrainData)

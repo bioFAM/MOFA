@@ -97,9 +97,8 @@ MOFAobject <- runMOFA(MOFAobject, DirOptions)
 
 For illustration, we load the model used in the paper from the hdf5 file produced by MOFA
 ```{r}
-# TO-DO: sortFactor=T by default
 filepath <- system.file("extdata", "model15.hdf5", package = "MOFAtools")
-MOFAobject <- loadModel(filepath)
+MOFAobject <- loadModel(filepath, MOFAobject)
 MOFAobject
 ```
 
@@ -126,19 +125,19 @@ To see top features for a given view and factor we can use the 'showTopWeights' 
 
 ```{r}
 showTopWeights(MOFAobject, "Mutations", "1")
-showTopWeights(MOFAobject, "Mutations", "2")
 ```
 
-All weights on a factors in a view can be looked at using the 'showAllWeights' function
+All weights on a factors in a view can be looked at using the 'showAllWeights' function. 
+Labels are set based on the 'threshold' or 'manual' parameter. 
 ```{r}
-showAllWeights(MOFAobject, view = "Mutations", factor = "1", nfeatures = 4)
+showAllWeights(MOFAobject, view = "Mutations", factor = "1", threshold = 1)
 ```
 
 
-To get an overview across all factors in a given view we can use the 'showWeightHeatmap' function.
+To get an overview across all factors in a given view we can use the 'showWeightHeatmap' function. Using the threshold paramater features and factors with loadings bewlow this threshold can be removed.
 ```{r}
-#TO-DO: white for zeros and transpose
-showWeightHeatmap(MOFAobject, "Mutations")
+showWeightHeatmap(MOFAobject, "Mutations", show_colnames=F)
+showWeightHeatmap(MOFAobject, "Mutations", threshold = 0.1)
 ```
 
 To see the original data for the genes with top weights on a factor use 'showDataHeatmap'.
@@ -155,13 +154,11 @@ The input of this function is a MOFA trained model (MOFAmodel), the factors for 
 
 We illustrate the use of this function using the [reactome](http://reactome.org) annotations.
 ```{r}
-# TO-DO make min.size 15 default
-
 # Load reactome annotations, binary matrix with feature sets in rows and feautres in columns
 data("reactomeGS")
-fsea.out <- FeatureSetEnrichmentAnalysis(MOFAobject, "mRNA", reactomceGS,
-                                         statistical.test = "parametric", alpha = 0.01,
-                                         min.size = 15)
+
+# perfrom enrichment analysis
+fsea.out <- FeatureSetEnrichmentAnalysis(MOFAobject, "mRNA", reactomeGS, alpha = 0.01)
 
 # get (mutliple-testing adjusted) p-values
 pval <- fsea.out$pval.adj
@@ -187,17 +184,18 @@ for (factor in interestingFactors) {
 
 Samples can be visualized along factors of interest using the 'scatterPlot' function.
 ```{r}
-# TO-DO covariates
 scatterPlot(MOFAobject, factors = c("1", "2"), color_by = "IGHV", shape_by = "trisomy12")
 ```
 
 An overview of pair-wise sctterplots for all or a subset of factors is produced by the 'scatterPairs' function
 ```{r}
+# TO-DO covariates, warnings?
 scatterPairs(MOFAobject, factors = c("1", "2", "3", "4"))
 ```
 
 A single factor can be visualised using the 'beeswarmPlot' function
 ```{r}
+# TO-DO covariates
 beeswarmPlot(MOFAobject, factors = "1")
 ```
 
@@ -209,8 +207,7 @@ head(MOFAweights)
 ```
 
 ```{r}
-#TO-DO add a factors option
-MOFAfactors <- getFactors(MOFAobject, as.data.frame = T)
+MOFAfactors <- getFactors(MOFAobject, as.data.frame = T, include_intercept = F)
 head(MOFAfactors)
 ```
 
@@ -225,7 +222,6 @@ head(MOFAdata)
 ## Imputation of missing observations
 With the 'imputeMissing' function all missing values are imputed based on the MOFA model. The imputed data is then stored in the MOFAobject and can be accessed via 'getImputedData'.
 ```{r}
-# TO-DO get function
 MOFAobject <- imputeMissing(MOFAobject)
 imputedDrugs <- getImputedData(MOFAobject, view="Drugs")
 ```
@@ -233,8 +229,7 @@ imputedDrugs <- getImputedData(MOFAobject, view="Drugs")
 ## Prediction of views
 With the 'predict' function, full views can be predicted based on the MOFA model with all or a subset of factors
 ```{r}
-# TO-DO predict
-predict(MOFAobject, view="Drugs", factors=c("1","2"))
+predictedDrugs <- predict(MOFAobject, view="Drugs", factors="all")
 ```
 
 

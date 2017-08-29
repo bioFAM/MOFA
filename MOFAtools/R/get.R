@@ -44,7 +44,7 @@ getFactors <- function(object, as.data.frame = FALSE, include_intercept = TRUE, 
     }
 
   # Remove intercept
-  if (include_intercept == F) {
+  if (include_intercept == F & "intercept" %in% colnames(Z)) {
     if (as.data.frame==F) {
       Z <- Z[,colnames(Z)!="intercept"]
     } else {

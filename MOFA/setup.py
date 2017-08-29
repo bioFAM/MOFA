@@ -5,7 +5,7 @@ if __name__ == '__main__':
     setup(name='MOFA',
           version='0.1',
           description='Multi-Omics Factor Analysis',
-          long_description=read('README.rst'),
+          #long_description=read('README.rst'),
           url='http://github.com/rargelaguet/mofa',
           author='Ricard Argelaguet, Damien Arnol and Britta Velten',
           author_email='ricard.argelaguet@gmail.com',

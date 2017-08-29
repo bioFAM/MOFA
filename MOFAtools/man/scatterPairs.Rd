@@ -4,18 +4,23 @@
 \alias{scatterPairs}
 \title{Visualize scatterplot of all latent variables in a pair-wise grid}
 \usage{
-scatterPairs(object, factors = "all", showMissing = T, color_by = NULL,
-  color_name = NULL, colorLegend = F, shape_by = NULL,
-  shape_name = NULL, shapeLegend = F)
+scatterPairs(object, factors = "all", showMissing = TRUE, color_by = NULL,
+  name_color = "", shape_by = NULL, name_shape = "")
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{showMissing}{boolean wether to include missing values in color_by}
+\item{factors}{vector of factors to plot or "all"}
 
-\item{color_by}{vector of length N with discrete sample groups to color by}
+\item{showMissing}{boolean, if false, removes sample for which shape_by or color_by is missing}
 
-\item{color_name}{name of the factor used to color_by (only relevant if color_by is not NULL)}
+\item{color_by}{specifies groups or values used to color points. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.}
+
+\item{name_color}{name for color legend (usually only used if color_by is not a character itself)}
+
+\item{shape_by}{specifies groups or values used for point shapes. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.}
+
+\item{name_shape}{name for shape legend (usually only used if shape_by is not a character itself)}
 }
 \value{
 fill this

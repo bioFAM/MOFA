@@ -5,7 +5,7 @@
 \title{Visualize scatterplot of two latent variables}
 \usage{
 scatterPlot(object, factors, color_by = NULL, shape_by = NULL,
-  name_color = "", name_shape = "", showMissing = T)
+  name_color = "", name_shape = "", showMissing = TRUE)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
@@ -20,10 +20,10 @@ scatterPlot(object, factors, color_by = NULL, shape_by = NULL,
 
 \item{name_shape}{name for shape legend (usually only used if shape_by is not a character itself)}
 
-\item{showMissing}{boolean, if true, removes sample for which shape_by or color_by is missing}
+\item{showMissing}{boolean, if false, removes sample for which shape_by or color_by is missing}
 }
 \value{
-fill this
+ggplot object containing the scatterplot
 }
 \description{
 fill this

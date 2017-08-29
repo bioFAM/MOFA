@@ -4,16 +4,22 @@
 \alias{beeswarmPlot}
 \title{Visualize beeswarm plot of one latent variable}
 \usage{
-beeswarmPlot(object, factors, color_by = NULL, color_name = "",
-  colorLegend = T, showNA = F)
+beeswarmPlot(object, factors, color_by = NULL, name_color = "",
+  showMissing = TRUE)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{id}{latent variable}
+\item{factors}{factors to plot}
+
+\item{color_by}{specifies groups or values used to color points. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.}
+
+\item{name_color}{name for color legend (usually only used if color_by is not a character itself)}
+
+\item{showMissing}{boolean, if false, removes sample for which shape_by or color_by is missing}
 }
 \value{
-fill this
+ggplot object containing the beeswarm plots
 }
 \description{
 fill this

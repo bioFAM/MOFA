@@ -8,46 +8,68 @@
 #' @name histPlot
 #' @description fill this
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param id name of latent variable to plot
+#' @param factor one factors to plot
+#' @param groups specifies groups or values used to split histogram into groups and color. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.
+#' @param name_groups name for groups (usually only used if groups is not a character itself)
+#' @param alpha transparency parameter
+#' @param binwidth binwidth for histogram
+#' @param showMissing boolean, if false, removes sample for which shape_by or color_by is missing
 #' @details asd
 #' @return fill this
 #' @references fill this
 #' @import ggplot2
 #' @export
-histPlot <- function(object, factor, xlabel = NULL, fill=NULL, name_fill="", alpha=0.6, binwidth=NULL, showNA=F) {
+histPlot <- function(object, factor, groups=NULL, name_groups="", alpha=0.6, binwidth=NULL, showMissing=FALSE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") 
     stop("'object' has to be an instance of MOFAmodel")
-  if ((!is.null(fill_discrete)) & (!is.null(fill_continuous)))
-    stop("do not specify both fill_discrete and fill_continuous")
+
   if(!factor %in% factorNames(object)) { stop("factor not recognised") }
   
   # Collect relevant data
   N <- object@Dimensions[["N"]]
-  Z <- getExpectations(object, "Z", "E")
-  factor <- as.character(factor)
+  Z <- getFactors(object, factors = factor, as.data.frame = TRUE)
   
-  # Create data frame
-  if (is.null(fill)) { 
-    fill <- 1 
+  # get groups
+  groupLegend <- T
+  if (!is.null(groups)) {
+    # It is the name of a covariate or a feature in the TrainData
+    if (length(groups) == 1 & is.character(groups)) {
+      if(name_groups=="") name_groups <- groups
+      TrainData <- getTrainData(object)
+      featureNames <- lapply(TrainData(object), rownames)
+      if(groups %in% Reduce(union,featureNames)) {
+        viewidx <- which(sapply(featureNames, function(vnm) groups %in% vnm))
+        groups <- TrainData[[viewidx]][groups,]
+      } else if(class(object@InputData) == "MultiAssayExperiment"){
+        groups <- getCovariates(object, groups)
+      }
+      else stop("'groups' was specified but it was not recognised, please read the documentation")
+      # It is a vector of length N
+    } else if (length(groups) > 1) {
+      stopifnot(length(groups) == N)
+    } else {
+      stop("'groups' was specified but it was not recognised, please read the documentation")
+    }
   } else {
-    stopifnot(is.character(fill) | is.factor(fill))
-    fill <- as.factor(fill)
+    groups <- rep(TRUE,N)
+    groupLegend <- F
   }
-  
-  df = data.frame(x=Z[,factor], fill=fill)
-  
-  if(!showNA) df <- df[!is.na(fill),]
+  names(groups) <- sampleNames(object)
+  Z$groups <- groups[Z$sample]
 
-  if (is.null(xlabel)) { xlabel <- paste("Latent factor", factor) }
+  if(!showMissing) Z <- Z[!is.na(Z$groups),]
+  Z$groups <- as.factor(Z$groups)
   
-  p <- ggplot(df, aes(x=x)) + 
-    geom_histogram(aes(fill=fill), alpha=alpha, binwidth=binwidth, position="identity") + 
+  xlabel <- paste("Latent factor", factor)
+  
+  p <- ggplot(Z, aes(x=value, group=groups)) + 
+    geom_histogram(aes(fill=groups), alpha=alpha, binwidth=binwidth, position="identity") + 
     xlab(xlabel) + 
     ylab("Count") + 
     scale_y_continuous(expand=c(0,0)) +
-    guides(fill=guide_legend(title=name_fill)) +
+    guides(fill=guide_legend(title=name_groups)) +
     theme(plot.margin = margin(40,40,20,20), 
           axis.text = element_text(size=rel(1.3), color = "black"), 
           axis.title.y = element_text(size=rel(1.5), margin=margin(0,15,0,0)), 
@@ -61,7 +83,7 @@ histPlot <- function(object, factor, xlabel = NULL, fill=NULL, name_fill="", alp
           legend.key = element_rect(fill = "white")
     )
   
-  if (is.null(fill)) { p <- p + guides(fill = FALSE) }
+  if (!groupLegend) { p <- p + guides(fill = FALSE) }
   
   return(p)
 }
@@ -74,11 +96,13 @@ histPlot <- function(object, factor, xlabel = NULL, fill=NULL, name_fill="", alp
 #' @param factors factors to plot
 #' @param color_by specifies groups or values used to color points. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.
 #' @param name_color name for color legend (usually only used if color_by is not a character itself)
+#' @param showMissing boolean, if false, removes sample for which shape_by or color_by is missing
 #' @details asd
-#' @return fill this
+#' @return ggplot object containing the beeswarm plots
 #' @references fill this
+#' @import ggplot2
 #' @export
-beeswarmPlot <- function(object, factors, color_by = NULL, name_color="", showMissing=F) {
+beeswarmPlot <- function(object, factors, color_by = NULL, name_color="", showMissing=TRUE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel")  stop("'object' has to be an instance of MOFAmodel")
@@ -164,14 +188,14 @@ beeswarmPlot <- function(object, factors, color_by = NULL, name_color="", showMi
 #' @param shape_by specifies groups or values used for point shapes. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.
 #' @param name_color name for color legend (usually only used if color_by is not a character itself)
 #' @param name_shape name for shape legend (usually only used if shape_by is not a character itself)
-#' @param showMissing boolean, if true, removes sample for which shape_by or color_by is missing
+#' @param showMissing boolean, if false, removes sample for which shape_by or color_by is missing
 #' @details asd
-#' @return fill this
+#' @return ggplot object containing the scatterplot
 #' @references fill this
 #' @import ggplot2
 #' @export
 scatterPlot <- function (object, factors, color_by = NULL, shape_by = NULL, name_color="",
-                         name_shape="", showMissing = T) {
+                         name_shape="", showMissing = TRUE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -280,18 +304,21 @@ scatterPlot <- function (object, factors, color_by = NULL, shape_by = NULL, name
 #' @name scatterPairs
 #' @description fill this
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param color_by vector of length N with discrete sample groups to color by
-#' @param color_name name of the factor used to color_by (only relevant if color_by is not NULL)
-#' @param showMissing boolean wether to include missing values in color_by
+#' @param factors vector of factors to plot or "all"
+#' @param color_by specifies groups or values used to color points. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.
+#' @param shape_by specifies groups or values used for point shapes. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.
+#' @param name_color name for color legend (usually only used if color_by is not a character itself)
+#' @param name_shape name for shape legend (usually only used if shape_by is not a character itself)
+#' @param showMissing boolean, if false, removes sample for which shape_by or color_by is missing
 #' @details asd
 #' @return fill this
 #' @references fill this
 #' @import ggplot2 GGally
 #' @export
 #' 
-scatterPairs <- function(object, factors = "all", showMissing=T, 
-                         color_by=NULL, color_name=NULL, colorLegend=F, 
-                         shape_by=NULL, shape_name=NULL, shapeLegend=F) {
+scatterPairs <- function(object, factors = "all", showMissing=TRUE, 
+                         color_by=NULL, name_color="",  
+                         shape_by=NULL, name_shape="") {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -318,37 +345,55 @@ scatterPairs <- function(object, factors = "all", showMissing=T,
     factors <- factors[!tmp==0]
   }
   
-  # Set color
+    # Set color
+  colorLegend <- T
   if (!is.null(color_by)) {
-    # It is the name of a covariate 
+    # It is the name of a covariate or a feature in the TrainData
     if (length(color_by) == 1 & is.character(color_by)) {
-      color_by <- getCovariates(object, color_by)
-      # It is a vector of length N
+      if(name_color=="") name_color <- color_by
+      TrainData <- getTrainData(object)
+      featureNames <- lapply(TrainData(object), rownames)
+      if(color_by %in% Reduce(union,featureNames)) {
+        viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
+        color_by <- TrainData[[viewidx]][color_by,]
+      } else if(class(object@InputData) == "MultiAssayExperiment"){
+        color_by <- getCovariates(object, color_by)
+    }
+    else stop("'color_by' was specified but it was not recognised, please read the documentation")
+    # It is a vector of length N
     } else if (length(color_by) > 1) {
       stopifnot(length(color_by) == N)
       # color_by <- as.factor(color_by)
     } else {
       stop("'color_by' was specified but it was not recognised, please read the documentation")
     }
-    colorLegend <- T
   } else {
     color_by <- rep(TRUE,N)
     colorLegend <- F
   }
-  
+
   # Set shape
+  shapeLegend <- T
   if (!is.null(shape_by)) {
     # It is the name of a covariate 
     if (length(shape_by) == 1 & is.character(shape_by)) {
-      shape_by <- as.factor(getCovariates(object, shape_by))
-      # It is a vector of length N
+      if(name_shape=="") name_shape <- shape_by
+      TrainData <- getTrainData(object)
+      featureNames <- lapply(TrainData(object), rownames)
+      if(shape_by %in% Reduce(union,featureNames)) {
+        viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
+        shape_by <- TrainData[[viewidx]][shape_by,]
+      } else if(class(object@InputData) == "MultiAssayExperiment"){
+        shape_by <- getCovariates(object, shape_by)
+    }
+    else stop("'shape_by' was specified but it was not recognised, please read the documentation")
+    # It is a vector of length N
+    # It is a vector of length N
     } else if (length(shape_by) > 1) {
       stopifnot(length(shape_by) == N)
-      shape_by <- as.factor(shape_by)
     } else {
       stop("'shape_by' was specified but it was not recognised, please read the documentation")
     }
-    shapeLegend <- T
   } else {
     shape_by <- rep(TRUE,N)
     shapeLegend <- F
@@ -360,18 +405,20 @@ scatterPairs <- function(object, factors = "all", showMissing=T,
     color_by <- color_by[!is.na(color_by)]
     shape_by <- shape_by[!is.na(shape_by)]
   }
-  
+
   # Crete data.frame
   df <- as.data.frame(Z); colnames(df) <- paste0("LF_",colnames(df))
   df <- cbind(df, color_by=color_by, shape_by=shape_by)
+
+    #turn into factors
+   df$shape_by[is.na(df$shape_by)] <- "NA"
+   df$shape_by <- as.factor(df$shape_by)
+   if(length(unique(df$color_by)) < 5) df$color_by <- as.factor(df$color_by)
+  
   
   # Define title and legend of the plot
   main <- "" 
-  if (!is.null(color_name)) { colorLegend <- T }
-  if (!is.null(shape_name)) { shapeLegend <- T }
   p <- ggplot(df, aes_string(x=colnames(df)[1], y=colnames(df)[2], color="color_by", shape="shape_by")) + geom_point()
-  if (colorLegend) { p <- p + labs(color=color_name) } else { p <- p + guides(color = FALSE) }
-  if (shapeLegend) { p <- p + labs(shape=shape_name) } else { p <- p + guides(shape = FALSE) }
   if (colorLegend | shapeLegend) { 
     p <- p +
       theme(
@@ -382,8 +429,10 @@ scatterPairs <- function(object, factors = "all", showMissing=T,
       )
     
     # If color_by is numeric, define the default gradient
-    if (is.numeric(color_by)) { p <- p + scale_color_gradientn(colors=terrain.colors(10)) }
+    if (is.numeric(df$color_by)) { p <- p + scale_color_gradientn(colors=terrain.colors(10)) }
     
+    if (colorLegend) { p <- p + labs(color = name_color) } else { p <- p + guides(color = FALSE) }
+    if (shapeLegend) { p <- p + labs(shape = name_shape) }  else { p <- p + guides(shape = FALSE) }
     # Extract the legend
     legend <- GGally::grab_legend(p)
   } else {
@@ -403,7 +452,7 @@ scatterPairs <- function(object, factors = "all", showMissing=T,
           )
   
   # If color_by is numeric, define the default gradient
-  if (is.numeric(color_by)) { 
+  if (is.numeric(df$color_by)) { 
     for(i in 1:p$nrow) {
       for(j in 1:p$ncol){
         p[i,j] <- p[i,j] + scale_color_gradientn(colors=terrain.colors(10)) 

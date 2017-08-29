@@ -4,6 +4,7 @@ MOFA is a factor analysis model that integrates multi-omic data sets in an unsup
 
 For more details you can read our preprint:
 
+<![Alt text](logo.png?raw=true "Title")>
 
 ## News
 - 01/09/2017 Paper uploaded to bioRxiv and submitted for review

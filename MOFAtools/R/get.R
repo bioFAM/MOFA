@@ -82,7 +82,7 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
     weights <- weights[weights$view%in%views & weights$factor%in%factors, ]
   } else {
     weights <- lapply(views, function(m) weights[[m]][,factors,drop=F])
-    if (length(views)==1) { weights <- weights[[1]] }
+    # if (length(views)==1) { weights <- weights[[1]] }
     names(weights) <-  views
   }
   return(weights)
@@ -128,9 +128,10 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
     tmp <- lapply(views, function(m) { tmp <- reshape2::melt(trainData[[m]]); colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
     trainData <- do.call(rbind,tmp)
     trainData[,c("view","feature","sample")] <- sapply(trainData[,c("view","feature","sample")], as.character)
-  } else if ((length(views)==1) && (as.data.frame==F)) {
-    trainData <- trainData[[views]]
   }
+  # } else if ((length(views)==1) && (as.data.frame==F)) {
+  #   trainData <- trainData[[views]]
+  # }
   
   return(trainData)
 }

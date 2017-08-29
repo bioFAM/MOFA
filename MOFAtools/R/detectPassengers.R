@@ -46,8 +46,10 @@ detectPassengers <- function(object, views = "all", factors = "all", r2_threshol
   missing <- sapply(getTrainData(object,views), function(view) sampleNames(object)[apply(view, 2, function(x) all(is.na(x)))] )
   names(missing) <- viewNames(object)
   
+  
   for (factor in unique_factors) {
-    view <- names(which(r2[factor,]>=r2_threshold))
+    # view <- names(which(r2[factor,]>=r2_threshold))
+    view <- colnames(r2[which(r2[factor,]>=r2_threshold),,drop=F])
     missing_samples <- missing[[view]]
     if (length(missing_samples)>0) {
       Z[missing_samples,factor] <- NA

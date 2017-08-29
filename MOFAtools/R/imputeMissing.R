@@ -15,7 +15,7 @@
 #' @return List of imputed data, each list element corresponding to specified views.
 #' @references fill this
 #' @export
-imputeMissing <- function(object, views="all", factors = "all", type = c("inRange","response", "link")){
+imputeMissing <- function(object, views = "all", factors = "all", type = c("inRange","response", "link")){
   
   type = match.arg(type)
 

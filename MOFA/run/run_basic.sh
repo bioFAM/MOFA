@@ -7,7 +7,7 @@ delimiter=" " # Delimiter
 header_rows=0 # Do the files contain row names?
 header_cols=0 # Do the files contain column names?
 
-# Output file as .hdf5 format
+# Output path, as .hdf5 format
 outFile=( "/Users/ricard/MOFA/MOFA/test/test.hdf5" )
 
 # Define likelihoods 

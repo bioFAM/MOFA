@@ -15,6 +15,12 @@ For more details you can read our preprint:
 
 ## Installation
 
+### Python package
+pip install git+git://github.com/PMBio/scGFA
+
+### R package
+
+
 ## MOFA workflow
 
 ### Training the model

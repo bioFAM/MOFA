@@ -12,11 +12,10 @@ if __name__ == '__main__':
           license='MIT',
           packages=find_packages(),
 		      install_requires=[
-            'pandas',
-            'scipy',
-            'numpy',
-            'sklearn',
-            'argparse',
-            'h5py',
+            'pandas>=0.20',
+            'scipy>=0.19',
+            'scikit-learn>=0.18',
+            'argparse>=1.4',
+            'h5py >=2.7.0',
           ],
         )

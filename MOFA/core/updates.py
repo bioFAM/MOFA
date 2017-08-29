@@ -140,39 +140,6 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
 
         return lb_p - lb_q
 
-class AlphaW_Node_m(Gamma_Unobserved_Variational_Node):
-    def __init__(self, dim, pa, pb, qa, qb, qE=None):
-        super(AlphaW_Node_m,self).__init__(dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
-
-    def updateParameters(self):
-
-        # Collect expectations from other nodes
-        tmp = self.markov_blanket["SW"].getExpectations()
-        ES,EWW = tmp["ES"],tmp["EWW"]
-
-        # Collect parameters from the P and Q distributions of this node
-        P,Q = self.P.getParameters(), self.Q.getParameters()
-        Pa, Pb = P['a'], P['b']
-
-        # Perform updates
-        Qa = Pa + 0.5*ES.shape[0]*ES.shape[1]
-        Qb = Pb + 0.5*EWW.sum()
-
-        # Save updated parameters of the Q distribution
-        self.Q.setParameters(a=Qa, b=Qb)
-
-    def calculateELBO(self):
-        # Collect parameters and expectations
-        P,Q = self.P.getParameters(), self.Q.getParameters()
-        Pa, Pb, Qa, Qb = P['a'], P['b'], Q['a'], Q['b']
-        QE, QlnE = self.Q.getExpectations()['E'], self.Q.getExpectations()['lnE']
-
-        # Do the calculations
-        lb_p = (Pa*s.log(Pb)).sum() - special.gammaln(Pa).sum() + ((Pa-1.)*QlnE).sum() - (Pb*QE).sum()
-        lb_q = (Qa*s.log(Qb)).sum() - special.gammaln(Qa).sum() + ((Qa-1.)*QlnE).sum() - (Qb*QE).sum()
-
-        return lb_p - lb_q
-
 class AlphaW_Node_mk(Gamma_Unobserved_Variational_Node):
     def __init__(self, dim, pa, pb, qa, qb, qE=None):
         # Gamma_Unobserved_Variational_Node.__init__(self, dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
@@ -189,50 +156,6 @@ class AlphaW_Node_mk(Gamma_Unobserved_Variational_Node):
         # Collect expectations from other nodes
         tmp = self.markov_blanket["SW"].getExpectations()
         ES,EWW = tmp["ES"],tmp["EWW"]
-
-        # Collect parameters from the P and Q distributions of this node
-        P,Q = self.P.getParameters(), self.Q.getParameters()
-        Pa, Pb = P['a'], P['b']
-
-        # Perform updates
-        Qa = Pa + 0.5*ES.shape[0]
-        Qb = Pb + 0.5*EWW.sum(axis=0)
-
-        # Save updated parameters of the Q distribution
-        self.Q.setParameters(a=Qa, b=Qb)
-
-    def calculateELBO(self):
-        # Collect parameters and expectations
-        P,Q = self.P.getParameters(), self.Q.getParameters()
-        Pa, Pb, Qa, Qb = P['a'], P['b'], Q['a'], Q['b']
-        QE, QlnE = self.Q.getExpectations()['E'], self.Q.getExpectations()['lnE']
-
-        # Do the calculations
-        lb_p = (Pa*s.log(Pb)).sum() - special.gammaln(Pa).sum() + ((Pa-1.)*QlnE).sum() - (Pb*QE).sum()
-        lb_q = (Qa*s.log(Qb)).sum() - special.gammaln(Qa).sum() + ((Qa-1.)*QlnE).sum() - (Qb*QE).sum()
-
-        return lb_p - lb_q
-
-class AlphaW_Node_k(Gamma_Unobserved_Variational_Node):
-    def __init__(self, dim, pa, pb, qa, qb, qE=None):
-        # Gamma_Unobserved_Variational_Node.__init__(self, dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
-        super(AlphaW_Node_k,self).__init__(dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
-        self.precompute()
-
-    def precompute(self):
-        # self.lbconst = self.K * ( self.P.a*s.log(self.P.b) - special.gammaln(self.P.a) )
-        # self.lbconst = s.sum( self.P.params['a']*s.log(self.P.params['b']) - special.gammaln(self.P.params['a']) )
-        self.factors_axis = 0
-
-    def updateParameters(self):
-
-        # Collect expectations from other nodes
-        tmp = self.markov_blanket["SW"].getExpectations()
-
-        # Concatenate
-        M = len(tmp)
-        ES = s.concatenate([tmp[m]["ES"] for m in xrange(M)],axis=0)
-        EWW = s.concatenate([tmp[m]["EWW"] for m in xrange(M)],axis=0)
 
         # Collect parameters from the P and Q distributions of this node
         P,Q = self.P.getParameters(), self.Q.getParameters()
@@ -563,59 +486,6 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         lb_q = -(s.log(Qvar).sum() + self.N*len(latent_variables))/2.
 
         return lb_p-lb_q
-
-class AlphaZ_Node(Gamma_Unobserved_Variational_Node):
-    def __init__(self, dim, pa, pb, qa, qb, qE=None):
-        # Gamma_Unobserved_Variational_Node.__init__(self, dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
-        super(AlphaZ_Node,self).__init__(dim=dim, pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
-        self.precompute()
-
-    def precompute(self):
-        self.factors_axis = 0
-
-    def updateParameters(self):
-
-        # Collect expectations from other nodes
-        Ztmp = self.markov_blanket["Z"].getExpectations()
-        Z, ZZ = Ztmp["E"], Ztmp["E2"]
-
-        if 'Mu' in self.markov_blanket:
-            Mutmp = self.markov_blanket['Mu'].getExpectations()
-            MuE, MuE2 = Mutmp['E'], Mutmp['E2']
-        else:
-            MuE = self.markov_blanket['Z'].P.getParameters()["mean"]
-            MuE2 = s.zeros(Z.shape)
-
-        # Collect parameters from the P distributions of this node
-        P = self.P.getParameters()
-        Pa, Pb = P['a'], P['b']
-
-        # Perform updates
-        Qa = Pa + 0.5*Z.shape[0]
-        Qb = Pb + 0.5*ZZ.sum(axis=0)
-        Qb -= 2*(Z*MuE).sum(axis=0)
-        Qb += MuE2.sum(axis=0)
-
-        # Save updated parameters of the Q distribution
-        self.Q.setParameters(a=Qa, b=Qb)
-
-    def calculateELBO(self):
-        # Collect parameters and expectations
-        P,Q = self.P.getParameters(), self.Q.getParameters()
-        Pa, Pb, Qa, Qb = P['a'], P['b'], Q['a'], Q['b']
-        QE, QlnE = self.Q.expectations['E'], self.Q.expectations['lnE']
-
-        # This ELBO term contains only cross entropy between Q and P,and entropy of Q. So the covariates should not intervene at all
-        latent_variables = self.markov_blanket["Z"].getLvIndex()
-        Pa, Pb, Qa, Qb = Pa[latent_variables], Pb[latent_variables], Qa[latent_variables], Qb[latent_variables]
-        QE, QlnE = QE[latent_variables], QlnE[latent_variables]
-
-        # Do the calculations
-        # lb_p = s.nansum( self.P.params['a']*s.log(self.P.params['b']) - special.gammaln(self.P.params['a']) ) + s.nansum((Pa-1)*QlnE) - s.nansum(Pb*QE)
-        lb_p = (Pa*s.log(Pb)).sum() - (special.gammaln(Pa)).sum() + ((Pa-1)*QlnE).sum() - (Pb*QE).sum()
-        lb_q = (Qa*s.log(Qb)).sum() + ((Qa-1)*QlnE).sum() - (Qb*QE).sum() - special.gammaln(Qa).sum()
-
-        return lb_p - lb_q
 
 class MuZ_Node(UnivariateGaussian_Unobserved_Variational_Node):
     """ """

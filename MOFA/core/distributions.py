@@ -1,3 +1,17 @@
+"""
+This module is used to define classes for statistical distributions
+
+Each 'Distribution' class can store an arbitrary number of distributions of the same type, this is specified in the 'dim' argument
+
+A 'Distribution' class has two main types of attributes: parameters and expectations. Both have to be defined when initialising a class.
+Note that in some distributions (Gaussian mainly) a parameter is equal to an expectation. However, they are stored as separate
+attributes and are not always necessarily equal due to E and M steps in the VB algorithm.
+
+TO-DO:
+- we should pass parametrs and expectations to Distribution() and perform sanity checks there
+- Improve initialisation of Multivariate Gaussian
+- Sanity checks on setter and getter functions
+"""
 
 import scipy as s
 import numpy.linalg as linalg
@@ -6,60 +20,48 @@ import scipy.stats as stats
 
 from utils import *
 
-"""
-This module is used to define statistical distributions in a general sense
 
-Each Distribution class can store an arbitrary number of distributions of the same type, this is specified in the 'dim' argument
-
-A Distribution class has two main types of attributes: parameters and expectations. Both have to be defined when initialising a class.
-Note that in some distributions (Gaussian mainly) a parameter is equal to an expectation. However, they are stored as separate
-attributes and are not always necessarily equal (i.e. VBEM algorithm).
-
-There are cases (mainly with the BernoulliGaussian distribution) where some expectations are quite complex and
-require expectations from other distributions. In that case, I prefer to define the expectations together with the updates
-of the corresponding node, instead of doing it here.
-
-TO-DO:
-- we should pass parametrs and expectations to Distribution() and perform sanity checks there
-- Improve initialisation of Multivariate Gaussian
-- Sanity checks on setter and getter functions
-"""
 
 # General class for probability distributions
 class Distribution(object):
-    """ Abstract class for a distribution """
+    """ General class for a statistical distribution """
     def __init__(self, dim):
         self.dim = dim
 
     def density(self):
+        """ General method to calculate density """
         pass
     def loglik(self):
+        """ General method to calculate log likelihood """
         pass
     def sample(self):
+        """ General method to sample from the distribution """
         pass
     def entropy(self):
+        """ General method to calculate entropy """
         pass
     def updateExpectations(self):
+        """ General method to update expectations """
         pass
 
     def getParameters(self):
-        # Getter function for parameters
+        """ General getter function for parameters """
         return self.params
 
     def setParameters(self,**params):
-        # Setter function for parameters
+        """ General setter function for parameters """
         self.params = params
 
     def getExpectation(self):
-        # Getter function for expectations
+        """ General getter function for expectations """
         return self.expectations['E']
 
     def getExpectations(self):
-        # Getter function for expectations
+        """ General setter function for expectations """
         return self.expectations
 
     def CheckDimensionalities(self):
-        # Method to do a sanity check on the dimensionalities
+        """ General method to do a sanity check on the dimensionalities """
         # p_dim = set(map(s.shape, self.params.values()))
         e_dim = set(map(s.shape, self.expectations.values()))
         # assert len(p_dim) == 1, "Parameters have different dimensionalities"
@@ -67,9 +69,15 @@ class Distribution(object):
         # assert e_dim == p_dim, "Parameters and Expectations have different dimensionality"
 
     def removeDimensions(self, axis, idx):
-        # Method to remove undesired dimensions
-        # - axis (int): axis from where to remove the elements
-        # - idx (numpy array): indices of the elements to remove
+        """ General method to remove undesired dimensions 
+
+        PARAMETERS
+        ----------
+        axis: int 
+            axis from where to remove the elements
+        idx: list or numpy array
+            indices of the elements to remove
+        """
         assert axis <= len(self.dim)
         assert s.all(idx < self.dim[axis])
         for k in self.params.keys(): self.params[k] = s.delete(self.params[k], idx, axis)
@@ -77,8 +85,15 @@ class Distribution(object):
         self.updateDim(axis=axis, new_dim=self.dim[axis]-len(idx))
 
     def updateDim(self, axis, new_dim):
-        # Function to update the dimensionality of a particular axis
-        # this seems inefficient but tuples cannot be modified...
+        """ Method to update the dimensionality of a particular axis. This method is a bit inefficient but we store dimensionalities with tuples and they cannot be modified 
+
+        PARAMETERS
+        ----------
+        axis: int
+            axis to be updated
+        new_dim: int
+            updated dimensionality
+        """
         dim = list(self.dim)
         dim[axis] = new_dim
         self.dim = tuple(dim)
@@ -86,10 +101,8 @@ class Distribution(object):
 # Specific classes for probability distributions
 class MultivariateGaussian(Distribution):
     """
-    Class for a multivariate Gaussian distribution. This class can store N multivate
-    Gaussian Distributions of dimensionality D each.
-    Here we assume that the data factorises over samples (rows),
-    so we have N distributions of dimensionality D each.
+    Class to define multivariate Gaussian distribution. 
+    This class can store N multivate Gaussian Distributions of dimensionality D each.
 
     Equations:
     p(X|Mu,Sigma) = 1/(2pi)^{D/2} * 1/(|Sigma|^0.5) * exp( -0.5*(X-Mu)^{T} Sigma^{-1} (X-Mu) )
@@ -138,8 +151,6 @@ class MultivariateGaussian(Distribution):
             self.updateExpectations()
         else:
             self.expectations = { 'E':E }
-
-        # TO-DO: SANITY CHECKS ON EXPECTATIONS
 
 
     def updateExpectations(self):
@@ -190,7 +201,7 @@ class MultivariateGaussian(Distribution):
         # return ( 0.5*(tmp + (self.dim[0]*self.dim[1])*(1+s.log(2*pi)) ).sum() )
 class UnivariateGaussian(Distribution):
     """
-    Class for an arbitrary number of univariate Gaussian distributions
+    Class to define univariate Gaussian distributions
 
     Equations:
     Class for a univariate Gaussian distributed node
@@ -244,7 +255,7 @@ class UnivariateGaussian(Distribution):
         return s.sum( 0.5*s.log(self.params['var']) + 0.5*(1+s.log(2*s.pi)) )
 class Gamma(Distribution):
     """
-    This class can store an arbitrary number of Gamma distributions
+    Class to define Gamma distributions
 
     Equations:
     p(x|a,b) = (1/Gamma(a)) * b^a * x^(a-1) * e^(-b*x)
@@ -286,8 +297,7 @@ class Gamma(Distribution):
         return s.sum( -s.log(special.gamma(self.params['a'])) + self.params['a']*s.log(self.params['b']) * (self.params['a']-1)*s.log(x) -self.params['b']*x )
 class Poisson(Distribution):
     """
-    Class for a Poisson distribution.
-    This class can store an arbitrary number of Poisson distributions
+    Class to define Poisson distributions.
 
     Equations:
     p(x|theta) = theta**x * exp(-theta) * 1/theta!
@@ -333,7 +343,7 @@ class Poisson(Distribution):
         return s.sum( x*s.log(theta) - theta - s.log(s.misc.factorial(x)) )
 class Bernoulli(Distribution):
     """
-    Class to store an arbitrary number of Bernoulli distributions
+    Class to define Bernoulli distributions
 
     Equations:
 
@@ -367,8 +377,7 @@ class Bernoulli(Distribution):
         return s.sum( x*self.params['theta'] + (1-x)*(1-self.params['theta']) )
 class BernoulliGaussian(Distribution):
     """
-    Class to store an arbitrary number of Bernoulli-Gaussian distributions (see paper Spike and Slab
-    Variational Inference for Multi-Task and Multiple Kernel Learning by Titsias and Gredilla)
+    Class to define a Bernoulli-Gaussian distributions (for more information see Titsias and Gredilla, 2014)
 
     The best way to characterise a joint Bernoulli-Gaussian distribution P(w,s) is by considering
     its factorisation p(w|s)p(s) where s is a bernoulli distribution and w|s=0 and w|s=1 are normal distributions
@@ -449,7 +458,7 @@ class BernoulliGaussian(Distribution):
         self.dim = tuple(dim)
 class Binomial(Distribution):
     """
-    Class to store an arbitrary number of Binomial distributions
+    Class to define Binomial distributions
 
     Equations:
     p(x|N,theta) = binom(N,x) * theta**(x) * (1-theta)**(N-x)
@@ -492,7 +501,7 @@ class Binomial(Distribution):
         return s.sum( s.log(special.binom(self.params["N"],x)) + x*s.log(self.params["theta"]) + (self.params["N"]-x)*s.log(1-self.params["theta"]) )
 class Beta(Distribution):
     """
-    Class to store an arbitrary number of Beta distributions
+    Class to define Beta distributions
 
     Equations:
     p(x|a,b) = GammaF(a+b)/(GammaF(a)*GammaF(b)) * x**(a-1) * (1-x)**(b-1)
@@ -530,8 +539,8 @@ class Beta(Distribution):
         lnEInv[s.isinf(lnEInv)] = -s.inf # there is a numerical error in lnEInv if E=1
         self.expectations = { 'E':E, 'lnE':lnE, 'lnEInv':lnEInv }
 
-if __name__ == "__main__":
-    a = Beta(dim=(10,20), a=1, b=1, E=3)
-    MultivariateGaussian(dim=(1,10), mean=stats.norm.rvs(loc=0, scale=1, size=(10,)), cov=s.eye(10,10), E=None)
-    exit()
+# if __name__ == "__main__":
+#     a = Beta(dim=(10,20), a=1, b=1, E=3)
+#     MultivariateGaussian(dim=(1,10), mean=stats.norm.rvs(loc=0, scale=1, size=(10,)), cov=s.eye(10,10), E=None)
+#     exit()
 

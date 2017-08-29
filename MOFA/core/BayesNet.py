@@ -1,3 +1,13 @@
+
+"""
+This module is used to define the class containing the entire Bayesian Network,
+and the corresponding attributes/methods to train the model, set algorithmic options, calculate lower bound, etc.
+
+To-do:
+- default values for schedule and options
+
+"""
+
 from __future__ import division
 from time import time
 import os
@@ -5,24 +15,10 @@ import scipy as s
 import pandas as pd
 import sys
 
-from nodes import Node
-from variational_nodes import Unobserved_Variational_Node, Variational_Node
+from variational_nodes import Variational_Node
 from utils import corr, nans
 
-"""
-This module is used to define the class containing the entire Bayesian Network,
-and the corresponding attributes/methods to train the model, set algorithmic options, calculate lower bound, etc.
 
-A Bayesian network requires the following information:
-- dim: Keyworded dimensionalities (N=10, D=100, ...)
-- nodes: instances (or children) of 'Node' class.
-- schedule: order of nodes in the updates
-- Monitoring and algorithmic options: verbosity, tolerance for convergence, number of iterations, lower bound frequency...
-
-To-do:
-- default values for schedule and options
-
-"""
 
 class BayesNet(object):
     def __init__(self, dim, nodes, schedule, options, trial=1):
@@ -30,7 +26,7 @@ class BayesNet(object):
         #  nodes: dictionary with all nodes where the keys are the name of the node and the values are instances the 'Node' class
         #  schedule: list or tuple with the names of the nodes to be updated in the given order. Nodes not present in schedule will not be updated
         #  options: training options, such as maximum number of iterations, training options, etc.
-        #  trial: this is an auxiliary variable for parallel multitrial running
+        #  trial: this is an auxiliary variable for parallelised running of multiple trials
 
         self.dim = dim
         self.nodes = nodes
@@ -41,13 +37,23 @@ class BayesNet(object):
         # Training flag
         self.trained = False
 
-    def removeInactiveFactors(self, by_norm=None, by_pvar=None, by_cor=None, by_r2=None, by_sharedness=None):
-        # Method to remove inactive factors
-        # - by_norm: threshold to shut down factors based on the norm of the latent variable
-        # - by_pvar: threshold to shut down factors based on the proportion of variance explained
-        # - by_cor: threshold to shut down factors based on the correlation between variables
-        # - by_r2: threshold to shut down factors based on the coefficient of determination
+    def removeInactiveFactors(self, by_norm=None, by_pvar=None, by_cor=None, by_r2=None):
+        """Method to remove inactive factors
 
+        PARAMETERS
+        ----------
+        by_norm: float
+            threshold to shut down factors based on the norm of the latent variable
+            CURRENTLY NOT IMPLEMENTED
+        by_pvar: float
+            threshold to shut down factors based on the proportion of variance explained
+            CURRENTLY NOT IMPLEMENTED
+        by_cor: float
+            threshold to shut down factors based on the correlation between latent variables
+            CURRENTLY NOT IMPLEMENTED
+        by_r2: float
+            threshold to shut down factors based on the coefficient of determination
+        """
         drop_dic = {}
 
         # Shut down based on norm of latent variable vectors
@@ -59,32 +65,6 @@ class BayesNet(object):
         #     drop_dic["by_norm"] = s.where((Z**2).mean(axis=0) < by_norm)[0]
         #     if len(drop_dic["by_norm"]) > 0:
         #         drop_dic["by_norm"] = [ s.random.choice(drop_dic["by_norm"]) ]
-
-        ### test ###
-        # print "maximum correlation:"
-        # Z = self.nodes["Z"].getExpectation()
-        # r = s.absolute(corr(Z.T,Z.T))
-        # s.fill_diagonal(r,0)
-        # r *= s.tri(*r.shape)
-        # print r.max()
-
-        # alpha = self.nodes["AlphaW"].getExpectation()
-        # print (alpha)
-
-        # # print "SW:"
-        # SW = self.nodes["SW"].getExpectation()
-        # for m in xrange(len(SW)):
-        #     print str(m) + "= " + str(s.absolute(SW[m]>0.001).sum(axis=0))
-
-        # SW = s.concatenate(self.nodes["SW"].getExpectation(), axis=0)
-        # print (s.absolute(SW)>0.01).sum(axis=0)
-        # print (s.absolute(SW)).mean(axis=0)
-        # print "Z norm:"
-        # Z = self.nodes["Z"].getExpectation()
-        # print (Z**2).mean(axis=0)
-        # print "max Z"
-        # print Z.max(axis=0)
-        ### test ###
 
         # Shut down based on coefficient of determination with respect to the residual variance
         #   Advantages: it takes into account both weights and latent variables, is based on how well the model fits the data
@@ -130,13 +110,6 @@ class BayesNet(object):
                 if len(drop_dic["by_r2"]) > 0:
                     drop_dic["by_r2"] = [ s.random.choice(drop_dic["by_r2"]) ]
 
-            if by_sharedness is not None:
-                print "Not implemented"
-                exit()
-                # drop_dic["by_sharedness"] = s.where( (all_r2>by_r2).sum(axis=0) < 2)[0]
-                # if len(drop_dic["by_r2"]) > 0:
-                #     drop_dic["by_r2"] = [ s.random.choice(drop_dic["by_r2"]) ]
-
         # Shut down based on the proportion of residual variance explained by each factor
         # IT DOESNT WORK, THERE IS SOME ERROR TO BE FIXED
         #   Good: it is the proper way of doing it,
@@ -155,17 +128,17 @@ class BayesNet(object):
         #             factor_pvar[m,k] = factor_var / residual_var
         #     drop_dic['by_pvar'] = s.where( (factor_pvar>by_pvar).sum(axis=0) == 0)[0]
 
-        # Remove highly correlated factors
+        # Shut down factors that are highly correlated
         # (Q) Which of the two factors should we remove? Maybe the one that explains less variation
-        if by_cor is not None:
-            Z = self.nodes["Z"].getExpectation()
-            r = s.absolute(corr(Z.T,Z.T))
-            s.fill_diagonal(r,0)
-            r *= s.tri(*r.shape)
-            drop_dic["by_cor"] = s.where(r>by_cor)[0]
-            if len(drop_dic["by_cor"]) > 0:
-                # Drop just one latent variable, chosen randomly
-                drop_dic["by_cor"] = [ s.random.choice(drop_dic["by_cor"]) ]
+        # if by_cor is not None:
+        #     Z = self.nodes["Z"].getExpectation()
+        #     r = s.absolute(corr(Z.T,Z.T))
+        #     s.fill_diagonal(r,0)
+        #     r *= s.tri(*r.shape)
+        #     drop_dic["by_cor"] = s.where(r>by_cor)[0]
+        #     if len(drop_dic["by_cor"]) > 0:
+        #         # Drop just one latent variable, chosen randomly
+        #         drop_dic["by_cor"] = [ s.random.choice(drop_dic["by_cor"]) ]
 
         # Drop the factors
         drop = s.unique(s.concatenate(drop_dic.values()))
@@ -181,7 +154,7 @@ class BayesNet(object):
         pass
 
     def iterate(self):
-        # Method to start training iterations
+        """Method to start iterating and updating the variables using the VB algorithm"""
 
         # Define some variables to monitor training
         nodes = self.getVariationalNodes().keys()
@@ -249,8 +222,14 @@ class BayesNet(object):
         self.trained = True
 
     def getParameters(self, *nodes):
-        # Method to collect all parameters of a given set of nodes (all by default)
-        # - nodes: name of the nodes
+        """Method to collect all parameters of a given set of nodes (all by default)
+
+        PARAMETERS
+        ----------
+        nodes: list
+            name of the nodes
+        """
+
         if len(nodes) == 0: nodes = self.nodes.keys()
         params = {}
         for node in nodes:
@@ -259,8 +238,15 @@ class BayesNet(object):
         return params
 
     def getExpectations(self, only_first_moments=False, *nodes):
-        # Method to collect all expectations of a given set of nodes (all by default)
-        # - nodes: name of the nodes
+        """Method to collect all expectations of a given set of nodes (all by default)
+        PARAMETERS
+        ----------
+        only_first_moments: bool
+            get only first moments?
+        nodes: list
+            name of the nodes
+        """
+
         if len(nodes) == 0: nodes = self.nodes.keys()
         expectations = {}
         for node in nodes:
@@ -272,27 +258,27 @@ class BayesNet(object):
         return expectations
 
     def getNodes(self):
-        # Method to return all nodes
+        """ Method to return all nodes """
         return self.nodes
 
     def getVariationalNodes(self):
-        # Method to return all variational nodes
+        """ Method to return all variational nodes """
         return { k:v for k,v in self.nodes.iteritems() if isinstance(v,Variational_Node) }
 
     def getTrainingStats(self):
-        # Method to return training statistics
+        """ Method to return training statistics """
         return self.train_stats
 
     def getTrainingOpts(self):
-        # Method to return training options
+        """ Method to return training options """
         return self.options
 
     def getTrainingData(self):
-        # Method to return training options
+        """ Method to return training data """
         return self.nodes["Y"].getValues()
 
     def calculateELBO(self, *nodes):
-        # Method to calculate the Evidence Lower Bound for a set of nodes
+        """Method to calculate the Evidence Lower Bound of the model"""
         if len(nodes) == 0: nodes = self.getVariationalNodes().keys()
         elbo = pd.Series(s.zeros(len(nodes)+1), index=list(nodes)+["total"])
         for node in nodes:

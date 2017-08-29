@@ -1,25 +1,23 @@
-import scipy as s
-import numpy as np
-
-
 """
 Module to define general nodes in a Bayesian network
 
-All nodes (variational or not variational) have two main attributes:
+All nodes have two main attributes:
 - dim: dimensionality of the node
 - markov_blanket: the markov blanket of the node
 
 """
 
+import scipy as s
+import numpy as np
+
+
 class Node(object):
-    """
-    General class for a node in a Bayesian network
-    """
+    """General class for a node in a Bayesian network"""
     def __init__(self, dim):
     	self.dim = dim
 
     def addMarkovBlanket(self, **kwargs):
-    	# Method to define the Markov blanket of the node
+    	"""Method to define the Markov blanket of the node"""
         if hasattr(self, 'markov_blanket'):
             for k,v in kwargs.iteritems():
                 if k in self.markov_blanket.keys():
@@ -31,71 +29,59 @@ class Node(object):
             self.markov_blanket = kwargs
 
     def getMarkovBlanket(self):
+        """ Method to return the Markov blanket of the node """
         return self.markov_blanket
 
     def update(self):
-        # General method to update both parameters and expectations
+        """ General method to update both parameters and expectations of the node """
         self.updateParameters()
         self.updateExpectations()
 
     def updateExpectations(self):
-        # General method to update the expectations of a node
+        """ General method to update the expectations of a node """
         pass
 
     def getDimensions(self):
+        """ Method to return dimensionality of the node """
         return self.dim
 
     def getExpectations(self):
-        # General method to get the expectations of a node
+        """ General method to get all expectations of a node """
         pass
 
     def getExpectation(self):
-        # General method to get the first moment (expectation) of a node
+        """ General method to get the first moment (expectation) of a node """
         pass
 
     def updateParameters(self):
-        # General function to update parameters of the Q distribution
+        """ General function to update parameters of the node """
         pass
 
     def getParameters(self):
-        # General function to get the parameters of the distributions
+        """ General function to get the parameters of the node """
         pass
 
     def updateDim(self, axis, new_dim):
-        # Method to update the dimensionality of a node
-        # this seems inefficient but self.dim is a tuple and it cannot be modified using
-        # something like self.dim[axis] = new_dim
+        """ Method to update the dimensionality of a node """
         dim = list(self.dim)
         dim[axis] = new_dim
         self.dim = tuple(dim)
 
 class Constant_Node(Node):
-    """
-    General class for a constant node in a Bayesian network
+    """ General class for a constant node in a Bayesian network
     Constant nodes do not have expectations or parameters but just values.
-    However, for technical reasons Expectations are defined to be the same as the values
+    However, for technical reasons the constant cvalues are defined as expectations
     """
     def __init__(self, dim, value):
         self.dim = dim
         if isinstance(value,(int,float)):
             self.value = value * s.ones(dim)
-        # elif value.ndim == 1:
-        #     if len(value) == dim[0]:
-        #         self.value = np.repeat(value[:, None], dim[1], axis = 1)
-        #     elif len(value) == dim[1]:
-        #         self.value = np.repeat(value[None, :], dim[0], axis = 0)
-        #     else:
-        #         print 'dimensionality mismatch'
-        #         exit(1)
         else:
             assert value.shape == dim, "dimensionality mismatch"
             self.value = value
 
     def getValue(self):
         return self.value
-
-    # def getParameters(self):
-        # return self.value
 
     def getExpectation(self):
         return self.getValue()

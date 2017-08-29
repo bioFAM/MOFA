@@ -8,42 +8,47 @@ from run_utils import *
 
 # Read arguments
 p = argparse.ArgumentParser( description='Run script for MOFA' )
+
+# I/O
 p.add_argument( '--inFiles',           type=str, nargs='+', required=True,                  help='Input data files (including extension)' )
 p.add_argument( '--outFile',           type=str, required=True,                             help='Output data file (hdf5 format)' )
 p.add_argument( '--delimiter',         type=str, default=" ",                               help='Delimiter for input files' )
-p.add_argument( '--header_cols',       action='store_true',                                 help='Do the input file(s) contain a header with column names?' )
-p.add_argument( '--header_rows',       action='store_true',                                 help='Do the input file(s) contain row names?' )
-p.add_argument( '--likelihoods',       type=str, nargs='+', required=True,                  help='Likelihoods (bernoulli, gaussian, poisson, binomial)')
-p.add_argument( '--views',             type=str, nargs='+', required=True,                  help='View names')
-p.add_argument( '--covariatesFile',    type=str,                                            help='Input covariate data' )
-p.add_argument( '--scale_covariates',  type=int, nargs='+', default=0,                      help='' )
-p.add_argument( '--schedule',          type=str, nargs="+", required=True,                  help='Update schedule' )
-p.add_argument( '--learnTheta',        type=int, nargs="+", default=0,                      help='learn the sparsity parameter from the spike and slab?' )
-p.add_argument( '--learnMean',         action='store_true',                                 help='learn the feature mean?' )
-p.add_argument( '--initTheta',         type=float, nargs="+", default=1. ,                  help='hyperparameter theta in case that learnTheta is set to False')
-p.add_argument( '--startSparsity',     type=int, default=1,                                 help='')
-p.add_argument( '--ThetaDir',          type=str, default="" ,                               help='BLABLA')
-p.add_argument( '--tolerance',         type=float, default=0.1 ,                            help='tolerance for convergence (deltaELBO)')
-p.add_argument( '--startDrop',         type=int, default=999999 ,                           help='First iteration to start dropping factors')
-p.add_argument( '--freqDrop',          type=int, default=999999 ,                           help='Frequency for dropping factors')
-p.add_argument( '--maskAtRandom',      type=float,nargs="+", default=None,                  help='Fraction of data to mask per view')
-p.add_argument( '--maskNSamples',      type=int,nargs="+", default=None,                    help='Number of patients to mask per view')
-p.add_argument( '--nostop',            action='store_true',                                 help='Do not stop even when convergence criterion is met?' )
-p.add_argument( '--ardZ',              action='store_true',                                 help='Automatic Relevance Determination on the latent variables?' )
-p.add_argument( '--ardW',              type=str, default="mk" ,                             help=' "m" = Per view, "k" = Per factor, "mk" = Per view and factor' )
-p.add_argument( '--dropNorm',          type=float, default=None ,                           help='Threshold to drop latent variables based on norm of the latent variable' )
-p.add_argument( '--dropR2',            type=float, default=None ,                           help='Threshold to drop latent variables based on coefficient of determination' )
-p.add_argument( '--seed',              type=int, default=0 ,                                help='seed' )
-p.add_argument( '--center_features',   action="store_true",                                 help='Center the features?' )
+p.add_argument( '--covariatesFile',    type=str,                                            help='Input data file for covariates' )
+p.add_argument( '--header_cols',       action='store_true',                                 help='Do the input files contain column names?' )
+p.add_argument( '--header_rows',       action='store_true',                                 help='Do the input files contain row names?' )
+
+# Data options
+p.add_argument( '--center_features',   action="store_true",                                 help='Center the features to zero-mean?' )
 p.add_argument( '--scale_features',    action="store_true",                                 help='Scale the features to unit variance?' )
 p.add_argument( '--scale_views',       action="store_true",                                 help='Scale the views to unit variance?' )
-p.add_argument( '--RemoveIncompleteSamples',action="store_true",                            help='Remove samples with incomplete views?' )
-p.add_argument( '-n', '--ntrials',     type=int, default=1,                                 help='Number of trials' )
-p.add_argument( '-c', '--ncores',      type=int, default=1,                                 help='Number of cores' )
-p.add_argument( '-i', '--iter',        type=int, default=10,                                help='Number of iterations' )
-p.add_argument( '-lb', '--elbofreq',   type=int, default=1,                                 help='Frequency of computation of ELBO' )
-p.add_argument( '-k', '--factors',     type=int, default=10,                                help='Number of latent variables')
-p.add_argument( '-v', '--verbose',     action='store_true',                                 help='More detailed log messages')
+p.add_argument( '--scale_covariates',  type=int, nargs='+', default=0,                      help='' )
+p.add_argument( '--maskAtRandom',      type=float,nargs="+", default=None,                  help='Fraction of data to mask per view')
+p.add_argument( '--maskNSamples',      type=int,nargs="+", default=None,                    help='Number of patients to mask per view')
+p.add_argument( '--RemoveIncompleteSamples', action="store_true",                           help='Remove samples with incomplete views?' )
+
+# Model options
+p.add_argument( '--factors',           type=int, default=10,                                help='Initial number of latent variables')
+p.add_argument( '--likelihoods',       type=str, nargs='+', required=True,                  help='Likelihood per view, current options are bernoulli, gaussian, poisson')
+p.add_argument( '--views',             type=str, nargs='+', required=True,                  help='View names')
+p.add_argument( '--schedule',          type=str, nargs="+", default=None,                   help='Update schedule, default is ( Y SW Z AlphaW Theta Tau )' )
+p.add_argument( '--learnTheta',        type=int, nargs="+", default=1,                      help='Learn the sparsity parameter from the spike-and-slab (theta)?' )
+p.add_argument( '--initTheta',         type=float, nargs="+", default=1. ,                  help='Initialisation for the sparsity parameter of the spike-and-slab (theta)')
+p.add_argument( '--learnMean',         action='store_true',                                 help='Learn the feature-wise mean?' )
+
+# Training options
+p.add_argument( '--elbofreq',          type=int, default=1,                                 help='Frequency of computation of ELBO' )
+p.add_argument( '--iter',              type=int, default=5000,                              help='Maximum number of iterations' )
+p.add_argument( '--ntrials',           type=int, default=1,                                 help='Number of trials' )
+p.add_argument( '--startSparsity',     type=int, default=100,                               help='Iteration to activate the spike-and-slab')
+p.add_argument( '--tolerance',         type=float, default=0.1 ,                            help='Tolerance for convergence (based on the change in ELBO)')
+p.add_argument( '--startDrop',         type=int, default=999999 ,                           help='First iteration to start dropping factors')
+p.add_argument( '--freqDrop',          type=int, default=999999 ,                           help='Frequency for dropping factors')
+p.add_argument( '--dropR2',            type=float, default=None ,                           help='Threshold to drop latent variables based on coefficient of determination' )
+p.add_argument( '--nostop',            action='store_true',                                 help='Do not stop when convergence criterion is met' )
+p.add_argument( '--verbose',           action='store_true',                                 help='Use more detailed log messages?')
+p.add_argument( '--seed',              type=int, default=0 ,                                help='Random seed' )
+
+
 args = p.parse_args()
 
 #############################
@@ -56,12 +61,11 @@ data_opts = {}
 data_opts['input_files'] = args.inFiles
 data_opts['outfile'] = args.outFile
 data_opts['delimiter'] = args.delimiter
-data_opts['ThetaDir'] = args.ThetaDir
 
 # View names
 data_opts['view_names'] = args.views
 
-# ...
+# Headers
 if args.header_rows:
   data_opts['rownames'] = 0
 else:
@@ -71,8 +75,6 @@ if args.header_cols:
   data_opts['colnames'] = 0
 else:
   data_opts['colnames'] = None
-
-data_opts['RemoveIncompleteSamples'] = args.RemoveIncompleteSamples
 
 #####################
 ## Data processing ##
@@ -115,6 +117,8 @@ if args.maskNSamples is not None:
 else:
   data_opts['maskNSamples'] = [0]*M
 
+# Remove incomplete samples?
+data_opts['RemoveIncompleteSamples'] = args.RemoveIncompleteSamples
 
 ###############
 ## Load data ##
@@ -157,10 +161,6 @@ if args.learnMean:
     data_opts['scale_covariates'] = [False]
   args.factors += 1
 
-# Load known annotations
-if data_opts["ThetaDir"] != "":
-  theta_annotations = loadTheta(data_opts)
-
 
 ##############################
 ## Define the model options ##
@@ -179,15 +179,7 @@ assert set(model_opts['likelihood']).issubset(set(["gaussian","bernoulli","poiss
 # Define whether to learn the feature-wise means
 model_opts["learnMean"] = args.learnMean
 
-# Define whether to learn the variance of the latent variables
-model_opts['ardZ'] = args.ardZ
-
-# Define how to learn the variance of the weights
-model_opts['ardW'] = args.ardW
-
 # Define for which factors and views should we learn 'theta', the sparsity of the factor
-# if data_opts["ThetaDir"] != "":
-  # args.learnTheta = False
 if type(args.learnTheta) == int:
   model_opts['learnTheta'] = [s.ones(K)*args.learnTheta for m in xrange(M)]
 elif type(args.learnTheta) == list:
@@ -198,14 +190,10 @@ else:
    exit()
 
 # Define schedule of updates
-model_opts['schedule'] = args.schedule
-
-# Define known annotations
-if data_opts["ThetaDir"] != "":
-  for m in xrange(M):
-    if theta_annotations[m] is not None:
-      idx = s.arange(start=K-theta_annotations[m].shape[1], stop=K)
-      model_opts['learnTheta'][m][idx] = 0.
+if args.schedule is None:
+  model_opts['schedule'] = ( "Y", "SW", "Z", "AlphaW", "Theta", "Tau" )
+else:
+  model_opts['schedule'] = args.schedule
 
 
 ####################################
@@ -214,20 +202,11 @@ if data_opts["ThetaDir"] != "":
 
 # Latent Variables
 model_opts["priorZ"] = { 'mean':s.zeros((N,K)) }
-if model_opts['ardZ']:
-  model_opts["priorZ"]['var'] = s.ones((K,))*s.nan
-  model_opts["priorAlphaZ"] = { 'a':s.ones(K)*1e-3, 'b':s.ones(K)*1e-3 }
-else:
-  model_opts["priorZ"]['var'] = s.ones((K,))*1.
+model_opts["priorZ"]['var'] = s.ones((K,))*1.
 
 # Weights
 model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M } # Not required
-if model_opts['ardW'] == "m":
-  model_opts["priorAlphaW"] = { 'a':[1e-3]*M, 'b':[1e-3]*M }
-elif model_opts['ardW'] == "mk":
-  model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-14]*M, 'b':[s.ones(K)*1e-14]*M }
-elif model_opts['ardW'] == "k":
-  model_opts["priorAlphaW"] = { 'a':s.ones(K)*1e-3, 'b':s.ones(K)*1e-3 }
+model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-14]*M, 'b':[s.ones(K)*1e-14]*M }
 
 # Theta
 model_opts["priorTheta"] = { 'a':[s.ones(K,) for m in xrange(M)], 'b':[s.ones(K,) for m in xrange(M)] }
@@ -247,20 +226,12 @@ model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-14 for m in xrange(M)], 'b':[s.o
 
 # Latent variables
 model_opts["initZ"] = { 'mean':"random", 'var':s.ones((K,)), 'E':None, 'E2':None }
-if model_opts['ardZ']:
-  model_opts["initAlphaZ"] = { 'a':s.nan, 'b':s.nan, 'E':s.ones(K)*1. }
 
 # Tau
 model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(D[m])*100 for m in xrange(M)] }
 
 # ARD of weights
-if model_opts['ardW'] == "m":
-  # model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[10.]*M }
-  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[ K*D[m]/(data[m].std(axis=0)**2 - 1./model_opts["initTau"]["E"][m]).sum() for m in xrange(M) ] }
-elif model_opts['ardW'] == "mk":
-  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*1. for m in xrange(M)] }
-elif model_opts['ardW'] == "k":
-  model_opts["initAlphaW"] = { 'a':s.nan*s.ones(K), 'b':s.nan*s.ones(K), 'E':s.ones(K)*100. }
+model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*1. for m in xrange(M)] }
 
 # Theta
 model_opts["initTheta"] = { 'a':[s.ones(K,) for m in xrange(M)], 'b':[s.ones(K,) for m in xrange(M)], 'E':[s.nan*s.zeros((D[m],K)) for m in xrange(M)] }
@@ -274,9 +245,6 @@ else:
    exit()
 
 for m in xrange(M):
-  if data_opts["ThetaDir"] != "":
-    if theta_annotations[m] is not None:
-      model_opts["initTheta"]["E"][m][:,idx] = theta_annotations[m]
   for k in xrange(K):
     if model_opts['learnTheta'][m][k]==0.:
       model_opts["initTheta"]["a"][m][k] = s.nan
@@ -284,7 +252,6 @@ for m in xrange(M):
 
 # Weights
 model_opts["initSW"] = { 
-  # 'Theta':[s.ones((D[m],K)) for m in xrange(M)], # THIS SHOULDN BE USED
   'Theta':[ model_opts['initTheta']['E'][m] for m in xrange(M)],
   'mean_S0':[s.zeros((D[m],K)) for m in xrange(M)],
   'var_S0':[s.nan*s.ones((D[m],K)) for m in xrange(M)],
@@ -305,18 +272,12 @@ if data_opts['covariates'] is not None:
   idx = xrange(data_opts['covariates'].shape[1])
 
   # Ignore prior distributions
-  if model_opts['ardZ']:
-    model_opts["priorZ"]["mean"][:,idx] = s.nan
-    model_opts["priorAlphaZ"]["a"][idx] = s.nan
-    model_opts["priorAlphaZ"]["b"][idx] = s.nan
-  else:
-    model_opts["priorZ"]["var"][idx] = s.nan
+  model_opts["priorZ"]["var"][idx] = s.nan
 
   # Ignore variational distribution
   # model_opts["initZ"]["mean"][:,idx] = model_opts["covariates"]
   model_opts["initZ"]["var"][idx] = 0.
-  if model_opts['ardZ']:
-        model_opts["initAlphaZ"]["E"][idx] = s.nan
+
 
 ###########################################################
 ## Modify priors and initialisations for the mean vector ##
@@ -342,6 +303,7 @@ if model_opts["learnMean"]:
     model_opts["initTheta"]["b"][m][0] = s.nan
     model_opts["initTheta"]["E"][m][:,0] = 1.
 
+
 #################################
 ## Define the training options ##
 #################################
@@ -354,15 +316,11 @@ train_opts['maxiter'] = args.iter
 # Lower bound computation frequency
 train_opts['elbofreq'] = args.elbofreq
 
-# (NOT IMPLEMENTED) Save temporary versions of the model
-train_opts['savefreq'] = s.nan
-train_opts['savefolder'] = s.nan
-
 # Verbosity
 train_opts['verbosity'] = 2
 
 # Criteria to drop latent variables while training
-train_opts['drop'] = { "by_norm":args.dropNorm, "by_pvar":None, "by_cor":None, "by_r2":args.dropR2 }
+train_opts['drop'] = { "by_norm":None, "by_pvar":None, "by_cor":None, "by_r2":args.dropR2 }
 train_opts['startdrop'] = args.startDrop
 train_opts['freqdrop'] = args.freqDrop
 
@@ -378,8 +336,6 @@ train_opts['startSparsity'] = args.startSparsity
 # Number of trials
 train_opts['trials'] = args.ntrials
 
-# Number of cores
-train_opts['cores'] = args.ncores
 
 #####################
 ## Train the model ##
@@ -390,8 +346,4 @@ keep_best_run = False
 
 # Go!
 # runSingleTrial(data, data_opts, model_opts, train_opts, seed=None)
-# t1 = t = time()
-
 runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, args.seed)
-# t2 = time() - t1
-# s.savetxt(args.outFile, t2*np.ones(1), fmt='%.3f')

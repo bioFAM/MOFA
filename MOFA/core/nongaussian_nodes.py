@@ -1,3 +1,22 @@
+"""
+Module to define updates for non-conjugate matrix factorisation models.
+Reference: 'Fast Variational Bayesian Inference for Non-Conjugate Matrix Factorisation models' by Seeger and Bouchard (2012)
+
+PseudoY: general class for pseudodata
+    PseudoY_seeger: general class for pseudodata using seeger aproach
+        Poisson_PseudoY: Poisson likelihood
+        Bernoulli_PseudoY: Bernoulli likelihood
+        Binomial_PseudoY: Binomial likelihood (TO FINISH)
+    
+    PseudoY_Jaakkola: NOT IMPLEMENTED
+        Bernoulli_PseudoY_Jaakkola: bernoulli likelihood for Jaakkola approach (see REF)
+        Tau_Jaakkola:
+
+    Warped_PseudoY_Node (TO FINISH)
+
+
+"""
+
 from __future__ import division
 import scipy as s
 import numpy.ma as ma
@@ -8,25 +27,22 @@ from utils import sigmoid, lambdafn
 
 from warp.warping_inference import Warping_inference
 
-"""
-Module to define updates for non-conjugate matrix factorisation models using the Seeger approach
-Reference: 'Fast Variational Bayesian Inference for Non-Conjugate Matrix Factorisation models' by Seeger and Bouchard (2012)
-"""
 
-
-################
-## Pseudodata ##
-################
+##############################
+## General pseudodata nodes ##
+##############################
 
 class PseudoY(Unobserved_Variational_Node):
-    """
-    General class for pseudodata nodes
-    """
+    """ General class for pseudodata nodes """
     def __init__(self, dim, obs, params=None, E=None):
-        # Inputs:
-        #  dim (2d tuple): dimensionality of each view
-        #  obs (ndarray): observed data
-        #  E (ndarray): initial expected value of pseudodata
+        """
+        PARAMETERS
+        ----------
+         dim (2d tuple): dimensionality of each view
+         obs (ndarray): observed data
+         params:
+         E (ndarray): initial expected value of pseudodata
+        """
         Unobserved_Variational_Node.__init__(self, dim)
 
         # Initialise observed data
@@ -97,9 +113,7 @@ class PseudoY(Unobserved_Variational_Node):
 ##################
 
 class PseudoY_Seeger(PseudoY):
-    """
-    General class for pseudodata nodes
-    """
+    """ General class for pseudodata nodes using the seeger approach """
     def __init__(self, dim, obs, params=None, E=None):
         # Inputs:
         #  dim (2d tuple): dimensionality of each view
@@ -114,7 +128,8 @@ class PseudoY_Seeger(PseudoY):
 
 class Poisson_PseudoY(PseudoY_Seeger):
     """
-    Class for a Poisson pseudodata node with the following likelihood:
+    Class for a Poisson pseudodata node.
+    Likelihood:
         p(y|x) \prop gamma(x) * e^{-gamma(x)}  (1)
     where gamma(x) is a rate function that is chosen to be convex and log-concave
     A simple choise for the rate function is e^{x} but this rate function is non-robust
@@ -168,7 +183,8 @@ class Poisson_PseudoY(PseudoY_Seeger):
         return lb
 class Bernoulli_PseudoY(PseudoY_Seeger):
     """
-    Class for a Bernoulli (0,1 data) pseudodata node with the following likelihood:
+    Class for a Bernoulli (0,1 data) pseudodata node 
+    Likelihood:
         p(y|x) = (e^{yx}) / (1+e^x)  (1)
         f(x) = -log p(y|x) = log(1+e^x) - yx
 
@@ -208,7 +224,8 @@ class Bernoulli_PseudoY(PseudoY_Seeger):
         return lik
 class Binomial_PseudoY(PseudoY_Seeger):
     """
-    Class for a Binomial pseudodata node with the following likelihood:
+    Class for a Binomial pseudodata node 
+    Likelihood:
         p(x|N,theta) = p(x|N,theta) = binom(N,x) * theta**(x) * (1-theta)**(N-x)
         f(x) = -log p(x|N,theta) = -log(binom(N,x)) - x*theta - (N-x)*(1-theta)
 
@@ -266,7 +283,8 @@ class Binomial_PseudoY(PseudoY_Seeger):
 
 class Tau_Jaakkola(Node):
     """
-    Add some description....
+    Local Parameter that needs to be optimised in the Jaakkola approach.
+    For more details see Supplementary Methods 
     """
     def __init__(self, dim, value):
         Node.__init__(self, dim=dim)
@@ -293,7 +311,8 @@ class Tau_Jaakkola(Node):
         pass
 class Bernoulli_PseudoY_Jaakkola(PseudoY):
     """
-    Class for a Bernoulli (0,1 data) pseudodata node with the following likelihood:
+    Class for a Bernoulli pseudodata node using the Jaakkola approach:
+    Likelihood:
         p(y|x) = (e^{yx}) / (1+e^x)
     Following Jaakola et al and intterpreting the bound as a liklihood on gaussian pseudodata
     leads to the folllowing updates

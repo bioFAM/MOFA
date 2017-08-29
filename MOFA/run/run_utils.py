@@ -1,22 +1,36 @@
+"""
+Module with functions to initialise the model 
+
+runSingleTrial: run a single trial
+runMultipleTrial: run multiple trials, optionally in Parallel (not implemented)
+
+"""
 
 import scipy as s
 from sys import path
 from time import time
 import pandas as pd
 import numpy as np
-from joblib import Parallel, delayed
+#from joblib import Parallel, delayed
 
 from init_nodes import *
 from MOFA.run.init_nodes import *
 from MOFA.core.BayesNet import BayesNet
 from MOFA.core.utils import *
 
-"""
-To-do: initialuse MuZ
-"""
-
-# Function to run a single trial of the model
 def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, verbose=False):
+    """Method to run a single trial of a MOFA model
+    data: 
+    data_opts
+    model_opts:
+    train_opts:
+    seed:
+    trial:
+    verbose:
+
+    PARAMETERS
+    ----------
+    """
 
     # set the seed
     if seed is None or seed==0:
@@ -33,13 +47,10 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     ## Perform sanity checks ##
     ###########################
 
+    # Create output directory
     if not os.path.isdir(os.path.dirname(data_opts["outfile"])):
         print "Output directory does not exist, creating it..."
         os.makedirs(os.path.dirname(data_opts["outfile"]))
-
-    # If it doesnt exist, create the output folder
-    # outdir = os.path.dirname(data_opts['outfile'])
-    # if not os.path.exists(outdir): os.makedirs(outdir)
 
     ####################
     ## Parse the data ##
@@ -64,8 +75,7 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
 
     ## Define and initialise the nodes ##
 
-    # if verbose: print "Initialising nodes...\n"
-
+    if verbose: print "Initialising nodes...\n"
     init = initModel(dim, data, model_opts["likelihood"], seed=seed)
 
     # Latent variables
@@ -78,28 +88,17 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
                 qtheta=model_opts["initSW"]["Theta"], qmean_S0=model_opts["initSW"]["mean_S0"], qvar_S0=model_opts["initSW"]["var_S0"], qmean_S1=model_opts["initSW"]["mean_S1"], qvar_S1=model_opts["initSW"]["var_S1"],
                 qEW_S0=model_opts["initSW"]["EW_S0"], qEW_S1=model_opts["initSW"]["EW_S1"], qES=model_opts["initSW"]["ES"])
 
-    # ARD on latent variables
-    if model_opts["ardZ"]:
-        init.initAlphaZ(pa=model_opts["priorAlphaZ"]['a'], pb=model_opts["priorAlphaZ"]['b'],
-                       qa=model_opts["initAlphaZ"]['a'], qb=model_opts["initAlphaZ"]['b'], qE=model_opts["initAlphaZ"]['E'])
-
     # ARD on weights
-    if model_opts["ardW"] == "m":
-        init.initAlphaW_m(pa=model_opts["priorAlphaW"]['a'], pb=model_opts["priorAlphaW"]['b'],
-                              qa=model_opts["initAlphaW"]['a'], qb=model_opts["initAlphaW"]['b'], qE=model_opts["initAlphaW"]['E'])
-    if model_opts["ardW"] == "k":
-        init.initAlphaW_k(pa=model_opts["priorAlphaW"]['a'], pb=model_opts["priorAlphaW"]['b'],
-                              qa=model_opts["initAlphaW"]['a'], qb=model_opts["initAlphaW"]['b'], qE=model_opts["initAlphaW"]['E'])
-    elif model_opts["ardW"] == "mk":
-        init.initAlphaW_mk(pa=model_opts["priorAlphaW"]['a'], pb=model_opts["priorAlphaW"]['b'],
-                                 qa=model_opts["initAlphaW"]['a'], qb=model_opts["initAlphaW"]['b'], qE=model_opts["initAlphaW"]['E'])
+    init.initAlphaW_mk(pa=model_opts["priorAlphaW"]['a'], pb=model_opts["priorAlphaW"]['b'],
+                       qa=model_opts["initAlphaW"]['a'], qb=model_opts["initAlphaW"]['b'], qE=model_opts["initAlphaW"]['E'])
 
-    # Precision of the zero-mean normally-distributed noise
+    # Precision of noise
     init.initTau(pa=model_opts["priorTau"]['a'], pb=model_opts["priorTau"]['b'],
                  qa=model_opts["initTau"]['a'], qb=model_opts["initTau"]['b'], qE=model_opts["initTau"]['E'])
 
     # Sparsity on the weights
     if len(s.unique(model_opts['learnTheta'])) == 1:
+
         # All are infered
         if s.unique(model_opts['learnTheta'])==1.:
             # init.initThetaLearn(pa=model_opts["priorTheta"]['a'], pb=model_opts["priorTheta"]['b'],
@@ -107,24 +106,23 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
             init.initThetaMixed(pa=model_opts["priorTheta"]['a'], pb=model_opts["priorTheta"]['b'],
                 qa=model_opts["initTheta"]['a'],  qb=model_opts["initTheta"]['b'], qE=model_opts["initTheta"]['E'],
                 learnTheta=model_opts['learnTheta'])
+
         # None are infered
         elif s.unique(model_opts['learnTheta'])==0.:
             init.initThetaConst(value=model_opts["initTheta"]['E'])
+
     # Some are infered
     else:
         init.initThetaMixed(pa=model_opts["priorTheta"]['a'], pb=model_opts["priorTheta"]['b'],
             qa=model_opts["initTheta"]['a'],  qb=model_opts["initTheta"]['b'], qE=model_opts["initTheta"]['E'],
             learnTheta=model_opts['learnTheta'])
 
+    # Observed data
     init.initY()
 
     # Define the markov blanket of each node
     nodes = init.getNodes()
-    if model_opts["ardZ"]:
-        nodes["Z"].addMarkovBlanket(SW=nodes["SW"], Tau=nodes["Tau"], Y=nodes["Y"], Alpha=nodes["AlphaZ"])
-        nodes["AlphaZ"].addMarkovBlanket(Z=nodes["Z"])
-    else:
-        nodes["Z"].addMarkovBlanket(SW=nodes["SW"], Tau=nodes["Tau"], Y=nodes["Y"])
+    nodes["Z"].addMarkovBlanket(SW=nodes["SW"], Tau=nodes["Tau"], Y=nodes["Y"])
     nodes["Theta"].addMarkovBlanket(SW=nodes["SW"])
     nodes["AlphaW"].addMarkovBlanket(SW=nodes["SW"])
     nodes["SW"].addMarkovBlanket(Z=nodes["Z"], Tau=nodes["Tau"], Alpha=nodes["AlphaW"], Y=nodes["Y"], Theta=nodes["Theta"])
@@ -144,22 +142,26 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
 
     net.iterate()
 
-    #####################
-    ## Finish training ##
-    #####################
-
     return net
 
-# Function to run multiple trials of the model
 def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, seed=None, verbose=True):
 
-    #########################
-    ## Run parallel trials ##
-    #########################
+    """Method to run multiple trials of a MOFA model
 
+    PARAMETERS
+    -----
+    data: 
+    data_opts
+    model_opts:
+    train_opts:
+    seed:
+    trial:
+    verbose:
+    """
     # trained_models = Parallel(n_jobs=train_opts['cores'], backend="threading")(
-    trained_models = Parallel(n_jobs=train_opts['cores'])(
-        delayed(runSingleTrial)(data,data_opts,model_opts,train_opts,seed,i) for i in xrange(1,train_opts['trials']+1))
+    # trained_models = Parallel(n_jobs=train_opts['cores'])(
+    #     delayed(runSingleTrial)(data,data_opts,model_opts,train_opts,seed,i) for i in xrange(1,train_opts['trials']+1))
+    trained_models = [ runSingleTrial(data,data_opts,model_opts,train_opts,seed,i) for i in xrange(1,train_opts['trials']+1) ]
 
     print "\n"
     print "#"*43
@@ -170,7 +172,6 @@ def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, se
     #####################
     ## Process results ##
     #####################
-
 
     # Select the trial with the best lower bound or keep all models
     if train_opts['trials'] > 1:
@@ -186,7 +187,10 @@ def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, se
         save_models = trained_models
         outfiles = [ data_opts['outfile'] ]
 
-    # Save the results
+    ##################
+    ## Save results ##
+    ##################
+    
     sample_names = data[0].index.tolist()
     feature_names = [  data[m].columns.values.tolist() for m in xrange(len(data)) ]
     for t in xrange(len(save_models)):

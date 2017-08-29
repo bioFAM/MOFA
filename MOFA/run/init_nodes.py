@@ -1,6 +1,21 @@
 
 """
 Module to initalise the nodes
+
+Z: the latent variables can be initialised either randomly, orthogonal or with the PCA solution
+    MuZ:
+
+SW:
+    Alpha:
+
+Tau:
+
+Y:
+
+Theta:
+    ThetaConst
+    ThetaLearn
+    ThetaMixed
 """
 
 import scipy as s
@@ -14,15 +29,18 @@ from MOFA.core.nongaussian_nodes import *
 from MOFA.core.updates import *
 
 
-# General class to initialise a MOFA model
 class initModel(object):
     def __init__(self, dim, data, lik, seed=None):
-        # Inputs:
-        #  dim (dic): keyworded dimensionalities
-        #    N for the number of samples, M for the number of views
-        #    K for the number of latent variables, D for the number of features (per view, so it is a list)
-        #  data (list of ndarrays of length M): observed data
-        #  lik (list): likelihood type for each view
+        """
+        PARAMETERS
+        ----------
+         dim: dictionary
+            keyworded dimensionalities: N for the number of samples, M for the number of views, K for the number of latent variables, D for the number of features per view (a list)
+         data: list of ndarrays of length M: 
+            observed data
+         lik: list of strings 
+            likelihood for each view
+        """
         self.data = data
         self.lik = lik
         self.N = dim["N"]
@@ -36,9 +54,20 @@ class initModel(object):
         s.random.seed(seed)
 
     def initZ(self, pmean, pvar, qmean, qvar, qE=None, qE2=None, covariates=None, scale_covariates=None):
-        # Method to initialise the latent variables
-        # Inputs:
-        # - covariates (nd array): matrix of covariates with dimensions (nsamples,ncovariates)
+        """Method to initialise the latent variables
+
+        PARAMETERS
+        ----------
+        pmean:
+        pvar:
+        qmean
+        qvar
+        qE
+        qE2
+        covariates: nd array
+            matrix of covariates with dimensions (nsamples,ncovariates)
+        scale_covariates: 
+        """
 
         # Initialise mean of the Q distribution
         if qmean is not None:
@@ -97,7 +126,11 @@ class initModel(object):
         self.nodes["Z"] = self.Z
 
     def initSW(self, pmean_S0, pmean_S1, pvar_S0, pvar_S1, ptheta, qmean_S0, qmean_S1, qvar_S0, qvar_S1, qtheta, qEW_S0, qEW_S1, qES):
-        # Method to initialise the spike-slab variable (product of bernoulli and gaussian variables)
+        """Method to initialise the spike-slab variable (product of bernoulli and gaussian variables)
+
+        PARAMETERS
+        ----------
+        """
         SW_list = [None]*self.M
         for m in xrange(self.M):
 
@@ -140,12 +173,21 @@ class initModel(object):
         self.nodes["SW"] = self.SW
 
     def initAlphaW_mk(self, pa, pb, qa, qb, qE):
-        # Method to initialise the precision of the group-wise ARD prior
-        # Inputs:
-        #  pa (float): 'a' parameter of the prior distribution
-        #  pb (float): 'b' parameter of the prior distribution
-        #  qb (float): initialisation of the 'b' parameter of the variational distribution
-        #  qE (float): initial expectation of the variational distribution
+
+        """Method to initialise the precision of the group-wise ARD prior
+
+        PARAMETERS
+        ----------
+         pa: float 
+            'a' parameter of the prior distribution
+         pb :float
+            'b' parameter of the prior distribution
+         qb: float
+            initialisation of the 'b' parameter of the variational distribution
+         qE: float
+            initial expectation of the variational distribution
+        """
+        
         alpha_list = [None]*self.M
         for m in xrange(self.M):
             alpha_list[m] = AlphaW_Node_mk(dim=(self.K,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
@@ -154,44 +196,6 @@ class initModel(object):
         self.AlphaW = Multiview_Variational_Node(self.M, *alpha_list)
         # self.AlphaW = Multiview_Constant_Node(self.M, *alpha_list)
         self.nodes["AlphaW"] = self.AlphaW
-
-    def initAlphaW_m(self, pa, pb, qa, qb, qE):
-        # Method to initialise the precision of the group-wise ARD prior
-        # Inputs:
-        #  pa (float): 'a' parameter of the prior distribution
-        #  pb (float): 'b' parameter of the prior distribution
-        #  qb (float): initialisation of the 'b' parameter of the variational distribution
-        #  qE (float): initial expectation of the variational distribution
-        alpha_list = [None]*self.M
-        for m in xrange(self.M):
-            alpha_list[m] = AlphaW_Node_m(dim=(1,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
-            # alpha_list[m] = Constant_Node(dim=(1,), value=qE[m])
-        self.AlphaW = Multiview_Variational_Node(self.M, *alpha_list)
-        # self.AlphaW = Multiview_Constant_Node(self.M, *alpha_list)
-        self.nodes["AlphaW"] = self.AlphaW
-
-    def initAlphaW_k(self, pa, pb, qa, qb, qE):
-        # Method to initialise the precision of the factor-wise ARD prior
-        # Inputs:
-        #  pa (float): 'a' parameter of the prior distribution
-        #  pb (float): 'b' parameter of the prior distribution
-        #  qb (float): initialisation of the 'b' parameter of the variational distribution
-        #  qE (float): initial expectation of the variational distribution
-        self.AlphaW = AlphaW_Node_k(dim=(self.K,), pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
-        self.nodes["AlphaW"] = self.AlphaW
-
-    def initAlphaZ(self, pa, pb, qa, qb, qE, covariates=None):
-        # Method to initialise the precision of the latent variable ARD prior
-        # Inputs:
-        #  pa (float): 'a' parameter of the prior distribution
-        #  pb (float): 'b' parameter of the prior distribution
-        #  qb (float): initialisation of the 'b' parameter of the variational distribution
-        #  qE (float): initial expectation of the variational distribution
-
-        self.AlphaZ = AlphaZ_Node(dim=(self.K,), pa=pa, pb=pb, qa=qa, qb=qb, qE=qE)
-        # self.AlphaZ = Constant_Node(dim=(self.K,), value=qE)
-        # self.AlphaZ.factors_axis = 0
-        self.nodes["AlphaZ"] = self.AlphaZ
 
     def initTau(self, pa, pb, qa, qb, qE):
         # Method to initialise the precision of the noise

@@ -1,27 +1,33 @@
-from __future__ import division
-import scipy as s
-import pandas as pd
-from scipy.stats import bernoulli, norm, gamma, uniform, poisson, binom
-from random import sample
-# import numpy.ma as ma
-import warnings
-
-from utils import sigmoid
-
 """
 Module to simulate test data
 
 To-do:
 - Currently non-gaussian likelihoods have no noise
-- Maybe integrate this into the nodes with a Simulate() method?
+- Maybe integrate this into the corresponding Node classes with a Simulate() method?
+- Fix binomial
 """
+
+from __future__ import division
+import scipy as s
+import pandas as pd
+from scipy.stats import bernoulli, norm, gamma, uniform, poisson, binom
+from random import sample
+import warnings
+
+from utils import sigmoid
+
 
 class Simulate(object):
     def __init__(self, M, N, D, K):
-        # M (int): number of views
-        # N (int): number of samples
-        # D (list/tuple of length M): dimensionality of each view
-        # K (int): number of latent variables
+        """General method to Simulate from the generative model
+
+        PARAMETERS
+        ----------
+        M (int): number of views
+        N (int): number of samples
+        D (list/tuple of length M): dimensionality of each view
+        K (int): number of latent variables
+        """
 
         # Sanity checks
         assert len(D) == M
@@ -34,7 +40,7 @@ class Simulate(object):
         self.D = D
 
     def initAlpha(self):
-        # ARD precision is initialised randomly using a Bernoulli distribution with p=0.5
+        """ Initialisation of ARD on the weights"""
         alpha = [ s.zeros(self.K,) for m in xrange(self.M) ]
         for m in xrange(self.M):
             tmp = bernoulli.rvs(p=0.5, size=self.K)
@@ -44,7 +50,7 @@ class Simulate(object):
         return alpha
 
     def initW_ard(self, alpha=None):
-        # ARD weights are initialised
+        """ Initialisation of weights in automatic relevance determination prior"""
         if alpha is None:
             alpha = self.initAlpha()
         W = [ s.zeros((self.D[m],self.K)) for m in xrange(self.M) ]
@@ -53,9 +59,9 @@ class Simulate(object):
                 W[m][:,k] = norm.rvs(loc=0, scale=1/s.sqrt(alpha[m][k]), size=self.D[m])
         return W,alpha
 
-    # TODO: here is a quick hack for taking into account informative priors
-    # need to work out how to do this better
     def initW_spikeslab(self, theta, alpha=None, annotation=False):
+        """ Initialisation of weights in spike and slab prior"""
+
         # checking there is no zero in alpha input
         if alpha is not None:
             assert not any([0 in a for a in alpha]), 'alpha cannot be zero'
@@ -85,6 +91,8 @@ class Simulate(object):
                 #     for k in xrange(self.K):
                 #         S[m][d,k] = bernoulli.rvs(p=theta[m][d,k], size=1)
 
+        # WHAT IS ALL THESE???
+
         # Simualte ARD precision
         if alpha is None:
             alpha = self.initAlpha()
@@ -99,7 +107,7 @@ class Simulate(object):
         return S,W,W_hat,alpha
 
     def initZ(self):
-        # Latent variables are initialised by default using a spherical gaussian distribution
+        """ Initialisation of latent variables"""
         Z = s.empty((self.N,self.K))
         for n in xrange(self.N):
             for k in xrange(self.K):
@@ -107,22 +115,28 @@ class Simulate(object):
         return Z
 
     def initTau(self):
-        # Precision of noise is initialised by default using a uniform distribution
+        """ Initialisation of noise precision"""
         return [ uniform.rvs(loc=1,scale=3,size=self.D[m]) for m in xrange(self.M) ]
 
     def initMu(self):
+        """ Initialisation of hyperprior means of latent variables"""
         # Means are initialised to zero by default
         return [ s.zeros(self.D[m]) for m in xrange(self.M) ]
 
     def generateData(self, W, Z, Tau, Mu, likelihood, min_trials=None, max_trials=None, missingness=0.0, missing_view=False):
-        # W (list of length M where each element is a np array with shape (Dm,K)): weights
-        # Z (np array with shape (N,K): latent variables
-        # Tau (list of length M where each element is a np array with shape (Dm,)): precision of the normally-distributed noise
-        # Mu (list of length M where each element is a np array with shape (Dm,)): feature-wise means
-        # likelihood (str): type of likelihood
-        # min_trials (int): only for binomial likelihood, minimum number of total trials
-        # max_trials (int): only for binomial likelihood, maximum number of total trials
-        # missingness (float): percentage of missing values
+        """ Initialisation of observations 
+
+        PARAMETERS
+        ----------
+        W (list of length M where each element is a np array with shape (Dm,K)): weights
+        Z (np array with shape (N,K): latent variables
+        Tau (list of length M where each element is a np array with shape (Dm,)): precision of the normally-distributed noise
+        Mu (list of length M where each element is a np array with shape (Dm,)): feature-wise means
+        likelihood (str): type of likelihood
+        min_trials (int): only for binomial likelihood, minimum number of total trials
+        max_trials (int): only for binomial likelihood, maximum number of total trials
+        missingness (float): percentage of missing values
+        """
 
         Y = [ s.zeros((self.N,self.D[m])) for m in xrange(self.M) ]
 

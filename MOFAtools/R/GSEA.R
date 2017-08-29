@@ -30,6 +30,13 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
                                          statistical.test=c("parametric", "cor.adj.parametric", "permutation"),
                                          nperm=100, min.size=15, cores=1, p.adj.method = "BH", alpha=0.1) {
   
+  # Parse inputs
+  local.statistic <- match.arg(local.statistic)
+  transformation <- match.arg(transformation)
+  global.statistic <- match.arg(global.statistic)
+  statistical.test <- match.arg(statistical.test)
+
+
   # Collect factors
   if (paste0(factors,sep="",collapse="") == "all") { 
     factors <- factorNames(model)

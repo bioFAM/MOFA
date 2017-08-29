@@ -1,8 +1,7 @@
 # MOFA: Multi-Omics Factor Analysis
 
-MOFA is a factor analysis model that provides a general framework for the integration of multi-omic data sets in a completely unsupervised fashion.
-
-MOFA calculates a low dimensional representation of the multiple views in terms of a small number of latent factors that capture the main sources of variability, which might be masked in the noisy and complex high-dimensional representation. Furthermore, it reveals whether the different factors are unique to a single -omic or shared between multiple -omics. This allows a more comprehensive characterisation of the biological and technicals sourdes of variation underlying the data.  
+MOFA is a factor analysis model that provides a **general framework for the integration of multi-omic data sets** in a completely unsupervised fashion.  
+It calculates a low dimensional representation of the multiple views in terms of a small number of latent factors that capture the main sources of variability, which might be masked in the noisy and complex high-dimensional representation. Furthermore, it reveals whether the different factors are unique to a single -omic or shared between multiple -omics. This allows a more comprehensive characterisation of the biological and technicals sources of variation underlying the data.  
 The model can take as input multiple data modalities (continuous, binary and count data) and it is flexible to the presence of missing values, including absence of entire assays.
 
 For more details you can read our preprint:
@@ -11,11 +10,13 @@ For more details you can read our preprint:
 </p>
 
 ## News
-- 01/09/2017 Paper uploaded to bioRxiv and submitted for review
+- XX/09/2017 Paper uploaded to bioRxiv and submitted for review
 
 ## Installation
+The workflow is splitted in two parts: the training of the model, which is done using a Python package and the downstream analysis which is done using an R package.
+They both can be installed as follows:
 
-### Python package (to train the model)
+### Python package 
 The easiest way to install MOFA is to use PyPI:
 ```r
 ```
@@ -30,7 +31,7 @@ git clone https://github.com/PMBio/MOFA
 python setup.py install
 ```
 
-### R package (for downstream analysis)
+### R package
 The easier way to install the R package is via github:
 ```r
 devtools::install_github("PMBio/MOFA", subdir="MOFAtools")

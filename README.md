@@ -14,14 +14,15 @@ For more details you can read our preprint:
 ### Python package (to train the model)
 The easiest way to install DeepCpG is to use PyPI:
 ```r
-``
+```
 Alternatively, you can directly install from the repository:
 ```r
 pip install git+git://github.com/PMBio/MOFA
 ```
 Or clone the repository and then install MOFA using the setup.py
-git clone https://github.com/PMBio/MOFA
+
 ```r
+git clone https://github.com/PMBio/MOFA
 python setup.py install
 ```
 
@@ -32,8 +33,8 @@ devtools::install_github("PMBio/MOFA", subdir="MOFAtools")
 ```
 
 Alternatively, you can clone the repository and insall via R CMD:
-git clone https://github.com/PMBio/MOFA
 ```r
+git clone https://github.com/PMBio/MOFA
 R CMD build MOFAtools
 R CMD install MOFAtools
 ```
@@ -44,7 +45,7 @@ R CMD install MOFAtools
 The training of the model is performed using the python framework. It can also be rin within the R framework (by indirectly calling python), but is not as fast or stable.
 
 To train the model, simply store your input matrices as text files and modify the following script accordingly:
-run_basic.sh
+[run_basic.sh](MOFA/run/run_basic.sh)
 
 If you are very familar with the model and want to play with more advaned options, you can edit and run the following script:
 run_advanced.sh

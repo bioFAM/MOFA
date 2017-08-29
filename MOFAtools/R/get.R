@@ -38,7 +38,7 @@ getFactors <- function(object, as.data.frame = FALSE, include_intercept = TRUE, 
   # Collect factors
   Z <- getExpectations(object,"Z","E",as.data.frame)
     if (as.data.frame==F) {
-      Z <- Z[,factors]
+      Z <- Z[,factors, drop=FALSE]
     } else {
       Z <- Z[Z$factor %in% factors,]
     }

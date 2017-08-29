@@ -248,6 +248,35 @@ Heatmap_FeatureSetEnrichmentAnalysis <- function(p.values, threshold=0.05, log=T
 }
 
 
+#' @title Barplot of Feature Set Enrichment Analysis results
+#' @name Barplot_FeatureSetEnrichmentAnalysis
+#' @description Barplot of the Feature Set Enrichment Analyisis results
+#' @param fsea.out output of \link{FeatureSetEnrichmentAnalysis} function
+#' @param alpha FDR threshold fro calling enriched feature sets
+#' @details fill this
+#' @return Barplot of number of enriched gene sets for each factors 
+#' @import ggplot2
+#' @importFrom grDevices colorRampPalette
+#' @export
+Barplot_FeatureSetEnrichmentAnalysis <- function(fsea.out, alpha=0.05) {
+
+  # get enriched pathways at FDR of alpha
+  pathwayList <- apply(fsea.out$pval.adj, 2, function(f) names(f)[f<=alpha])
+  pathwaysDF <- reshape2::melt(pathwayList, value.name="pathway")
+  colnames(pathwaysDF) <- c("pathway", "factor")
+  
+  # count enriched gene sets per pathway
+  pathwaysSummary <- dplyr::group_by(pathwaysDF,factor)
+  pathwaysSummary <- dplyr::summarise(pathwaysSummary, n_enriched=length(pathway))
+  pathwaysSummary <- rbind(pathwaysSummary, data.frame(factor = colnames(fsea.out$pval)[!colnames(fsea.out$pval) %in% pathwaysSummary$factor],
+                                                     n_enriched=0))
+  # plot
+  ggplot(pathwaysSummary, aes(x=factor, y=n_enriched)) +
+  geom_bar(stat="identity") + coord_flip() + 
+  ylab(paste0("Enriched gene sets at FDR", alpha*100,"%")) +
+  xlab("Factor") + 
+  theme(legend.position = "bottom")
+}
 
 
 

@@ -13,6 +13,7 @@
 #' @param features name of the features to include (default: "all")
 #' @param factors name of the factors to include (default: "all")
 #' @param RemoveIntercept boolean wether to include the intercept factor if present in the object (by default not included)
+#' @param threshold threshold on absolute weight values, features/factors that are below this threshold in all factors/features are removed
 #' @param main asd 
 #' @param color asd 
 #' @param breaks asd 
@@ -23,7 +24,7 @@
 #' @importFrom RColorBrewer brewer.pal 
 #' @importFrom grDevices colorRampPalette
 #' @export
-showWeightHeatmap <- function(object, view, features = "all", factors = "all", RemoveIntercept = T, main=NULL, color=NULL, breaks=NULL, ...) {
+showWeightHeatmap <- function(object, view, features = "all", factors = "all", threshold = 0, RemoveIntercept = T, main=NULL, color=NULL, breaks=NULL, ...) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -64,6 +65,10 @@ showWeightHeatmap <- function(object, view, features = "all", factors = "all", R
                 seq(maxV/palLength,maxV, length.out=floor(palLength/2)))
   }
   
+  #remove columns and rows below threshold
+  W <- W[!apply(W,1,function(r) all(abs(r)<threshold)),]
+  W <- W[,!apply(W,2,function(r) all(abs(r)<threshold))]
+
   # Plot heatmap
   pheatmap::pheatmap(t(W), color=color, breaks=breaks, fontsize=15, ...)
 }

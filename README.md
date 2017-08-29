@@ -48,9 +48,9 @@ To train the model, simply store your input matrices as text files and modify th
 [run_basic.sh](MOFA/run/run_basic.sh)
 
 If you are very familar with the model and want to play with more advaned options, you can edit and run the following script:
-run_advanced.sh
+[run_advanced.sh](MOFA/run/run_advanced.sh)
 
-Once the model has converged and is saved as an .hdf5 file, then you should move to the R framework, where we implemented a pipeline for a semi-automated factor annotation.
+Once the model has converged and is saved as an .hdf5 file, then you should move to our R framework ([MOFAtools](MOFAtools)), where we implemented a pipeline for a semi-automated factor annotation.
 
 ### Downstream analysis: annotation of factors
 

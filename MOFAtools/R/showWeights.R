@@ -182,9 +182,12 @@ showAllWeights <- function(object, view, factor, nfeatures = "all", abs=FALSE, t
 #' @param factor character vector with the factor name or numeric vector with the index of the factor.
 #' @param nfeatures number of features
 #' @param abs take absolute value of the weights?
+#' @param sign can be 'positive', 'negative' or 'both' to show only positive, negative or all weigths, respectively
+#' @param manual_features names of features to be included into the plot. If null (default) take top features as specified in nfeatures.
+#' @param scale scales all loading by absolute value of maximal loading
 #' @import ggplot2
 #' @export
-showTopWeights <- function(object, view, factor, nfeatures = 5, manual_features=NULL, sign="positive", abs=TRUE) {
+showTopWeights <- function(object, view, factor, nfeatures = 5, manual_features=NULL, sign="positive", abs=TRUE, scale=T) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -194,6 +197,9 @@ showTopWeights <- function(object, view, factor, nfeatures = 5, manual_features=
   
   # Collect expectations  
   W <- getWeights(object, factor=factor, view=view, as.data.frame=T)
+
+  # Scale values
+  if(scale) W$value <- W$value/max(abs(W$value))
 
    # Absolute value
   if (abs) W$value <- abs(W$value)
@@ -234,8 +240,10 @@ showTopWeights <- function(object, view, factor, nfeatures = 5, manual_features=
       )
   
   if (sign=="negative") p <- p + scale_x_discrete(position = "top")
-  if(abs) p <-  p + ylab(paste("Absolute loading on factor", factor))  
-    else  p <- p + ylab(paste("Absolute loading on factor", factor))
+  if(abs & scale) p <-  p + ylab(paste("Relative loading on factor", factor))  
+  else if(abs & !scale) p <- p + ylab(paste("Absolute loading on factor", factor))
+  else if(!abs & scale) p <- p + ylab(paste("Relative loading on factor", factor))
+  else p <- p + ylab(paste("Loading on factor", factor))
   return(p)
   
 }

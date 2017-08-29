@@ -4,11 +4,12 @@
 \alias{showWeightHeatmap}
 \title{showWeightHeatmap: show heatmap of the factor loadings in a specific view}
 \usage{
-showWeightHeatmap(model, view, features = "all", factors = "all",
-  RemoveIntercept = T, main = NULL, color = NULL, breaks = NULL, ...)
+showWeightHeatmap(object, view, features = "all", factors = "all",
+  threshold = 0, RemoveIntercept = T, main = NULL, color = NULL,
+  breaks = NULL, ...)
 }
 \arguments{
-\item{model}{a MOFA model}
+\item{object}{a \code{\link{MOFAmodel}} object.}
 
 \item{view}{view name}
 
@@ -16,7 +17,9 @@ showWeightHeatmap(model, view, features = "all", factors = "all",
 
 \item{factors}{name of the factors to include (default: "all")}
 
-\item{RemoveIntercept}{boolean wether to include the intercept factor if present in the model (by default not included)}
+\item{threshold}{threshold on absolute weight values, features/factors that are below this threshold in all factors/features are removed}
+
+\item{RemoveIntercept}{boolean wether to include the intercept factor if present in the object (by default not included)}
 
 \item{main}{asd}
 
@@ -30,7 +33,8 @@ showWeightHeatmap(model, view, features = "all", factors = "all",
 fill this
 }
 \description{
-Function to visualize the weights for each feature in each factor for a given view
+Function to visualize loadings for a given set of factors in a given view. This is useful to see the overall pattern of the weights but it is not very useful to characterise the factors.
+ If you want to individually look at the top weights for a given factor we recommend the function showAllWeights and showTopWeights
 }
 \details{
 fill this

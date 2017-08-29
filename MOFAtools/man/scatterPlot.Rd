@@ -4,17 +4,23 @@
 \alias{scatterPlot}
 \title{Visualize scatterplot of two latent variables}
 \usage{
-scatterPlot(object, factors, title = "", titlesize = 16, xlabel = NULL,
-  ylabel = NULL, xlim_down = NA, xlim_up = NA, ylim_down = NA,
-  ylim_up = NA, dotsize = 2.5, colour_by = NULL, shape_by = NULL,
-  name_colour = "", name_shape = "", showMissing = T)
+scatterPlot(object, factors, color_by = NULL, shape_by = NULL,
+  name_color = "", name_shape = "", showMissing = T)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{factorx}{latent variable on the x axis}
+\item{factors}{vector of two factor to plot}
 
-\item{factory}{latent variable on the y axis}
+\item{color_by}{specifies groups or values used to color points. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.}
+
+\item{shape_by}{specifies groups or values used for point shapes. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.}
+
+\item{name_color}{name for color legend (usually only used if color_by is not a character itself)}
+
+\item{name_shape}{name for shape legend (usually only used if shape_by is not a character itself)}
+
+\item{showMissing}{boolean, if true, removes sample for which shape_by or color_by is missing}
 }
 \value{
 fill this

@@ -2,16 +2,16 @@
 % Please edit documentation in R/corPlot.R
 \name{CorrplotLFvsPC}
 \alias{CorrplotLFvsPC}
-\title{Correlate latent factors to principal components on single views}
+\title{Correlation plot of latent factors to principal components of single views}
 \usage{
 CorrplotLFvsPC(model, views = "all", noPCs = 5, method = "svd")
 }
 \arguments{
-\item{views}{fill}
+\item{views}{view names (default is "all")}
 
-\item{noPCs}{fill}
+\item{noPCs}{Number of principal components to calculate}
 
-\item{method}{fill, can be svd, ppca, bpca}
+\item{method}{method to compute PCA, we recommend svd (traditional PCA no missing values) or nipals (small number of missing values)}
 
 \item{object}{a \code{\link{MOFAmodel}} object.}
 }
@@ -19,10 +19,47 @@ CorrplotLFvsPC(model, views = "all", noPCs = 5, method = "svd")
 Correlation matrix of latent factors versus principal components
 }
 \description{
-fill this
+This function is used to identify the relationship between latent factors and principal components.
+Usually the first latent factors also correspond to the main principal components,
+We only recommend to run this function with complete data or with small number of missing values (with method="nipals"). 
+PCA is very inaccurate with large number of missing values.
+This function uses the package \link{pcaMethods} to calculate the PCA solution
 }
 \details{
-fill
+#' @title Faced scatterplot between latent variables
+#' @name FactorsScatterPlot
+#' @description plot a faced scatterplot with combinations of latent variables
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @param factors factors to plot (default="all")
+#' @details asd
+#' @return fill this
+#' @import ggplot2 dplyr tidyr
+#' @export
+FactorsScatterPlot <- function(object, factors="all") {
+  # THIS HAS TO BE FINISHED, WE SHOULDNT USE PIPES OR DPLYR
+  if (is.null(factors))
+    factors <- 1:object@Dimensions[["K"]]
+
+# Convert latent variable matrix into dataframe
+  Z <- Z[,factors]; colnames(Z) <- factors
+  Z_long <- as.data.frame(t(Z)) %>% dplyr::tbl_df %>% dplyr::mutate(Z=factor(1:n())) %>%
+    tidyr::gather(sample,value,-Z)
+
+# Concate PCs
+  joined <- Z_long %>% inner_join(Z_long, by='sample') %>%
+    dplyr::rename(Z1=Z.x, Z2=Z.y, value1=value.x, value2=value.y)
+
+# Plot
+  p <- ggplot(joined, aes(x=value1, y=value2)) +
+    ggtitle(title) +
+    stat_smooth(method=lm, color='black') +
+    geom_point(aes(color=sample), size=0.5, alpha=0.5) +
+    xlab('') + ylab('') +
+    facet_grid(Z1~Z2) +
+    guides(color=F)
+
+return(p)
+}
 }
 \references{
 fill this

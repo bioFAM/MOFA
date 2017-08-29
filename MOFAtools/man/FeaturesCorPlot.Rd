@@ -4,21 +4,29 @@
 \alias{FeaturesCorPlot}
 \title{Visualize correlation matrix between the features}
 \usage{
-FeaturesCorPlot(object, view, method = "pearson", regress_factors = NULL,
-  top = 500, ...)
+FeaturesCorPlot(object, view, features = "all", method = "pearson",
+  regress_factors = NULL, ...)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
+
+\item{view}{view name}
+
+\item{features}{character vector with the feature names or numeric vector with the feature indices (default is "all").}
+
+\item{method}{a character string indicating which correlation coefficient is to be computed: pearson (default), kendall, or spearman.}
+
+\item{regress_factors}{character or numeric vector with the factors to regress (default is NULL)}
+
+\item{...}{arguments to be passed to \link{pheatmap} function}
 }
 \value{
-fill this
+correlation matrix between features
 }
 \description{
-fill this
-}
-\details{
-asd
-}
-\references{
-fill this
+the function plots the correlation between all features in a given view. 
+This is useful to see if the factors learnt by the model capture the correlations between features, as the residuals should be uncorrelated.
+To check this, run the function twice, first without regressing out any factor (regress_factors=NULL) and then regress all factors (regress_factors="all").
+The first plot should be enriched by correlations whereas the second should be fairly uncorrelated. 
+If not, it suggests that there is more signal to be learnt and you should increase the number of factors.
 }

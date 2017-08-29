@@ -14,14 +14,10 @@ FactorsCorPlot(object, method = "pearson", ...)
 \item{...}{arguments passed to \code{corrplot}}
 }
 \value{
-fill this
+symmetric matrix with the correlation coefficient between factors
 }
 \description{
-fill this
-}
-\details{
-asd
-}
-\references{
-fill this
+plot the correlation matrix between the latent variables. The model encourages factors to be uncorrelated, but it is nos hard constraint such as in PCA.
+Ideally all learnt factors should be uncorrelated to make interpretation easier, but correlations can happen, particularly with large number factors or with non-linear relationship.
+If you have too many correlated factors try to train the model again reducing the number of factors.
 }

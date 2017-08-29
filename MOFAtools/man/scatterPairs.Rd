@@ -4,18 +4,18 @@
 \alias{scatterPairs}
 \title{Visualize scatterplot of all latent variables in a pair-wise grid}
 \usage{
-scatterPairs(object, factors = "all", showMissing = T, colour_by = NULL,
-  colour_name = NULL, colourLegend = F, shape_by = NULL,
+scatterPairs(object, factors = "all", showMissing = T, color_by = NULL,
+  color_name = NULL, colorLegend = F, shape_by = NULL,
   shape_name = NULL, shapeLegend = F)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{showMissing}{boolean wether to include missing values in colour_by}
+\item{showMissing}{boolean wether to include missing values in color_by}
 
-\item{colour_by}{vector of length N with discrete sample groups to colour by}
+\item{color_by}{vector of length N with discrete sample groups to color by}
 
-\item{colour_name}{name of the factor used to colour_by (only relevant if colour_by is not NULL)}
+\item{color_name}{name of the factor used to color_by (only relevant if color_by is not NULL)}
 }
 \value{
 fill this

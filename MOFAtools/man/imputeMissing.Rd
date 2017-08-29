@@ -2,26 +2,26 @@
 % Please edit documentation in R/imputeMissing.R
 \name{imputeMissing}
 \alias{imputeMissing}
-\title{Impute missing value from a fitted MOFA model}
+\title{Impute missing values from a fitted MOFA model}
 \usage{
-imputeMissing(object, viewnms = "all", type = c("inRange", "response",
-  "link"), onlyMissing = T)
+imputeMissing(object, views = "all", factors = "all", type = c("inRange",
+  "response", "link"))
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{viewnms}{character vector containing the names of views to be imputed (default: all)}
+\item{views}{vector containing the names of views (character) or index of views (numeric) to be imputed (default: "all")}
 
-\item{type}{of imputations returned. By default values are imputed using "inRange". "response" gives mean for gaussian and poisson and probabilities for bernoulli , 
+\item{factors}{vector with the factors indices (numeric) or factor names (character) to use (default is "all")}
+
+\item{type}{type of imputations returned. By default values are imputed using "inRange". "response" gives mean for gaussian and poisson and probabilities for bernoulli , 
 "link" gives the linear predictions, "inRange" rounds the fitted values from "terms" for integer-valued distributions to the next integer.}
-
-\item{onlyMissing}{By default, only values missing in Training Data are replaced by imputed ones. If all predicitons based on MOFA are wanted, this needs to be set to FALSE.}
 }
 \value{
 List of imputed data, each list element corresponding to specified views.
 }
 \description{
-fill this
+This function uses the latent factors and the weights infered from MOFA to impute missing values in the input views.
 }
 \details{
 asd

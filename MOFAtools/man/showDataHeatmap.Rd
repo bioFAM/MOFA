@@ -2,26 +2,29 @@
 % Please edit documentation in R/showData.R
 \name{showDataHeatmap}
 \alias{showDataHeatmap}
-\title{showDataHeatmap: heatmap of the observed data of the most relevant features for a given factor}
+\title{showDataHeatmap: plot heatmap of the observed data for the top weighted features}
 \usage{
-showDataHeatmap(object, view, factor, nfeatures = 50, main = NULL, ...)
+showDataHeatmap(object, view, factor, features = 50, plotWeights = FALSE,
+  transpose = FALSE, ...)
 }
 \arguments{
-\item{object}{a fitted MOFA model}
+\item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{view}{name of view}
+\item{view}{character vector with the view name or numeric vector with the index of the view.}
 
-\item{factor}{factor}
+\item{factor}{character vector with the factor name or numeric vector with the index of the factor.}
 
-\item{nfeatures}{total number of features, sorted by weight (default=???)}
+\item{features}{if an integer, the total number of features to plot sorted by the corresponding weight.
+If a character vector, the manually-defined features to plot by the given order.}
 
 \item{...}{further arguments that can be passed to pheatmap}
-}
-\value{
-fill this
+
+\item{plotWeights:}{boolean indicating whether to include the weight of each feature in the heatmap.}
+
+\item{transpose:}{boolean indicating whether to transpose the output heatmap (by default features as rows and samples as columns)}
 }
 \description{
-Function to plot a heatmap of the original data using the most relevant features of a given latent variables
+Function to plot a heatmap of the original data using the most relevant features for a given latent variable.
 }
 \details{
 fill this

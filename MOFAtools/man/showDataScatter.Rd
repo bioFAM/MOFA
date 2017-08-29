@@ -4,24 +4,25 @@
 \alias{showDataScatter}
 \title{showDataScatter: scatterplot of the observed data for the most relevant features for a given factor}
 \usage{
-showDataScatter(object, view, factor, nfeatures = 50, colour_by = NULL,
+showDataScatter(object, view, factor, features = 50, color_by = NULL,
   shape_by = NULL, xlabel = "", ylabel = "")
 }
 \arguments{
-\item{object}{a fitted MOFA model}
+\item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{view}{name of view}
+\item{view}{character vector with a view name or numeric vector with the index of the view.}
 
-\item{factor}{factor}
+\item{factor}{character vector with a factor name or numeric vector with the index of the factor.}
 
-\item{nfeatures}{total number of features (default=???)}
-
-\item{shape_by}{vector}
+\item{features}{if an integer, the total number of features to plot sorted by the corresponding weight.
+If a character vector, the manually-defined features to plot by the given order.}
 
 \item{color_by}{vector}
+
+\item{shape_by}{vector}
 }
 \value{
-ggplot2 model
+fill this
 }
 \description{
 Function to plot a scatterplot of the observed values for the most relevant features for a given factor

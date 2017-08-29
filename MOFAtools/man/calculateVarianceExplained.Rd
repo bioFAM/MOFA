@@ -13,26 +13,25 @@ calculateVarianceExplained(object, views = "all", factors = "all",
 
 \item{views}{Views to use, default is "all"}
 
-\item{factors}{Latent variables or factores to use, default is "all"}
+\item{factors}{Latent factores to use, default is "all"}
 
-\item{plotit}{boolean, wether to produce a plot (default true)}
+\item{plotit}{boolean, wether to produce a plot (default True)}
 
 \item{perFeature}{boolean, whether to calculate in addition variance explained per feature (and factor) (default FALSE)}
 
-\item{orderFactorsbyR2}{if T, facotrs are order according to sum of variance explained across views}
+\item{orderFactorsbyR2}{order factors according to sum of variance explained across views (default TRUE)}
 
-\item{showtotalR2}{(REWRITE) if FALSE, R2 with respect to total prediciton instead of observations is considered instead of total R2 showing each factors contribution to the full prediction}
+\item{showtotalR2}{Calculate R2 with respect to the total variance (TRUE) or the residual variance (FALSE?}
 
-\item{showVarComp}{if True plot additional barplots showing the contribution of ea}
+\item{showVarComp}{Calculate R2 per view using all factors (default TRUE)}
 }
 \value{
-fill this
+a list with matrices with the amount of variation explained per factor and view, and optionally total variance explained per view and variance explained by each feature alone
 }
 \description{
 Method to calculate variance explained by the MOFA model for each view and latent factor, and optionally also for each feature.
 As a measure of variance explained we adopt the coefficient of determination (R2).
-For non-gaussian views the calculations are based on the normally-distributed pseudo-data (see REF).
-If the data is non-centered and the model had to learn the mean then we regress it out before computing the R2
+For non-gaussian views the calculations are based on the normally-distributed pseudo-data (for more information on the non-gaussian model see Seeger & Bouchard, 2012).
 }
 \details{
 fill this

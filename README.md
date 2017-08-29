@@ -3,9 +3,9 @@
 MOFA is a factor analysis model that integrates multi-omic data sets in an unsupervised fashion. It automatically discovers the main sources of both technical and biological variability and it identifies whether they are unique or shared between several -omic layers. The model allows for the presence of missing values, including absence of entire assays for a given samples. Also, we provide an accessible and user-friendly package for a semi-automated annotation of factors.
 
 For more details you can read our preprint:
-
-<![Alt text](logo.png?raw=true "Title")>
-
+<p align="center"> 
+<img src="logo.png">
+</p>
 ## News
 - 01/09/2017 Paper uploaded to bioRxiv and submitted for review
 

@@ -231,9 +231,8 @@ predictedDrugs <- predict(MOFAobject, view="Drugs", factors="all")
 
 
 ## Clustering of samples based on latent factors
-Samples can be clustered according to their values on some or all latent factors using the 'clusterSamples' function.
+Samples can be clustered according to their values on some or all latent factors using the 'clusterSamples' function. CLusters can for example be visualised using the scatterPlot function
 ```{r}
-# TO-DO: k-means
-h <- clusterSamples(MOFAobject, "all")
-h <- clusterSamples(MOFAobject, "1")
+h <- clusterSamples(MOFAobject, k=2, factors="1")
+scatterPlot(MOFAobject, c("1","2"), h$cluster)
 ```

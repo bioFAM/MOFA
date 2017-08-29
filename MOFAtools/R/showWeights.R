@@ -13,6 +13,7 @@
 #' @param features name of the features to include (default: "all")
 #' @param factors name of the factors to include (default: "all")
 #' @param RemoveIntercept boolean wether to include the intercept factor if present in the object (by default not included)
+#' @param threshold threshold on absolute weight values, features/factors that are below this threshold in all factors/features are removed
 #' @param main asd 
 #' @param color asd 
 #' @param breaks asd 
@@ -23,7 +24,7 @@
 #' @importFrom RColorBrewer brewer.pal 
 #' @importFrom grDevices colorRampPalette
 #' @export
-showWeightHeatmap <- function(object, view, features = "all", factors = "all", RemoveIntercept = T, main=NULL, color=NULL, breaks=NULL, ...) {
+showWeightHeatmap <- function(object, view, features = "all", factors = "all", threshold = 0, RemoveIntercept = T, main=NULL, color=NULL, breaks=NULL, ...) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -64,8 +65,12 @@ showWeightHeatmap <- function(object, view, features = "all", factors = "all", R
                 seq(maxV/palLength,maxV, length.out=floor(palLength/2)))
   }
   
+  #remove columns and rows below threshold
+  W <- W[!apply(W,1,function(r) all(abs(r)<threshold)),]
+  W <- W[,!apply(W,2,function(r) all(abs(r)<threshold))]
+
   # Plot heatmap
-  pheatmap::pheatmap(W, fontsize=15, ...)
+  pheatmap::pheatmap(t(W), color=color, breaks=breaks, fontsize=15, ...)
 }
 
 
@@ -78,7 +83,7 @@ showWeightHeatmap <- function(object, view, features = "all", factors = "all", R
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param view name of view from which to get the corresponding weights
 #' @param factor name of the factor
-#' @param nfeatures number of features to label based on weight
+#' @param nfeatures number of features to include (by default all, otherwise only those with highest absolute values are included)
 #' @param abs take absolute value of the weights?
 #' @param threshold threshold on the absolute value beyond which weigths are labeled
 #' @param manual features to be manually labelled. A list of character vectors
@@ -111,7 +116,7 @@ showAllWeights <- function(object, view, factor, nfeatures = "all", abs=FALSE, t
   } else {
     stopifnot(class(nfeatures)=="numeric")
   }
-  W <- head(W[order(W$value, decreasing=T),], n=nfeatures)
+  W <- head(W[order(abs(W$value), decreasing=T),], n=nfeatures)
     
   # Define groups for labelling
   W$group <- "0"
@@ -182,9 +187,12 @@ showAllWeights <- function(object, view, factor, nfeatures = "all", abs=FALSE, t
 #' @param factor character vector with the factor name or numeric vector with the index of the factor.
 #' @param nfeatures number of features
 #' @param abs take absolute value of the weights?
+#' @param sign can be 'positive', 'negative' or 'both' to show only positive, negative or all weigths, respectively
+#' @param manual_features names of features to be included into the plot. If null (default) take top features as specified in nfeatures.
+#' @param scale scales all loading by absolute value of maximal loading
 #' @import ggplot2
 #' @export
-showTopWeights <- function(object, view, factor, nfeatures = 5, manual_features=NULL, sign="positive", abs=TRUE) {
+showTopWeights <- function(object, view, factor, nfeatures = 5, manual_features=NULL, sign="positive", abs=TRUE, scale=T) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -194,6 +202,9 @@ showTopWeights <- function(object, view, factor, nfeatures = 5, manual_features=
   
   # Collect expectations  
   W <- getWeights(object, factor=factor, view=view, as.data.frame=T)
+
+  # Scale values
+  if(scale) W$value <- W$value/max(abs(W$value))
 
    # Absolute value
   if (abs) W$value <- abs(W$value)
@@ -234,8 +245,10 @@ showTopWeights <- function(object, view, factor, nfeatures = 5, manual_features=
       )
   
   if (sign=="negative") p <- p + scale_x_discrete(position = "top")
-  if(abs) p <-  p + ylab(paste("Absolute loading on factor", factor))  
-    else  p <- p + ylab(paste("Absolute loading on factor", factor))
+  if(abs & scale) p <-  p + ylab(paste("Relative loading on factor", factor))  
+  else if(abs & !scale) p <- p + ylab(paste("Absolute loading on factor", factor))
+  else if(!abs & scale) p <- p + ylab(paste("Relative loading on factor", factor))
+  else p <- p + ylab(paste("Loading on factor", factor))
   return(p)
   
 }

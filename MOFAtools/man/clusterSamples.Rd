@@ -2,25 +2,21 @@
 % Please edit documentation in R/clusterSamples.R
 \name{clusterSamples}
 \alias{clusterSamples}
-\title{Hierarchical clustering on samples based on latent factors}
+\title{K-means clustering on samples based on latent factors}
 \usage{
-clusterSamples(object, factors = "all", anno_df = NULL, main = NULL, ...)
+clusterSamples(object, k, factors = "all")
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{factors}{factors to use for the clustering}
+\item{k}{number of clusters}
 
-\item{anno_df}{annotation data frame that will be passed to pheatmap}
-
-\item{main}{title of the plot}
+\item{factors}{vector with the factors indices (numeric) or factor names (character) to use for clustering. Default is "all"}
 }
 \value{
-A hclust object containing the clustering of the samples
+output from kmeans function
 }
 \description{
-fill this
-}
-\details{
-If only one factor (...). Plots heatmap
+latent factors are continuous in nature but they can be used to predict clusters of samples, similar to what the iCluster model does (Shen, 2009). \cr
+The clustering can be performed in a single factor, which is equivalent to setting a manual threshold, or using multiple factors. \cr
 }

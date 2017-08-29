@@ -22,21 +22,30 @@ getDimensions <- function(object) {
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param as.data.frame: boolean indicating whether to return factors as a long data frame with columns (sample,factor,value), default is FALSE.
 #' @param include_intercept: boolean indicating where to include the intercept term of the model, default is TRUE.
+#' @param factors: vector with the factors indices (numeric) or factor names (character) to fetch.
 #' @return by default returns a matrix of dimensionality (N,K) where N is number of samples and k is number of factors. 
 #' Alternatively, with as.data.frame=TRUE, it returns a data frame with columns (sample,factor,value)
 #' @export
 #' 
-getFactors <- function(object, as.data.frame = FALSE, include_intercept = TRUE) {
+getFactors <- function(object, as.data.frame = FALSE, include_intercept = TRUE, factors = "all") {
   
   # Sanity check
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
   
+  # Get factors
+  if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } else { stopifnot(all(factors %in% factorNames(object))) }
+
   # Collect factors
   Z <- getExpectations(object,"Z","E",as.data.frame)
-  
+    if (as.data.frame==F) {
+      Z <- Z[,factors, drop=FALSE]
+    } else {
+      Z <- Z[Z$factor %in% factors,]
+    }
+
   # Remove intercept
   if (include_intercept == F) {
-    if (as.data.frame==F) {
+    if (as.data.frame==F & "intercept" %in% colnames(Z)) {
       Z <- Z[,colnames(Z)!="intercept"]
     } else {
       Z <- Z[Z$factor!="intercept",]
@@ -74,6 +83,7 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
   } else {
     weights <- lapply(views, function(m) weights[[m]][,factors,drop=F])
     if (length(views)==1) { weights <- weights[[1]] }
+    names(weights) <-  views
   }
   return(weights)
 }
@@ -125,6 +135,66 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
   return(trainData)
 }
 
+#' @rdname getImputedData
+#' @name getImputedData
+#' @title wraper to fetch imputed data from the model
+#' @description to-fill
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @param views vector containing the names of views (character) or index of views (numeric) to be fetched.
+#' @param features: list with feature indices (numeric) or names (character), with the same order as views (default is "all")
+#' @param as.data.frame: boolean indicating whether to return factors as a long data frame with columns (view,feature,sample,value), default is FALSE.
+#' @return if as.data.frame == FALSE it return a list of length M, where M is the number of views, with matrices of dimensionality (N,Dm) where N is the number of samples and Dm is the numher of features in view m.
+#' Alternatively, if as.data.frame == TRUE, it returns long data frame with columns (view,feature,sample,value).
+#' @export
+getImputedData <- function(object, views = "all", features = "all", as.data.frame = F) {
+  
+  # Sanity checks
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  
+  # Get views
+  if (paste0(views,collapse="") == "all") { views <- viewNames(object) } else { stopifnot(all(views %in% viewNames(object))) }
+  
+  # Get features
+  if (class(features)=="list") {
+    stopifnot(all(sapply(1:length(features), function(i) all(features[[i]] %in% featureNames(object)[[views[i]]]))))
+  } else {
+    if (paste0(features,collapse="") == "all") { 
+      features <- featureNames(object)[views]
+    } else {
+      stop("features not recognised, please read the documentation")
+    }
+  }
+  
+  # Fetch data
+  ImputedData <- object@ImputedData[views]
+  ImputedData <- lapply(1:length(ImputedData), function(m) ImputedData[[m]][features[[m]],,drop=F]); names(ImputedData) <- views
+  
+  # Convert to long data frame
+  if (as.data.frame) {
+    tmp <- lapply(views, function(m) { tmp <- reshape2::melt(ImputedData[[m]]); colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
+    ImputedData <- do.call(rbind,tmp)
+    ImputedData[,c("view","feature","sample")] <- sapply(ImputedData[,c("view","feature","sample")], as.character)
+  } else if ((length(views)==1) && (as.data.frame==F)) {
+    ImputedData <- ImputedData[[views]]
+  }
+  
+  return(ImputedData)
+}
+
+#' @rdname getCovariates
+#' @name getCovariates
+#' @title wraper to extract covariates from the MultiAssayExperiment stored in the InputData slot
+#' @description to-fill
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @param names: names of the covariates
+#' @export
+#' 
+getCovariates <- function(object, names) {
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
+  if(class(object@InputData) != "MultiAssayExperiment") stop("To work with covariates, InputData has to be specified in form of a MultiAssayExperiment")  
+  stopifnot(all(names %in% colnames(colData(object@InputData))))
+  return(colData(object@InputData)[,names])
+}
 
 #' @rdname getExpectations
 #' @name getExpectations

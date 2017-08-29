@@ -9,11 +9,14 @@ getExpectations(object, variable, expectation, as.data.frame = F)
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{variable:}{variable name ('SW')}
+\item{variable:}{variable name ('Z,'SW','Tau','Y','Theta' or 'Alpha')}
 
-\item{expectation:}{expectation name ('E')}
+\item{expectation:}{expectation name ('E' for the first moment and 'E2' for the second moment (not implemented))}
 
 \item{as.data.frame:}{output the result as a long data frame?}
+}
+\value{
+to-fill
 }
 \description{
 to-fill

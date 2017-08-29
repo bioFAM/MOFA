@@ -30,8 +30,8 @@ showDataHeatmap <- function(object, view, factor, features = 50, plotWeights = F
   
   # Define features
   if (class(features) == "numeric") {
-    tmp <- names(tail(sort(abs(W)), n=features))
-    stopifnot(all(tmp %in% featureNames(object)[[view]]))
+    features <- names(tail(sort(abs(W)), n=features))
+    stopifnot(all(features %in% featureNames(object)[[view]]))
   } else if (class(features)=="character") {
     stopifnot(all(manual_features %in% featureNames(object)[[view]]))
   } else {

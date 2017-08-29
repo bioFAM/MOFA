@@ -4,13 +4,15 @@
 \alias{Heatmap_FeatureSetEnrichmentAnalysis}
 \title{Heatmap of Feature Set Enrichment Analysis results}
 \usage{
-Heatmap_FeatureSetEnrichmentAnalysis(p.values, threshold = 0.05, log = T,
-  ...)
+Heatmap_FeatureSetEnrichmentAnalysis(fsea.out, threshold = 0.05, log = T,
+  adjust = TRUE, ...)
 }
 \arguments{
-\item{p.values}{output of \link{FeatureSetEnrichmentAnalysis} function. A data frame of p.values where rows are gene sets and columns are latent variables}
+\item{fsea.out}{output of \link{FeatureSetEnrichmentAnalysis} function}
 
 \item{threshold}{p.value threshold to filter out feature sets. If a feature set has a p.value lower than 'threshold'}
+
+\item{adjust}{use multiple testing correction}
 
 \item{...}{Parameters to be passed to pheatmap function}
 }

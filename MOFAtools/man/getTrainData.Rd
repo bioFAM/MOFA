@@ -4,14 +4,20 @@
 \alias{getTrainData}
 \title{wraper to fetch training data from the model}
 \usage{
-getTrainData(object, views = "all", as.data.frame = F)
+getTrainData(object, views = "all", features = "all", as.data.frame = F)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{views:}{views (default is "all")}
+\item{views}{vector containing the names of views (character) or index of views (numeric) to be fetched.}
 
-\item{as.data.frame:}{output the result as a long data frame?}
+\item{features:}{list with feature indices (numeric) or names (character), with the same order as views (default is "all")}
+
+\item{as.data.frame:}{boolean indicating whether to return factors as a long data frame with columns (view,feature,sample,value), default is FALSE.}
+}
+\value{
+if as.data.frame == FALSE it return a list of length M, where M is the number of views, with matrices of dimensionality (N,Dm) where N is the number of samples and Dm is the numher of features in view m.
+Alternatively, if as.data.frame == TRUE, it returns long data frame with columns (view,feature,sample,value).
 }
 \description{
 to-fill

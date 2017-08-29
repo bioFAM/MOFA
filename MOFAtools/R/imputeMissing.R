@@ -11,67 +11,38 @@
 #' @param factors vector with the factors indices (numeric) or factor names (character) to use (default is "all")
 #' @param type type of imputations returned. By default values are imputed using "inRange". "response" gives mean for gaussian and poisson and probabilities for bernoulli , 
 #' "link" gives the linear predictions, "inRange" rounds the fitted values from "terms" for integer-valued distributions to the next integer.
-#' @param onlyMissing By default, only values missing in Training Data are replaced by imputed ones. If all predicitons based on MOFA are wanted, this needs to be set to FALSE.
 #' @details asd
 #' @return List of imputed data, each list element corresponding to specified views.
 #' @references fill this
 #' @export
-imputeMissing <- function(object, views="all", factors = "all", type = c("inRange","response", "link"), onlyMissing = T){
+imputeMissing <- function(object, views="all", factors = "all", type = c("inRange","response", "link")){
   
-  # Sanity checks
-  if (class(object) != "MOFAmodel")
-    stop("'object' has to be an instance of MOFAmodel")
-  
+  type = match.arg(type)
+
+  # sanity checks are perfomred inside the predcit function
+  predData <- predict(object, views=views, factors = factors, type = type)
+
   # Get views  
   if (views=="all") {
     views = viewNames(object)
   } else {
     stopifnot(all(views%in%viewNames(object)))
   }
-  
-  # Get factors
-  if (factors=="all") {
-    factors = factorNames(object)
-  } else {
-    stopifnot(all(factors%in%factorNames(object)))
-    factors <- c("intercept", factors)
-  } 
-  
-  # Get weights
-  W <- getWeights(object, views=views, factors=factors)
-  
-  type = match.arg(type)
-  
-  # mask passenger factors
-  object <- detectPassengers(object)
-  Z <- getFactors(object)[,factors]
-  Z[is.na(Z)] <- 0 # set missing values in Z to 0 to exclude from imputations
-  
-  # Impute data
-  imputedData <- lapply(sapply(views, grep, viewNames(object)), function(viewidx){
-    
-    # make imputation based on linear model
-    imputedView <- t(Z%*% t(W[[viewidx]])) 
-    
-    # make predicitons based on underlying model
-    if(type!="link"){
-    lk <- object@ModelOpts$likelihood[viewidx]
-    if(lk == "gaussian") imputedView <- imputedView
-      else if (lk == "bernoulli") {imputedView <- (exp(imputedView)/(1+exp(imputedView))); if(type=="inRange") imputedView <- round(imputedView)}
-        else if (lk == "poisson") {imputedView <- (exp(imputedView)); if(type=="inRange") imputedView <- round(imputedView)}
-          else stop("Liklihood not implemented for imputation")
-    }
-    # values that have been observed are kept
-    if(onlyMissing){
-      observed <- which(!is.na(object@TrainData[[viewidx]]), arr.ind = T)
-      imputedView[observed] <- object@TrainData[[viewidx]][observed]
-    }
-    imputedView
+
+  #replace NAs with predicted values
+  imputedData <- getTrainData(object, views = views)
+  imputedData <- lapply(names(imputedData), function(viewnm) {
+      view <- imputedData[[viewnm]]
+      non_observed <- which(is.na(view), arr.ind = T)
+      if(viewnm %in% names(predData)) view[non_observed] <- predData[[viewnm]][non_observed]
+      view
   })
 
   # re- arrange list in accordance with other data slots in the model
   names(imputedData) <- views
   imputedData <- imputedData[viewNames(object)]
+  names(imputedData) <- viewNames(object)
+
 
   # save in model slot  
   object@ImputedData <- imputedData

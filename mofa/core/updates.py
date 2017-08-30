@@ -1,8 +1,8 @@
 from __future__ import division
 import numpy.ma as ma
 import numpy as np
+import warnings
 from copy import deepcopy
-
 from time import time
 
 # Import manually defined functions
@@ -12,6 +12,8 @@ from nodes import Constant_Node
 from mixed_nodes import Mixed_Theta_Nodes
 
 import scipy.special as special
+
+warnings.filterwarnings('ignore')
 
 """
 Module to define the nodes and the corresponding updates of the model

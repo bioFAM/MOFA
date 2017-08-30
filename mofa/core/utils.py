@@ -1,4 +1,5 @@
 from __future__ import division
+from time import sleep
 import numpy as np
 import pandas as pd
 import numpy.ma as ma
@@ -94,6 +95,7 @@ def loadData(data_opts, verbose=True):
     print "## Loading data ##"
     print "#"*18
     print "\n"
+    sleep(1)
 
     M = len(data_opts['input_files'])
 

@@ -8,15 +8,15 @@ runMultipleTrial: run multiple trials, optionally in Parallel (not implemented)
 
 import scipy as s
 from sys import path
-from time import time
+from time import time,sleep
 import pandas as pd
 import numpy as np
 #from joblib import Parallel, delayed
 
 from init_nodes import *
-from MOFA.run.init_nodes import *
-from MOFA.core.BayesNet import BayesNet
-from MOFA.core.utils import *
+from mofa.run.init_nodes import *
+from mofa.core.BayesNet import BayesNet
+from mofa.core.utils import *
 
 def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, verbose=False):
     """Method to run a single trial of a MOFA model
@@ -37,11 +37,6 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
         seed = int(round(time()*1000)%1e6)
     s.random.seed(seed)
 
-    print "\n"
-    print "#"*45
-    print "## Running trial number %d with seed %d ##" % (trial,seed)
-    print "#"*45
-    print "\n"
 
     ###########################
     ## Perform sanity checks ##
@@ -64,6 +59,13 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     ######################
     ## Define the model ##
     ######################
+
+    print "\n"
+    print "#"*24
+    print "## Building the model ##"
+    print "#"*24
+    print "\n"
+    sleep(1)
 
     # Define dimensionalities
     M = len(data)
@@ -140,6 +142,13 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     ## Start training ##
     ####################
 
+    print "\n"
+    print "#"*45
+    print "## Running trial number %d with seed %d ##" % (trial,seed)
+    print "#"*45
+    print "\n"
+    sleep(1)
+    
     net.iterate()
 
     return net

@@ -19,8 +19,9 @@
 #' @param nperm Number of permutations to perform. Only relevant if statistical.test is set to "permutation".
 #' @param cores Number of cores to run the permutation analysis in parallel. Only relevant if statistical.test is set to "permutation".
 #' @param p.adj.method Method to adjust p-values factor-wise for multiple testing. Can be any method in p.adjust.methods(). Default uses Benjamini-Hochberg procedure.
+#' @param alpha FDR threshold to generate lists of significant pathways
 #' @details fill this
-#' @return a list with two matrices, one for the feature set statistics and the other for the pvalues. Rows are feature sets and columns are latent variables.
+#' @return a list with three components: pval and pval.adj contain matrices with p-values and adjusted p-values, repectively. sigPathways contains a list with significant pathwayd at FDR alpha per factor.
 #' @import foreach doParallel
 #' @importFrom stats p.adjust
 #' @export
@@ -28,7 +29,7 @@
 FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all", local.statistic=c("loading", "cor", "z"),
                                          transformation=c("abs.value", "none"), global.statistic=c("mean.diff", "rank.sum"),
                                          statistical.test=c("parametric", "cor.adj.parametric", "permutation"),
-                                         nperm=100, min.size=15, cores=1, p.adj.method = "BH", alpha=0.1) {
+                                         nperm=1000, min.size=15, cores=1, p.adj.method = "BH", alpha=0.1) {
   
   # Parse inputs
   local.statistic <- match.arg(local.statistic)
@@ -53,10 +54,7 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
   
   # Check that there is no constant factor
   stopifnot( all(apply(Z,2,var, na.rm=T)>0) )
-  
-  # To-do: check feature.sets input format
-  # to-do: to reduce FDR problems, extract only factors that are active in that view
-  
+    
   # turn feature.sets into binary membership matrices if provided as list
   if(class(feature.sets) == "list") {
     features <- Reduce(union, feature.sets)
@@ -67,6 +65,8 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
     })
     feature.sets <-t(feature.sets)*1
   }
+
+  if(!(class(feature.sets)=="matrix" & all(feature.sets %in% c(0,1)))) stop("feature.sets has to be a list or a binary matrix.")
   
   # Check if some features do not intersect between the feature sets and the observed data and remove them
   features <- intersect(colnames(data),colnames(feature.sets))
@@ -77,13 +77,7 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
   
   # Filter feature sets with small number of features
   feature.sets <- feature.sets[rowSums(feature.sets)>=min.size,]
-  
-  # Match test options
-  # local.statistic <- match.arg(local.statistic)
-  # transformation <- match.arg(transformation)
-  # global.statistic <- match.arg(global.statistic)
-  # statistical.test <- match.arg(statistical.test)
-  
+    
   # Print options
   message("Doing feature Ontology Enrichment Analysis with the following options...")
   message(sprintf("View: %s", view))
@@ -101,14 +95,14 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
   # use own version for permutation test because of bugs in PCGSE package
   if (statistical.test == "permutation") {
     doParallel::registerDoParallel(cores=cores)
-    
+    	
     null_dist_tmp <- foreach(rnd=1:nperm) %dopar% {
       perm <- sample(ncol(data))
       # Permute rows of the weight matrix to obtain a null distribution
-      W_null <- apply(W, 2, function(w) w[perm])
+      W_null <- W[perm,]
       rownames(W_null) <- rownames(W); colnames(W_null) <- colnames(W)
-      
-      data_null <- data[,perm]
+      # Permute columns of the data matrix correspondingly (only matters for cor.adjusted test)
+	  data_null <- data[,perm]
       rownames(data_null) <- rownames(data)
       
       # Compute null statistic
@@ -125,41 +119,29 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
     colnames(s.true) <- factors
     rownames(s.true) <- rownames(feature.sets)
     
-    # directly use permutation to control FDR
-    calcfdr <- function(th, idx) {
-      fp <- sum(abs(null_dist[,idx]) > th)
-      tp <- sum(abs(s.true[,idx]) > th )
-      fp/(tp+fp) }
-    sigPathways <- lapply(1:length(factors), function(j) {
-      fdr <-sapply(seq(0,100,0.01), calcfdr,j)
-      Idxsel <- which(fdr<=alpha)[1]
-      if(!is.na(Idxsel)) {
-        tsel <- seq(0,100,0.01)[Idxsel]
-        rownames(s.true)[s.true[,j] > tsel]
-      } else NULL
-    })
-      
-    # Compute p.values
-    p.values <- matrix(NA, nrow=nrow(s.true), ncol=ncol(s.true));
-    rownames(p.values) <- rownames(s.true); colnames(p.values) <- factors
-    for (j in factors) {
-      p.values[,j] <- sapply(s.true[,j], function(x) mean(abs(null_dist[,j]) > abs(x)) )
-    }
+    # Calculate p-values based on fraction true statistic per factor and gene set is larger than permuted
+    warning("A large number of permutations is required for the permutation approach!")
+    xx <- array(unlist(null_dist_tmp), dim = c(nrow(null_dist_tmp[[1]]), ncol(null_dist_tmp[[1]]), length(null_dist_tmp)))
+	ll <- lapply(1:nperm, function(i) xx[,,i] > abs(s.true))
+	p.values <- Reduce("+",ll)/nperm
+	rownames(p.values) <- rownames(s.true); colnames(p.values) <- factors
 
+# parametric version
   } else {
     p.values <- pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
                       transformation=transformation, feature.set.statistic=global.statistic, feature.set.test=statistical.test, nperm=nperm)$p.values
     colnames(p.values) <- factors
     rownames(p.values) <- rownames(feature.sets)
-  }
+    }
   
+  # adjust for multiple testing per factor
   if(!p.adj.method %in%  p.adjust.methods) stop("p.adj.method needs to be an element of p.adjust.methods")
   adj.p.values <- apply(p.values, 2,function(lfw) p.adjust(lfw, method = p.adj.method))
-  
-  sigPathways2 <- lapply(factors, function(j) rownames(adj.p.values)[adj.p.values[,j] <= alpha])
-  if(statistical.test != "permutation") sigPathways <- NULL
-  
-  return(list(pval = p.values, pval.adj = adj.p.values, sigPathways=sigPathways, sigPathways2=sigPathways2))
+
+  # list of significant pathwasy at level alpha
+  sigPathways <- lapply(factors, function(j) rownames(adj.p.values)[adj.p.values[,j] <= alpha])
+
+  return(list(pval = p.values, pval.adj = adj.p.values, sigPathways=sigPathways))
 }
 
 

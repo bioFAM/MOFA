@@ -23,10 +23,10 @@ import scipy.stats as stats
 from sys import path
 import sklearn.decomposition
 
-from MOFA.core.nodes import *
-from MOFA.core.multiview_nodes import *
-from MOFA.core.nongaussian_nodes import *
-from MOFA.core.updates import *
+from mofa.core.nodes import *
+from mofa.core.multiview_nodes import *
+from mofa.core.nongaussian_nodes import *
+from mofa.core.updates import *
 
 
 class initModel(object):

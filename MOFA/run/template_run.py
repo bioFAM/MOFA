@@ -1,12 +1,23 @@
 import argparse
 import pandas as pd
 import scipy as s
+from time import sleep
 
-# from MOFA.core.utils import *
 from run_utils import *
 
 def entry_point():
+  banner = """
+  ###########################################################
+  ###                 __  __  ___  _____ _                ### 
+  ###                |  \/  |/ _ \|  ___/ \               ### 
+  ###                | |\/| | | | | |_ / _ \              ### 
+  ###                | |  | | |_| |  _/ ___ \             ### 
+  ###                |_|  |_|\___/|_|/_/   \_\            ### 
+  ###                                                     ###
+  ########################################################### """
 
+  print banner
+  sleep(2)
 
   # Read arguments
   p = argparse.ArgumentParser( description='Run script for MOFA' )

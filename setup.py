@@ -11,12 +11,7 @@ if __name__ == '__main__':
           author_email='ricard.argelaguet@gmail.com',
           license='MIT',
           packages=find_packages(),
-		      install_requires=[
-            'pandas',
-            'scipy',
-            'numpy',
-            'sklearn',
-            'argparse',
-            'h5py',
-          ],
+		      install_requires=['pandas', 'scipy', 'numpy', 'sklearn', 'argparse', 'h5py'],
+          console_scripts = [ 'mofa=mofa.run.template_run:entry_point'],
+          entry_points={'console_scripts': console_scripts}
         )

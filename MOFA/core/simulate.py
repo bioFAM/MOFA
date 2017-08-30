@@ -59,52 +59,41 @@ class Simulate(object):
                 W[m][:,k] = norm.rvs(loc=0, scale=1/s.sqrt(alpha[m][k]), size=self.D[m])
         return W,alpha
 
-    def initW_spikeslab(self, theta, alpha=None, annotation=False):
+    def initW_spikeslab(self, theta, alpha=None):
         """ Initialisation of weights in spike and slab prior"""
-
-        # checking there is no zero in alpha input
-        if alpha is not None:
-            assert not any([0 in a for a in alpha]), 'alpha cannot be zero'
-
-        # Simulate bernoulli variable S
-        S = [ s.zeros((self.D[m],self.K)) for m in xrange(self.M) ]
-        if annotation:
-            # if annotation is True, theta is an informative prior and its dimensions
-            # are M * K * D[m], so theta[m][k] is already of length D
-            for m in xrange(self.M):
-                for k in xrange(self.K):
-                    # S[m][:,k] = bernoulli.rvs(p=theta[m][:, k])
-                    S[m][:,k] = (theta[m][:, k] > .7) *1.
-
-        else:
-            for m in xrange(self.M):
-
-                # Completely vectorised, not sure if it works
-                # S[m] = bernoulli.rvs(p=theta[m].flatten(), size=self.D[m]*self.K).reshape((self.D[m],self.K))
-
-                # Partially vectorised
-                for k in xrange(self.K):
-                    S[m][:,k] = bernoulli.rvs(p=theta[m][:,k], size=self.D[m])
-                
-                # Unvectorised
-                # for d in xrange(self.D[m]):
-                #     for k in xrange(self.K):
-                #         S[m][d,k] = bernoulli.rvs(p=theta[m][d,k], size=1)
-
-        # WHAT IS ALL THESE???
 
         # Simualte ARD precision
         if alpha is None:
             alpha = self.initAlpha()
+        else:
+            assert not any([0 in a for a in alpha]), 'alpha cannot be zero'
 
-        # Simulate gaussian weights
+        # Simulate bernoulli variable S
+        S = [ s.zeros((self.D[m],self.K)) for m in xrange(self.M) ]
+        for m in xrange(self.M):
+
+            # Completely vectorised, not sure if it works
+            # S[m] = bernoulli.rvs(p=theta[m].flatten(), size=self.D[m]*self.K).reshape((self.D[m],self.K))
+
+            # Partially vectorised
+            for k in xrange(self.K):
+                S[m][:,k] = bernoulli.rvs(p=theta[m][:,k], size=self.D[m])
+            
+            # Unvectorised
+            # for d in xrange(self.D[m]):
+            #     for k in xrange(self.K):
+            #         S[m][d,k] = bernoulli.rvs(p=theta[m][d,k], size=1)
+
+
+        # Simulate gaussian weights W
         W_hat = [ s.empty((self.D[m],self.K)) for m in xrange(self.M) ]
         W = [ s.empty((self.D[m],self.K)) for m in xrange(self.M) ]
         for m in xrange(self.M):
             for k in xrange(self.K):
-                W_hat[m][:,k] = norm.rvs(loc=0, scale=s.sqrt(1/alpha[m][k]), size=self.D[m])
+                W_hat[m][:,k] = norm.rvs(loc=0, scale=s.sqrt(1./alpha[m][k]), size=self.D[m])
             W[m] = W_hat[m] * S[m]
-        return S,W,W_hat,alpha
+
+        return S, W, W_hat, alpha
 
     def initZ(self):
         """ Initialisation of latent variables"""
@@ -123,7 +112,7 @@ class Simulate(object):
         # Means are initialised to zero by default
         return [ s.zeros(self.D[m]) for m in xrange(self.M) ]
 
-    def generateData(self, W, Z, Tau, Mu, likelihood, min_trials=None, max_trials=None, missingness=0.0, missing_view=False):
+    def generateData(self, W, Z, Tau, Mu, likelihood, missingness=0.0, missing_view=False):
         """ Initialisation of observations 
 
         PARAMETERS
@@ -133,18 +122,15 @@ class Simulate(object):
         Tau (list of length M where each element is a np array with shape (Dm,)): precision of the normally-distributed noise
         Mu (list of length M where each element is a np array with shape (Dm,)): feature-wise means
         likelihood (str): type of likelihood
-        min_trials (int): only for binomial likelihood, minimum number of total trials
-        max_trials (int): only for binomial likelihood, maximum number of total trials
         missingness (float): percentage of missing values
         """
 
         Y = [ s.zeros((self.N,self.D[m])) for m in xrange(self.M) ]
 
-        # Sample observations using a gaussian likelihood
         if likelihood == "gaussian":
+            # Vectorised
             for m in xrange(self.M):
                 Y[m] = s.dot(Z,W[m].T) + Mu[m] + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m]), size=[self.N, self.D[m]])
-
             # Non-vectorised, slow
             # for m in xrange(self.M):
                 # for n in xrange(self.N):
@@ -197,22 +183,8 @@ class Simulate(object):
                         # Y[m][n,d] = s.special.round(f)
                 f = sigmoid( s.dot(Z,W[m].T) )
                 Y[m] = s.special.round(f)
-        # Sample observations using a binomial likelihood
-        elif likelihood == "binomial":
-            Y = dict(tot=[s.zeros((self.N,self.D[m])) for m in xrange(self.M)],
-                     obs=[s.zeros((self.N,self.D[m])) for m in xrange(self.M)] )
-            # Slow way
-            for m in xrange(self.M):
-                for n in xrange(self.N):
-                    for d in xrange(self.D[m]):
-                        # Sample the total number of trials
-                        Y["tot"][m][n,d] = s.random.random_integers(low=min_trials, high=max_trials, size=1)
-                        # Sample the total number of successes
-                        f = sigmoid( s.dot(Z[n,:],W[m][d,:].T) )
-                        Y["obs"][m][n,d] = binom.rvs(Y["tot"][m][n,d], f)
 
         # Introduce missing values into the data
-        # DOESNT WORK FOR BINOMIAL RIGHT NOW
         if missingness > 0.0:
             for m in xrange(self.M):
                 nas = s.random.choice(range(self.N*self.D[m]), size=int(missingness*self.N*self.D[m]), replace=False)

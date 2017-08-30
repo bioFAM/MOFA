@@ -12,7 +12,13 @@ import numpy as np
 
 
 class Node(object):
-    """General class for a node in a Bayesian network"""
+    """General class for a node in a Bayesian network
+
+    PARAMETERS
+    ----------
+    dim: tuple
+        Dimensionality of the node
+    """
     def __init__(self, dim):
     	self.dim = dim
 
@@ -62,7 +68,12 @@ class Node(object):
         pass
 
     def updateDim(self, axis, new_dim):
-        """ Method to update the dimensionality of a node """
+        """ Method to update the dimensionality of a node 
+        PARAMETERS
+        ----------
+        axis:
+        new_dim:
+        """
         dim = list(self.dim)
         dim[axis] = new_dim
         self.dim = tuple(dim)
@@ -81,12 +92,15 @@ class Constant_Node(Node):
             self.value = value
 
     def getValue(self):
+        """ Method to return the values of the node """
         return self.value
 
     def getExpectation(self):
+        """ Method to return the first moment of the node, which just points to the values """
         return self.getValue()
 
     def getExpectations(self):
+        """ Method to return the expectations of the node, which just points to the values """
         return { 'E':self.getValue(), 'lnE':s.log(self.getValue()), 'E2':self.getValue()**2 }
 
     def removeFactors(self, idx, axis=None):

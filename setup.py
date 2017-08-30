@@ -4,7 +4,6 @@ from setuptools import find_packages
 def setup_package():
   install_requires = ['pandas', 'scipy', 'numpy', 'sklearn', 'argparse', 'h5py']
   console_scripts = [ 'mofa=mofa.run.template_run:entry_point'],
-
   metadata = dict(
       name = 'MOFA',
       version = '0.1',

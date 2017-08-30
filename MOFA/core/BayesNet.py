@@ -5,7 +5,6 @@ and the corresponding attributes/methods to train the model, set algorithmic opt
 
 To-do:
 - default values for schedule and options
-
 """
 
 from __future__ import division
@@ -22,11 +21,21 @@ from utils import corr, nans
 
 class BayesNet(object):
     def __init__(self, dim, nodes, schedule, options, trial=1):
-        #  dim: dictionary with the keyworded dimensionalities, ex. {'N'=10, 'M'=3, ...}
-        #  nodes: dictionary with all nodes where the keys are the name of the node and the values are instances the 'Node' class
-        #  schedule: list or tuple with the names of the nodes to be updated in the given order. Nodes not present in schedule will not be updated
-        #  options: training options, such as maximum number of iterations, training options, etc.
-        #  trial: this is an auxiliary variable for parallelised running of multiple trials
+        """ Initialisation of a Bayesian network
+
+        PARAMETERS
+        ----------
+        dim: dict
+            keyworded dimensionalities, ex. {'N'=10, 'M'=3, ...}
+        nodes: dict
+            dictionary with all nodes where the keys are the name of the node and the values are instances the 'Node' class
+        schedule: iterable
+            list or tuple with the names of the nodes to be updated in the given order. Nodes not present in schedule will not be updated
+        options: dict
+            training options, such as maximum number of iterations, training options, etc.
+        trial: int
+            this is an auxiliary variable for parallelised running of multiple trials
+        """
 
         self.dim = dim
         self.nodes = nodes
@@ -226,7 +235,7 @@ class BayesNet(object):
 
         PARAMETERS
         ----------
-        nodes: list
+        nodes: iterable
             name of the nodes
         """
 
@@ -239,6 +248,7 @@ class BayesNet(object):
 
     def getExpectations(self, only_first_moments=False, *nodes):
         """Method to collect all expectations of a given set of nodes (all by default)
+        
         PARAMETERS
         ----------
         only_first_moments: bool

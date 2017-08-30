@@ -15,8 +15,8 @@ All multiview nodes have the following main attributes:
 
 import scipy as s
 
-from nodes import Node
-from variational_nodes import Variational_Node
+from .nodes import Node
+from .variational_nodes import Variational_Node
 
 
 class Multiview_Node(Node):
@@ -37,11 +37,11 @@ class Multiview_Node(Node):
     def addMarkovBlanket(self, **kwargs):
         """Method to define the Markov blanket"""
         # assert len(kwargs.values()) == len(self.activeM), "The markov blanket of a multiview node should be a dictionary where the key is the name of the node and the value is a list of nodes of length M"
-        for k,v in kwargs.iteritems(): 
+        for k,v in kwargs.items(): 
             for m in self.activeM: 
                 if hasattr(self.nodes[m], 'markov_blanket'):
                     if k in self.nodes[m].markov_blanket.keys():
-                        print "Error: " + str(k) + " is already in the markov blanket of " + str(self.nodes[m])
+                        print("Error: " + str(k) + " is already in the markov blanket of " + str(self.nodes[m]))
                     else:
                         if isinstance(v,Multiview_Node):
                             self.nodes[m].markov_blanket[k] = v.getNodes()[m]
@@ -51,7 +51,7 @@ class Multiview_Node(Node):
                     self.nodes[m].addMarkovBlanket( **{ k: (v.getNodes()[m] if isinstance(v,Multiview_Node) else v) } )
 
     def getMarkovBlanket(self):
-        print "Error: Multiview nodes do not have a markov blanket, use the single-view nodes"
+        print("Error: Multiview nodes do not have a markov blanket, use the single-view nodes")
         exit()
         
     def removeFactors(self,idx):

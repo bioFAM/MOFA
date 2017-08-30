@@ -2,8 +2,8 @@
 from __future__ import division
 import scipy as s
 
-from nodes import *
-from distributions import *
+from .nodes import *
+from .distributions import *
 
 
 """

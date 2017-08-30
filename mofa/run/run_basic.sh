@@ -24,6 +24,9 @@ likelihoods=( gaussian gaussian gaussian )
 # Define view names
 views=( A B C )
 
+# Maximum number of iterations
+iterations=10
+
 # Define the initial number of latent factors and how they are dropped during training.
 # The model automatically removes inactive factors while training if they explain no variance.
 # 'dropR2' sets the threshold of variance explained (R^2) for a model to shut down a factor. 
@@ -44,6 +47,7 @@ cmd='mofa
 	--outFile $outFile
 	--likelihoods ${likelihoods[@]}
 	--views ${views[@]}
+	--iter $iterations
 	--factors $factors
 	--dropR2 $dropR2
 	--learnMean

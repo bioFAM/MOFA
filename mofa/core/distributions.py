@@ -18,7 +18,7 @@ import numpy.linalg as linalg
 import scipy.special as special
 import scipy.stats as stats
 
-from utils import *
+from .utils import *
 
 
 
@@ -158,11 +158,11 @@ class MultivariateGaussian(Distribution):
         E = self.params['mean']
 
         # self.E2 = s.empty( (self.dim[0],self.dim[1],self.dim[1]) )
-        # for i in xrange(self.dim[0]):
+        # for i in range(self.dim[0]):
         #     self.E2[i,:,:] = s.outer(self.E[i,:],self.E[i,:]) + self.cov[i,:,:]
 
         E2 = self.params['cov'].copy()
-        for i in xrange(self.dim[0]):
+        for i in range(self.dim[0]):
             E2[i,:,:] += s.outer(E[i,:],E[i,:])
 
         self.expectations = {'E':E, 'E2':E2}
@@ -175,7 +175,7 @@ class MultivariateGaussian(Distribution):
         assert x.shape == self.dim, "Problem with the dimensionalities"
         l = 0.
         D = self.dim[1]
-        for n in xrange(self.dim[0]):
+        for n in range(self.dim[0]):
             qterm = (x[n,:]-self.params['mean'][n,:]).T.dot(linalg.det(self.params['cov'][n,:,:])).dot(x[n,:]-self.params['mean'][n,:])
             l += -0.5*D*s.log(2*s.pi) - 0.5*s.log(linalg.det(self.params['cov'][n,:,:])) -0.5*qterm
         return l
@@ -197,7 +197,7 @@ class MultivariateGaussian(Distribution):
 
     # def entropy(self):
         # CHECK THIs Is CORRECT
-        # tmp = sum( [ logdet(self.cov[i,:,:]) for i in xrange(self.dim[0]) ] )
+        # tmp = sum( [ logdet(self.cov[i,:,:]) for i in range(self.dim[0]) ] )
         # return ( 0.5*(tmp + (self.dim[0]*self.dim[1])*(1+s.log(2*pi)) ).sum() )
 class UnivariateGaussian(Distribution):
     """

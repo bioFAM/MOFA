@@ -4,14 +4,14 @@ import numpy as np
 import warnings
 from copy import deepcopy
 from time import time
+import scipy.special as special
 
 # Import manually defined functions
-from variational_nodes import *
-from utils import *
-from nodes import Constant_Node
-from mixed_nodes import Mixed_Theta_Nodes
+from .variational_nodes import *
+from .utils import *
+from .nodes import Constant_Node
+from .mixed_nodes import Mixed_Theta_Nodes
 
-import scipy.special as special
 
 warnings.filterwarnings('ignore')
 
@@ -230,7 +230,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         tau[mask] = 0.
 
         # Update each latent variable in turn
-        for k in xrange(self.dim[1]):
+        for k in range(self.dim[1]):
 
             # Calculate intermediate steps
             term1 = (theta_lnE-theta_lnEInv)[:,k]
@@ -277,7 +277,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
                 alpha["E"] = s.repeat(alpha["E"][:], self.dim[1], axis=0)
                 alpha["lnE"] = s.repeat(alpha["lnE"][:], self.dim[1], axis=0)
         else:
-            print "Not implemented"
+            print("Not implemented")
             exit()
 
         # Calculate ELBO for W
@@ -409,7 +409,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         SWtmp = self.markov_blanket["SW"].getExpectations()
         tau = deepcopy(self.markov_blanket["Tau"].getExpectation())
         latent_variables = self.getLvIndex() # excluding covariates from the list of latent variables
-        mask = [ma.getmask(Y[m]) for m in xrange(len(Y))]
+        mask = [ma.getmask(Y[m]) for m in range(len(Y))]
 
         # Collect parameters from the prior or expectations from the markov blanket
         if "Mu" in self.markov_blanket:
@@ -424,7 +424,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
             Alpha = 1./self.P.getParameters()["var"]
 
         # Check dimensionality of Tau and expand if necessary (for Jaakola's bound only)
-        for m in xrange(len(Y)):
+        for m in range(len(Y)):
             if tau[m].shape != Y[m].shape:
                 tau[m] = s.repeat(tau[m].copy()[None,:], self.N, axis=0)
             # Mask tau
@@ -442,7 +442,7 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         for k in latent_variables:
             foo = s.zeros((self.N,))
             bar = s.zeros((self.N,))
-            for m in xrange(M):
+            for m in range(M):
                 foo += np.dot(tau[m],SWtmp[m]["ESWW"][:,k])
                 bar += np.dot(tau[m]*(Y[m] - s.dot( Qmean[:,s.arange(self.dim[1])!=k] , SWtmp[m]["E"][:,s.arange(self.dim[1])!=k].T )), SWtmp[m]["E"][:,k])
             Qvar[:,k] = 1./(Alpha[:,k]+foo)

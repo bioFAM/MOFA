@@ -92,7 +92,7 @@ class initModel(object):
                 qmean = s.ones((self.N,self.K)) * qmean
 
             else:
-                print "Wrong initialisation for Z"
+                print("Wrong initialisation for Z")
                 exit()
 
         # Add covariates
@@ -132,21 +132,21 @@ class initModel(object):
         ----------
         """
         SW_list = [None]*self.M
-        for m in xrange(self.M):
+        for m in range(self.M):
 
            # Initialise first moment
             if isinstance(qmean_S1[m],str):
                 if qmean_S1[m] == "random":
                     qmean_S1[m] = stats.norm.rvs(loc=0, scale=1, size=(self.D[m],self.K))
                 else:
-                    print "%s initialisation not implemented for SW" % qmean_S1[m]
+                    print("%s initialisation not implemented for SW" % qmean_S1[m])
                     exit()
             elif isinstance(qmean_S1[m],s.ndarray):
                 assert qmean_S1[m].shape == (self.D[m],self.K), "Wrong dimensionality"
             elif isinstance(qmean_S1[m],(int,float)):
                 qmean_S1[m] = s.ones((self.D[m],self.K)) * qmean_S1[m]
             else:
-                print "Wrong initialisation for SW"
+                print("Wrong initialisation for SW")
                 exit()
 
             SW_list[m] = SW_Node(
@@ -189,7 +189,7 @@ class initModel(object):
         """
         
         alpha_list = [None]*self.M
-        for m in xrange(self.M):
+        for m in range(self.M):
             alpha_list[m] = AlphaW_Node_mk(dim=(self.K,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
             # alpha_list[m] = Constant_Node(dim=(self.K,), value=qE[m])
             # alpha_list[m].factors_axis = 0
@@ -205,7 +205,7 @@ class initModel(object):
         #  qb (float): initialisation of the 'b' parameter of the variational distribution
         #  qE (float): initial expectation of the variational distribution
         tau_list = [None]*self.M
-        for m in xrange(self.M):
+        for m in range(self.M):
             if self.lik[m] == "poisson":
                 tmp = 0.25 + 0.17*s.amax(self.data[m],axis=0)
                 tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
@@ -227,7 +227,7 @@ class initModel(object):
     def initY(self):
         # Method to initialise the observed data
         Y_list = [None]*self.M
-        for m in xrange(self.M):
+        for m in range(self.M):
             if self.lik[m]=="gaussian":
                 Y_list[m] = Y_Node(dim=(self.N,self.D[m]), value=self.data[m])
             elif self.lik[m]=="poisson":
@@ -238,10 +238,6 @@ class initModel(object):
                 # tmp = stats.norm.rvs(loc=0, scale=1, size=(self.N,self.D[m]))
                 Y_list[m] =  Bernoulli_PseudoY_Jaakkola(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
                 # Y_list[m] =  Bernoulli_PseudoY_Jaakkola(dim=(self.N,self.D[m]), obs=self.data[m], E=self.data[m])
-            elif self.lik[m]=="binomial":
-                print "Not implemented"
-                exit()
-                # Y_list[m] = Binomial_PseudoY(dim=(self.N,self.D[m]), tot=data["tot"][m], obs=data["obs"][m], E=None)
             elif self.lik[m]=="warp":
                 Y_list[m] = Warped_PseudoY_Node(dim=(self.N,self.D[m]), obs=self.data[m], func_type='tanh', I=3, E=None)
                 # Y_list[m] = Warped_PseudoY_Node(dim=(self.N,self.D[m]), obs=self.data[m], func_type='logistic', I=1, E=None)
@@ -258,7 +254,7 @@ class initModel(object):
         #  learnTheta (binary): list with binary matrices with dim (D[m],K)
 
         Theta_list = [None] * self.M
-        for m in xrange(self.M):
+        for m in range(self.M):
             
             # Initialise constant node
             Kconst = learnTheta[m]==0
@@ -288,7 +284,7 @@ class initModel(object):
     def initThetaLearn(self, pa, pb, qa, qb, qE):
         # Method to initialise the theta node
         Theta_list = [None] * self.M
-        for m in xrange(self.M):
+        for m in range(self.M):
             Theta_list[m] = Theta_Node(dim=(self.K,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m][0,:])
         self.Theta = Multiview_Variational_Node(self.M, *Theta_list)
         self.nodes["Theta"] = self.Theta
@@ -296,7 +292,7 @@ class initModel(object):
     def initThetaConst(self, value):
         # Method to initialise a constant theta node
         Theta_list = [None] * self.M
-        for m in xrange(self.M):
+        for m in range(self.M):
             Theta_list[m] = Theta_Constant_Node(dim=(self.D[m],self.K,), value=value[m], N_cells=1.)
         self.Theta = Multiview_Constant_Node(self.M, *Theta_list)
         self.nodes["Theta"] = self.Theta
@@ -314,4 +310,4 @@ class initModel(object):
             self.nodes[node].updateExpectations()
 
     def getNodes(self):
-        return { k:v for (k,v) in self.nodes.iteritems()}
+        return { k:v for (k,v) in self.nodes.items()}

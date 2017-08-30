@@ -8,8 +8,8 @@ Created on Tue Aug 11 14:41:10 2015
 
 import numpy
 import scipy.optimize
-# from matplotlib import pyplot as plt
-from warping_functions import Warping_functions
+
+from .warping_functions import Warping_functions
 
 
 class Warping_inference(object):
@@ -35,7 +35,7 @@ class Warping_inference(object):
         If i is -1, all warping terms are used. 
         """
         res = 0.0
-        for l in xrange(self.entity.I):
+        for l in range(self.entity.I):
             if l!=i_not: 
                 res += self.entity.f(x,l)
         return x + res
@@ -46,7 +46,7 @@ class Warping_inference(object):
         Gradient of f w.r.t. to x of all warping terms except the i^th term
         """
         res = 0.0
-        for l in xrange(self.entity.I):
+        for l in range(self.entity.I):
             if l!=i_not: 
                 res += self.entity.f_prime(x,l)
         return 1. + res
@@ -59,7 +59,7 @@ class Warping_inference(object):
 
         NOTE: PARTIAL_F_VAL AND PRIME_VAL NOT SURE IF ITS IN THE LOOP OR NOT
         """
-        for i in xrange(self.entity.I):
+        for i in range(self.entity.I):
             for warp_var in self.entity.param.keys():
                 partial_f_val = self.f(X,i_not=i)
                 partial_f_prime_val = self.f_prime(X,i_not=i)
@@ -160,7 +160,7 @@ class Warping_inference(object):
             x -= update
             t += 1 
         if t == max_iters:
-            print "WARNING: maximum number of iterations reached in f_inv "
+            print("WARNING: maximum number of iterations reached in f_inv ")
         return x
 
     def f_inv_gauss_hermite(self,mu_z,tau_z,deg=10):
@@ -170,7 +170,7 @@ class Warping_inference(object):
         x,w = numpy.polynomial.hermite.hermgauss(deg)
         sqrt_2_over_tau_z = numpy.sqrt(2.0/tau_z)
         mu_x = numpy.zeros_like(mu_z).astype(float)
-        for t in xrange(deg):
+        for t in range(deg):
             new_arg = x[t]*sqrt_2_over_tau_z + mu_z 
             mu_x += w[t]*self.f_inv(new_arg)
         return (1.0/numpy.sqrt(numpy.pi)) * mu_x

@@ -1,5 +1,6 @@
 from __future__ import division
 from time import sleep
+
 import numpy as np
 import pandas as pd
 import numpy.ma as ma
@@ -18,22 +19,22 @@ def removeIncompleteSamples(data):
     ----------
     data: list  
     """
-    print "Removing incomplete samples..."
+    print("Removing incomplete samples...")
 
     M = len(data)
     N = data[0].shape[0]
     samples_to_remove = []
-    for n in xrange(N):
-        for m in xrange(M):
+    for n in range(N):
+        for m in range(M):
             if pd.isnull(data[m].iloc[n][0]):
                 samples_to_remove.append(n)
                 break
 
-    print "A total of " + str(len(samples_to_remove)) + " sample(s) have at least a missing view and will be removed"
+    print("A total of " + str(len(samples_to_remove)) + " sample(s) have at least a missing view and will be removed")
 
     data_filt = [None]*M
     samples_to_keep = np.setdiff1d(range(N),samples_to_remove)
-    for m in xrange(M):
+    for m in range(M):
         data_filt[m] = data[m].iloc[samples_to_keep]
 
     return data_filt
@@ -49,13 +50,13 @@ def maskData(data, data_opts):
     ----------
     data_opts: dic
     """
-    print "Masking data with the following options:"
-    print "at random:"
-    print data_opts['maskAtRandom']
-    print "full cases:"
-    print data_opts['maskNSamples']
+    print("Masking data with the following options:")
+    print("at random:")
+    print(data_opts['maskAtRandom'])
+    print("full cases:")
+    print(data_opts['maskNSamples'])
 
-    for m in xrange(len(data)):
+    for m in range(len(data)):
 
         # Mask values at random
         D = data[m].shape[1]
@@ -90,47 +91,47 @@ def loadData(data_opts, verbose=True):
     verbose: boolean
     """
     
-    print "\n"
-    print "#"*18
-    print "## Loading data ##"
-    print "#"*18
-    print "\n"
+    print ("\n")
+    print ("#"*18)
+    print ("## Loading data ##")
+    print ("#"*18)
+    print ("\n")
     sleep(1)
 
     M = len(data_opts['input_files'])
 
     Y =  [None]*M
-    for m in xrange(M):
+    for m in range(M):
 
         # Read file
         file = data_opts['input_files'][m]
         Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"]).astype(pd.np.float32)
 
         # Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"])
-        print "Loaded %s with dim (%d,%d)..." % (file, Y[m].shape[0], Y[m].shape[1])
+        print("Loaded %s with dim (%d,%d)..." % (file, Y[m].shape[0], Y[m].shape[1]))
 
         # Removing features with no variance
         var = Y[m].std(axis=0) 
         if np.any(var==0.):
-            print "Warning: %d features(s) have zero variance, removing them..." % (var==0.).sum()
+            print("Warning: %d features(s) have zero variance, removing them..." % (var==0.).sum())
             Y[m].drop(Y[m].columns[np.where(var==0.)], axis=1, inplace=True)
 
         # Center the features
         if data_opts['center_features'][m]:
-            print "Centering features for view " + str(m) + "..."
+            print("Centering features for view " + str(m) + "...")
             Y[m] = (Y[m] - Y[m].mean(axis=0))
 
         # Scale the views to unit variance
         if data_opts['scale_views'][m]:
-            print "Scaling view " + str(m) + " to unit variance..."
+            print("Scaling view " + str(m) + " to unit variance...")
             Y[m] = Y[m] / np.nanstd(Y[m].as_matrix())
 
         # Scale the features to unit variance
         if data_opts['scale_features'][m]:
-            print "Scaling features for view " + str(m) + " to unit variance..."
+            print("Scaling features for view " + str(m) + " to unit variance...")
             Y[m] = Y[m] / np.std(Y[m], axis=0, )
 
-        print "\n"
+        print("\n")
 
     return Y
 
@@ -241,7 +242,7 @@ def saveParameters(model, hdf5, view_names=None):
         # Multi-view nodes
         if type(parameters) == list:
             # Loop through the views
-            for m in xrange(len(parameters)):
+            for m in range(len(parameters)):
                 if view_names is not None:
                     tmp = view_names[m]
                 else:
@@ -293,7 +294,7 @@ def saveExpectations(model, hdf5, view_names=None, only_first_moments=True):
         if type(expectations) == list:
 
             # Iterate over views
-            for m in xrange(len(expectations)):
+            for m in range(len(expectations)):
                 if view_names is not None:
                     tmp = view_names[m]
                 else:
@@ -336,7 +337,7 @@ def saveTrainingStats(model, hdf5):
     stats_grp.create_dataset("activeK", data=stats["activeK"])
     stats_grp.create_dataset("elbo", data=stats["elbo"])
     stats_grp.create_dataset("elbo_terms", data=stats["elbo_terms"].T)
-    stats_grp['elbo_terms'].attrs['colnames'] = list(stats["elbo_terms"].columns.values)
+    stats_grp['elbo_terms'].attrs['colnames'] = [a.encode('utf8') for a in stats["elbo_terms"].columns.values]
 
 def saveTrainingOpts(opts, hdf5):
     """ Method to save the training options in an hdf5 file
@@ -347,16 +348,18 @@ def saveTrainingOpts(opts, hdf5):
     hdf5: 
     """
     # Remove dictionaries from the options
-    for k,v in opts.copy().iteritems():
+    for k,v in opts.copy().items():
         if type(v)==dict:
-            for k1,v1 in v.iteritems():
+            for k1,v1 in v.items():
                 opts[str(k)+"_"+str(k1)] = v1
             opts.pop(k)
-    hdf5.create_dataset("training_opts", data=np.array(opts.values(), dtype=np.float))
-    hdf5['training_opts'].attrs['names'] = opts.keys()
+
+    # Create HDF5 data set
+    hdf5.create_dataset("training_opts", data=np.array(list(opts.values()), dtype=np.float))
+    hdf5['training_opts'].attrs['names'] = np.asarray(list(opts.keys())).astype('S')
 
 def saveModelOpts(opts, hdf5):
-    """ Method to save the model  optionsin an hdf5 file
+    """ Method to save the model options in an hdf5 file
     
     PARAMETERS
     ----------
@@ -365,10 +368,10 @@ def saveModelOpts(opts, hdf5):
     """
     opts_interest = ["learnMean","schedule","likelihood"]
     opts = dict((k, opts[k]) for k in opts_interest)
-    grp=hdf5.create_group('model_opts')
+    grp = hdf5.create_group('model_opts')
     for k,v in opts.items():
-        grp.create_dataset(k, data=v)
-    grp[k].attrs['names'] = opts.keys()
+        grp.create_dataset(k, data=np.asarray(v).astype('S'))
+    grp[k].attrs['names'] = np.asarray(list(opts.keys())).astype('S')
 
 def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_names=None):
     """ Method to save the training data in an hdf5 file
@@ -385,7 +388,7 @@ def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_na
     data_grp = hdf5.create_group("data")
     featuredata_grp = hdf5.create_group("features")
     hdf5.create_dataset("samples", data=sample_names)
-    for m in xrange(len(data)):
+    for m in range(len(data)):
         view = view_names[m] if view_names is not None else str(m)
         data_grp.create_dataset(view, data=data[m].data.T)
         if feature_names is not None:
@@ -403,7 +406,7 @@ def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_na
 
     # For some reason h5py orders the datasets alphabetically, so we have to modify the likelihood accordingly
     idx = sorted(range(len(view_names)), key=lambda k: view_names[k])
-    tmp = [model_opts["likelihood"][idx[m]] for m in xrange(len(model_opts["likelihood"]))]
+    tmp = [model_opts["likelihood"][idx[m]] for m in range(len(model_opts["likelihood"]))]
     model_opts["likelihood"] = tmp
 
     hdf5 = h5py.File(outfile,'w')

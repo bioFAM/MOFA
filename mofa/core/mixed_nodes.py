@@ -1,7 +1,7 @@
 import scipy as s
 
-from variational_nodes import Variational_Node
-from nodes import Constant_Node
+from .variational_nodes import Variational_Node
+from .nodes import Constant_Node
 
 """
 This module defines nodes that are a mix of variational and constant. 

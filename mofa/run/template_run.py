@@ -3,9 +3,10 @@ import pandas as pd
 import scipy as s
 from time import sleep
 
-from run_utils import *
+from .run_utils import *
 
 def entry_point():
+
   banner = """
   ###########################################################
   ###                 __  __  ___  _____ _                ### 
@@ -16,7 +17,7 @@ def entry_point():
   ###                                                     ###
   ########################################################### """
 
-  print banner
+  print(banner)
   sleep(2)
 
   # Read arguments
@@ -26,7 +27,7 @@ def entry_point():
   p.add_argument( '--inFiles',           type=str, nargs='+', required=True,                  help='Input data files (including extension)' )
   p.add_argument( '--outFile',           type=str, required=True,                             help='Output data file (hdf5 format)' )
   p.add_argument( '--delimiter',         type=str, default=" ",                               help='Delimiter for input files' )
-  p.add_argument( '--covariatesFile',    type=str,                                            help='Input data file for covariates' )
+  p.add_argument( '--covariatesFile',    type=str, default=None,                               help='Input data file for covariates' )
   p.add_argument( '--header_cols',       action='store_true',                                 help='Do the input files contain column names?' )
   p.add_argument( '--header_rows',       action='store_true',                                 help='Do the input files contain row names?' )
 
@@ -100,7 +101,7 @@ def entry_point():
   if args.center_features:
     data_opts['center_features'] = [ True if l=="gaussian" else False for l in args.likelihoods ]
   else:
-    if not args.learnMean: print "\nWarning... you are not centering the data and not learning the mean...\n"
+    if not args.learnMean: print("\nWarning... you are not centering the data and not learning the mean...\n")
     data_opts['center_features'] = [ False for l in args.likelihoods ]
 
   # Data processing: scale views
@@ -146,12 +147,12 @@ def entry_point():
 
   # Calculate dimensionalities
   N = data[0].shape[0]
-  D = [data[m].shape[1] for m in xrange(M)]
+  D = [data[m].shape[1] for m in range(M)]
 
   # Load covariates
   if args.covariatesFile is not None:
     data_opts['covariates'] = pd.read_csv(args.covariatesFile, delimiter=" ", header=None).as_matrix()
-    print "Loaded covariates from " + args.covariatesFile + "with shape " + str(data_opts['covariates'].shape) + "..."
+    print("Loaded covariates from " + args.covariatesFile + "with shape " + str(data_opts['covariates'].shape) + "...")
     data_opts['scale_covariates'] = args.scale_covariates
     if len(data_opts['scale_covariates']) == 1 and data_opts['covariates'].shape[1] > 1:
       data_opts['scale_covariates'] = args.scale_covariates[0] * s.ones(data_opts['covariates'].shape[1])
@@ -194,12 +195,12 @@ def entry_point():
 
   # Define for which factors and views should we learn 'theta', the sparsity of the factor
   if type(args.learnTheta) == int:
-    model_opts['learnTheta'] = [s.ones(K)*args.learnTheta for m in xrange(M)]
+    model_opts['learnTheta'] = [s.ones(K)*args.learnTheta for m in range(M)]
   elif type(args.learnTheta) == list:
     assert len(args.learnTheta) == M, "--learnTheta has to be a binary vector with length number of views"
-    model_opts['learnTheta'] = [ args.learnTheta[m]*s.ones(K) for m in xrange(M) ]
+    model_opts['learnTheta'] = [ args.learnTheta[m]*s.ones(K) for m in range(M) ]
   else:
-     print "--learnTheta has to be either 1 or 0 or a binary vector with length number of views"
+     print("--learnTheta has to be either 1 or 0 or a binary vector with length number of views")
      exit()
 
   # Define schedule of updates
@@ -222,15 +223,15 @@ def entry_point():
   model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-14]*M, 'b':[s.ones(K)*1e-14]*M }
 
   # Theta
-  model_opts["priorTheta"] = { 'a':[s.ones(K,) for m in xrange(M)], 'b':[s.ones(K,) for m in xrange(M)] }
-  for m in xrange(M):
-    for k in xrange(K):
+  model_opts["priorTheta"] = { 'a':[s.ones(K,) for m in range(M)], 'b':[s.ones(K,) for m in range(M)] }
+  for m in range(M):
+    for k in range(K):
       if model_opts['learnTheta'][m][k]==0:
         model_opts["priorTheta"]["a"][m][k] = s.nan
         model_opts["priorTheta"]["b"][m][k] = s.nan
 
   # Tau
-  model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-14 for m in xrange(M)], 'b':[s.ones(D[m])*1e-14 for m in xrange(M)] }
+  model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-14 for m in range(M)], 'b':[s.ones(D[m])*1e-14 for m in range(M)] }
 
 
   ##############################################
@@ -241,36 +242,36 @@ def entry_point():
   model_opts["initZ"] = { 'mean':"random", 'var':s.ones((K,)), 'E':None, 'E2':None }
 
   # Tau
-  model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(D[m])*100 for m in xrange(M)] }
+  model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(D[m])*100 for m in range(M)] }
 
   # ARD of weights
-  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*1. for m in xrange(M)] }
+  model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*1. for m in range(M)] }
 
   # Theta
-  model_opts["initTheta"] = { 'a':[s.ones(K,) for m in xrange(M)], 'b':[s.ones(K,) for m in xrange(M)], 'E':[s.nan*s.zeros((D[m],K)) for m in xrange(M)] }
+  model_opts["initTheta"] = { 'a':[s.ones(K,) for m in range(M)], 'b':[s.ones(K,) for m in range(M)], 'E':[s.nan*s.zeros((D[m],K)) for m in range(M)] }
   if type(args.initTheta) == float:
-    model_opts['initTheta']['E'] = [s.ones((D[m],K))*args.initTheta for m in xrange(M)]
+    model_opts['initTheta']['E'] = [s.ones((D[m],K))*args.initTheta for m in range(M)]
   elif type(args.initTheta) == list:
     assert len(args.initTheta) == M, "--initTheta has to be a binary vector with length number of views"
-    model_opts['initTheta']['E']= [ args.initTheta[m]*s.ones((D[m],K)) for m in xrange(M) ]
+    model_opts['initTheta']['E']= [ args.initTheta[m]*s.ones((D[m],K)) for m in range(M) ]
   else:
-     print "--learnTheta has to be either 1 or 0 or a binary vector with length number of views"
+     print("--learnTheta has to be either 1 or 0 or a binary vector with length number of views")
      exit()
 
-  for m in xrange(M):
-    for k in xrange(K):
+  for m in range(M):
+    for k in range(K):
       if model_opts['learnTheta'][m][k]==0.:
         model_opts["initTheta"]["a"][m][k] = s.nan
         model_opts["initTheta"]["b"][m][k] = s.nan
 
   # Weights
   model_opts["initSW"] = { 
-    'Theta':[ model_opts['initTheta']['E'][m] for m in xrange(M)],
-    'mean_S0':[s.zeros((D[m],K)) for m in xrange(M)],
-    'var_S0':[s.nan*s.ones((D[m],K)) for m in xrange(M)],
-    'mean_S1':[s.zeros((D[m],K)) for m in xrange(M)],
-    # 'mean_S1':[stats.norm.rvs(loc=0, scale=1, size=(D[m],K)) for m in xrange(M)],
-    'var_S1':[s.ones((D[m],K)) for m in xrange(M)],
+    'Theta':[ model_opts['initTheta']['E'][m] for m in range(M)],
+    'mean_S0':[s.zeros((D[m],K)) for m in range(M)],
+    'var_S0':[s.nan*s.ones((D[m],K)) for m in range(M)],
+    'mean_S1':[s.zeros((D[m],K)) for m in range(M)],
+    # 'mean_S1':[stats.norm.rvs(loc=0, scale=1, size=(D[m],K)) for m in range(M)],
+    'var_S1':[s.ones((D[m],K)) for m in range(M)],
     'ES':[None]*M, 'EW_S0':[None]*M, 'EW_S1':[None]*M # It will be calculated from the parameters
   }
 
@@ -282,7 +283,7 @@ def entry_point():
   # Covariates are constant vectors and do not have any prior or variational distribution on Z
 
   if data_opts['covariates'] is not None:
-    idx = xrange(data_opts['covariates'].shape[1])
+    idx = range(data_opts['covariates'].shape[1])
 
     # Ignore prior distributions
     model_opts["priorZ"]["var"][idx] = s.nan

@@ -5,7 +5,8 @@ Created on Fri Jul 22 14:59:50 2016
 @author: Rukawa
 """
 import numpy
-import factor_functions
+
+from . import factor_functions
 
 class Warping_functions(object):
     ''' Type of the warping functions e.g. tanh. '''
@@ -19,7 +20,7 @@ class Warping_functions(object):
         self.param['a'] = [[]] * self.I
         self.param['b'] = [[]] * self.I
         self.param['c'] = [[]] * self.I
-        for i in xrange(self.I):
+        for i in range(self.I):
             self.param['a'][i] = self.factor_ft_type['a'](numpy.random.random())
             self.param['b'][i] = self.factor_ft_type['b'](numpy.random.random())
             self.param['c'][i] = self.factor_ft_type['c'](numpy.random.random())

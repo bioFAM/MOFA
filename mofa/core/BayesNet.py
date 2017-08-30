@@ -14,8 +14,8 @@ import scipy as s
 import pandas as pd
 import sys
 
-from variational_nodes import Variational_Node
-from utils import corr, nans
+from .variational_nodes import Variational_Node
+from .utils import corr, nans
 
 
 
@@ -83,7 +83,7 @@ class BayesNet(object):
             Y = self.nodes["Y"].getExpectation()
             W = self.nodes["SW"].getExpectation()
             all_r2 = s.zeros([self.dim['M'], self.dim['K']])
-            for m in xrange(self.dim['M']):
+            for m in range(self.dim['M']):
 
                 # Fetch the mask for missing vlaues
                 mask = self.nodes["Y"].getNodes()[m].getMask()
@@ -100,7 +100,7 @@ class BayesNet(object):
                     Ypred_m -= Ypred_m_intercept
                     all_r2[:,0] = 1.
                     SS = (Ypred_m**2.).sum()
-                    for k in xrange(1,self.dim['K']):
+                    for k in range(1,self.dim['K']):
                         Ypred_mk = s.outer(Z[:,k], W[m][:,k])
                         Ypred_mk[mask] = 0.
                         Res = ((Ypred_m - Ypred_mk)**2.).sum()
@@ -108,7 +108,7 @@ class BayesNet(object):
                 # No intercept term
                 else:
                     SS = (Ypred_m**2.).sum()
-                    for k in xrange(self.dim['K']):
+                    for k in range(self.dim['K']):
                         Ypred_mk = s.outer(Z[:,k], W[m][:,k])
                         Ypred_mk[mask] = 0.
                         Res = ((Ypred_m - Ypred_mk)**2.).sum()
@@ -130,9 +130,9 @@ class BayesNet(object):
         #     alpha = self.nodes["Alpha"].getExpectation()
 
         #     factor_pvar = s.zeros((self.dim['M'],self.dim['K']))
-        #     for m in xrange(self.dim['M']):
+        #     for m in range(self.dim['M']):
         #         residual_var = (s.var(Y[m],axis=0) - 1/tau[m]).sum()
-        #         for k in xrange(self.dim["K"]):
+        #         for k in range(self.dim["K"]):
         #             factor_var = (self.dim["D"][m]/alpha[m][k])# * s.var(Z[:,k])
         #             factor_pvar[m,k] = factor_var / residual_var
         #     drop_dic['by_pvar'] = s.where( (factor_pvar>by_pvar).sum(axis=0) == 0)[0]
@@ -157,7 +157,7 @@ class BayesNet(object):
         self.dim['K'] -= len(drop)
 
         if self.dim['K']==0:
-            print "Shut down all components, no structure found in the data."
+            print("Shut down all components, no structure found in the data.")
             exit()
 
         pass
@@ -166,12 +166,12 @@ class BayesNet(object):
         """Method to start iterating and updating the variables using the VB algorithm"""
 
         # Define some variables to monitor training
-        nodes = self.getVariationalNodes().keys()
+        nodes = list(self.getVariationalNodes().keys())
         elbo = pd.DataFrame(data = nans((self.options['maxiter'], len(nodes)+1 )), columns = nodes+["total"] )
         activeK = nans((self.options['maxiter']))
         
         # Start training
-        for i in xrange(self.options['maxiter']):
+        for i in range(self.options['maxiter']):
             t = time();
 
             # Remove inactive latent variables
@@ -196,9 +196,9 @@ class BayesNet(object):
                 # Print first iteration
                 if i==0:
                     if self.options['verbosity'] >=0:
-                        print "Trial %d, Iteration 1: time=%.2f ELBO=%.2f, Factors=%d, Covariates=%d" % (self.trial, time()-t,elbo.iloc[i]["total"], (~self.nodes["Z"].covariates).sum(), self.nodes["Z"].covariates.sum() )
+                        print("Trial %d, Iteration 1: time=%.2f ELBO=%.2f, Factors=%d, Covariates=%d" % (self.trial, time()-t,elbo.iloc[i]["total"], (~self.nodes["Z"].covariates).sum(), self.nodes["Z"].covariates.sum() ))
                     if self.options['verbosity'] == 2:
-                        print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
+                        print("".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n")
 
                 else:
                     # Check convergence using the ELBO
@@ -206,22 +206,22 @@ class BayesNet(object):
 
                     # Print ELBO monitoring
                     if self.options['verbosity'] > 0:
-                        print "Trial %d, Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, Factors=%d, Covariates=%d" % (self.trial, i+1, time()-t, elbo.iloc[i]["total"], delta_elbo, (~self.nodes["Z"].covariates).sum(), self.nodes["Z"].covariates.sum() )
-                        if delta_elbo<0: print "Warning, lower bound is decreasing..."; print '\a'
+                        print("Trial %d, Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, Factors=%d, Covariates=%d" % (self.trial, i+1, time()-t, elbo.iloc[i]["total"], delta_elbo, (~self.nodes["Z"].covariates).sum(), self.nodes["Z"].covariates.sum() ))
+                        if delta_elbo<0: print("Warning, lower bound is decreasing..."); print('\a')
                     if self.options['verbosity'] == 2:
-                        print "".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n"
+                        print("".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n")
 
                     # Assess convergence
                     if (0 <= delta_elbo < self.options['tolerance']) and (not self.options['forceiter']):
                         activeK = activeK[:(i+1)]
                         elbo = elbo[:(i+1)]
                         if self.options['verbosity']>=0:
-                            print "Converged!\n"
+                            print ("Converged!\n")
                         break
 
             # Do not calculate lower bound
             else:
-                if self.options['verbosity'] > 0: print "Iteration %d: time=%.2f, K=%d\n" % (i+1,time()-t,self.dim["K"])
+                if self.options['verbosity'] > 0: print("Iteration %d: time=%.2f, K=%d\n" % (i+1,time()-t,self.dim["K"]))
 
             # Flush (we need this to print when running on the cluster)
             sys.stdout.flush()
@@ -273,7 +273,7 @@ class BayesNet(object):
 
     def getVariationalNodes(self):
         """ Method to return all variational nodes """
-        return { k:v for k,v in self.nodes.iteritems() if isinstance(v,Variational_Node) }
+        return { k:v for k,v in self.nodes.items() if isinstance(v,Variational_Node) }
 
     def getTrainingStats(self):
         """ Method to return training statistics """

@@ -20,14 +20,14 @@ class Node(object):
         Dimensionality of the node
     """
     def __init__(self, dim):
-    	self.dim = dim
+        self.dim = dim
 
     def addMarkovBlanket(self, **kwargs):
-    	"""Method to define the Markov blanket of the node"""
+        """Method to define the Markov blanket of the node"""
         if hasattr(self, 'markov_blanket'):
-            for k,v in kwargs.iteritems():
+            for k,v in kwargs.items():
                 if k in self.markov_blanket.keys():
-                    print "Error: " + str(k) + " is already in the markov blanket of " + str(self)
+                    print("Error: " + str(k) + " is already in the markov blanket of " + str(self))
                     exit()
                 else:
                     self.markov_blanket[k] = v

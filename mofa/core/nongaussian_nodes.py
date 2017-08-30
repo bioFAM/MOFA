@@ -21,11 +21,11 @@ from __future__ import division
 import scipy as s
 import numpy.ma as ma
 
-from variational_nodes import Unobserved_Variational_Node
-from nodes import Node
-from utils import sigmoid, lambdafn
+from .variational_nodes import Unobserved_Variational_Node
+from .nodes import Node
+from .utils import sigmoid, lambdafn
 
-from warp.warping_inference import Warping_inference
+from .warp.warping_inference import Warping_inference
 
 
 ##############################
@@ -86,7 +86,7 @@ class PseudoY(Unobserved_Variational_Node):
         pass
 
     def updateExpectations(self):
-        print "Error: expectation updates for pseudodata node depend on the type of likelihood. They have to be specified in a new class."
+        print("Error: expectation updates for pseudodata node depend on the type of likelihood. They have to be specified in a new class.")
         exit()
 
     def getExpectation(self):
@@ -105,7 +105,7 @@ class PseudoY(Unobserved_Variational_Node):
         return self.params
 
     def calculateELBO(self):
-        print "Not implemented"
+        print("Not implemented")
         exit()
 
 ##################
@@ -215,8 +215,6 @@ class Bernoulli_PseudoY(PseudoY_Seeger):
 
     def calculateELBO(self):
         # Compute Lower Bound using the Bernoulli likelihood with observed data
-        print "Potential error, check that we are masked"
-        exit()
         Z = self.markov_blanket["Z"].getExpectation()
         SW = self.markov_blanket["SW"].getExpectation()
         tmp = s.dot(Z,SW.T)
@@ -373,9 +371,9 @@ class Warped_PseudoY_Node(PseudoY):
 
         self.params = {
             # 'function_type': self.warping.entity.func_type_str,
-            'a':s.array([self.warping.entity.param['a'][i].x for i in xrange(self.warping.entity.I)]),
-            'b':s.array([self.warping.entity.param['b'][i].x for i in xrange(self.warping.entity.I)]),
-            'c':s.array([self.warping.entity.param['c'][i].x for i in xrange(self.warping.entity.I)]),
+            'a':s.array([self.warping.entity.param['a'][i].x for i in range(self.warping.entity.I)]),
+            'b':s.array([self.warping.entity.param['b'][i].x for i in range(self.warping.entity.I)]),
+            'c':s.array([self.warping.entity.param['c'][i].x for i in range(self.warping.entity.I)]),
         }
 
     def updateExpectations(self):

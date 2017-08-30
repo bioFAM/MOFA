@@ -13,8 +13,7 @@ import pandas as pd
 import numpy as np
 #from joblib import Parallel, delayed
 
-from init_nodes import *
-from mofa.run.init_nodes import *
+from .init_nodes import *
 from mofa.core.BayesNet import BayesNet
 from mofa.core.utils import *
 
@@ -44,7 +43,7 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
 
     # Create output directory
     if not os.path.isdir(os.path.dirname(data_opts["outfile"])):
-        print "Output directory does not exist, creating it..."
+        print("Output directory does not exist, creating it...")
         os.makedirs(os.path.dirname(data_opts["outfile"]))
 
     ####################
@@ -60,24 +59,23 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     ## Define the model ##
     ######################
 
-    print "\n"
-    print "#"*24
-    print "## Building the model ##"
-    print "#"*24
-    print "\n"
+    print ("\n")
+    print ("#"*24)
+    print ("## Building the model ##")
+    print ("#"*24)
+    print ("\n")
     sleep(1)
 
     # Define dimensionalities
     M = len(data)
     N = data[0].shape[0]
-    D = s.asarray([ data[m].shape[1] for m in xrange(M) ])
+    D = s.asarray([ data[m].shape[1] for m in range(M) ])
     K = model_opts["k"]
 
     dim = {'M':M, 'N':N, 'D':D, 'K':K }
 
     ## Define and initialise the nodes ##
 
-    if verbose: print "Initialising nodes...\n"
     init = initModel(dim, data, model_opts["likelihood"], seed=seed)
 
     # Latent variables
@@ -142,11 +140,11 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     ## Start training ##
     ####################
 
-    print "\n"
-    print "#"*45
-    print "## Running trial number %d with seed %d ##" % (trial,seed)
-    print "#"*45
-    print "\n"
+    print ("\n")
+    print ("#"*45)
+    print ("## Running trial number %d with seed %d ##" % (trial,seed))
+    print ("#"*45)
+    print ("\n")
     sleep(1)
     
     net.iterate()
@@ -169,14 +167,14 @@ def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, se
     """
     # trained_models = Parallel(n_jobs=train_opts['cores'], backend="threading")(
     # trained_models = Parallel(n_jobs=train_opts['cores'])(
-    #     delayed(runSingleTrial)(data,data_opts,model_opts,train_opts,seed,i) for i in xrange(1,train_opts['trials']+1))
-    trained_models = [ runSingleTrial(data,data_opts,model_opts,train_opts,seed,i) for i in xrange(1,train_opts['trials']+1) ]
+    #     delayed(runSingleTrial)(data,data_opts,model_opts,train_opts,seed,i) for i in range(1,train_opts['trials']+1))
+    trained_models = [ runSingleTrial(data,data_opts,model_opts,train_opts,seed,i) for i in range(1,train_opts['trials']+1) ]
 
-    print "\n"
-    print "#"*43
-    print "## Training finished, processing results ##"
-    print "#"*43
-    print "\n"
+    print("\n")
+    print("#"*43)
+    print("## Training finished, processing results ##")
+    print("#"*43)
+    print("\n")
 
     #####################
     ## Process results ##
@@ -191,7 +189,7 @@ def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, se
         else:
             save_models = trained_models
             tmp = os.path.splitext(data_opts['outfile'])
-            outfiles = [ tmp[0]+"_"+str(t)+tmp[1]for t in xrange(train_opts['trials']) ]
+            outfiles = [ tmp[0]+"_"+str(t)+tmp[1]for t in range(train_opts['trials']) ]
     else:
         save_models = trained_models
         outfiles = [ data_opts['outfile'] ]
@@ -201,8 +199,8 @@ def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, se
     ##################
     
     sample_names = data[0].index.tolist()
-    feature_names = [  data[m].columns.values.tolist() for m in xrange(len(data)) ]
-    for t in xrange(len(save_models)):
-        print "Saving model %d in %s...\n" % (t,outfiles[t])
+    feature_names = [  data[m].columns.values.tolist() for m in range(len(data)) ]
+    for t in range(len(save_models)):
+        print("Saving model %d in %s...\n" % (t,outfiles[t]))
         saveModel(save_models[t], outfile=outfiles[t], view_names=data_opts['view_names'],
             sample_names=sample_names, feature_names=feature_names, train_opts=train_opts, model_opts=model_opts)

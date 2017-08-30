@@ -58,12 +58,23 @@ Then, you run the corresponding script and let the model converge (it can take a
 ```r
 bash run_[basic/extended].sh
 ```
-If everything is successful, you should observe the following output:
+If everything is successful, you should observe an output analogous to the following:
 ```
+
+  ###########################################################
+  ###                 __  __  ___  _____ _                ###
+  ###                |  \/  |/ _ \|  ___/ \               ###
+  ###                | |\/| | | | | |_ / _ \              ###
+  ###                | |  | | |_| |  _/ ___ \             ###
+  ###                |_|  |_|\___/|_|/_/   \_\            ###
+  ###                                                     ###
+  ###########################################################
+
 
 ##################
 ## Loading data ##
 ##################
+
 
 Loaded /Users/ricard/MOFA/MOFA/test/data/500_0.txt with dim (100,500)...
 
@@ -71,28 +82,31 @@ Loaded /Users/ricard/MOFA/MOFA/test/data/500_1.txt with dim (100,500)...
 
 Loaded /Users/ricard/MOFA/MOFA/test/data/500_2.txt with dim (100,500)...
 
+
+########################
+## Building the model ##
+########################
+
+
 #############################################
-## Running trial number 1 with seed 90545 ##
+## Running trial number 1 with seed 642034 ##
 #############################################
 
-(A few warnings, don't worry!...)
-/Users/ricard/anaconda2/lib/python2.7/site-packages/numpy/lib/scimath.py:262: RuntimeWarning: divide by zero encountered in log
-  return nx.log(x)
-/Users/ricard/anaconda2/lib/python2.7/site-packages/MOFA/core/updates.py:287: RuntimeWarning: invalid value encountered in multiply
-  lb_ps = S*theta['lnE'] + (1.-S)*theta['lnEInv']
 
-Trial 1, Iteration 1: time=0.06 ELBO=-344149.64, Factors=10, Covariates=1
+Trial 1, Iteration 1: time=0.08 ELBO=-345954.96, Factors=10, Covariates=1
+Tau=-49154.90  AlphaW=-1108.05  SW=-41897.40  Y=-239443.86  Theta=0.00  Z=-14350.75
 
-Trial 1, Iteration 2: time=0.09 ELBO=-277174.84, deltaELBO=66974.8028, Factors=10, Covariates=1
+Trial 1, Iteration 2: time=0.10 ELBO=-283729.31, deltaELBO=62225.6421, Factors=10, Covariates=1
+Tau=-49154.90  AlphaW=-1108.05  SW=-20723.75  Y=-202567.46  Theta=0.00  Z=-10175.16
 
-Trial 1, Iteration 3: time=0.08 ELBO=-263272.74, deltaELBO=13902.1021, Factors=10, Covariates=1
+Trial 1, Iteration 3: time=0.10 ELBO=-257427.42, deltaELBO=26301.8893, Factors=10, Covariates=1
+Tau=-49154.90  AlphaW=-1108.05  SW=-24790.82  Y=-172099.85  Theta=0.00  Z=-10273.81
 
 ...
 
 Trial 1, Iteration 100: time=0.07 ELBO=-221171.01, deltaELBO=0.0998, Factors=10, Covariates=1
 
 Converged!
-
 
 ```
 There are two important quantities to keep track of: first, the number of latent variables, that should decrease during training if you want the model to automatically learn the number of factors. Second, the difference in evidence lower bound (deltaELBO), which is used to assess model convergence. Once the model reaches a default value of 0.1 the model will converge and it will be saved as an .hdf5 file. Then, you are ready to start the analysis with the R package.

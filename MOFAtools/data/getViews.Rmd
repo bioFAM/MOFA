@@ -18,6 +18,7 @@ In this script the pre-processing steps to generate the data objects CLL_data.RD
 Starting point is the data contained in the 'PACEdata' pacakge based on Dietrich, Oles, Lu et al.
 
 # Set general in/out parameters
+The data in the package is based on all samples diagnosed with CLL and with observations in at least 2 views.
 ```{r}
 # minimum number of views observed for a patient to be included out of 4 (RNA, meth, viab, mut), covariates are not considered
 minViews <- 2
@@ -34,6 +35,7 @@ rownames(patCLL)<-patCLL$PatID
 ```
 
 # Get RNAseq
+RNAseq data is normalised using DESeq2 and filtered to top 5000 most variable genes after exclusion of genes from the Y chromosome.
 ```{r}
 source("getRNAseq.R")
   
@@ -52,6 +54,7 @@ any(is.na(Reduce(cbind,RNA)))
 ```
 
 # Get methylation data
+Methylation data is transformed to M-values and filtered to include only the top variable $1\%$ CpG sites excluding sex chromosomes ($p=4248$).
 ```{r}
 source("getMeth.R")
 # met.tsv.gz contains chromosome annotation for each CpG site
@@ -61,7 +64,8 @@ meth <- getMeth(methFile, pat2include = patCLL$PatID,
 any(is.na(meth))
 ```
 
-# Get drug response 
+# Get drug response
+Drug response values are included for 62 drugs (excluding NSC 74859 and bortezomib due to bad quality) at five concentrations each ($p=310$) with a threshold at 1.1 to remove outliers.
 ```{r}
 source("getViab.R")
 # Threshold parameters: drugs are accepted that for at least `effectNum` samples 
@@ -86,6 +90,7 @@ any(is.na(viab))
 ```
 
 # Get mutations
+Mutations were considered if present in at least 3 samples ($p=69$).
 ```{r}
 source("getMut.R")
 mut<-getMut(pat2include = patCLL$PatID,
@@ -102,6 +107,7 @@ any(apply(mut,1,function(r) all(is.na(r))))
 ```
 
 # Get covariates
+Gender and diagnosis of patients are kept as useful covariates.
 ```{r}
 source("getCovariates.R")
 covariates <- getCovariates(pat2include = patCLL$PatID,

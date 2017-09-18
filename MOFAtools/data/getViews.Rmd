@@ -1,7 +1,7 @@
 ---
-title: "Construct CLL_data objects"
+title: "Construct CLL data objects used in the MOFAtools vignette"
 author: "Britta Velten"
-date: "3/23/2017"
+date: "9/18/2017"
 output:
   BiocStyle::html_document:
     toc: true
@@ -14,6 +14,8 @@ library(data.table)
 library(PACEdata)
 ```
 
+In this script the pre-processing steps to generate the data objects CLL_data.RData and CLL_covariates.RData stored in the MOFAtools package.
+Starting point is the data contained in the 'PACEdata' pacakge based on Dietrich, Oles, Lu et al.
 
 # Set general in/out parameters
 ```{r}

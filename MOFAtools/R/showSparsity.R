@@ -16,7 +16,7 @@
 #' @importFrom RColorBrewer brewer.pal 
 #' @importFrom grDevices colorRampPalette
 #' @export
-showSparsity <- function(model, views="all", factors="all", main=NULL) {
+showSparsity <- function(model, views = "all", factors = "all", main = NULL) {
   
   # Sanity checks
   if (class(model) != "MOFAmodel") stop("'model' has to be an instance of MOFAmodel")

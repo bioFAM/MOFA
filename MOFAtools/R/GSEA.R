@@ -79,18 +79,18 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
   feature.sets <- feature.sets[rowSums(feature.sets)>=min.size,]
     
   # Print options
-  message("Doing feature Ontology Enrichment Analysis with the following options...")
-  message(sprintf("View: %s", view))
-  message(sprintf("Latent variables: %s", paste(as.character(factors),collapse=" ")))
-  message(sprintf("Number of feature sets: %d", nrow(feature.sets)))
-  message(sprintf("Local statistic: %s", local.statistic))
-  message(sprintf("Transformation: %s", transformation))
-  message(sprintf("Global statistic: %s", global.statistic))
-  message(sprintf("Statistical test: %s", statistical.test))
-  if (statistical.test=="permutation") {
-    message(sprintf("Cores: %d", cores))
-    message(sprintf("Number of permutations: %d", nperm))
-  }
+  # message("Doing feature Ontology Enrichment Analysis with the following options...")
+  # message(sprintf("View: %s", view))
+  # message(sprintf("Latent variables: %s", paste(as.character(factors),collapse=" ")))
+  # message(sprintf("Number of feature sets: %d", nrow(feature.sets)))
+  # message(sprintf("Local statistic: %s", local.statistic))
+  # message(sprintf("Transformation: %s", transformation))
+  # message(sprintf("Global statistic: %s", global.statistic))
+  # message(sprintf("Statistical test: %s", statistical.test))
+  # if (statistical.test=="permutation") {
+  #   message(sprintf("Cores: %d", cores))
+  #   message(sprintf("Number of permutations: %d", nperm))
+  # }
   
   # use own version for permutation test because of bugs in PCGSE package
   if (statistical.test == "permutation") {

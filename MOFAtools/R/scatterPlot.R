@@ -110,6 +110,7 @@ beeswarmPlot <- function(object, factors, color_by = NULL, name_color="", showMi
   # Collect relevant data
   N <- object@Dimensions[["N"]]
   Z <- getFactors(object, factors=factors, include_intercept=FALSE, as.data.frame=T)
+  Z$factor <- as.factor(Z$factor)
   
   # Z <- getExpectations(object, "Z", "E")
   
@@ -149,7 +150,7 @@ beeswarmPlot <- function(object, factors, color_by = NULL, name_color="", showMi
   Z$color_by <- color_by[Z$sample]
   
   # Generate plot
-  p <- ggplot(Z, aes(factor, value)) + 
+  p <- ggplot(Z, aes(x=factor, y=value)) + 
     ggbeeswarm::geom_quasirandom(aes(color=color_by)) +
     labs(x="Latent factor(s)", y="") +
     theme(

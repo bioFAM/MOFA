@@ -45,10 +45,10 @@ getFactors <- function(object, as.data.frame = FALSE, include_intercept = TRUE, 
 
   # Remove intercept
   if (include_intercept == F) {
-    if (as.data.frame==F & "intercept" %in% colnames(Z)) {
-      Z <- Z[,colnames(Z)!="intercept"]
+    if (as.data.frame==F) {
+      if ("intercept" %in% colnames(Z)) Z <- Z[,colnames(Z)!="intercept"]
     } else {
-      Z <- Z[Z$factor!="intercept",]
+      if ("intercept" %in% unique(Z$factor)) Z <- Z[Z$factor!="intercept",]
     }
   }
   return(Z)

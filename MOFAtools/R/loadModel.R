@@ -45,6 +45,7 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   # Load model options
   if (length(object@ModelOpts) == 0) {
     tryCatch(object@ModelOpts <- as.list(h5read(file, 'model_opts',read.attributes=T)), error = function(x) { print("Model opts not found, not loading it...") })
+    object@ModelOpts$learnMean <- as.logical(object@ModelOpts$learnMean)
   }
   
   # Load training data
@@ -74,17 +75,26 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   factorNames(object) <- as.character(1:object@Dimensions[["K"]])
     
   # Rename covariates, including intercept
-  if (object@ModelOpts$learnMean == TRUE) factorNames(object) <- c("intercept",as.character(1:(object@Dimensions[["K"]]-1)))
+  # if (object@ModelOpts$learnMean == TRUE) factorNames(object) <- c("intercept",as.character(1:(object@Dimensions[["K"]]-1)))
+  # if (!is.null(object@ModelOpts$covariates)) {
+  #   if (object@ModelOpts$learnMean == TRUE) {
+  #     factorNames(object) <- c("intercept", colnames(object@ModelOpts$covariates), as.character((ncol(object@ModelOpts$covariates)+1:(object@Dimensions[["K"]]-1-ncol(object@ModelOpts$covariates)))))
+  #   } else {
+  #     factorNames(object) <- c(colnames(object@ModelOpts$covariates), as.character((ncol(object@ModelOpts$covariates)+1:(object@Dimensions[["K"]]-1))))
+  #   }
+  # }
+  if (object@ModelOpts$learnMean == TRUE) {
+    intercept_idx <- names(which(sapply(apply(object@Expectations$Z$E,2,unique),length)==1))
+    factornames <- as.character(1:(object@Dimensions[["K"]]))
+    factornames[factornames==intercept_idx] <- "intercept"
+    factorNames(object) <- factornames
+  }
   if (!is.null(object@ModelOpts$covariates)) {
-    if (object@ModelOpts$learnMean == TRUE) {
-      factorNames(object) <- c("intercept", colnames(object@ModelOpts$covariates), as.character((ncol(object@ModelOpts$covariates)+1:(object@Dimensions[["K"]]-1-ncol(object@ModelOpts$covariates)))))
-    } else {
-      factorNames(object) <- c(colnames(object@ModelOpts$covariates), as.character((ncol(object@ModelOpts$covariates)+1:(object@Dimensions[["K"]]-1))))
-    }
+    stop("Not working")
   }
   
   # Mask pasenger factors and set to NA
-  object <- detectPassengers(object)
+  # object <- detectPassengers(object)
 
   # Re-name and order factors in order of variance explained
   if (sortFactors == T) {

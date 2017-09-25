@@ -148,7 +148,7 @@ showAllWeights <- function(object, view, factor, nfeatures = "all", abs=FALSE, t
   # Generate plot
   W$tmp <- as.character(W$group!="0")
   gg_W <- ggplot(W, aes(x=feature, y=value, col=group)) + 
-    scale_y_continuous(expand = c(0.01,0.01)) + scale_x_discrete(expand = c(0.01,0.01)) +
+    # scale_y_continuous(expand = c(0.01,0.01)) + scale_x_discrete(expand = c(0.01,0.01)) +
     ggtitle(main) + geom_point(aes(size=tmp)) + labs(y="Loading") +
     ggrepel::geom_text_repel(data = W[W$group!="0",], aes(label = feature, col = group),
                              segment.alpha=0.1, segment.color="black", segment.size=0.3, box.padding = unit(0.5, "lines"), show.legend= F)

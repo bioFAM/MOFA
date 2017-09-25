@@ -46,8 +46,6 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
   SW <- getExpectations(object,"SW","E")
   Z <- getExpectations(object,"Z","E")
   Y <- getExpectations(object,"Y","E")
-  # bug was fixed in newer versions of MOFA, following line can be used as work-around for old model
-  # Y[[which(object@ModelOpts$likelihood=="bernoulli")]][Y[[which(object@ModelOpts$likelihood=="bernoulli")]]==2] <- NA
   
   # Calculate predictions under the  MOFA model using all or a single factor
   #replace masked values on Z by 0 (do not contribute to predicitons)

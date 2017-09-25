@@ -27,19 +27,20 @@ showDataHeatmap <- function(object, view, factor, features = 50, plotWeights = F
   # Collect relevant expectations
   W <- getExpectations(object,"SW","E")[[view]][,factor]
   Z <- getFactors(object)[,factor]
+  Z <- Z[!is.na(Z)]
   
   # Define features
   if (class(features) == "numeric") {
     features <- names(tail(sort(abs(W)), n=features))
     stopifnot(all(features %in% featureNames(object)[[view]]))
   } else if (class(features)=="character") {
-    stopifnot(all(manual_features %in% featureNames(object)[[view]]))
+    stopifnot(all(features %in% featureNames(object)[[view]]))
   } else {
     stop("Features need to be either a numeric or character vector")
   }
   
   # Get train data
-  data <- getTrainData(object, view)
+  data <- getTrainData(object, view)[[1]][,names(Z)]
   
   # Ignore samples with full missing views
   data <- data[,apply(data, 2, function(x) !all(is.na(x)))]
@@ -107,7 +108,7 @@ showDataScatter <- function(object, view, factor, features=50, color_by=NULL, sh
     tmp <- names(tail(sort(abs(W)), n=features))
     stopifnot(all(tmp %in% featureNames(object)[[view]]))
   } else if (class(features)=="character") {
-    stopifnot(all(manual_features %in% featureNames(object)[[view]]))
+    stopifnot(all(features %in% featureNames(object)[[view]]))
   } else {
     stop("Features need to be either a numeric or character vector")
   }

@@ -39,10 +39,11 @@ detectPassengers <- function(object, views = "all", factors = "all", r2_threshol
   Z <- getFactors(object)
   
   # Identify factors unique to a single view
-  r2 <- calculateVarianceExplained(object, views = views, factors = factors, plotit = F, showtotalR2 = F)$R2PerFactor
-  unique_factors <- as.character(which(rowSums(r2>=r2_threshold)==1))
+  # r2 <- calculateVarianceExplained(object, views = views, factors = factors, plotit = F, showtotalR2 = F)$R2PerFactor
+  r2 <- calculateVarianceExplained(object, views = views, factors = factors, plotit = F)$R2PerFactor
+  unique_factors <- names(which(rowSums(r2>=r2_threshold)==1))
   
-  # Mask samples that have full missing views
+  # Mask samples that rhave full missing views
   missing <- sapply(getTrainData(object,views), function(view) sampleNames(object)[apply(view, 2, function(x) all(is.na(x)))] )
   names(missing) <- viewNames(object)
   

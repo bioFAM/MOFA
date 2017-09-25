@@ -114,6 +114,7 @@ class initModel(object):
         else:
             idx_covariates = None
 
+
         # Initialise the node
         # self.Z = Constant_Node(dim=(self.N,self.K), value=qmean)
         self.Z = Z_Node(dim=(self.N,self.K),

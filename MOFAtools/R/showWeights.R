@@ -149,7 +149,8 @@ showAllWeights <- function(object, view, factor, nfeatures = "all", abs=FALSE, t
   W$tmp <- as.character(W$group!="0")
   gg_W <- ggplot(W, aes(x=feature, y=value, col=group)) + 
     # scale_y_continuous(expand = c(0.01,0.01)) + scale_x_discrete(expand = c(0.01,0.01)) +
-    ggtitle(main) + geom_point(aes(size=tmp)) + labs(y="Loading") +
+    ggtitle(main) + geom_point(aes(size=tmp)) + labs(x="Rank position", y="Loading") +
+    scale_x_discrete(breaks = NULL, expand=c(0.05,0.05)) +
     ggrepel::geom_text_repel(data = W[W$group!="0",], aes(label = feature, col = group),
                              segment.alpha=0.1, segment.color="black", segment.size=0.3, box.padding = unit(0.5, "lines"), show.legend= F)
   # Define size
@@ -160,16 +161,25 @@ showAllWeights <- function(object, view, factor, nfeatures = "all", abs=FALSE, t
   gg_W <- gg_W + scale_color_manual(values=cols) + guides(col=F)
   
   # Add Theme  
-  gg_W <- gg_W + theme(
-    # panel.spacing = margin(5,5,5,5),
-    panel.border = element_rect(colour = "black", fill=NA, size=0.75),
-    plot.title = element_text(size=rel(1.3), hjust=0.5),
-    axis.title.x = element_blank(),
-    axis.text.x = element_blank(),
-    axis.text.y = element_text(size=rel(1.3), color="black"),
-    axis.title.y = element_text(size=rel(1.5), color="black"),
-    axis.ticks.x = element_blank(),
-    panel.background = element_rect(fill="white")
+  gg_W <- gg_W +
+    theme(
+      # panel.spacing = margin(5,5,5,5),
+      # panel.border = element_rect(colour = "black", fill=NA, size=0.75),
+      plot.title = element_text(size=rel(1.3), hjust=0.5),
+      # axis.title.x = element_blank(),
+      axis.text.x = element_blank(),
+      axis.text.y = element_text(size=rel(1.3), color="black"),
+      axis.title.y = element_text(size=rel(1.5), color="black"),
+      axis.ticks.x = element_blank(),
+
+      # white background and dark border
+      panel.background = element_rect(fill = "white", colour = NA),
+      panel.border     = element_rect(fill = NA, colour = "grey20"),
+      # make gridlines dark, same contrast with white as in theme_grey
+      panel.grid.major = element_line(colour = "grey92"),
+      panel.grid.minor = element_line(colour = "grey92", size = rel(0.5)),
+      # contour strips to match panel contour
+      strip.background = element_rect(fill = "grey85", colour = "grey20")
     )
   
   return(gg_W)

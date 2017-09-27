@@ -37,15 +37,15 @@ getFactors <- function(object, as.data.frame = FALSE, include_intercept = TRUE, 
 
   # Collect factors
   Z <- getExpectations(object,"Z","E",as.data.frame)
-    if (as.data.frame==F) {
+    if (as.data.frame==FALSE) {
       Z <- Z[,factors, drop=FALSE]
     } else {
       Z <- Z[Z$factor %in% factors,]
     }
 
   # Remove intercept
-  if (include_intercept == F) {
-    if (as.data.frame==F) {
+  if (include_intercept == FALSE) {
+    if (as.data.frame==FALSE) {
       if ("intercept" %in% colnames(Z)) Z <- Z[,colnames(Z)!="intercept"]
     } else {
       if ("intercept" %in% unique(Z$factor)) Z <- Z[Z$factor!="intercept",]

@@ -51,7 +51,7 @@ compareModels <- function(models, comparison = "all", ...) {
   for(i in seq_along(LFs)) 
     colnames(LFs[[i]]) <- paste(names(models)[i], colnames(LFs[[i]]), sep="_")
   
-    if(comparison=="all"){
+  if(comparison=="all") {
     #get common samples between models
     commonSamples <- Reduce(intersect,lapply(LFs, rownames))
     if(is.null(commonSamples)) 
@@ -76,7 +76,7 @@ compareModels <- function(models, comparison = "all", ...) {
              ...)
     
     return(corLFs)
-    }
+  }
   
   if(comparison=="pairwise"){
     PairWiseCor <- lapply(seq_along(LFs[-length(LFs)]), function(i){

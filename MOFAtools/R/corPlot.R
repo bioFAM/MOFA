@@ -84,7 +84,7 @@ FactorsCorPlot <- function(object, method = "pearson", ...) {
   Z <- getFactors(object)
   
   # Remove intercept
-  if(object@ModelOpts$learnMean==T) Z <- Z[,-1]
+  if(object@ModelOpts$learnIntercept==TRUE) Z <- Z[,-1]
   
   # Compute and plot correlation
   r <- cor(x=Z, y=Z, method=method, use = "complete.obs")
@@ -155,7 +155,7 @@ CorrplotLFvsPC <- function(model, views="all", noPCs=5, method="svd") {
   # Collect expectations
   # Z <- getExpectations(model,"Z","E")
   Z <- getFactors(model)
-  if (model@ModelOpts$learnMean) Z <- Z[,-1]
+  if (model@ModelOpts$learnIntercept==TRUE) { Z <- Z[,-1] }
   
   
   # Perform PCAs

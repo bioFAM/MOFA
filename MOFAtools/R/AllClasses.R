@@ -55,12 +55,12 @@ setMethod("show", "MOFAmodel", function(object) {
   
   if (object@Status == "trained") {
     nfactors <- object@Dimensions[["K"]]
-    if (object@ModelOpts$learnMean==T) { nfactors <- nfactors-1 }
-    cat(sprintf("Trained MOFA model with the following characteristics: \n views: %d \n View names: %s \n Number of features: %s \n Number of samples: %d \n Number of latent variables: %d ",
+    if (object@ModelOpts$learnIntercept==TRUE) { nfactors <- nfactors-1 }
+    cat(sprintf("Trained MOFA model with the following characteristics: \n Number of views: %d \n View names: %s \n Number of features per view: %s \n Number of samples: %d \n Number of latent variables: %d ",
                 object@Dimensions[["M"]], paste(viewNames(object),collapse=" "), paste(as.character(object@Dimensions[["D"]]),collapse=" "), object@Dimensions[["N"]], nfactors))
   }
   else {
-    cat(sprintf("Untrained MOFA model with the following characteristics: \n views: %d \n View names: %s \n Number of features: %s \n Number of samples: %d ",
+    cat(sprintf("Untrained MOFA model with the following characteristics: \n Number of views: %d \n View names: %s \n Number of features per view: %s \n Number of samples: %d ",
                 object@Dimensions[["M"]], paste(viewNames(object),collapse=" "), paste(as.character(object@Dimensions[["D"]]),collapse=" "), object@Dimensions[["N"]]))
   }
 })

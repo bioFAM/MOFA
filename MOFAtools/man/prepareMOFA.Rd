@@ -2,7 +2,7 @@
 % Please edit documentation in R/prepareMOFA.R
 \name{prepareMOFA}
 \alias{prepareMOFA}
-\title{prepareMOFA: Prepare an untrained MOFA object for running MOFA}
+\title{prepareMOFA: Prepare an untrained MOFA object for training}
 \usage{
 prepareMOFA(object, DirOptions, ModelOptions = NULL, TrainOptions = NULL)
 }

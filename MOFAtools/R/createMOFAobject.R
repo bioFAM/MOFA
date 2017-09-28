@@ -1,68 +1,59 @@
 
 #' @title Initialize a \code{\link{MOFAmodel}} object with multi-omic data
 #' @name createMOFAobject
-#' @description Method to intilize the InputData slot of the MOFA object using a MultiAssayExperiment object as input
-#' @param  A MultiAssayExperiment containing the input data for MOFA
-#' @param minViews Number of views a sample has to be observed to be included (default 1, i.e. including all samples)
-#' @details fill this
+#' @description Method to initialize a MOFAmodel object
+#' @param data either MultiAssayExperiment or list of matrices with features as rows and samples as columns
 #' @return an untrained MOFA model object
-#' @importFrom utils combn
 #' @export
-
-
-createMOFAobject <- function(mae, minViews = 1) {
-  message("Creating MOFA object from a MultiAssayExperiment object...")
+createMOFAobject <- function(data) {
+  if (class(data) == "MultiAssayExperiment") {
+    message("Creating MOFA object from a MultiAssayExperiment object...")
+    object <- .createMOFAobjectFromMAE(data)
+  } else if (class(data) == "list") {
+    message("Creating MOFA object from list of matrices...")
+    object <- .createMOFAobjectFromList(data)
+  } else {
+    stop("Data has to be provided either as a MultiAssayExperiment object or as a list of matrices ")
+  }
   
-  if (class(mae) != "MultiAssayExperiment") stop ("mae has to be a MultiAssayExperiment object, for matrices use createMOFAobjectFromList")
-  
-  # initialise MOFA object
-  # message(paste("Creating MOFA object from", length(mae), "experiments"))
-  object <- new("MOFAmodel")
-  object@Status <- "untrained"
-  object@InputData <- mae 
-  
-  
-  ##=== arrange to matrices in TrainData====
-  
-  # find samples which have been onserved in less than minViews
-  # if(!minViews %in% 1: length(mae))
-  #   stop("'minViews' needs to be in 1 : number of experiments in 'mae'")
-  # sub <- combn(1:length(mae), minViews)
-  # samples2include <- apply(apply(sub, 2, function(s) complete.cases(mae[,,s])), 1, any)
-
-  # drop samples which have been onserved in less than minViews
-  # mae_sub <- mae[,samples2include,]
-  # if(minViews>1)
-  #   message(paste("Removing ", sum(!samples2include), " sample not present in at least 'minViews'= ", minViews, ". Remaing samples for training: ", sum(samples2include), sep=""))
-  mae_sub <- mae
-  
-  # re-arrange data for training in MOFA to matrices, fill in NAs and store in TrainData slot
-  object@TrainData <- lapply(names(mae_sub), function(exp) .subset_augment(assays(mae_sub)[[exp]], sampleMap(mae_sub)[sampleMap(mae_sub)$assay==exp,"colname"]))
-
-  # set dimensionalities
+  # Set dimensionalities
   object@Dimensions[["M"]] <- length(object@TrainData)
   object@Dimensions[["N"]] <- ncol(object@TrainData[[1]])
   object@Dimensions[["D"]] <- sapply(object@TrainData,nrow)
   object@Dimensions[["K"]] <- 0
   
-  # set view names
-  viewNames(object) <- names(mae)
+  # Set view names
+  viewNames(object) <- names(data)
   
-  # message("Returning the following MOFA object:")
-  # print(object)
+  return(object)
+}
+
+# (Hidden) function to initialise a MOFAmodel object using a MultiAssayExperiment object
+.createMOFAobjectFromMAE <- function(data) {
+
+  # Initialise MOFA object
+  object <- new("MOFAmodel")
+  object@Status <- "untrained"
+  object@InputData <- data
+  
+  # Re-arrange data for training in MOFA to matrices, fill in NAs and store in TrainData slot
+  object@TrainData <- lapply(names(data), function(exp) .subset_augment(assays(data)[[exp]], sampleMap(data)[sampleMap(data)$assay==exp,"colname"]))
   
   return(object)
 }
 
 
-# createMOFAobjectFromList <- function(ExpList, pData = S4Vectors::DataFrame(), minViews=1){
-# 
-#   mae <- MultiAssayExperiment(experiments = ExpList, pData = pData)
-#   
-#   object <- createMOFAobject(mae, minViews=minViews)
-#   
-#   return(object)
-# }
+# (Hidden) function to initialise a MOFAmodel object using a list of matrices
+.createMOFAobjectFromList <- function(data) {
+  
+  # Initialise MOFA object
+  object <- new("MOFAmodel")
+  object@Status <- "untrained"
+  object@TrainData <- data
+  
+  return(object)
+}
+
 
 
 

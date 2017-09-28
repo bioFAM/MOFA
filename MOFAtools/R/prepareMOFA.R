@@ -1,5 +1,5 @@
 
-#' @title prepareMOFA: Prepare an untrained MOFA object for running MOFA
+#' @title prepareMOFA: Prepare an untrained MOFA object for training
 #' @name prepareMOFA
 #' @description Function to set the training and model options, produces .txt files that are used for python as input and 
 #' creates an .sh file for calling MOFA with the specified options from the command line. These files are all stored in the specified directory.
@@ -21,20 +21,20 @@ prepareMOFA <- function(object, DirOptions, ModelOptions = NULL, TrainOptions = 
     stop("'object' has to be an instance of MOFAmodel")
   
   # Create temporary folder to store data
-  dir.create(DirOptions$tmpDir, showWarnings = FALSE)
+  dir.create(DirOptions$dataDir, showWarnings = FALSE)
   
   # Store views as matrices in .txt files
-  message(sprintf("Storing input views in %s...", DirOptions$tmpDir))
+  message(sprintf("Storing input views in tmp folder %s...", DirOptions$dataDir))
   for(view in viewNames(object)) {
-    write.table(t(object@TrainData[[view]]), file=file.path(DirOptions$tmpDir, paste0(view,".txt")),
+    write.table(t(object@TrainData[[view]]), file=file.path(DirOptions$dataDir, paste0(view,".txt")),
                 sep=" ", row.names=TRUE, col.names=TRUE, quote=F)
   }
   
   # Store covariates as a .txt file
-  if (!is.null(ModelOptions$covariates)) {
-  write.table(ModelOptions$covariates, file=file.path(DirOptions$tmpDir, "covariates.txt"), 
-              sep=" ", row.names=F, col.names=F, quote=F)
-  }
+  # if (!is.null(ModelOptions$covariates)) {
+  # write.table(ModelOptions$covariates, file=file.path(DirOptions$dataDir, "covariates.txt"), 
+  #             sep=" ", row.names=F, col.names=F, quote=F)
+  # }
   
   # Get training options
   message("Checking training options...")
@@ -69,30 +69,13 @@ prepareMOFA <- function(object, DirOptions, ModelOptions = NULL, TrainOptions = 
 #' @title getDefaultTrainOpts: Get default training options
 #' @name getDefaultTrainOpts
 #' @description Function to obtain default training options
-#' @details fill this
 #' @return list with training options
 #' @export
-
-getDefaultTrainOpts <- function(silent=T) {
-  if(!silent) message("Using default training options...")
+getDefaultTrainOpts <- function() {
   TrainOpts <- list(
-    trials = 1,          # Number of trials
-    
-    maxiter = 2000,      # Maximum number of iterations
-    tolerance = 0.01,    # Convergence threshold based on change in the evidence lower bound
-    forceiter = 0,       # Do not stop when convergence criterion is met, force model to complete all iterations
-    
-    elbofreq = 1,        # Frequency of evidence lower bound calculation
-    
-    startSparsity = 1000, # ...
-    startdrop = 3,       # Initial iteration to start dropping factors
-    freqdrop = 1,        # Frequency of dropping latent factors
-    drop_by_norm = 0.00,  # Option to drop latent factors: minimum norm threshold
-    # drop_by_cor = NA,   # (NOT IMPLEMENTED) Option to drop latent factors: maximum correlation between two factors
-    drop_by_r2 = 0.00,   # Option to drop latent factors: minimum coefficient of determination (percentage of variance explained in at least one view)
-    
-    verbosity = 2,       # Verbosity (TO BE DEFINED)
-    cores = 1            # Number of cores (usually it is one core per trial)
+    maxiter = 10000,              # Maximum number of iterations
+    tolerance = 0.01,            # Convergence threshold based on change in the evidence lower bound
+    DropFactorThreshold = 0.00   # Threshold on fraction of variance explained to drop a factor
   )
   return(TrainOpts)
 }
@@ -100,18 +83,16 @@ getDefaultTrainOpts <- function(silent=T) {
 #' @title getDefaultModelOpts: Get default model options
 #' @name getDefaultModelOpts
 #' @param object  untrained MOFA object to get model options for
-#' @param silent  boolean whether to print warnings
 #' @description Function to obtain default model options
-#' @details fill this
-#' @return  list with training options
+#' @return  list with default model options
 #' @export
-#' 
 getDefaultModelOpts <- function(object) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   if (!.hasSlot(object,"Dimensions") | length(object@Dimensions) == 0) stop("Dimensions of object need to be defined before getting ModelOpts")
-  if (!.hasSlot(object,"InputData")) stop("Input data needs to be specified before getting ModelOpts")
+  if (!.hasSlot(object,"InputData")) stop("InputData slot needs to be specified before getting ModelOpts")
+  if (!.hasSlot(object,"TrainData")) stop("TrainData slot needs to be specified before getting ModelOpts")
   
   # Guess likelihood type
   likelihood = rep("gaussian", object@Dimensions[["M"]]); names(likelihood) <- viewNames(object)
@@ -126,13 +107,10 @@ getDefaultModelOpts <- function(object) {
   
   # Define default model options
   ModelOptions <- list(
-    learnMean = TRUE,
-    learnTheta = rep(1,object@Dimensions[["M"]]),
-    initTheta = rep(0.5,object@Dimensions[["M"]]),
-    likelihood = likelihood,
-    initialK = 10,
-    schedule = c("Y","SW","Z","AlphaW","Theta","Tau"),
-    covariates = NULL
+    learnIntercept = TRUE,      # (bool) include a constant factor of 1s to learn the mean of features (intercept)? If not, you need to center the data
+    likelihood = likelihood,    # (character vector) likelihood per view [gaussian/bernoulli/poisson]
+    numFactors = 10             # (numeric) initial number of latent factors
+    # covariates = NULL
   )
   
   return(ModelOptions)

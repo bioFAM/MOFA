@@ -1,64 +1,49 @@
 
-###########################
-## Functions to run MOFA ##
-###########################
+##############################################
+## Functions to run MOFA from the R package ##
+##############################################
 
-#' @title prepareMOFARunFile: Write .sh files to run MOFA in Python 
-#' @name prepareMOFARunFile
-#' @description Function to produce .sh files to run MOFA in Python from the command line with specified options.
-#' @param object an untrained MOFA object
-#' @param dir directory to store .txt in
-#' @param outFile name of output file from Python MOFA
-#' @param k number of latent factors to start with (default = 10)
-#' @param MOFAdir directory of the MOFA Pyhton package installation
-#' @details fill this
-#' @return  
+#' @title runMOFA:
+#' @name runMOFA
+#' @description train a \code{\link{MOFAmodel}}
+#' @param object an untrained \code{\link{MOFAmodel}}
+#' @param dirOptions list with I/O options, should contain at least 'dataDir' where the input matrices as stored as .txt files and 'outFile' where the model is going to be stored as a .hdf5 file
+#' @return a trained \code{\link{MOFAmodel}}
 #' @export
-#' 
-
 runMOFA <- function(object, DirOptions) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
-  stopifnot(all(c("tmpDir","mofaDir","outFile") %in% names(DirOptions)))
+  stopifnot(all(c("dataDir","outFile") %in% names(DirOptions)))
   
   # Prepare command
   command <- paste(sep=" ",
-  "/Users/ricard/anaconda2/bin/python", paste0(DirOptions$mofaDir,"/run/template_run.py"),
-  "--inFiles", paste(paste0(DirOptions$tmpDir, "/", viewNames(object), ".txt"), collapse = " "),
+  # "mofa",
+  "--inFiles", paste(paste0(DirOptions$dataDir, "/", viewNames(object), ".txt"), collapse = " "),
+  "--header_cols --header_rows",
   "--outFile", DirOptions$outFile,
   "--views", paste(viewNames(object), collapse=" "),
   "--likelihoods", paste(object@ModelOpts$likelihood, collapse=" "),
-  "--learnTheta", paste(object@ModelOpts$learnTheta, collapse=" "),
-  "--initTheta", paste(object@ModelOpts$initTheta, collapse=" "),
-  "--schedule", paste(object@ModelOpts$schedule, collapse=" "),
-  "--ntrials", object@TrainOpts$trials,
-  "--ncores", object@TrainOpts$cores,
+  "--factors", object@ModelOpts$numFactors,
   "--iter", object@TrainOpts$maxiter,
-  "--elbofreq", object@TrainOpts$elbofreq,
-  "--startDrop", object@TrainOpts$startdrop,
-  "--freqDrop", object@TrainOpts$freqdrop,
-  "--startSparsity", object@TrainOpts$startSparsity,
-  "--dropNorm", object@TrainOpts$drop_by_norm,
-  "--dropR2", object@TrainOpts$drop_by_r2,
-  "--factors", object@ModelOpts$initialK,
+  "--dropR2", object@TrainOpts$DropFactorThreshold,
   "--tolerance", object@TrainOpts$tolerance
   )
-  if (!is.null(object@ModelOpts$covariates)) {
-    command <- paste(command, sep=" ",
-                     "--covariatesFile", file.path(DirOptions$tmpDir, "covariates.txt"),
-                     "--scale_covariates", paste(object@ModelOpts$scale_covariates, collapse=" ")
-                     )
-  }
-  if (object@TrainOpts$forceiter == T) { command <- paste(command, "--nostop", sep=" ") }
-  if (object@ModelOpts$learnMean == T) { command <- paste(command, "--learnMean", sep=" ") }
+  # if (!is.null(object@ModelOpts$covariates)) {
+  #   command <- paste(command, sep=" ",
+  #                    "--covariatesFile", file.path(DirOptions$dataDir, "covariates.txt"),
+  #                    "--scale_covariates", paste(object@ModelOpts$scale_covariates, collapse=" ")
+  #                    )
+  # }
+  if (object@ModelOpts$learnIntercept == T) { command <- paste(command, "--learnIntercept", sep=" ") }
   
-  # Run motherfuckers!!!!
-  system(command, ignore.stdout = F, ignore.stderr = T)
+  # Run!
+  # system(command, ignore.stdout = F, ignore.stderr = T, wait=F)
+  # system2(command="mofa", args=command, wait=F)
+  system2(command="mofa", args=command, wait=T)
   
   # Load trained model
   object <- loadModel(DirOptions$outFile, object)
-  # object <- loadModel(DirOptions$outFile)
   
   return(object)
 }

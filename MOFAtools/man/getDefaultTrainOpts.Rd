@@ -4,14 +4,11 @@
 \alias{getDefaultTrainOpts}
 \title{getDefaultTrainOpts: Get default training options}
 \usage{
-getDefaultTrainOpts(silent = T)
+getDefaultTrainOpts()
 }
 \value{
 list with training options
 }
 \description{
 Function to obtain default training options
-}
-\details{
-fill this
 }

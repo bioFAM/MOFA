@@ -45,8 +45,15 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   # Load model options
   if (length(object@ModelOpts) == 0) {
     tryCatch(object@ModelOpts <- as.list(h5read(file, 'model_opts',read.attributes=T)), error = function(x) { print("Model opts not found, not loading it...") })
-    object@ModelOpts$learnMean <- as.logical(object@ModelOpts$learnMean)
   }
+  
+  # TO REMOVE
+  if ("learnMean" %in% names(object@ModelOpts)) {
+    tmp <- names(object@ModelOpts)
+    tmp[tmp=="learnMean"] <- "learnIntercept"
+    names(object@ModelOpts) <- tmp
+  }
+  object@ModelOpts$learnIntercept <- as.logical(object@ModelOpts$learnIntercept)
   
   # Load training data
   tryCatch( {
@@ -75,15 +82,15 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   factorNames(object) <- as.character(1:object@Dimensions[["K"]])
     
   # Rename covariates, including intercept
-  # if (object@ModelOpts$learnMean == TRUE) factorNames(object) <- c("intercept",as.character(1:(object@Dimensions[["K"]]-1)))
+  # if (object@ModelOpts$learnIntercept == TRUE) factorNames(object) <- c("intercept",as.character(1:(object@Dimensions[["K"]]-1)))
   # if (!is.null(object@ModelOpts$covariates)) {
-  #   if (object@ModelOpts$learnMean == TRUE) {
+  #   if (object@ModelOpts$learnIntercept == TRUE) {
   #     factorNames(object) <- c("intercept", colnames(object@ModelOpts$covariates), as.character((ncol(object@ModelOpts$covariates)+1:(object@Dimensions[["K"]]-1-ncol(object@ModelOpts$covariates)))))
   #   } else {
   #     factorNames(object) <- c(colnames(object@ModelOpts$covariates), as.character((ncol(object@ModelOpts$covariates)+1:(object@Dimensions[["K"]]-1))))
   #   }
   # }
-  if (object@ModelOpts$learnMean == TRUE) {
+  if (object@ModelOpts$learnIntercept == TRUE) {
     intercept_idx <- names(which(sapply(apply(object@Expectations$Z$E,2,unique),length)==1))
     factornames <- as.character(1:(object@Dimensions[["K"]]))
     factornames[factornames==intercept_idx] <- "intercept"
@@ -100,9 +107,9 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   if (sortFactors == T) {
     r2 <- rowSums(calculateVarianceExplained(object,plotit=F,showtotalR2=T)$R2PerFactor)
     order_factors <- c(names(r2)[order(r2, decreasing = T)])
-    if (object@ModelOpts$learnMean==T) { order_factors <- c("intercept",order_factors) }
+    if (object@ModelOpts$learnIntercept==T) { order_factors <- c("intercept",order_factors) }
     object <- subsetFactors(object,order_factors)
-    if (object@ModelOpts$learnMean==T) { 
+    if (object@ModelOpts$learnIntercept==T) { 
       factorNames(object) <- c("intercept",1:(object@Dimensions$K-1))
     } else {
       factorNames(object) <- c(1:object@Dimensions$K) 

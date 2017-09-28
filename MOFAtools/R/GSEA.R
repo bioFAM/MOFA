@@ -41,7 +41,7 @@ FeatureSetEnrichmentAnalysis <- function(model, view, feature.sets, factors="all
   # Collect factors
   if (paste0(factors,sep="",collapse="") == "all") { 
     factors <- factorNames(model)
-    if (model@ModelOpts$learnMean == T) { factors <- factors[-1] }
+    if (model@ModelOpts$learnIntercept == T) { factors <- factors[-1] }
   } else if(!all(factors %in% factorNames(model))) stop("Factors do not match factor names in model")
   
   # Collect observed data

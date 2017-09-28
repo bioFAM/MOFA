@@ -8,15 +8,10 @@ getDefaultModelOpts(object)
 }
 \arguments{
 \item{object}{untrained MOFA object to get model options for}
-
-\item{silent}{boolean whether to print warnings}
 }
 \value{
-list with training options
+list with default model options
 }
 \description{
 Function to obtain default model options
-}
-\details{
-fill this
 }

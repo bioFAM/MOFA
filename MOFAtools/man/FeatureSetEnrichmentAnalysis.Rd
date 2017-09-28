@@ -8,7 +8,7 @@ FeatureSetEnrichmentAnalysis(model, view, feature.sets, factors = "all",
   local.statistic = c("loading", "cor", "z"),
   transformation = c("abs.value", "none"), global.statistic = c("mean.diff",
   "rank.sum"), statistical.test = c("parametric", "cor.adj.parametric",
-  "permutation"), nperm = 100, min.size = 15, cores = 1,
+  "permutation"), nperm = 1000, min.size = 15, cores = 1,
   p.adj.method = "BH", alpha = 0.1)
 }
 \arguments{
@@ -36,9 +36,11 @@ Must be one of the following: "parametric" (default), "cor.adj.parametric", "per
 \item{cores}{Number of cores to run the permutation analysis in parallel. Only relevant if statistical.test is set to "permutation".}
 
 \item{p.adj.method}{Method to adjust p-values factor-wise for multiple testing. Can be any method in p.adjust.methods(). Default uses Benjamini-Hochberg procedure.}
+
+\item{alpha}{FDR threshold to generate lists of significant pathways}
 }
 \value{
-a list with two matrices, one for the feature set statistics and the other for the pvalues. Rows are feature sets and columns are latent variables.
+a list with three components: pval and pval.adj contain matrices with p-values and adjusted p-values, repectively. sigPathways contains a list with significant pathwayd at FDR alpha per factor.
 }
 \description{
 Method to perform enrichment analysis for feature sets from a given view in the latent factors  \cr

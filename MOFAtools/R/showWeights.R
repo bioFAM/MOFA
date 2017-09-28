@@ -40,7 +40,7 @@ showWeightHeatmap <- function(object, view, features = "all", factors = "all", t
   }
   
   # Remove intercept factor
-  if(object@ModelOpts$learnMean==T & RemoveIntercept) { factors <- factors[factors != factorNames(object)[1]] }
+  if(object@ModelOpts$learnIntercept==T & RemoveIntercept) { factors <- factors[factors != factorNames(object)[1]] }
   
   # Define features
   if (paste(features,collapse="")=="all") { 
@@ -154,7 +154,7 @@ showAllWeights <- function(object, view, factor, nfeatures = "all", abs=FALSE, t
     ggrepel::geom_text_repel(data = W[W$group!="0",], aes(label = feature, col = group),
                              segment.alpha=0.1, segment.color="black", segment.size=0.3, box.padding = unit(0.5, "lines"), show.legend= F)
   # Define size
-  gg_W <- gg_W + scale_size_manual(values=c(0.05,1.5)) + guides(size=F)
+  gg_W <- gg_W + scale_size_manual(values=c(0.5,2)) + guides(size=F)
   
   # Define colors
   cols <- c("grey","black",color_manual)

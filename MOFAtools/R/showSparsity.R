@@ -38,7 +38,7 @@ showSparsity <- function(model, views = "all", factors = "all", main = NULL) {
   
   # Collect relevant data
   theta <- do.call("rbind",lapply(getExpectations(model,"Theta","E"), function(x) x[1,]))
-  if (model@ModelOpts$learnMean) { theta <- theta[,-1]; factors <- factors[factors != "intercept"] }
+  if (model@ModelOpts$learnIntercept==T) { theta <- theta[,-1]; factors <- factors[factors != "intercept"] }
   theta <- theta[views,factors]
   
   # Heatmap

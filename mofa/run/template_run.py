@@ -47,7 +47,7 @@ def entry_point():
   p.add_argument( '--schedule',          type=str, nargs="+", default=None,                   help='Update schedule, default is ( Y SW Z AlphaW Theta Tau )' )
   p.add_argument( '--learnTheta',        type=int, nargs="+", default=1,                      help='Learn the sparsity parameter from the spike-and-slab (theta)?' )
   p.add_argument( '--initTheta',         type=float, nargs="+", default=1. ,                  help='Initialisation for the sparsity parameter of the spike-and-slab (theta)')
-  p.add_argument( '--learnMean',         action='store_true',                                 help='Learn the feature-wise mean?' )
+  p.add_argument( '--learnIntercept',         action='store_true',                                 help='Learn the feature-wise mean?' )
 
   # Training options
   p.add_argument( '--elbofreq',          type=int, default=1,                                 help='Frequency of computation of ELBO' )
@@ -101,7 +101,7 @@ def entry_point():
   if args.center_features:
     data_opts['center_features'] = [ True if l=="gaussian" else False for l in args.likelihoods ]
   else:
-    if not args.learnMean: print("\nWarning... you are not centering the data and not learning the mean...\n")
+    if not args.learnIntercept: print("\nWarning... you are not centering the data and not learning the mean...\n")
     data_opts['center_features'] = [ False for l in args.likelihoods ]
 
   # Data processing: scale views
@@ -165,7 +165,7 @@ def entry_point():
     data_opts['covariates'] = None
 
   # If we want to learn the mean, we add a constant covariate of 1s
-  if args.learnMean:
+  if args.learnIntercept:
     if data_opts['covariates'] is not None:
       # data_opts['covariates'].insert(0, "mean", s.ones(N,))
       data_opts['covariates'] = s.insert(data_opts['covariates'], obj=0, values=1, axis=1)
@@ -190,7 +190,7 @@ def entry_point():
   assert set(model_opts['likelihood']).issubset(set(["gaussian","bernoulli","poisson","warp"]))
 
   # Define whether to learn the feature-wise means
-  model_opts["learnMean"] = args.learnMean
+  model_opts["learnIntercept"] = args.learnIntercept
 
   # Define for which factors and views should we learn 'theta', the sparsity of the factor
   if type(args.learnTheta) == int:
@@ -299,7 +299,7 @@ def entry_point():
   # By definition, the weights of the vector associated with the means should not be sparse, therefore we remove
   # the spike and slab prior by not learning theta and initialisating it to one
 
-  if model_opts["learnMean"]:
+  if model_opts["learnIntercept"]:
     for m in range(M):
       
       # Weights

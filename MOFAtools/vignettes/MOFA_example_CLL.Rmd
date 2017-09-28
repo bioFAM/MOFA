@@ -15,73 +15,81 @@ This vignette show how to use MOFA including initialization, training and down-s
 For illustration we use the CLL data which is used in the MOFA publication.
 
 ```{r, warning=FALSE, message=FALSE}
-library(MultiAssayExperiment)
+library(MultiAssayExperiment) # I think we shouldn't load this here
 library(MOFAtools)
 ```
 
-# Step 1: Initialize MOFA object
+# Step 1: Load data and create MOFA object
 
-## Load data and create MOFA object
-Data is loaded into MOFA using the [MultiAssayExperiment](https://bioconductor.org/packages/release/bioc/html/MultiAssayExperiment.html) framework.
+There are two options to input data to MOFA
+* Option 1: Bioconductor approach using the MultiAssayExperiment framework
+* Option 2: base R approach using a list of matrices
 
-Starting from a list of matrices where features are rows and samples are columns this can be easily constructed as follows:
+## Option 1: bioconductor approach
+If using the Bioconductor approach, you need to provide or create a [MultiAssayExperiment](https://bioconductor.org/packages/release/bioc/html/MultiAssayExperiment.html) object and then use it to build the MOFA object. For example, starting from a list of matrices where features are rows and samples are columns, this can be easily constructed as follows:
 ```{r}
-# list containing matrices for the following views: mRNA, Methyaltion, Drug Response, Mutations
-# samples are columns, features are rows
-data("CLL_data")
-sapply(CLL_data, dim)
+# Load data
+data("CLL_data") # import list containing matrices for mRNA, Methylation, Drug Response and Mutation data. 
+lapply(CLL_data, dim) # check dimensionalities, samples are columns, features are rows
 
-# data frame containing covariates not included in the training: sex, diagnosis
+# Load sample metadata (colData): Gender and Diagnosis
 data("CLL_covariates")
 head(CLL_covariates)
 
 # Create MultiAssayExperiment object 
 mae_CLL <- MultiAssayExperiment(experiments = CLL_data, colData = CLL_covariates)
+
+# Build the MOFA object
+MOFAobject <- createMOFAobject(mae_CLL)
+MOFAobject
+
 ```
 
-## Create MOFA object using MultiAssayExperiment
-'createMOFAobject' initialized an untrained MOFA object.
+## Option 2: base R approach
+If using the base R approach, you simply need to provide a list of matrices where features are rows and samples are columns. The Importantly, the samples need to be aligned. Missing assays can be filled with NAs.
 ```{r}
-MOFAobject <- createMOFAobject(mae_CLL)
+data("CLL_data")
+MOFAobject <- createMOFAobject(CLL_data)
 MOFAobject
 ```
 
-
 # Step 2: Fit the MOFA model
-Now we can run MOFA on the untrained MOFA object from the last step. 
-This step requires some time and is not evaluates in this vignette, users need to specify the location of their MOFA python installation and a directory used by MOFA for intermediate and final outputs.
+The next step is to fit the model using the untrained MOFA object from the last step.
+Note: the core of the MOFA model is implemented in Python, so first of all make sure you have the corresponding package installed (see installation instructions in the README file). In principle, we recommend to train the model directly from the command line (see running instructions, it is very simple), but we have created the following R wrapper if you do not feel comfortable with bash.
 
 ## Define options
+
 ### Define I/O options
-Important paths to specify:
-- mofaDir: directory of the MOFA package
-- outFile: Output file for the model
-```{r, eval=FALSE}
+```{r}
 DirOptions <- list(
-  "mofaDir" = "your_path_to_MOFA/MOFApackage/scGFA/MOFA",
-  "outFile" = "path_to_output_directory"
+  "dataDir" = tempdir(), # Folder to store the input matrices as .txt files, it can be a simple temporary folder
+  "outFile" = "/Users/ricard/test/test.hdf5" # Output file of the model (use hdf5 extension)
 )
 ```
 
 ### Define model options
-The user can look in the documentation and the function 'getDefaultModelOpts' for the different options, but the default ones usually work well The most important thing the user has to define is the initial number of latent variables and the likelihood type (if not provided, the model tries to guess it from the data) 
-```{r, eval=FALSE}
-# TO-DO: check consistency with final model parameters
+The most important options the user needs to define are:
+* numFactors: initial number of factors
+* likelihoods: likelihood for each view, gaussian for continuous data, bernoulli for binary data and poisson for count data. If not provided, the model tries to guess it from the data.
+```{r}
 ModelOptions <- getDefaultModelOpts(MOFAobject)
 ModelOptions
 ```
 
 ### Define training options
-The user can look in the documentation and the function 'getDefaultTrainOpts' for the different options, but the default ones work fine. The most important thing the user has to define is the maximum number of iterations and whether/how to drop inactive latent factors while training.
-```{r, eval=FALSE}
-# TO-DO: check consistency with final model parameters
+The most important options the user needs to define are:
+* maxiter: Maximum number of iterations, ideally set it large enough and use the convergence criteria
+* tolerance: Convergence threshold based on change in the evidence lower bound. We recommend you stick to the default value.
+* DropFactorThreshold: Threshold on fraction of variance explained to define inactive factors. That is, factors explaining less than 'DropFactorThreshold' percentage of variation in all views will be dropped during training.
+```{r}
 TrainOptions <- getDefaultTrainOpts()
+# TrainOptions$maxiter <- 10
 TrainOptions
 ```
 
 ## Prepare MOFA
-Internally, prepareMOFA performs a set of sanity checks, fills the TrainOpts and ModelOpts slots of the MOFAmodel object and it also creates a set of temporary files with the input matrices that will be loaded by the Python core implementation
-```{r, eval=FALSE}
+prepareMOFA internally performs a set of sanity checks, fills the TrainOpts and ModelOpts slots of the MOFAmodel object and it also creates a set of temporary files with the input matrices that will be loaded by the Python core implementation
+```{r}
 MOFAobject <- prepareMOFA(MOFAobject, 
                       DirOptions = DirOptions,
                       ModelOptions = ModelOptions,
@@ -90,65 +98,69 @@ MOFAobject <- prepareMOFA(MOFAobject,
 ```
 
 ## Run MOFA
-This step can take some time and it decouples from the R package, it is recommended to run it from the Python-based module directly using the txt files as input generated by 'prepareMOFA' and then re-load the fitted model stored in the hdf5 object back into R.
+This step can take some time (around 20 min with default parameters), for illustration we provide an existing trained model
 ```{r, eval=FALSE}
 MOFAobject <- runMOFA(MOFAobject, DirOptions)
 ```
 
-For illustration, we load the model used in the paper from the hdf5 file produced by MOFA
 ```{r}
+# Loading an existing trained model
 filepath <- system.file("extdata", "model15.hdf5", package = "MOFAtools")
 MOFAobject <- loadModel(filepath, MOFAobject)
 MOFAobject
 ```
 
+
 # Step 3: Analyse a trained MOFA model
-After training, we can explore the results from MOFA. We recommend the following semi-automated pipeline to disentangel adn characterize the drivers of variation identified by MOFA:
+After training, we can explore the results from MOFA. Here we provide a semi-automated pipeline to disentangle and characterize the sources of variation (the factors) identified by MOFA.
 
-For a first overview we recommend:
+Part 1: Disentangling the heterogeneity:
+- Calculation of variance explained by each factor in each view
+Part 2: Characterisation of individual factors:
+- Inspection of top weighted features in the active views
+- Feature set enrichemnt analysis in the active views (where set annotations are present, e.g. gene sets for mRNA views)
+- Ordination of samples by factors to reveal clusters and graadients in the sample space
 
-  (1) Calculation of variance explained by each factor in each view
+For details, please read the Methods section of the Manuscript.
 
-Next, factor can be further characterized using:
-
-  (2) Inspection of top weighted features in the active views
-  (3) Feature set enrichemnt analysis in the active views (where set annotations are present, e.g. gene sets for mRNA views)
-  (4) Ordination of samples by factors to reveal clusters and graadients in the sample space
-  
-## Calculation of variance explained by each factor in each view
-This is done by the 'calculateVarianceExplained' function. The resulting plot allows to get an overivew of wich factors are active in which view and see which factors are unique and which capture co-variation between several views. Factors are ordered by overall variance explained, i.e. the first factor explains most varaince across all views.
+## Part 1: Disentangling the heterogeneity, calculation of variance explained by each factor in each view
+This is done by the 'calculateVarianceExplained' function. The resulting plot allows to get an overivew of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of the different views.
 
 ```{r}
 r2 <- calculateVarianceExplained(MOFAobject)
 ```
 
-## Inspection of top weighted features in the active views
-To see top features for a given view and factor we can use the 'showTopWeights' function, e.g. for the first two factors on the mutation or mRNA view:
-
+## Part 2: Characterisation of individual factors
+### Inspection of top weighted features in the active views
+To get an overview of the weights across all factors in a given view you can use the 'showWeightHeatmap' function.
+For example, here we plot all weights from all factors in the Mutation data:
+```{r}
+showWeightHeatmap(MOFAobject, "Mutations", factors=c(1,2,3,4,5), show_colnames=F)
+```
+Similarly, we can also plot all weights for a single factor using the 'showAllWeights' function.
+For example, here we plot all weights from Factor 1 in the Mutation data:
+```{r}
+showAllWeights(MOFAobject, view = "Mutations", factor = "1")
+```
+If you are only interested in looking at the top features you can use the 'showTopWeights' function.
+For example, here we plot the mutations with largest loadings on Factor 1:
 ```{r}
 showTopWeights(MOFAobject, "Mutations", "1")
 ```
+Features with large weight in a given factor means that they follow the pattern of covariation associated with the factor. For example, if a factor is capturing sex differences, then the largest weights will be associated with features that show sex-specific effects.
 
-All weights on a factors in a view can be looked at using the 'showAllWeights' function. 
-Labels are set based on the 'threshold' or 'manual' parameter. 
+From the previous plots, we can clearly see that Factor 1 is associated to IGHV status. Now if we look at the mRNA view, the top features will also be associated to IGHV status:
 ```{r}
-showAllWeights(MOFAobject, view = "Mutations", factor = "1", threshold = 1)
+showTopWeights(MOFAobject, "mRNA", "1")
 ```
 
-
-To get an overview across all factors in a given view we can use the 'showWeightHeatmap' function. Using the threshold paramater features and factors with loadings bewlow this threshold can be removed.
+Finally, instead of looking at an the "abstract" weight, it is useful to observe the coordinated heterogeneity of the top features in the original data. This can be done using the 'showDataHeatmap' function.
 ```{r}
-showWeightHeatmap(MOFAobject, "Mutations", show_colnames=F)
-showWeightHeatmap(MOFAobject, "Mutations", threshold = 0.1)
+showDataHeatmap(MOFAobject, view="mRNA", factor="1", features=20, show_rownames=FALSE)
 ```
 
-To see the original data for the genes with top weights on a factor use 'showDataHeatmap'.
-```{r}
-showDataHeatmap(MOFAobject, view="mRNA", factor="1", nfeatures=20, show_rownames=FALSE)
-```
-
-## Feature set enrichemnt analysis in the active views
-The characterisation of factors usually requires the inspection of the corresponding weights. However, looking at the loadings of single features can be challenging, and often the combination of signal from functionally related sets of features (i.e. gene ontologies) is required.
+### Feature set enrichemnt analysis in the active views
+Sometimes looking at the loadings of single features can be challenging, and often the combination of signal from functionally related sets of features (i.e. gene ontologies) is required.
 
 Here we implemented a function for feature set enrichment analysis method (FeatureSetEnrichmentAnalysis) derived from the [PCGSE package](https://cran.r-project.org/web/packages/PCGSE/index.html).
 
@@ -197,14 +209,14 @@ beeswarmPlot(MOFAobject, factors = "1", color_by = "IGHV")
 ```
 
 ## Customized analysis
-For customized exploration of weights and factors, you can directly obtain the weights, factors or training data in matrix or data.frame format using the 'getWeights', 'getFactors' and 'getTrainData'. You can specify a subset of views or factors, you are interested in; by default, all views and factors are reported.
+For customized exploration of weights and factors, you can directly fetch the variables from the model using 'get' functions: 'getWeights', 'getFactors' and 'getTrainData':
 ```{r}
-MOFAweights <- getWeights(MOFAobject, as.data.frame = T)
+MOFAweights <- getWeights(MOFAobject, views="all", factors="all", as.data.frame = T)
 head(MOFAweights)
 ```
 
 ```{r}
-MOFAfactors <- getFactors(MOFAobject, as.data.frame = T, include_intercept = F)
+MOFAfactors <- getFactors(MOFAobject, factors=c(1,2), as.data.frame = F)
 head(MOFAfactors)
 ```
 
@@ -216,23 +228,24 @@ head(MOFAdata)
 
 # Further functionalities
 
-## Imputation of missing observations
-With the 'imputeMissing' function all missing values are imputed based on the MOFA model. The imputed data is then stored in the MOFAobject and can be accessed via 'getImputedData'.
-```{r}
-MOFAobject <- imputeMissing(MOFAobject)
-imputedDrugs <- getImputedData(MOFAobject, view="Drugs")
-```
-
 ## Prediction of views
 With the 'predict' function, full views can be predicted based on the MOFA model with all or a subset of factors
 ```{r}
 predictedDrugs <- predict(MOFAobject, view="Drugs", factors="all")
 ```
 
+## Imputation of missing observations
+With the 'imputeMissing' function all missing values are imputed based on the MOFA model. The imputed data is then stored in the ImputedData slot of the MOFAobject and can be accessed via the 'getImputedData' function.
+```{r}
+MOFAobject <- imputeMissing(MOFAobject)
+imputedDrugs <- getImputedData(MOFAobject, view="Drugs")
+```
 
 ## Clustering of samples based on latent factors
 Samples can be clustered according to their values on some or all latent factors using the 'clusterSamples' function. CLusters can for example be visualised using the scatterPlot function
 ```{r}
 h <- clusterSamples(MOFAobject, k=2, factors="1")
-scatterPlot(MOFAobject, c("1","2"), h$cluster)
+scatterPlot(MOFAobject, factors=c("1","2"), color_by=h$cluster)
 ```
+
+

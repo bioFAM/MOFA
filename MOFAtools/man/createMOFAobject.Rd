@@ -4,19 +4,14 @@
 \alias{createMOFAobject}
 \title{Initialize a \code{\link{MOFAmodel}} object with multi-omic data}
 \usage{
-createMOFAobject(mae, minViews = 1)
+createMOFAobject(data)
 }
 \arguments{
-\item{minViews}{Number of views a sample has to be observed to be included (default 1, i.e. including all samples)}
-
-\item{A}{MultiAssayExperiment containing the input data for MOFA}
+\item{data}{either MultiAssayExperiment or list of matrices with features as rows and samples as columns}
 }
 \value{
 an untrained MOFA model object
 }
 \description{
-Method to intilize the InputData slot of the MOFA object using a MultiAssayExperiment object as input
-}
-\details{
-fill this
+Method to initialize a MOFAmodel object
 }

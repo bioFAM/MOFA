@@ -39,11 +39,11 @@ compareModels <- function(models, comparison = "all", ...) {
   LFs <- lapply(seq_along(models), function(modelidx){
     model <- models[[modelidx]]
     Z <- getExpectations(model, 'Z', 'E')
-    if(!is.null(model@ModelOpts$learnMean)) if(model@ModelOpts$learnMean) Z <- Z[,-1]
+    if(!is.null(model@ModelOpts$learnIntercept)) if(model@ModelOpts$learnIntercept) Z <- Z[,-1]
     if(is.null(rownames(Z))) rownames(Z) <- rownames(model@TrainData[[1]])
     if(is.null(colnames(Z))) 
-      if(!is.null(model@ModelOpts$learnMean)) {
-        if(model@ModelOpts$learnMean)  colnames(Z) <- paste("LF", 2:(ncol(Z)+1), sep="")
+      if(!is.null(model@ModelOpts$learnIntercept)) {
+        if(model@ModelOpts$learnIntercept)  colnames(Z) <- paste("LF", 2:(ncol(Z)+1), sep="")
         }else
           colnames(Z) <- paste("LF", 1:ncol(Z), sep="")
     Z

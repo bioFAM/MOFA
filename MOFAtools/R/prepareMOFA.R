@@ -75,7 +75,7 @@ getDefaultTrainOpts <- function() {
   TrainOpts <- list(
     maxiter = 10000,              # Maximum number of iterations
     tolerance = 0.01,            # Convergence threshold based on change in the evidence lower bound
-    DropFactorThreshold = 0.00   # Threshold on fraction of variance explained to drop a factor
+    DropFactorThreshold = 0.03   # Threshold on fraction of variance explained to drop a factor
   )
   return(TrainOpts)
 }
@@ -109,7 +109,7 @@ getDefaultModelOpts <- function(object) {
   ModelOptions <- list(
     learnIntercept = TRUE,      # (bool) include a constant factor of 1s to learn the mean of features (intercept)? If not, you need to center the data
     likelihood = likelihood,    # (character vector) likelihood per view [gaussian/bernoulli/poisson]
-    numFactors = 10             # (numeric) initial number of latent factors
+    numFactors = 25             # (numeric) initial number of latent factors
     # covariates = NULL
   )
   

@@ -105,10 +105,9 @@ There are two important quantities to keep track of:
 ### Step 2: Downstream analysis: annotation of factors
 Once the heterogeneity of the data set is reduced into a set of factors, you need to understand what are they and relate them to technical or biological sources of variability.
 
-We have built a semi-automated pipeline based on our experience annotating factors:
-
-(1) **Disentangling the heterogeneity**: calculation of variance explained by each factor in each view.
+We have built a semi-automated pipeline based on our experience annotating factors:  
+(1) **Disentangling the heterogeneity**: calculation of variance explained by each factor in each view.  
 (2) **Inspection of top weighted features**: for example, if a factor is associated to the presence of a chromosomal duplication, the mRNA data will have very high loadings for genes located in that particular chromosome.  
-(4) **Feature set enrichment analysis**: using for example gene ontologies
-(4) **Visualisation of the samples in the factor space**: similarly to what is done in Principal Component Analysis, it is useful to plot the factors against each other and color using known covariates.
+(4) **Feature set enrichment analysis**: using for example gene ontologies.  
+(4) **Visualisation of the samples in the factor space**: similarly to what is done in Principal Component Analysis, it is useful to plot the factors against each other and color using known covariates.  
 

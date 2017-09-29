@@ -46,20 +46,20 @@ R CMD install MOFAtools
 
 ## MOFA workflow
 
-The workflow of MOFA consists of two steps: 
-(1) Fitting step: train the model with the multi-omics data to disentangle the heterogeneity into latent factors.
-(2) Characterisation step: once the factors are inferred they need to be characterised in terms of technical or biological sources of variation.  
+The workflow of MOFA consists of two steps:  
+**(1) Fitting step**: train the model with the multi-omics data to disentangle the heterogeneity into latent factors.  
+**(2) Characterisation step**: once the factors are inferred they need to be characterised in terms of technical or biological sources of variation.  
 
 ### Step 1: Fitting the model
 There are two ways of doing this:
-* Using the command line tool: modify and run the script [run_basic.sh](MOFA/run/run_basic.sh). If you are very familar with the model and want to play with more advanced options, you can edit and run [run_advanced.sh](MOFA/run/run_advanced.sh).
-* Using the R wrapper: for the ones not comfortable with the command line we built an R wrapper. See the vignette.
+* **Using the command line tool**: modify and run the script [run_basic.sh](MOFAtools/run/run_basic.sh). If you are very familar with the model and want to play with more advanced options, you can use instead [run_advanced.sh](MOFAtools/run/run_advanced.sh).
+* **Using the R wrapper**: for the ones not comfortable with the command line we built an R wrapper. See [the vignette](MOFAtools/vignettes/MOFA_example_CLL.Rmd).
 
-Important note: the core framework of MOFA is implemented in Python, so no matter which approach you folllow, you need to install the Python package first.
+Important note: the core framework of MOFA is implemented in Python, so no matter which approach you folllow, you need to install the Python package first.  
 
-If everything is successful, you should observe an output analogous to the following:
+No matter which option you went for, if everything is successful, you should observe an output analogous to the following:
+
 ```
-
   ###########################################################
   ###                 __  __  ___  _____ _                ###
   ###                |  \/  |/ _ \|  ___/ \               ###
@@ -74,23 +74,16 @@ If everything is successful, you should observe an output analogous to the follo
 ## Loading data ##
 ##################
 
-
 Loaded /Users/ricard/MOFA/MOFA/test/data/500_0.txt with dim (100,500)...
 
 Loaded /Users/ricard/MOFA/MOFA/test/data/500_1.txt with dim (100,500)...
 
 Loaded /Users/ricard/MOFA/MOFA/test/data/500_2.txt with dim (100,500)...
-
-
-########################
-## Building the model ##
-########################
-
+ 
 
 #############################################
 ## Running trial number 1 with seed 642034 ##
 #############################################
-
 
 Trial 1, Iteration 1: time=0.08 ELBO=-345954.96, Factors=10, Covariates=1
 
@@ -103,20 +96,19 @@ Trial 1, Iteration 3: time=0.10 ELBO=-257427.42, deltaELBO=26301.8893, Factors=1
 Trial 1, Iteration 100: time=0.07 ELBO=-221171.01, deltaELBO=0.0998, Factors=10, Covariates=1
 
 Converged!
-
 ```
 
 There are two important quantities to keep track of: 
-* Number of factors: you start the model with a large enough amount of factors, and the model will automatically remove the factors that do not explain significant amounts of variation. 
-* deltaELBO: this is the objective function being maximised which is used to assess model convergence. Once the deltaELBO decreases below a threshold, training will end and the model will be saved as an .hdf5 file. Then, you are ready to start the analysis with the R package.
+* **Number of factors**: you start the model with a large enough amount of factors, and the model will automatically remove the factors that do not explain significant amounts of variation. 
+* **deltaELBO**: this is the objective function being maximised which is used to assess model convergence. Once the deltaELBO decreases below a threshold, training will end and the model will be saved as an .hdf5 file. Then, you are ready to start the analysis with the R package.
 
 ### Step 2: Downstream analysis: annotation of factors
 Once the heterogeneity of the data set is reduced into a set of factors, you need to understand what are they and relate them to technical or biological sources of variability.
 
 We have built a semi-automated pipeline based on our experience annotating factors:
 
-(1) Disentangling the heterogeneity: calculation of variance explained by each factor in each view.
-(2) Inspection of top weighted features: for example, if a factor is associated to the presence of a chromosomal duplication, the mRNA data will have very high loadings for genes located in that particular chromosome.  
-(4) Feature set enrichment analysis using for example gene ontologies
-(4) Visualisation of the samples in the factor space: similarly to what is done in Principal Component Analysis, it is useful to plot the factors against each other and color using known covariates.
+(1) **Disentangling the heterogeneity**: calculation of variance explained by each factor in each view.
+(2) **Inspection of top weighted features**: for example, if a factor is associated to the presence of a chromosomal duplication, the mRNA data will have very high loadings for genes located in that particular chromosome.  
+(4) **Feature set enrichment analysis**: using for example gene ontologies
+(4) **Visualisation of the samples in the factor space**: similarly to what is done in Principal Component Analysis, it is useful to plot the factors against each other and color using known covariates.
 

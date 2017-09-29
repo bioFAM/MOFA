@@ -47,7 +47,7 @@ def entry_point():
   p.add_argument( '--schedule',          type=str, nargs="+", default=None,                   help='Update schedule, default is ( Y SW Z AlphaW Theta Tau )' )
   p.add_argument( '--learnTheta',        type=int, nargs="+", default=1,                      help='Learn the sparsity parameter from the spike-and-slab (theta)?' )
   p.add_argument( '--initTheta',         type=float, nargs="+", default=1. ,                  help='Initialisation for the sparsity parameter of the spike-and-slab (theta)')
-  p.add_argument( '--learnIntercept',         action='store_true',                                 help='Learn the feature-wise mean?' )
+  p.add_argument( '--learnIntercept',    action='store_true',                                 help='Learn the feature-wise mean?' )
 
   # Training options
   p.add_argument( '--elbofreq',          type=int, default=1,                                 help='Frequency of computation of ELBO' )

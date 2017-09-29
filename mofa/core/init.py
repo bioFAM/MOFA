@@ -3,7 +3,7 @@ import pandas as pd
 import scipy as s
 from time import sleep
 
-from .run_utils import *
+from .build_model import *
 
 def entry_point():
 

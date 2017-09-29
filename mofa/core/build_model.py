@@ -14,8 +14,8 @@ import numpy as np
 #from joblib import Parallel, delayed
 
 from .init_nodes import *
-from mofa.core.BayesNet import BayesNet
-from mofa.core.utils import *
+from .BayesNet import BayesNet
+from .utils import *
 
 def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, verbose=False):
     """Method to run a single trial of a MOFA model

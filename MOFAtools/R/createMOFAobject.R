@@ -23,7 +23,12 @@ createMOFAobject <- function(data) {
   object@Dimensions[["K"]] <- 0
   
   # Set view names
-  viewNames(object) <- names(data)
+  if(!is.null(names(data))) {
+    viewNames(object) <- names(data) 
+  } else { 
+    viewNames(object) <- paste("view",1:length(object@TrainData), sep="_")
+    warning("View names are not specified in data")
+  }
   
   return(object)
 }
@@ -37,7 +42,7 @@ createMOFAobject <- function(data) {
   object@InputData <- data
   
   # Re-arrange data for training in MOFA to matrices, fill in NAs and store in TrainData slot
-  object@TrainData <- lapply(names(data), function(exp) .subset_augment(assays(data)[[exp]], sampleMap(data)[sampleMap(data)$assay==exp,"colname"]))
+  object@TrainData <- lapply(names(data), function(exp) .subset_augment(assays(data)[[exp]], unique(sampleMap(data)[,"colname"])))
   
   return(object)
 }
@@ -49,8 +54,8 @@ createMOFAobject <- function(data) {
   # Initialise MOFA object
   object <- new("MOFAmodel")
   object@Status <- "untrained"
-  object@TrainData <- data
-  
+  samples <- Reduce(union, lapply(data, colnames))
+  object@TrainData <- lapply(data, function(view) .subset_augment(view, samples))
   return(object)
 }
 

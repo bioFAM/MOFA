@@ -15,24 +15,26 @@ This vignette show how to use MOFA including initialization, training and down-s
 For illustration we use the CLL data which is used in the MOFA publication.
 
 ```{r, warning=FALSE, message=FALSE}
-library(MultiAssayExperiment) # I think we shouldn't load this here
 library(MOFAtools)
 ```
 
 # Step 1: Load data and create MOFA object
 
-There are two options to input data to MOFA
-* Option 1: Bioconductor approach using the MultiAssayExperiment framework
-* Option 2: base R approach using a list of matrices
+There are two options to input data to MOFA:
+
+- Option 1: Bioconductor approach using the MultiAssayExperiment framework
+- Option 2: base R approach using a list of matrices
 
 ## Option 1: bioconductor approach
 If using the Bioconductor approach, you need to provide or create a [MultiAssayExperiment](https://bioconductor.org/packages/release/bioc/html/MultiAssayExperiment.html) object and then use it to build the MOFA object. For example, starting from a list of matrices where features are rows and samples are columns, this can be easily constructed as follows:
 ```{r}
+library(MultiAssayExperiment)
+
 # Load data
 data("CLL_data") # import list containing matrices for mRNA, Methylation, Drug Response and Mutation data. 
 lapply(CLL_data, dim) # check dimensionalities, samples are columns, features are rows
 
-# Load sample metadata (colData): Gender and Diagnosis
+# Load sample metadata (colData): Sex and Diagnosis
 data("CLL_covariates")
 head(CLL_covariates)
 

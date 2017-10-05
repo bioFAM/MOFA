@@ -184,15 +184,18 @@ def corr(A,B):
     # Finally get corr coeff
     return np.dot(A_mA,B_mB.T)/np.sqrt(np.dot(ssA[:,None],ssB[None]))
 
+# NOT HERE
 def logdet(X):
     return np.log(np.linalg.det(X))
     # UC = np.linalg.cholesky(X)
     # return 2*sum(np.log(np.diag(UC)))
 
+# NOT HERE
 def sigmoid(X):
     return np.divide(1.,1.+np.exp(-X))
     # return 1./(1.+np.exp(-X))
 
+# NOT HERE
 def ddot(d, mtx, left=True):
     """Multiply a full matrix by a diagonal matrix.
     This function should always be faster than dot.
@@ -211,6 +214,7 @@ def ddot(d, mtx, left=True):
     else:
         return d*mtx
 
+# NOT HERE
 def lambdafn(X):
     return np.tanh(X/2.)/(4.*X)
 

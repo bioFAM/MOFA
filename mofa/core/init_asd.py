@@ -330,7 +330,7 @@ def entry_point():
   train_opts['elbofreq'] = args.elbofreq
 
   # Verbosity
-  train_opts['verbosity'] = 2
+  train_opts['verbose'] = args.verbose
 
   # Criteria to drop latent variables while training
   train_opts['drop'] = { "by_norm":None, "by_pvar":None, "by_cor":None, "by_r2":args.dropR2 }

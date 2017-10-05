@@ -25,8 +25,6 @@ from .variational_nodes import Unobserved_Variational_Node
 from .nodes import Node
 from .utils import sigmoid, lambdafn
 
-from .warp.warping_inference import Warping_inference
-
 
 ##############################
 ## General pseudodata nodes ##
@@ -352,36 +350,3 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY):
         tmp = s.dot(Z,SW.T)
         lik = ma.sum( self.obs*tmp - s.log(1+s.exp(tmp)) )
         return lik
-
-
-###################
-## Warping nodes ##
-###################
-
-class Warped_PseudoY_Node(PseudoY):
-    def __init__(self, dim, obs, params=None, func_type='tanh', I=3, E=None):
-        PseudoY.__init__(self, dim=dim, obs=obs, params=params, E=E)
-        self.warping = Warping_inference(func_type,I)
-
-    def updateParameters(self):
-        tau = self.markov_blanket["Tau"].getExpectation()
-        W = self.markov_blanket["SW"].getExpectation()
-        Z = self.markov_blanket["Z"].getExpectation()
-        self.warping.update_parameters(self.obs, Z.dot(W.T), tau, ~ma.getmask(self.obs))
-
-        self.params = {
-            # 'function_type': self.warping.entity.func_type_str,
-            'a':s.array([self.warping.entity.param['a'][i].x for i in range(self.warping.entity.I)]),
-            'b':s.array([self.warping.entity.param['b'][i].x for i in range(self.warping.entity.I)]),
-            'c':s.array([self.warping.entity.param['c'][i].x for i in range(self.warping.entity.I)]),
-        }
-
-    def updateExpectations(self):
-        self.E = self.warping.f(self.obs, i_not=-1)
-
-    def calculateELBO(self):
-        # print "check if this has missing values implemented"
-        # exit()
-        lb = s.sum(s.log(self.warping.f_prime(self.obs, i_not=-1) ) )
-        # lb = numpy.nansum(self.mat_mask* (numpy.log(self.warping.f_prime(self.obs,i_not=-1) ) ) )
-        return lb

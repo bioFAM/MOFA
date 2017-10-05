@@ -150,7 +150,7 @@ class BayesNet(object):
         #         drop_dic["by_cor"] = [ s.random.choice(drop_dic["by_cor"]) ]
 
         # Drop the factors
-        drop = s.unique(s.concatenate(drop_dic.values()))
+        drop = s.unique(s.concatenate(list(drop_dic.values())))
         if len(drop) > 0:
             for node in self.nodes.keys():
                 self.nodes[node].removeFactors(drop)
@@ -195,9 +195,8 @@ class BayesNet(object):
 
                 # Print first iteration
                 if i==0:
-                    if self.options['verbosity'] >=0:
-                        print("Trial %d, Iteration 1: time=%.2f ELBO=%.2f, Factors=%d, Covariates=%d" % (self.trial, time()-t,elbo.iloc[i]["total"], (~self.nodes["Z"].covariates).sum(), self.nodes["Z"].covariates.sum() ))
-                    if self.options['verbosity'] == 2:
+                    print("Trial %d, Iteration 1: time=%.2f ELBO=%.2f, Factors=%d, Covariates=%d" % (self.trial, time()-t,elbo.iloc[i]["total"], (~self.nodes["Z"].covariates).sum(), self.nodes["Z"].covariates.sum() ))
+                    if self.options['verbose']:
                         print("".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n")
 
                 else:
@@ -205,23 +204,21 @@ class BayesNet(object):
                     delta_elbo = elbo.iloc[i]["total"]-elbo.iloc[i-self.options['elbofreq']]["total"]
 
                     # Print ELBO monitoring
-                    if self.options['verbosity'] > 0:
-                        print("Trial %d, Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, Factors=%d, Covariates=%d" % (self.trial, i+1, time()-t, elbo.iloc[i]["total"], delta_elbo, (~self.nodes["Z"].covariates).sum(), self.nodes["Z"].covariates.sum() ))
-                        if delta_elbo<0: print("Warning, lower bound is decreasing..."); print('\a')
-                    if self.options['verbosity'] == 2:
+                    print("Trial %d, Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, Factors=%d, Covariates=%d" % (self.trial, i+1, time()-t, elbo.iloc[i]["total"], delta_elbo, (~self.nodes["Z"].covariates).sum(), self.nodes["Z"].covariates.sum() ))
+                    if delta_elbo<0: print("Warning, lower bound is decreasing..."); print('\a')
+                    if self.options['verbose']:
                         print("".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n")
 
                     # Assess convergence
                     if (0 <= delta_elbo < self.options['tolerance']) and (not self.options['forceiter']):
                         activeK = activeK[:(i+1)]
                         elbo = elbo[:(i+1)]
-                        if self.options['verbosity']>=0:
-                            print ("Converged!\n")
+                        print ("Converged!\n")
                         break
 
             # Do not calculate lower bound
             else:
-                if self.options['verbosity'] > 0: print("Iteration %d: time=%.2f, K=%d\n" % (i+1,time()-t,self.dim["K"]))
+                print("Iteration %d: time=%.2f, K=%d\n" % (i+1,time()-t,self.dim["K"]))
 
             # Flush (we need this to print when running on the cluster)
             sys.stdout.flush()

@@ -182,12 +182,12 @@ class BayesNet(object):
 
             # Update node by node, with E and M step merged
             for node in self.schedule:
-                # print "Node: " + str(node)
+                # print("Node: " + str(node))
                 # t = time()
                 if node=="Theta" and i<self.options['startSparsity']:
                     continue
                 self.nodes[node].update()
-                # print "time: " + str(time()-t)
+                # print("time: " + str(time()-t))
 
             # Calculate Evidence Lower Bound
             if (i+1) % self.options['elbofreq'] == 0:

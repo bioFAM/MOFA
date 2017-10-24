@@ -85,6 +85,7 @@ showWeightHeatmap <- function(object, view, features = "all", factors = "all", t
 #' @param factor name of the factor
 #' @param nfeatures number of features to include (by default all, otherwise only those with highest absolute values are included)
 #' @param abs take absolute value of the weights?
+#' @param scale scales all loading by absolute value of maximal loading
 #' @param threshold threshold on the absolute value beyond which weigths are labeled
 #' @param manual features to be manually labelled. A list of character vectors
 #' @param color_manual a character vector with colors
@@ -93,7 +94,7 @@ showWeightHeatmap <- function(object, view, features = "all", factors = "all", t
 #' @import ggplot2 ggrepel
 #' @export
 showAllWeights <- function(object, view, factor, nfeatures = "all", abs=FALSE, threshold = NULL, 
-                                    manual = NULL, color_manual=NULL, main = NULL) {
+                                    manual = NULL, color_manual=NULL, main = NULL, scale=TRUE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -106,6 +107,8 @@ showAllWeights <- function(object, view, factor, nfeatures = "all", abs=FALSE, t
   W <- getExpectations(object,"SW","E", as.data.frame = T)
   W <- W[W$factor==factor & W$view==view,]
   
+    # Scale values
+  if(scale) W$value <- W$value/max(abs(W$value))
   
   # Parse the weights
   if (abs) W$value <- abs(W$value)
@@ -196,30 +199,36 @@ showAllWeights <- function(object, view, factor, nfeatures = "all", abs=FALSE, t
 #' @param view character vector with the view name or numeric vector with the index of the view.
 #' @param factor character vector with the factor name or numeric vector with the index of the factor.
 #' @param nfeatures number of features
-#' @param abs take absolute value of the weights?
+#' @param abs take absolute value of the weights? By default absolute values are shown.
 #' @param sign can be 'positive', 'negative' or 'both' to show only positive, negative or all weigths, respectively
 #' @param manual_features names of features to be included into the plot. If null (default) take top features as specified in nfeatures.
 #' @param scale scales all loading by absolute value of maximal loading
+#' @param showSign wether signs of weights are plotted (only used when abs=TRUE)
 #' @import ggplot2
 #' @export
-showTopWeights <- function(object, view, factor, nfeatures = 5, manual_features=NULL, sign="positive", abs=TRUE, scale=T) {
+showTopWeights <- function(object, view, factor, nfeatures = 5, manual_features=NULL, abs=TRUE, scale=TRUE, sign="both", showSign=TRUE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   stopifnot(view %in% viewNames(object))
   if(!is.null(manual_features)) { stopifnot(class(manual_features)=="list"); stopifnot(all(Reduce(intersect,manual_features) %in% featureNames(object)[[view]]))  }
-  if (sign=="negative") stopifnot(abs==FALSE)
   
   # Collect expectations  
   W <- getWeights(object, factor=factor, view=view, as.data.frame=T)
 
-  # Scale values
+  # Scale values by loading with highest (absolute) value
   if(scale) W$value <- W$value/max(abs(W$value))
+
+  #store sign
+  W <- W[W$value!=0,]
+  W$sign <- ifelse(W$value>0, "+", "-")
+
+ # select subset of only positive or negative loadings
+  if (sign=="positive") { W <- W[W$value>0,] } else if (sign=="negative") { W <- W[W$value<0,] }
 
    # Absolute value
   if (abs) W$value <- abs(W$value)
 
-  if (sign=="positive") { W <- W[W$value>0,] } else if (sign=="negative") { W <- W[W$value<0,] }
   
   # Extract relevant features
   W <- W[with(W, order(-abs(value))), ]
@@ -255,9 +264,13 @@ showTopWeights <- function(object, view, factor, nfeatures = 5, manual_features=
       )
   
   if (sign=="negative") p <- p + scale_x_discrete(position = "top")
-  if(abs & scale) p <-  p + ylab(paste("Relative loading on factor", factor))  
+
+  #annotate with signs if absolute value is used
+  if(abs&showSign) p <- p +  ylim(0,max(W$value)+0.1)+ geom_text(label=W$sign,y=max(W$value)+0.1, size=10)
+
+  if(abs & scale) p <-  p + ylab(paste("Absolute loading on factor", factor))  
   else if(abs & !scale) p <- p + ylab(paste("Absolute loading on factor", factor))
-  else if(!abs & scale) p <- p + ylab(paste("Relative loading on factor", factor))
+  else if(!abs & scale) p <- p + ylab(paste("Loading on factor", factor))
   else p <- p + ylab(paste("Loading on factor", factor))
   return(p)
   

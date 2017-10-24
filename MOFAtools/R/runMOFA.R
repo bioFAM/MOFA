@@ -36,6 +36,7 @@ runMOFA <- function(object, DirOptions) {
   #                    )
   # }
   if (object@ModelOpts$learnIntercept == T) { command <- paste(command, "--learnIntercept", sep=" ") }
+  if (object@ModelOpts$sparsity == F) { command <- paste(command, "--learnTheta 0", sep=" ") }
   
   # Run!
   # system(command, ignore.stdout = F, ignore.stderr = T, wait=F)

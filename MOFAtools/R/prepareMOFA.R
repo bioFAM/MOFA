@@ -109,7 +109,8 @@ getDefaultModelOpts <- function(object) {
   ModelOptions <- list(
     learnIntercept = TRUE,      # (bool) include a constant factor of 1s to learn the mean of features (intercept)? If not, you need to center the data
     likelihood = likelihood,    # (character vector) likelihood per view [gaussian/bernoulli/poisson]
-    numFactors = 25             # (numeric) initial number of latent factors
+    numFactors = 25,            # (numeric) initial number of latent factors
+    sparsity=T                  # use feature-wise sparsity?
     # covariates = NULL
   )
   

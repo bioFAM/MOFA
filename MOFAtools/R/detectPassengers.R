@@ -14,6 +14,8 @@
 #' @details fill this
 #' @return fill this
 #' @export
+#' 
+#' THIS IS WRONG, IT PATIENT IS MISSING EXPRESSION VIEW BUT HAS ALL METYLATION VIEWS, IT DOESNT GET PASSENGERED
 detectPassengers <- function(object, views = "all", factors = "all", r2_threshold = 0.03) {
   
   # Sanity checks
@@ -43,8 +45,8 @@ detectPassengers <- function(object, views = "all", factors = "all", r2_threshol
   r2 <- calculateVarianceExplained(object, views = views, factors = factors, plotit = F)$R2PerFactor
   unique_factors <- names(which(rowSums(r2>=r2_threshold)==1))
   
-  # Mask samples that rhave full missing views
-  missing <- sapply(getTrainData(object,views), function(view) sampleNames(object)[apply(view, 2, function(x) all(is.na(x)))] )
+  # Mask samples that have full missing views
+  missing <- sapply(getTrainData(object,views), function(view) MOFAtools::sampleNames(object)[apply(view, 2, function(x) all(is.na(x)))] )
   names(missing) <- viewNames(object)
   
   

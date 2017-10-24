@@ -128,9 +128,9 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
     tmp <- lapply(views, function(m) { tmp <- reshape2::melt(trainData[[m]]); colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
     trainData <- do.call(rbind,tmp)
     trainData[,c("view","feature","sample")] <- sapply(trainData[,c("view","feature","sample")], as.character)
-  } else if ((length(views)==1) && (as.data.frame==F)) {
-    trainData <- trainData[[views]]
-  }
+  }# else if ((length(views)==1) && (as.data.frame==F)) {
+  #  trainData <- trainData[[views]]
+  #}
   
   return(trainData)
 }

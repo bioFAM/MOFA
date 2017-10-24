@@ -77,8 +77,8 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   # K=tail(training_stats$activeK[!is.nan(training_stats$activeK)],n=1)
   object@Dimensions[["K"]] <- ncol(object@Expectations$Z$E)
   viewNames(object) <- names(object@TrainData)
-  sampleNames(object) <- colnames(object@TrainData[[1]])
-  featureNames(object) <- lapply(object@TrainData,rownames)
+  MOFAtools::sampleNames(object) <- colnames(object@TrainData[[1]])
+  MOFAtools::featureNames(object) <- lapply(object@TrainData,rownames)
   factorNames(object) <- as.character(1:object@Dimensions[["K"]])
     
   # Rename covariates, including intercept
@@ -95,26 +95,31 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
     factornames <- as.character(1:(object@Dimensions[["K"]]))
     factornames[factornames==intercept_idx] <- "intercept"
     factorNames(object) <- factornames
+    # object@Dimensions[["K"]] <- object@Dimensions[["K"]] - 1
   }
   if (!is.null(object@ModelOpts$covariates)) {
     stop("Not working")
   }
   
-  # Mask pasenger factors and set to NA
-  # object <- detectPassengers(object)
-
-  # Re-name and order factors in order of variance explained
-  if (sortFactors == T) {
-    r2 <- rowSums(calculateVarianceExplained(object,plotit=F,showtotalR2=T)$R2PerFactor)
-    order_factors <- c(names(r2)[order(r2, decreasing = T)])
-    if (object@ModelOpts$learnIntercept==T) { order_factors <- c("intercept",order_factors) }
-    object <- subsetFactors(object,order_factors)
-    if (object@ModelOpts$learnIntercept==T) { 
-      factorNames(object) <- c("intercept",1:(object@Dimensions$K-1))
-    } else {
-      factorNames(object) <- c(1:object@Dimensions$K) 
+  if ((object@Dimensions$K-as.numeric(object@ModelOpts$learnIntercept))>0) {
+    # Mask pasenger factors and set to NA
+    object <- detectPassengers(object)
+  
+    # Re-name and order factors in order of variance explained
+    if (sortFactors == T) {
+      r2 <- rowSums(calculateVarianceExplained(object,plotit=F,showtotalR2=T)$R2PerFactor)
+      order_factors <- c(names(r2)[order(r2, decreasing = T)])
+      if (object@ModelOpts$learnIntercept==T) { order_factors <- c("intercept",order_factors) }
+      object <- subsetFactors(object,order_factors)
+      if (object@ModelOpts$learnIntercept==T) { 
+        factorNames(object) <- c("intercept",1:(object@Dimensions$K-1))
+      } else {
+        factorNames(object) <- c(1:object@Dimensions$K) 
+      }
     }
+    return(object)
+  } else {
+    stop("The model has no active factors")
   }
-  return(object)
 }
 

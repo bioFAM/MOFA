@@ -17,7 +17,7 @@
 #' @importFrom cowplot plot_grid
 #' @export
 
-calculateVarianceExplained <- function(object, views = "all", factors = "all", perFeature = F, perView = F
+calculateVarianceExplained <- function(object, views = "all", factors = "all", perFeature = F, perView = F,
                                        totalVar = T, plotit = T) {
   
   # Sanity checks

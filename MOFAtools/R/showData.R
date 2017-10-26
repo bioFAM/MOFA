@@ -40,8 +40,7 @@ showDataHeatmap <- function(object, view, factor, features = 50, plotWeights = F
   }
   
   # Get train data
-  data <- getTrainData(object, view)[,names(Z)]
-  # data <- getTrainData(object, view)[[1]][,names(Z)]
+  data <- getTrainData(object, view)[[1]][,names(Z)]
   
   # Ignore samples with full missing views
   data <- data[,apply(data, 2, function(x) !all(is.na(x)))]

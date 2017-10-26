@@ -5,7 +5,7 @@
 
 
 #' @title Visualize histogram of one latent variable
-#' @name histPlot
+#' @name FactorHistPlot
 #' @description fill this
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param factor one factors to plot
@@ -19,7 +19,7 @@
 #' @references fill this
 #' @import ggplot2
 #' @export
-histPlot <- function(object, factor, groups=NULL, name_groups="", alpha=0.6, binwidth=NULL, showMissing=FALSE) {
+FactorHistPlot <- function(object, factor, groups=NULL, name_groups="", alpha=0.6, binwidth=NULL, showMissing=FALSE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") 
@@ -90,7 +90,7 @@ histPlot <- function(object, factor, groups=NULL, name_groups="", alpha=0.6, bin
 
 
 #' @title Visualize beeswarm plot of one latent variable
-#' @name beeswarmPlot
+#' @name FactorBeeswarmPlot
 #' @description fill this
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param factors factors to plot
@@ -102,7 +102,7 @@ histPlot <- function(object, factor, groups=NULL, name_groups="", alpha=0.6, bin
 #' @references fill this
 #' @import ggplot2
 #' @export
-beeswarmPlot <- function(object, factors, color_by = NULL, name_color="", showMissing=TRUE) {
+FactorBeeswarmPlot <- function(object, factors, color_by = NULL, name_color="", showMissing=TRUE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel")  stop("'object' has to be an instance of MOFAmodel")
@@ -181,7 +181,7 @@ beeswarmPlot <- function(object, factors, color_by = NULL, name_color="", showMi
 }
 
 #' @title Visualize scatterplot of two latent variables
-#' @name scatterPlot
+#' @name FactorsScatterPlot
 #' @description fill this
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param factors vector of two factor to plot
@@ -195,7 +195,7 @@ beeswarmPlot <- function(object, factors, color_by = NULL, name_color="", showMi
 #' @references fill this
 #' @import ggplot2
 #' @export
-scatterPlot <- function (object, factors, color_by = NULL, shape_by = NULL, name_color="",
+FactorsScatterPlot <- function (object, factors, color_by = NULL, shape_by = NULL, name_color="",
                          name_shape="", showMissing = TRUE) {
   
   # Sanity checks
@@ -302,7 +302,7 @@ scatterPlot <- function (object, factors, color_by = NULL, shape_by = NULL, name
   
   
 #' @title Visualize scatterplot of all latent variables in a pair-wise grid
-#' @name scatterPairs
+#' @name FactorsScatterPairs
 #' @description fill this
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param factors vector of factors to plot or "all"
@@ -317,7 +317,7 @@ scatterPlot <- function (object, factors, color_by = NULL, shape_by = NULL, name
 #' @import ggplot2 GGally
 #' @export
 #' 
-scatterPairs <- function(object, factors = "all", showMissing=TRUE, 
+FactorsScatterPairs <- function(object, factors = "all", showMissing=TRUE, 
                          color_by=NULL, name_color="",  
                          shape_by=NULL, name_shape="") {
   

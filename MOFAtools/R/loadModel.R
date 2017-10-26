@@ -103,7 +103,7 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   
   if ((object@Dimensions$K-as.numeric(object@ModelOpts$learnIntercept))>0) {
     # Mask pasenger factors and set to NA
-    object <- detectPassengers(object)
+    # object <- detectPassengers(object)
   
     # Re-name and order factors in order of variance explained
     if (sortFactors == T) {

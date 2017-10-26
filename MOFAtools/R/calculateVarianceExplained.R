@@ -7,19 +7,18 @@
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param views Views to use, default is "all"
 #' @param factors Latent factores to use, default is "all"
+#' @param perFeature boolean, whether to calculate in addition the variance explained (R2) per feature (default FALSE)
+#' @param perView boolean, whether to calculate in addition the variance explained (R2) per view, using all factors (default TRUE)
+#' @param totalVar calculate variance explained (R2) with respect to the total variance (TRUE) or the residual variance (FALSE? 
 #' @param plotit boolean, wether to produce a plot (default True)
-#' @param perFeature boolean, whether to calculate in addition variance explained per feature (and factor) (default FALSE)
-#' @param orderFactorsbyR2 order factors according to sum of variance explained across views (default TRUE)
-#' @param showtotalR2 Calculate R2 with respect to the total variance (TRUE) or the residual variance (FALSE? 
-#' @param showVarComp Calculate R2 per view using all factors (default TRUE)
 #' @details fill this
 #' @return a list with matrices with the amount of variation explained per factor and view, and optionally total variance explained per view and variance explained by each feature alone
 #' @import pheatmap ggplot2 reshape2
 #' @importFrom cowplot plot_grid
 #' @export
 
-calculateVarianceExplained <- function(object, views="all", factors="all", plotit=T, perFeature=F, 
-                                       orderFactorsbyR2=F, showtotalR2=T, showVarComp=F) {
+calculateVarianceExplained <- function(object, views = "all", factors = "all", perFeature = F, perView = F
+                                       totalVar = T, plotit = T) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -47,9 +46,8 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
   Z <- getExpectations(object,"Z","E")
   Y <- getExpectations(object,"Y","E")
   
-  # Calculate predictions under the  MOFA model using all or a single factor
-  #replace masked values on Z by 0 (do not contribute to predicitons)
-  Z[is.na(Z)] <- 0
+  # Calculate predictions under the MOFA model using all or a single factor
+  Z[is.na(Z)] <- 0 # replace masked values on Z by 0 (do not contribute to predicitons)
   Ypred_m <- lapply(views, function(m) Z%*%t(SW[[m]])); names(Ypred_m) <- views
   Ypred_mk <- lapply(views, function(m) {
                       ltmp <- lapply(factors, function(k) Z[,k]%*%t(SW[[m]][,k]) ); names(ltmp) <- factors; ltmp
@@ -87,7 +85,7 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
       fvar_md <- lapply(views, function(m) 1 - colSums((Y[[m]]-Ypred_m[[m]])**2,na.rm=T) / colSums(resNullModel[[m]]**2,na.rm=T))
     
     # per factor and view
-     if (showtotalR2) {
+     if (totalVar) {
        fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((resNullModel[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) ))
      } else {
        fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((partialresNull[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(partialresNull[[m]]**2, na.rm=T) ))
@@ -108,15 +106,22 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
     colnames(fvar_mk) <- views
     rownames(fvar_mk) <- factorsNonconst 
     
-  
+    # calculate variance explained by view 
+    # TO-DO: CHECK
+    if (perView) {
+      fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(l) sum(sapply(factorsNonconst, function(k) cov(Ypred_mk[[m]][[l]], Ypred_mk[[m]][[k]])))))
+    }
+    
+    # Plot the variance explained
     if (plotit) {
       
       # Sort factors
       fvar_mk_df <- reshape2::melt(fvar_mk, varnames=c("factor","view"))
       fvar_mk_df$factor <- factor(fvar_mk_df$factor)
-      hc <- hclust(dist(t(fvar_mk)))
-      fvar_mk_df$view <- factor(fvar_mk_df$view, levels = colnames(fvar_mk)[hc$order])
-      if(orderFactorsbyR2) factor_order <- order(rowSums(fvar_mk), decreasing = F) else factor_order <- rev(1:length(factorsNonconst))
+      if (ncol(fvar_mk)>1) {
+        hc <- hclust(dist(t(fvar_mk)))
+        fvar_mk_df$view <- factor(fvar_mk_df$view, levels = colnames(fvar_mk)[hc$order])
+      }
       fvar_mk_df$factor <- factor(fvar_mk_df$factor, levels = factorsNonconst[factor_order])
       
       # Plot 1: grid with the variance explained per factor in each view
@@ -138,7 +143,7 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
           )
       
       hm <- hm + ggtitle("Variance explained per factor")  + 
-      if (showtotalR2) {
+      if (totalVar) {
         guides(fill=guide_colorbar("R2"))
       } else {
         guides(fill=guide_colorbar("Residual R2")) 
@@ -146,7 +151,9 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
         
       # Plot 2: barplot with coefficient of determination (R2) per view
       fvar_m_df <- data.frame(view=names(fvar_m), R2=fvar_m)
-      fvar_m_df$view <- factor(fvar_m_df$view, levels = colnames(fvar_mk)[hc$order])
+      if (ncol(fvar_mk)>1) {
+        fvar_m_df$view <- factor(fvar_m_df$view, levels = colnames(fvar_mk)[hc$order])
+      }
       
       bplt <- ggplot( fvar_m_df, aes(x=view, y=R2)) + 
         ggtitle("Total variance explained per view") +
@@ -172,26 +179,29 @@ calculateVarianceExplained <- function(object, views="all", factors="all", ploti
       # gridExtra::grid.arrange(gg_R2)
       p <- plot_grid(bplt, hm, align="v", nrow=2, rel_heights=c(1/3,2/3))
       print(p)
-     
-      #optional: barplots with individual contributions of factors to explaining variance in a view, takes a lot of time....
-      if (showVarComp){
-        #Calculate 'variance component'/contribution of each factor
+      
+      # Plot 3: variance explained per view (TO CHECK)
+      if (perView) {
         cols  <- c(RColorBrewer::brewer.pal(9, "Set1"),RColorBrewer::brewer.pal(8, "Dark2"))
-        varcomp_mk <- sapply(views, function(m) sapply(factorsNonconst, function(l) sum(sapply(factorsNonconst, function(k) cov(Ypred_mk[[m]][[l]], Ypred_mk[[m]][[k]])))))
         par(mfrow=c(1,2))
-        barplot(t(t(varcomp_mk)/colSums(varcomp_mk)), col = cols, horiz = T, main = "Variance components per view", ncol = 2)
+        barplot(t(t(fvar_mk)/colSums(fvar_mk)), col = cols, horiz = T, main = "Variance components per view", ncol = 2)
         plot.new()
         legend("center", fill=cols, legend=factorsNonconst)
       }
+     
     }
     
+  
   # Store results
     R2_list <- list(
       R2Total = fvar_m,
       R2PerFactor = fvar_mk)
-    if(perFeature){
+    if (perFeature) {
       R2_list$R2PerFactorAndFeature = fvar_mdk
       R2_list$R2PerFeature = fvar_md
+    }
+    if (perView) {
+      R2_list$PerView <- fvar_mk
     }
   
   return(R2_list)

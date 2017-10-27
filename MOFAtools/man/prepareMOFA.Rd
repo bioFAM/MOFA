@@ -4,14 +4,17 @@
 \alias{prepareMOFA}
 \title{prepareMOFA: Prepare an untrained MOFA object for training}
 \usage{
-prepareMOFA(object, DirOptions, ModelOptions = NULL, TrainOptions = NULL)
+prepareMOFA(object, DirOptions, DataOptions = NULL, ModelOptions = NULL,
+  TrainOptions = NULL)
 }
 \arguments{
 \item{object}{an untrained MOFA object}
 
-\item{ModelOptions}{list of ModelOptions (see getDefaultModelOpts for what options can be set here). If none specified, default options are used.}
+\item{DataOptions}{list of DataOptions (see getDefaultDataOpts for what options can be set here). If NULL, default options are used.}
 
-\item{TrainOptions}{list of TrainOptions (see getDefaultTrainOptions for what options can be set here). If none specified, default options are used.}
+\item{ModelOptions}{list of ModelOptions (see getDefaultModelOpts for what options can be set here). If NULL, default options are used.}
+
+\item{TrainOptions}{list of TrainOptions (see getDefaultTrainOptions for what options can be set here). If NULL, default options are used.}
 
 \item{dir}{directory to store .txt and .sh files in}
 

@@ -14,8 +14,6 @@
 #' @details fill this
 #' @return fill this
 #' @export
-#' 
-#' THIS IS WRONG, IT PATIENT IS MISSING EXPRESSION VIEW BUT HAS ALL METYLATION VIEWS, IT DOESNT GET PASSENGERED
 detectPassengers <- function(object, views = "all", factors = "all", r2_threshold = 0.03) {
   
   # Sanity checks

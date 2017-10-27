@@ -38,6 +38,9 @@ runMOFA <- function(object, DirOptions) {
   if (object@ModelOpts$learnIntercept == T) { command <- paste(command, "--learnIntercept", sep=" ") }
   if (object@ModelOpts$sparsity == F) { command <- paste(command, "--learnTheta 0", sep=" ") }
   
+  if (object@DataOpts$centerFeatures == T) { command <- paste(command, "--center_features", sep=" ") }
+  if (object@DataOpts$scaleViews == T) { command <- paste(command, "--scale_views", sep=" ") }
+  
   # Run!
   # system(command, ignore.stdout = F, ignore.stderr = T, wait=F)
   # system2(command="mofa", args=command, wait=F)

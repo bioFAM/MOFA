@@ -5,8 +5,7 @@
 \title{Calculate variance explained by the model}
 \usage{
 calculateVarianceExplained(object, views = "all", factors = "all",
-  plotit = T, perFeature = F, orderFactorsbyR2 = F, showtotalR2 = T,
-  showVarComp = F)
+  perFeature = F, perView = F, totalVar = T, plotit = T)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
@@ -15,15 +14,13 @@ calculateVarianceExplained(object, views = "all", factors = "all",
 
 \item{factors}{Latent factores to use, default is "all"}
 
+\item{perFeature}{boolean, whether to calculate in addition the variance explained (R2) per feature (default FALSE)}
+
+\item{perView}{boolean, whether to calculate in addition the variance explained (R2) per view, using all factors (default TRUE)}
+
+\item{totalVar}{calculate variance explained (R2) with respect to the total variance (TRUE) or the residual variance (FALSE?}
+
 \item{plotit}{boolean, wether to produce a plot (default True)}
-
-\item{perFeature}{boolean, whether to calculate in addition variance explained per feature (and factor) (default FALSE)}
-
-\item{orderFactorsbyR2}{order factors according to sum of variance explained across views (default TRUE)}
-
-\item{showtotalR2}{Calculate R2 with respect to the total variance (TRUE) or the residual variance (FALSE?}
-
-\item{showVarComp}{Calculate R2 per view using all factors (default TRUE)}
 }
 \value{
 a list with matrices with the amount of variation explained per factor and view, and optionally total variance explained per view and variance explained by each feature alone

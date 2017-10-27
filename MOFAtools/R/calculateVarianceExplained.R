@@ -107,8 +107,9 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", p
     rownames(fvar_mk) <- factorsNonconst 
     
     # calculate variance explained by view 
-    # TO-DO: CHECK
+    # TO-DO: CHECK AND TOO SLOW
     if (perView) {
+      stop()
       fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(l) sum(sapply(factorsNonconst, function(k) cov(Ypred_mk[[m]][[l]], Ypred_mk[[m]][[k]])))))
     }
     
@@ -122,7 +123,6 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", p
         hc <- hclust(dist(t(fvar_mk)))
         fvar_mk_df$view <- factor(fvar_mk_df$view, levels = colnames(fvar_mk)[hc$order])
       }
-      fvar_mk_df$factor <- factor(fvar_mk_df$factor, levels = factorsNonconst[factor_order])
       
       # Plot 1: grid with the variance explained per factor in each view
       hm <- ggplot(fvar_mk_df, aes(view,factor)) + 

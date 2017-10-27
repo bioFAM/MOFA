@@ -5,8 +5,9 @@
 #' creates an .sh file for calling MOFA with the specified options from the command line. These files are all stored in the specified directory.
 #' @param object an untrained MOFA object
 #' @param dir directory to store .txt and .sh files in
-#' @param ModelOptions list of ModelOptions (see getDefaultModelOpts for what options can be set here). If none specified, default options are used.
-#' @param TrainOptions list of TrainOptions (see getDefaultTrainOptions for what options can be set here). If none specified, default options are used.
+#' @param DataOptions list of DataOptions (see getDefaultDataOpts for what options can be set here). If NULL, default options are used.
+#' @param ModelOptions list of ModelOptions (see getDefaultModelOpts for what options can be set here). If NULL, default options are used.
+#' @param TrainOptions list of TrainOptions (see getDefaultTrainOptions for what options can be set here). If NULL, default options are used.
 #' @param outFile name of output file from Python MOFA
 #' @param k number of latent factors to start with (default = 10)
 #' @param MOFAdir directory of the MOFA Pyhton package installation
@@ -14,7 +15,7 @@
 #' @return a untrained MOFA object with specified ModelOpts and TrainOpts 
 #' @export
 
-prepareMOFA <- function(object, DirOptions, ModelOptions = NULL, TrainOptions = NULL) {
+prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = NULL, TrainOptions = NULL) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel")
@@ -35,6 +36,17 @@ prepareMOFA <- function(object, DirOptions, ModelOptions = NULL, TrainOptions = 
   # write.table(ModelOptions$covariates, file=file.path(DirOptions$dataDir, "covariates.txt"), 
   #             sep=" ", row.names=F, col.names=F, quote=F)
   # }
+  
+  # Get data options
+  message("Checking data options...")
+  if (is.null(DataOptions)) {
+    message("No data options specified, using default...")
+    object@DataOpts <- getDefaultDataOpts()
+  } else {
+    # (To-do) Check that DataOpts is correct
+    object@DataOpts <- DataOptions
+  }
+  
   
   # Get training options
   message("Checking training options...")
@@ -65,7 +77,6 @@ prepareMOFA <- function(object, DirOptions, ModelOptions = NULL, TrainOptions = 
 
 
 
-
 #' @title getDefaultTrainOpts: Get default training options
 #' @name getDefaultTrainOpts
 #' @description Function to obtain default training options
@@ -78,6 +89,20 @@ getDefaultTrainOpts <- function() {
     DropFactorThreshold = 0.03   # Threshold on fraction of variance explained to drop a factor
   )
   return(TrainOpts)
+}
+
+
+#' @title getDefaultDataOpts: Get default data options
+#' @name getDefaultDatasOpts
+#' @description Function to obtain default data options
+#' @return list with data options
+#' @export
+getDefaultDataOpts <- function() {
+  DataOpts <- list(
+    centerFeatures = F,   # Center features to zero mean (does not apply to binary or count views)
+    scaleViews = T        # Scale views to unit variance (does not apply to binary or count views)
+  )
+  return(DataOpts)
 }
 
 #' @title getDefaultModelOpts: Get default model options

@@ -36,6 +36,7 @@ def entry_point():
   p.add_argument( '--scale_features',    action="store_true",                                 help='Scale the features to unit variance?' )
   p.add_argument( '--scale_views',       action="store_true",                                 help='Scale the views to unit variance?' )
   p.add_argument( '--scale_covariates',  type=int, nargs='+', default=0,                      help='' )
+  # p.add_argument( '--scale_covariates',  action="store_true",                                 help='' )
   p.add_argument( '--maskAtRandom',      type=float,nargs="+", default=None,                  help='Fraction of data to mask per view')
   p.add_argument( '--maskNSamples',      type=int,nargs="+", default=None,                    help='Number of patients to mask per view')
   p.add_argument( '--RemoveIncompleteSamples', action="store_true",                           help='Remove samples with incomplete views?' )
@@ -194,8 +195,10 @@ def entry_point():
 
   # Define for which factors and views should we learn 'theta', the sparsity of the factor
   if type(args.learnTheta) == int:
+    model_opts['sparsity'] = True
     model_opts['learnTheta'] = [s.ones(K)*args.learnTheta for m in range(M)]
   elif type(args.learnTheta) == list:
+    model_opts['sparsity'] = True
     assert len(args.learnTheta) == M, "--learnTheta has to be a binary vector with length number of views"
     model_opts['learnTheta'] = [ args.learnTheta[m]*s.ones(K) for m in range(M) ]
   else:

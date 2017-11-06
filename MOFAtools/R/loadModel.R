@@ -97,9 +97,9 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
     factorNames(object) <- factornames
     # object@Dimensions[["K"]] <- object@Dimensions[["K"]] - 1
   }
-  if (!is.null(object@ModelOpts$covariates)) {
-    stop("Not working")
-  }
+  # if (!is.null(object@ModelOpts$covariates)) {
+  #   stop("Not working")
+  # }
   
   if ((object@Dimensions$K-as.numeric(object@ModelOpts$learnIntercept))>0) {
     # Mask pasenger factors and set to NA

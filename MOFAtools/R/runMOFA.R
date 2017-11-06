@@ -29,12 +29,11 @@ runMOFA <- function(object, DirOptions) {
   "--dropR2", object@TrainOpts$DropFactorThreshold,
   "--tolerance", object@TrainOpts$tolerance
   )
-  # if (!is.null(object@ModelOpts$covariates)) {
-  #   command <- paste(command, sep=" ",
-  #                    "--covariatesFile", file.path(DirOptions$dataDir, "covariates.txt"),
-  #                    "--scale_covariates", paste(object@ModelOpts$scale_covariates, collapse=" ")
-  #                    )
-  # }
+  if (!is.null(object@ModelOpts$covariates)) {
+    command <- paste(command, sep=" ",
+                     "--covariatesFile", file.path(DirOptions$dataDir, "covariates.txt"),
+                     "--scale_covariates", rep(1,ncol(object@ModelOpts$covariates)))
+  }
   if (object@ModelOpts$learnIntercept == T) { command <- paste(command, "--learnIntercept", sep=" ") }
   if (object@ModelOpts$sparsity == F) { command <- paste(command, "--learnTheta 0", sep=" ") }
   

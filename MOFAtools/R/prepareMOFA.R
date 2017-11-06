@@ -22,20 +22,20 @@ prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = N
     stop("'object' has to be an instance of MOFAmodel")
   
   # Create temporary folder to store data
-  dir.create(DirOptions$dataDir, showWarnings = FALSE)
+  dir.create(DirOptions$dataDir, showWarnings = F)
   
   # Store views as matrices in .txt files
   message(sprintf("Storing input views in tmp folder %s...", DirOptions$dataDir))
   for(view in viewNames(object)) {
     write.table(t(object@TrainData[[view]]), file=file.path(DirOptions$dataDir, paste0(view,".txt")),
-                sep=" ", row.names=TRUE, col.names=TRUE, quote=F)
+                sep=" ", row.names=T, col.names=T, quote=F)
   }
   
   # Store covariates as a .txt file
-  # if (!is.null(ModelOptions$covariates)) {
-  # write.table(ModelOptions$covariates, file=file.path(DirOptions$dataDir, "covariates.txt"), 
-  #             sep=" ", row.names=F, col.names=F, quote=F)
-  # }
+  if (!is.null(ModelOptions$covariates)) {
+  write.table(ModelOptions$covariates, file=file.path(DirOptions$dataDir, "covariates.txt"),
+              sep=" ", row.names=F, col.names=F, quote=F)
+  }
   
   # Get data options
   message("Checking data options...")
@@ -135,8 +135,8 @@ getDefaultModelOpts <- function(object) {
     learnIntercept = TRUE,      # (bool) include a constant factor of 1s to learn the mean of features (intercept)? If not, you need to center the data
     likelihood = likelihood,    # (character vector) likelihood per view [gaussian/bernoulli/poisson]
     numFactors = 25,            # (numeric) initial number of latent factors
-    sparsity=T                  # use feature-wise sparsity?
-    # covariates = NULL
+    sparsity = T,               # use feature-wise sparsity?
+    covariates = NULL           # no covariates by default
   )
   
   return(ModelOptions)

@@ -205,9 +205,9 @@ class BayesNet(object):
 
                     # Print ELBO monitoring
                     print("Trial %d, Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, Factors=%d, Covariates=%d" % (self.trial, i+1, time()-t, elbo.iloc[i]["total"], delta_elbo, (~self.nodes["Z"].covariates).sum(), self.nodes["Z"].covariates.sum() ))
-                    if delta_elbo<0: print("Warning, lower bound is decreasing..."); print('\a')
                     if self.options['verbose']:
                         print("".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n")
+                    if delta_elbo<0 and self.options['verbose']: print("Warning, lower bound is decreasing..."); print('\a')
 
                     # Assess convergence
                     if (0 <= delta_elbo < self.options['tolerance']) and (not self.options['forceiter']):

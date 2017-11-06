@@ -110,10 +110,38 @@ def loadData(data_opts, verbose=True):
         # Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"])
         print("Loaded %s with dim (%d,%d)..." % (file, Y[m].shape[0], Y[m].shape[1]))
 
+        # Checking missing values on features
+        # print max(np.isnan(Y[m]).mean(axis=1))
+        # exit()
+
+        # Checking missing values on samples
+        # print np.isnan(Y[m]).mean(axis=1)
+        # exit()
+
+    # Check that the dimensions match
+    if not all([Y[m].shape[0] for m in range(M)]):
+        if all([Y[m].shape[1] for m in range(M)]):
+            print("Columns seem to be the shared axis, transposing the data...")
+            for m in range(M): Y[m] = Y[m].T
+        else:
+            print("The number of rows must match, aborting.")
+            exit()
+
+    # TO-DO: CHECK IF ANY SAMPLE HAS MISSING VALUES IN ALL VIEWS 
+
+    # Sanity checks on the data
+    for m in range(M):
+
+        # Removing features with complete missing values
+        nas = np.isnan(Y[m]).mean(axis=0)
+        if np.any(nas==1.):
+            print("Warning: %d features(s) on view %d have missing values in all samples, removing them..." % ( (nas==1.).sum(), m) )
+            Y[m].drop(Y[m].columns[np.where(nas==1.)], axis=1, inplace=True)
+
         # Removing features with no variance
         var = Y[m].std(axis=0) 
         if np.any(var==0.):
-            print("Warning: %d features(s) have zero variance, removing them..." % (var==0.).sum())
+            print("Warning: %d features(s) on view %d have zero variance, removing them..." % ( (var==0.).sum(),m) )
             Y[m].drop(Y[m].columns[np.where(var==0.)], axis=1, inplace=True)
 
         # Center the features
@@ -132,6 +160,9 @@ def loadData(data_opts, verbose=True):
             Y[m] = Y[m] / np.std(Y[m], axis=0, )
 
         print("\n")
+
+    print "Dimensionalities after data processing:"
+    for m in xrange(M): print("view %d has dimensionality (%d,%d)..." % (m, Y[m].shape[0], Y[m].shape[1]))
 
     return Y
 

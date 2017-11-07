@@ -90,7 +90,7 @@ compareModels <- function(models, comparison = "all", ...) {
           }
           else{
           # if(is.null(main)) main <- paste("Absolute correlation between factors in model", i,"and",j)
-          corLFs_pairs <- cor(LFs1[common_pairwise,], LFs2[common_pairwise,])
+          corLFs_pairs <- cor(LFs1[common_pairwise,], LFs2[common_pairwise,], use="complete.obs")
           pheatmap(abs(corLFs_pairs),color=colorRampPalette(c("white", "orange" ,"red"))(100), ...)
           corLFs_pairs
           }

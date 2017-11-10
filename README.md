@@ -11,7 +11,7 @@ For more details you can read our preprint: https://www.biorxiv.org/content/earl
 </p>
 
 ## News
-- XX/09/2017 Paper uploaded to bioRxiv and submitted for review
+- 10/11/2017 Paper uploaded to bioRxiv
 
 ## Installation
 The workflow is splitted in two parts: the training of the model, which is done using a Python package and the downstream analysis which is done using an R package.

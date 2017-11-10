@@ -4,11 +4,10 @@ MOFA is a factor analysis model that provides a **general framework for the inte
 It calculates a low dimensional representation of the multiple views in terms of a small number of latent factors that capture the main sources of variability, which might be masked in the noisy and complex high-dimensional representation. Furthermore, it reveals whether the different factors are unique to a single -omic or shared between multiple -omics.  
 The model can take as input multiple data modalities (continuous, binary and count data) and it is flexible to the presence of missing values, including absence of entire assays.
 
-For more details you can read our preprint:
+For more details you can read our preprint: https://www.biorxiv.org/content/early/2017/11/10/217554
 <p align="center"> 
-[<img src="logo.png">](https://www.biorxiv.org/content/early/2017/11/10/217554)
+<img src="logo.png">
 </p>
-
 
 ## News
 - XX/09/2017 Paper uploaded to bioRxiv and submitted for review
@@ -104,16 +103,11 @@ There are two important quantities to keep track of:
 * **deltaELBO**: this is the objective function being maximised which is used to assess model convergence. Once the deltaELBO decreases below a threshold, training will end and the model will be saved as an .hdf5 file. Then, you are ready to start the analysis with the R package.
 
 ### Step 2: Downstream analysis: annotation of factors
-Once the heterogeneity of the data set is reduced into a set of factors, you need to understand what they are and relate them to technical or biological sources of variability. 
+Once the heterogeneity of the data set is reduced into a set of factors, you need to understand what are they and relate them to technical or biological sources of variability.
 
 We have built a semi-automated pipeline based on our experience annotating factors:  
 (1) **Disentangling the heterogeneity**: calculation of variance explained by each factor in each view.  
 (2) **Inspection of top weighted features**: for example, if a factor is associated to the presence of a chromosomal duplication, the mRNA data will have very high loadings for genes located in that particular chromosome.  
 (4) **Feature set enrichment analysis**: using for example gene ontologies.  
 (4) **Visualisation of the samples in the factor space**: similarly to what is done in Principal Component Analysis, it is useful to plot the factors against each other and color using known covariates.  
-
-An example workflow is provided in [the vignette](MOFAtools/vignettes/MOFA_example_CLL.Rmd). From R the vignette can be explored using: 
-```r
-browseVignettes("MOFAtools")
-```
 

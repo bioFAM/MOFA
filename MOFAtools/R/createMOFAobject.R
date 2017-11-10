@@ -27,7 +27,7 @@ createMOFAobject <- function(data) {
     viewNames(object) <- names(data) 
   } else { 
     viewNames(object) <- paste("view",1:length(object@TrainData), sep="_")
-    warning("View names are not specified in data")
+    warning(paste0("View names are not specified in data, renaming them to...",paste("view",1:length(object@TrainData), sep="_")))
   }
   
   return(object)

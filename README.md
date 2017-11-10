@@ -7,6 +7,7 @@ The model can take as input multiple data modalities (continuous, binary and cou
 For more details you can read our preprint:
 <p align="center"> 
 <img src="logo.png">
+https://www.biorxiv.org/content/early/2017/11/10/217554
 </p>
 
 ## News

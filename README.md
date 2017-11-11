@@ -12,6 +12,7 @@ For more details you can read our preprint: https://www.biorxiv.org/content/earl
 
 ## News
 - 10/11/2017 Paper uploaded to bioRxiv
+- 10/11/2017 We created a Slack group to provide personalised help on running and interpreting MOFA, contact us if you are interested!
 
 ## Installation
 The workflow is splitted in two parts: the training of the model, which is done using a Python package and the downstream analysis which is done using an R package.
@@ -112,3 +113,9 @@ An example workflow is provided in [the vignette](MOFAtools/vignettes/MOFA_examp
 ```r
 browseVignettes("MOFAtools")
 ```
+
+## Contact
+The package is maintained by Britta Velten (britta.velten@embl.de) and Ricard Argelaguet (ricard@ebi.ac.uk). 
+Please, contact ask for problems, comments or suggestions.
+
+

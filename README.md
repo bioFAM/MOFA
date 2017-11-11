@@ -12,7 +12,7 @@ For more details you can read our preprint: https://www.biorxiv.org/content/earl
 
 ## News
 - 10/11/2017 Paper uploaded to bioRxiv
-- 10/11/2017 We created a Slack group to provide personalised help on running and interpreting MOFA, contact us if you are interested!
+- 10/11/2017 We created a Slack group to provide personalised help on running and interpreting MOFA, this is the link: https://join.slack.com/t/mofahelp/shared_invite/enQtMjcxNzM3OTE3NjcxLTkyZmE5YzNiMDc4OTkxYWExYWNlZTRhMWI2OWNkNzhmYmNlZjJiMjA4MjNiYjI2YTc4NjExNzU2ZTZiYzQyNjY
 
 ## Installation
 The workflow is splitted in two parts: the training of the model, which is done using a Python package and the downstream analysis which is done using an R package.

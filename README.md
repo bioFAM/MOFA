@@ -18,14 +18,10 @@ The workflow is splitted in two parts: the training of the model, which is done 
 They both can be installed as follows:
 
 ### Python package 
-The easiest way to install MOFA is to use PyPI:
-```r
-```
-Alternatively, you can directly install from the repository:
+We are on the process of uploading it to PyPI. For now, you can install it using:
 ```r
 pip install git+git://github.com/PMBio/MOFA
 ```
-
 Or clone the repository and then install it using the setup.py:
 ```r
 git clone https://github.com/PMBio/MOFA
@@ -112,3 +108,7 @@ We have built a semi-automated pipeline based on our experience annotating facto
 (4) **Feature set enrichment analysis**: using for example gene ontologies.  
 (4) **Visualisation of the samples in the factor space**: similarly to what is done in Principal Component Analysis, it is useful to plot the factors against each other and color using known covariates.  
 
+An example workflow is provided in [the vignette](MOFAtools/vignettes/MOFA_example_CLL.Rmd). From R the vignette can be explored using: 
+```r
+browseVignettes("MOFAtools")
+```

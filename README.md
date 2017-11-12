@@ -16,8 +16,8 @@ For more details you can read our preprint: https://www.biorxiv.org/content/earl
  
 
 ## Installation
-The workflow is splitted in two parts: the training of the model, which is done using a Python package and the downstream analysis which is done using an R package.
-They both can be installed as follows:
+The workflow is splitted in two parts: the training of the model, which is done using a Python framework and the downstream analysis which is done using an R package. If you don't like Python, don't worry, the whole process can be done from R!  
+In any case, you need to install both packages, as follows:
 
 ### Python package 
 We are on the process of uploading it to PyPI. For now, you can install it using:

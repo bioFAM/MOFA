@@ -55,8 +55,8 @@ MOFAobject
 
 
 # Step 2: Fit the MOFA model
-The next step is to fit the model using the untrained MOFA object from the last step.
-Note: the core of the MOFA model is implemented in Python, so first of all make sure you have the corresponding package installed (see installation instructions in the README file). In principle, we recommend to train the model directly from the command line (see running instructions, it is very simple), but we have created the following R wrapper if you do not feel comfortable with bash.
+The next step is to fit the model. 
+This part of the pipeline is implemented in Python, so first of all make sure you have the corresponding package installed (see installation instructions in the README file). In principle, we recommend to train the model directly from the command line (see running instructions, it is very simple), but we have created the following R wrapper if you do not feel comfortable with bash.
 
 ## Define options
 

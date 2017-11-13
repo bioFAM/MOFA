@@ -119,18 +119,20 @@ def loadData(data_opts, verbose=True):
         # exit()
 
     # Check that the dimensions match
-    if not all([Y[m].shape[0] for m in range(M)]):
+    if len(set([Y[m].shape[0] for m in range(M)])) != 1:
         if all([Y[m].shape[1] for m in range(M)]):
-            print("Columns seem to be the shared axis, transposing the data...")
+            print("\nColumns seem to be the shared axis, transposing the data...")
             for m in range(M): Y[m] = Y[m].T
         else:
-            print("The number of rows must match, aborting.")
+            print("\nDimensionalities do not match, aborting. Make sure that either columns or rows are shared!")
             exit()
 
     # TO-DO: CHECK IF ANY SAMPLE HAS MISSING VALUES IN ALL VIEWS 
 
     # Sanity checks on the data
-    print("\nDoing sanity checks and parsing the data...\n")
+    print ("\n" +"#"*46)
+    print("## Doing sanity checks and parsing the data ##")
+    print ("#"*46 + "\n")
     for m in range(M):
 
         # Removing features with complete missing values
@@ -422,11 +424,14 @@ def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_na
     data_grp = hdf5.create_group("data")
     featuredata_grp = hdf5.create_group("features")
     hdf5.create_dataset("samples", data=sample_names)
+    # hdf5.create_dataset("samples", data=np.array(sample_names, dtype='S'))
     for m in range(len(data)):
         view = view_names[m] if view_names is not None else str(m)
         data_grp.create_dataset(view, data=data[m].data.T)
+        data_grp.attrs['samples'] = np.array(sample_names, dtype='S')
         if feature_names is not None:
-            featuredata_grp.create_dataset(view, data=feature_names[m])
+            data_grp.attrs['features'] = np.array(feature_names[m], dtype='S')
+        #     featuredata_grp.create_dataset(view, data=feature_names[m])
 
 def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_names=None, feature_names=None):
     """ Method to save the model in an hdf5 file

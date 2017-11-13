@@ -130,6 +130,7 @@ def loadData(data_opts, verbose=True):
     # TO-DO: CHECK IF ANY SAMPLE HAS MISSING VALUES IN ALL VIEWS 
 
     # Sanity checks on the data
+    print("\nDoing sanity checks and parsing the data...\n")
     for m in range(M):
 
         # Removing features with complete missing values
@@ -159,9 +160,7 @@ def loadData(data_opts, verbose=True):
             print("Scaling features for view " + str(m) + " to unit variance...")
             Y[m] = Y[m] / np.std(Y[m], axis=0, )
 
-        print("\n")
-
-    print("Dimensionalities after data processing:")
+    print("\nDimensionalities after data processing:")
     for m in range(M): print("view %d has dimensionality (%d,%d)..." % (m, Y[m].shape[0], Y[m].shape[1]))
 
     return Y

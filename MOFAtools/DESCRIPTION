@@ -1,5 +1,3 @@
-biocViews:
-
 Package: MOFAtools
 Type: Package
 Maintainer: Ricard Argelaguet <ricard.argealguet@ebi.ac.uk> and Britta Velten <britta.velten@embl.de>
@@ -15,10 +13,10 @@ Date: 2016-12-20
 License: GPL (>= 2)
 Description: A collection of tools for analysing MOFA models.
 Encoding: UTF-8
-biocViews:
 Depends: R (>= 3.3)
-Imports: rhdf5, dplyr, tidyr, reshape2, pheatmap, corrplot, ggplot2, methods, scales, pcaMethods, GGally, doParallel, MultiAssayExperiment, RColorBrewer, cowplot, ggrepel, foreach
-Suggests: knitr, MultiAssayExperiment
+Imports: rhdf5, dplyr, tidyr, reshape2, pheatmap, corrplot, ggplot2, methods, scales, GGally, doParallel, RColorBrewer, cowplot, ggrepel, foreach
+Suggests: knitr, MultiAssayExperiment, pcaMethods
+biocViews:
 VignetteBuilder: knitr
 LazyData: true
 NeedsCompilation: yes

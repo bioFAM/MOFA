@@ -54,8 +54,6 @@ There are two ways of doing this:
 * **Using the command line tool**: modify and run the script [run_basic.sh](mofa/run/run_basic.sh). If you are very familar with the model and want to play with more advanced options, you can use instead [run_advanced.sh](mofa/run/run_advanced.sh).
 * **Using the R wrapper**: for the ones not comfortable with the command line we built an R wrapper. See [the vignette](MOFAtools/vignettes/MOFA_example_CLL.Rmd).
 
-Important note: the core framework of MOFA is implemented in Python, so no matter which approach you folllow, you need to install the Python package first.  
-
 No matter which option you went for, if everything is successful, you should observe an output analogous to the following:
 
 ```

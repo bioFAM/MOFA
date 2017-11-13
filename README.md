@@ -43,11 +43,16 @@ R CMD build MOFAtools
 R CMD install MOFAtools
 ```
 
+
 ## MOFA workflow
 
 The workflow of MOFA consists of two steps:  
 **(1) Fitting step**: train the model with the multi-omics data to disentangle the heterogeneity into latent factors.  
 **(2) Characterisation step**: once the factors are inferred they need to be characterised in terms of technical or biological sources of variation.  
+
+<p align="center"> 
+<img src="workflow.png">
+</p>
 
 ### Step 1: Fitting the model
 There are two ways of doing this:
@@ -111,6 +116,18 @@ We have built a semi-automated pipeline based on our experience annotating facto
 An example workflow is provided in [the vignette](MOFAtools/vignettes/MOFA_example_CLL.Rmd). From R the vignette can be explored using: 
 ```r
 browseVignettes("MOFAtools")
+```
+
+## Frequently asked questions
+
+**I get the following error when installing the R package:**
+```
+ERROR: dependencies 'pcaMethods', 'MultiAssayExperiment' are not available for package 'MOFAtools'
+```
+These two packages are available from Bioconductor, not CRAN. You can install them from R as follows:
+```
+source("https://bioconductor.org/biocLite.R")
+biocLite(c('pcaMethods', 'MultiAssayExperiment'))
 ```
 
 ## Contact

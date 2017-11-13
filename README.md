@@ -7,8 +7,10 @@ Once trained, the model output can be used for a range of downstream analyses, i
 
 For more details you can read our preprint: https://www.biorxiv.org/content/early/2017/11/10/217554
 <p align="center"> 
-<img src="logo.png">
+<img src="logo.png" style="width: 50%; height: 50%"/>​
 </p>
+
+
 
 ## News
 - 10/11/2017 Paper uploaded to bioRxiv

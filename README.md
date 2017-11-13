@@ -115,7 +115,9 @@ We have built a semi-automated pipeline based on our experience annotating facto
 (4) **Feature set enrichment analysis**: using for example gene ontologies.  
 (4) **Visualisation of the samples in the factor space**: similarly to what is done in Principal Component Analysis, it is useful to plot the factors against each other and color using known covariates.  
 
-An example workflow is provided in [the vignette](MOFAtools/vignettes/MOFA_example_CLL.Rmd). From R the vignette can be explored using: 
+A list of all **relevant methpds** with a short description can be found [here](https://github.com/PMBio/MOFA/blob/master/MOFAtools/Documentation.md)  
+
+An **example workflow** is provided in [the vignette](MOFAtools/vignettes/MOFA_example_CLL.Rmd). The vignette can be explored using: 
 ```r
 browseVignettes("MOFAtools")
 ```

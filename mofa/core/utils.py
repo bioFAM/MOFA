@@ -423,15 +423,14 @@ def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_na
     data = model.getTrainingData()
     data_grp = hdf5.create_group("data")
     featuredata_grp = hdf5.create_group("features")
-    hdf5.create_dataset("samples", data=sample_names)
-    # hdf5.create_dataset("samples", data=np.array(sample_names, dtype='S'))
+    # hdf5.create_dataset("samples", data=sample_names)
+    hdf5.create_dataset("samples", data=np.array(sample_names, dtype='S10'))
     for m in range(len(data)):
         view = view_names[m] if view_names is not None else str(m)
         data_grp.create_dataset(view, data=data[m].data.T)
-        data_grp.attrs['samples'] = np.array(sample_names, dtype='S')
         if feature_names is not None:
             # data_grp.attrs['features'] = np.array(feature_names[m], dtype='S')
-            featuredata_grp.create_dataset(view, data=feature_names[m])
+            featuredata_grp.create_dataset(view, data=np.array(feature_names[m], dtype='S10'))
 
 def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_names=None, feature_names=None):
     """ Method to save the model in an hdf5 file

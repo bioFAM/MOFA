@@ -134,6 +134,6 @@ biocLite(c('pcaMethods', 'MultiAssayExperiment'))
 
 ## Contact
 The package is maintained by Britta Velten (britta.velten@embl.de) and Ricard Argelaguet (ricard@ebi.ac.uk). 
-Please, contact ask for problems, comments or suggestions.
+Please, contact us for problems, comments or suggestions.
 
 

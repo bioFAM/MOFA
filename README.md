@@ -56,7 +56,7 @@ The workflow of MOFA consists of two steps:
 <img src="workflow.png">
 </p>
 
-A list of all **relevant methpds** with a short description can be found [here](https://github.com/PMBio/MOFA/blob/master/MOFAtools/Documentation.md)  
+A list of all **relevant methods** with a short description can be found [here](https://github.com/PMBio/MOFA/blob/master/MOFAtools/Documentation.md)  
 
 ### Step 1: Fitting the model
 There are two ways of doing this:
@@ -117,6 +117,8 @@ We have built a semi-automated pipeline based on our experience annotating facto
 (2) **Inspection of top weighted features**: for example, if a factor is associated to the presence of a chromosomal duplication, the mRNA data will have very high loadings for genes located in that particular chromosome.  
 (4) **Feature set enrichment analysis**: using for example gene ontologies.  
 (4) **Visualisation of the samples in the factor space**: similarly to what is done in Principal Component Analysis, it is useful to plot the factors against each other and color using known covariates.  
+
+## Tutorial
 
 An **example workflow** is provided in [the vignette](MOFAtools/vignettes/MOFA_example_CLL.Rmd). The vignette can be explored using: 
 ```r

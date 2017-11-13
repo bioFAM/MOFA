@@ -56,10 +56,13 @@ The workflow of MOFA consists of two steps:
 <img src="workflow.png">
 </p>
 
+A list of all **relevant methpds** with a short description can be found [here](https://github.com/PMBio/MOFA/blob/master/MOFAtools/Documentation.md)  
+
 ### Step 1: Fitting the model
 There are two ways of doing this:
 * **Using the command line tool**: modify and run the script [run_basic.sh](mofa/run/run_basic.sh). If you are very familar with the model and want to play with more advanced options, you can use instead [run_advanced.sh](mofa/run/run_advanced.sh).
 * **Using the R wrapper**: for the ones not comfortable with the command line we built an R wrapper. See [the vignette](MOFAtools/vignettes/MOFA_example_CLL.Rmd).
+
 
 No matter which option you went for, if everything is successful, you should observe an output analogous to the following:
 
@@ -114,8 +117,6 @@ We have built a semi-automated pipeline based on our experience annotating facto
 (2) **Inspection of top weighted features**: for example, if a factor is associated to the presence of a chromosomal duplication, the mRNA data will have very high loadings for genes located in that particular chromosome.  
 (4) **Feature set enrichment analysis**: using for example gene ontologies.  
 (4) **Visualisation of the samples in the factor space**: similarly to what is done in Principal Component Analysis, it is useful to plot the factors against each other and color using known covariates.  
-
-A list of all **relevant methpds** with a short description can be found [here](https://github.com/PMBio/MOFA/blob/master/MOFAtools/Documentation.md)  
 
 An **example workflow** is provided in [the vignette](MOFAtools/vignettes/MOFA_example_CLL.Rmd). The vignette can be explored using: 
 ```r

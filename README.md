@@ -47,8 +47,8 @@ R CMD install MOFAtools
 ## MOFA workflow
 
 The workflow of MOFA consists of two steps:  
-**(1) Fitting step**: train the model with the multi-omics data to disentangle the heterogeneity into latent factors.  
-**(2) Characterisation step**: once the factors are inferred they need to be characterised in terms of technical or biological sources of variation.  
+**(1) Fitting step**: train the model with the multi-omics data to disentangle the heterogeneity into a small number of latent factors.  
+**(2) Downstream analysis**: once the factors are inferred they need to be characterised as technical or biological sources of variation by looking at the corresponding weights, doing (gene set) enrichment analysis, plotting the factors, correlating factors with known covariates, etc. Also, one can do imputation of missing values and prediction of clinical outcomes using the latent factors.
 
 <p align="center"> 
 <img src="workflow.png">

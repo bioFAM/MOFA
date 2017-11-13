@@ -161,7 +161,7 @@ def loadData(data_opts, verbose=True):
 
         print("\n")
 
-    print "Dimensionalities after data processing:"
+    print("Dimensionalities after data processing:")
     for m in xrange(M): print("view %d has dimensionality (%d,%d)..." % (m, Y[m].shape[0], Y[m].shape[1]))
 
     return Y

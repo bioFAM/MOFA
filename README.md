@@ -1,30 +1,31 @@
 # MOFA: Multi-Omics Factor Analysis
 
 MOFA is a factor analysis model that provides a **general framework for the integration of multi-omic data sets** in a completely unsupervised fashion.  
-It calculates a low dimensional representation of the multiple views in terms of a small number of latent factors that capture the main sources of variability, which might be masked in the noisy and complex high-dimensional representation. Furthermore, it reveals whether the different factors are unique to a single -omic or shared between multiple -omics.  
-The model can take as input multiple data modalities (continuous, binary and count data) and it is flexible to the presence of missing values, including absence of entire assays.
+Intuitively, MOFA can be viewed as a versatile and statistically rigorous generalization of principal component analysis (PCA) to multi-omics data. Given several data matrices with measurements of multiple ‘omics data types on the same or on overlapping sets of samples, MOFA infers an **interpretable low-dimensional data representation in terms of (hidden) factors**. These learnt factors represent the driving sources of variation across data modalities, thus facilitating the identification of cellular states or disease subgroups.  
 
-For more details you can read our preprint:
+Once trained, the model output can be used for a range of downstream analyses, including the visualisation of samples in factor space, the automatic annotation of factors using (gene set) enrichment analysis, the identification of outliers (e.g. due to sample swaps) and the imputation of missing values.  
+
+For more details you can read our preprint: https://www.biorxiv.org/content/early/2017/11/10/217554
 <p align="center"> 
-<img src="logo.png">
+<img src="logo.png" style="width: 50%; height: 50%"/>​
 </p>
 
+
+
 ## News
-- XX/09/2017 Paper uploaded to bioRxiv and submitted for review
+- 10/11/2017 Paper uploaded to bioRxiv
+- 10/11/2017 We created a Slack group to provide personalised help on running and interpreting MOFA, [this is the link](https://join.slack.com/t/mofahelp/shared_invite/enQtMjcxNzM3OTE3NjcxLTkyZmE5YzNiMDc4OTkxYWExYWNlZTRhMWI2OWNkNzhmYmNlZjJiMjA4MjNiYjI2YTc4NjExNzU2ZTZiYzQyNjY)
+ 
 
 ## Installation
-The workflow is splitted in two parts: the training of the model, which is done using a Python package and the downstream analysis which is done using an R package.
-They both can be installed as follows:
+The workflow is splitted in two parts: the training of the model, which is done using a Python framework and the downstream analysis which is done using an R package. If you don't like Python, don't worry, the whole process can be done from R!  
+In any case, you need to install both packages, as follows:
 
 ### Python package 
-The easiest way to install MOFA is to use PyPI:
-```r
-```
-Alternatively, you can directly install from the repository:
+We are on the process of uploading it to PyPI. For now, you can install it using:
 ```r
 pip install git+git://github.com/PMBio/MOFA
 ```
-
 Or clone the repository and then install it using the setup.py:
 ```r
 git clone https://github.com/PMBio/MOFA
@@ -44,18 +45,24 @@ R CMD build MOFAtools
 R CMD install MOFAtools
 ```
 
+
 ## MOFA workflow
 
 The workflow of MOFA consists of two steps:  
-**(1) Fitting step**: train the model with the multi-omics data to disentangle the heterogeneity into latent factors.  
-**(2) Characterisation step**: once the factors are inferred they need to be characterised in terms of technical or biological sources of variation.  
+**(1) Fitting step**: train the model with the multi-omics data to disentangle the heterogeneity into a small number of latent factors.  
+**(2) Downstream analysis**: once the factors are inferred they need to be characterised as technical or biological sources of variation by looking at the corresponding weights, doing (gene set) enrichment analysis, plotting the factors, correlating factors with known covariates, etc. Also, one can do imputation of missing values and prediction of clinical outcomes using the latent factors.
+
+<p align="center"> 
+<img src="workflow.png">
+</p>
+
+A list of all **relevant methods** with a short description can be found [here](https://github.com/PMBio/MOFA/blob/master/MOFAtools/Documentation.md)  
 
 ### Step 1: Fitting the model
 There are two ways of doing this:
 * **Using the command line tool**: modify and run the script [run_basic.sh](mofa/run/run_basic.sh). If you are very familar with the model and want to play with more advanced options, you can use instead [run_advanced.sh](mofa/run/run_advanced.sh).
 * **Using the R wrapper**: for the ones not comfortable with the command line we built an R wrapper. See [the vignette](MOFAtools/vignettes/MOFA_example_CLL.Rmd).
 
-Important note: the core framework of MOFA is implemented in Python, so no matter which approach you folllow, you need to install the Python package first.  
 
 No matter which option you went for, if everything is successful, you should observe an output analogous to the following:
 
@@ -103,7 +110,7 @@ There are two important quantities to keep track of:
 * **deltaELBO**: this is the objective function being maximised which is used to assess model convergence. Once the deltaELBO decreases below a threshold, training will end and the model will be saved as an .hdf5 file. Then, you are ready to start the analysis with the R package.
 
 ### Step 2: Downstream analysis: annotation of factors
-Once the heterogeneity of the data set is reduced into a set of factors, you need to understand what they are and relate them to technical or biological sources of variability. 
+Once the heterogeneity of the data set is reduced into a set of factors, you need to understand what are they and relate them to technical or biological sources of variability.
 
 We have built a semi-automated pipeline based on our experience annotating factors:  
 (1) **Disentangling the heterogeneity**: calculation of variance explained by each factor in each view.  
@@ -111,8 +118,27 @@ We have built a semi-automated pipeline based on our experience annotating facto
 (4) **Feature set enrichment analysis**: using for example gene ontologies.  
 (4) **Visualisation of the samples in the factor space**: similarly to what is done in Principal Component Analysis, it is useful to plot the factors against each other and color using known covariates.  
 
-An example workflow is provided in [the vignette](MOFAtools/vignettes/MOFA_example_CLL.Rmd). From R the vignette can be explored using: 
+## Tutorial
+
+An **example workflow** is provided in [the vignette](MOFAtools/vignettes/MOFA_example_CLL.Rmd). The vignette can be explored using: 
 ```r
 browseVignettes("MOFAtools")
 ```
+
+## Frequently asked questions
+
+**I get the following error when installing the R package:**
+```
+ERROR: dependencies 'pcaMethods', 'MultiAssayExperiment' are not available for package 'MOFAtools'
+```
+These two packages are available from Bioconductor, not CRAN. You can install them from R as follows:
+```
+source("https://bioconductor.org/biocLite.R")
+biocLite(c('pcaMethods', 'MultiAssayExperiment'))
+```
+
+## Contact
+The package is maintained by Britta Velten (britta.velten@embl.de) and Ricard Argelaguet (ricard@ebi.ac.uk). 
+Please, contact us for problems, comments or suggestions.
+
 

@@ -19,13 +19,19 @@ library(MOFAtools)
 ```
 
 # Step 1: Load data and create MOFA object
-
 There are two options to input data to MOFA:
+- Option 1: base R approach using a list of matrices
+- Option 2: Bioconductor approach using the MultiAssayExperiment framework
 
-- Option 1: Bioconductor approach using the MultiAssayExperiment framework
-- Option 2: base R approach using a list of matrices
+## Option 1: base R approach
+If using the base R approach, you simply need to provide a list of matrices where features are rows and samples are columns. Importantly, the samples need to be aligned. Missing values/assays should be filled with NAs.
+```{r}
+data("CLL_data")
+MOFAobject <- createMOFAobject(CLL_data)
+MOFAobject
+```
 
-## Option 1: bioconductor approach
+## Option 2: bioconductor approach
 If using the Bioconductor approach, you need to provide or create a [MultiAssayExperiment](https://bioconductor.org/packages/release/bioc/html/MultiAssayExperiment.html) object and then use it to build the MOFA object. For example, starting from a list of matrices where features are rows and samples are columns, this can be easily constructed as follows:
 ```{r}
 library(MultiAssayExperiment)
@@ -47,17 +53,10 @@ MOFAobject
 
 ```
 
-## Option 2: base R approach
-If using the base R approach, you simply need to provide a list of matrices where features are rows and samples are columns. The Importantly, the samples need to be aligned. Missing assays can be filled with NAs.
-```{r}
-data("CLL_data")
-MOFAobject <- createMOFAobject(CLL_data)
-MOFAobject
-```
 
 # Step 2: Fit the MOFA model
-The next step is to fit the model using the untrained MOFA object from the last step.
-Note: the core of the MOFA model is implemented in Python, so first of all make sure you have the corresponding package installed (see installation instructions in the README file). In principle, we recommend to train the model directly from the command line (see running instructions, it is very simple), but we have created the following R wrapper if you do not feel comfortable with bash.
+The next step is to fit the model. 
+This part of the pipeline is implemented in Python, so first of all make sure you have the corresponding package installed (see installation instructions in the README file). In principle, we recommend to train the model directly from the command line (see running instructions, it is very simple), but we have created the following R wrapper if you do not feel comfortable with bash.
 
 ## Define options
 

@@ -57,13 +57,13 @@ prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = N
   message(sprintf("Storing input views in folder %s...", DirOptions$dataDir))
   for(view in viewNames(object)) {
     write.table(t(object@TrainData[[view]]), file=file.path(DirOptions$dataDir, paste0(view,".txt")),
-                sep=DataOptions$delimiter, row.names=T, col.names=T, quote=F)
+                sep=object@DataOpts$delimiter, row.names=T, col.names=T, quote=F)
   }
   
   # Store covariates as a .txt file
   if (!is.null(ModelOptions$covariates)) {
     write.table(ModelOptions$covariates, file=file.path(DirOptions$dataDir, "covariates.txt"),
-                sep=DataOptions$delimiter, row.names=F, col.names=F, quote=F)
+                sep=object@DataOpts$delimiter, row.names=F, col.names=F, quote=F)
   }
   
   # If output already exists, remove it

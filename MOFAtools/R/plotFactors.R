@@ -1,30 +1,30 @@
 
-###########################################################
-## Functions to visualise scatterplots of latent factors ##
-###########################################################
+###########################################
+## Functions to visualise latent factors ##
+###########################################
 
 
-#' @title Visualize histogram of one latent variable
+#' @title Visualize histogram of one latent factor
 #' @name FactorHistPlot
-#' @description fill this
+#' @description generate a histogram of the sample values in a given latent factor
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param factor one factors to plot
-#' @param groups specifies groups or values used to split histogram into groups and color. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.
-#' @param name_groups name for groups (usually only used if groups is not a character itself)
+#' @param factor character vector with the factor name or numeric vector with the index of the factor.
+#' @param group_by specifies groups used to color the samples of the histogram. This can be either a character giving the name of a feature, or the name of a covariate if using a MultiAssayExperiment class, or a vector of same length as number of samples.
+#' @param group_names name for groups (usually only used if groups is not a character itself)
 #' @param alpha transparency parameter
-#' @param binwidth binwidth for histogram
-#' @param showMissing boolean, if false, removes sample for which shape_by or color_by is missing
-#' @details asd
-#' @return fill this
-#' @references fill this
+#' @param binwidth binwidth for histogram (default is NULL, which uses ggplot's default calculation)
+#' @param showMissing boolean indicating whether to remove sample for which 'group_by' is missing (default is FALSE)
+#' @param xlabel define x-axis label (default is NULL)
+#' @details One of the first steps for the annotation of factors is to visualise and group/color them using known covariates such as phenotypic or clinical data.
+#' This method generates a histogram of the sample values in a given latent factor. Note that, similar to Principal Component Analysis, the factor values should be interpreted in a relative manner.
+#' Similar functions are \code{\link{FactorsScatterPlot}} for doing scatter plots and \code{\link{FactorBeeswarmPlot}} for doing Beeswarm plots
+#' @return ggpplot object
 #' @import ggplot2
 #' @export
-FactorHistPlot <- function(object, factor, groups=NULL, name_groups="", alpha=0.6, binwidth=NULL, showMissing=FALSE) {
+FactorHistPlot <- function(object, factor, group_by = NULL, group_names = "", alpha = 0.6, binwidth = NULL, xlabel = "", showMissing = FALSE) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") 
-    stop("'object' has to be an instance of MOFAmodel")
-
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   if(!factor %in% factorNames(object)) { stop("factor not recognised") }
   
   # Collect relevant data
@@ -33,43 +33,49 @@ FactorHistPlot <- function(object, factor, groups=NULL, name_groups="", alpha=0.
   
   # get groups
   groupLegend <- T
-  if (!is.null(groups)) {
+  if (!is.null(group_by)) {
+    
     # It is the name of a covariate or a feature in the TrainData
-    if (length(groups) == 1 & is.character(groups)) {
-      if(name_groups=="") name_groups <- groups
+    if (length(group_by) == 1 & is.character(group_by)) {
+      if(group_names=="") group_names <- group_by
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData(object), rownames)
-      if(groups %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) groups %in% vnm))
-        groups <- TrainData[[viewidx]][groups,]
+      if(group_by %in% Reduce(union,featureNames)) {
+        viewidx <- which(sapply(featureNames, function(vnm) group_by %in% vnm))
+        group_by <- TrainData[[viewidx]][group_by,]
       } else if(class(object@InputData) == "MultiAssayExperiment"){
-        groups <- getCovariates(object, groups)
+        group_by <- getCovariates(object, group_by)
       }
-      else stop("'groups' was specified but it was not recognised, please read the documentation")
-      # It is a vector of length N
-    } else if (length(groups) > 1) {
-      stopifnot(length(groups) == N)
+      else stop("'group_by' was specified but it was not recognised, please read the documentation")
+      
+    # It is a vector of length N
+    } else if (length(group_by) > 1) {
+      stopifnot(length(group_by) == N)
+      
+    # It is not recognised
     } else {
-      stop("'groups' was specified but it was not recognised, please read the documentation")
+      stop("'group_by' was specified but it was not recognised, please read the documentation")
     }
+    
   } else {
-    groups <- rep(TRUE,N)
+    group_by <- rep(TRUE,N)
     groupLegend <- F
   }
-  names(groups) <- sampleNames(object)
-  Z$groups <- groups[Z$sample]
+  
+  names(group_by) <- sampleNames(object)
+  Z$group_by <- group_by[Z$sample]
 
-  if(!showMissing) Z <- Z[!is.na(Z$groups),]
-  Z$groups <- as.factor(Z$groups)
+  # Remove missing samples
+  if(!showMissing) Z <- Z[!is.na(Z$group_by),]
+  Z$group_by <- as.factor(Z$group_by)
   
-  xlabel <- paste("Latent factor", factor)
-  
-  p <- ggplot(Z, aes(x=value, group=groups)) + 
-    geom_histogram(aes(fill=groups), alpha=alpha, binwidth=binwidth, position="identity") + 
+  # Generate plot
+  p <- ggplot(Z, aes_string(x="value", group="group_by")) + 
+    geom_histogram(aes(fill=group_by), alpha=alpha, binwidth=binwidth, position="identity") + 
     xlab(xlabel) + 
     ylab("Count") + 
     scale_y_continuous(expand=c(0,0)) +
-    guides(fill=guide_legend(title=name_groups)) +
+    guides(fill=guide_legend(title=group_names)) +
     theme(plot.margin = margin(40,40,20,20), 
           axis.text = element_text(size=rel(1.3), color = "black"), 
           axis.title.y = element_text(size=rel(1.5), margin=margin(0,15,0,0)), 
@@ -97,12 +103,15 @@ FactorHistPlot <- function(object, factor, groups=NULL, name_groups="", alpha=0.
 #' @param color_by specifies groups or values used to color points. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.
 #' @param name_color name for color legend (usually only used if color_by is not a character itself)
 #' @param showMissing boolean, if false, removes sample for which shape_by or color_by is missing
-#' @details asd
-#' @return ggplot object containing the beeswarm plots
-#' @references fill this
+#' @details One of the main steps for the annotation of factors is to visualise and group/color them using known covariates or phenotypic data.
+#' This method generates a beeswarm plot of the sample values in a given latent factor. Note that, similar to Principal Component Analysis, the factor values should be interpreted in a relative manner.
+#' Similar functions are \code{\link{FactorsScatterPlot}} for doing scatter plots and \code{\link{FactorHistPlot}} for doing histogram plots
+#' @return ggplot object
 #' @import ggplot2
+#' @import ggbeeswarm
+#' @import grDevices
 #' @export
-FactorBeeswarmPlot <- function(object, factors, color_by = NULL, name_color="", showMissing=TRUE) {
+FactorBeeswarmPlot <- function(object, factors, color_by = NULL, name_color="", showMissing = FALSE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel")  stop("'object' has to be an instance of MOFAmodel")
@@ -111,8 +120,6 @@ FactorBeeswarmPlot <- function(object, factors, color_by = NULL, name_color="", 
   N <- object@Dimensions[["N"]]
   Z <- getFactors(object, factors=factors, include_intercept=FALSE, as.data.frame=T)
   Z$factor <- as.factor(Z$factor)
-  
-  # Z <- getExpectations(object, "Z", "E")
   
  # Set color
   colorLegend <- T
@@ -150,7 +157,7 @@ FactorBeeswarmPlot <- function(object, factors, color_by = NULL, name_color="", 
   Z$color_by <- color_by[Z$sample]
   
   # Generate plot
-  p <- ggplot(Z, aes(x=factor, y=value)) + 
+  p <- ggplot(Z, aes_string(x="factor", y="value")) + 
     ggbeeswarm::geom_quasirandom(aes(color=color_by)) +
     labs(x="Latent factor(s)", y="") +
     theme(
@@ -190,7 +197,7 @@ FactorBeeswarmPlot <- function(object, factors, color_by = NULL, name_color="", 
 #' @param name_color name for color legend (usually only used if color_by is not a character itself)
 #' @param name_shape name for shape legend (usually only used if shape_by is not a character itself)
 #' @param showMissing boolean, if false, removes sample for which shape_by or color_by is missing
-#' @details asd
+#' @details TO-DO: IMPROVE THIS DOCUMENTATION
 #' @return ggplot object containing the scatterplot
 #' @references fill this
 #' @import ggplot2
@@ -277,7 +284,7 @@ FactorsScatterPlot <- function (object, factors, color_by = NULL, shape_by = NUL
   xlabel <- paste("Latent factor", factors[1])
   ylabel <- paste("Latent factor", factors[2])
                                 
-  p <- ggplot(df, aes(x, y, color = color_by, shape = shape_by)) + 
+  p <- ggplot(df, aes_string(x = "x", y = "y", color = "color_by", shape = "shape_by")) + 
       geom_point() + xlab(xlabel) + ylab(ylabel) +
       # scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))]) +
       theme(plot.margin = margin(20, 20, 10, 10), 
@@ -314,7 +321,7 @@ FactorsScatterPlot <- function (object, factors, color_by = NULL, shape_by = NUL
 #' @details asd
 #' @return fill this
 #' @references fill this
-#' @import ggplot2 GGally
+#' @import ggplot2 GGally grDevices
 #' @export
 #' 
 FactorsScatterPairs <- function(object, factors = "all", showMissing=TRUE, 
@@ -464,3 +471,36 @@ FactorsScatterPairs <- function(object, factors = "all", showMissing=TRUE,
   return(p)
 }
   
+
+
+#' @title Plot the correlation matrix between the latent factors
+#' @name PlotCorFactors
+#' @description method to plot the correlation between the latent factors.
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @param method a character string indicating which correlation coefficient is to be computed: pearson (default), kendall, or spearman.
+#' @param ... arguments passed to \code{corrplot}
+#' @details this method plots the correlation matrix between the latent factors. \cr 
+#' Factors are encouraged to be uncorrelated due to the assumptions of the model. However, it is not a hard constraint such as in Principal Component Analysis and correlations between factors can happen, particularly with large number factors.
+#' Generally, correlated factors are redundant and should be avoided, as they make interpretation harder. Therefore, if you have too many correlated factors we suggest you run the model again reducing the number of factors.
+#' @return symmetric matrix with the correlation coefficient between every pair of factors
+#' @import corrplot
+#' @export
+PlotCorFactors <- function(object, method = "pearson", ...) {
+  
+  # Sanity checks
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  
+  # Fetch factors
+  Z <- getFactors(object)
+  
+  # Remove intercept
+  if(object@ModelOpts$learnIntercept==TRUE) Z <- Z[,-1]
+  
+  # Compute and plot correlation
+  r <- cor(x=Z, y=Z, method=method, use = "complete.obs")
+  p <- corrplot::corrplot(r, tl.col="black", ...)
+  
+  return(r)
+}
+
+

@@ -10,22 +10,20 @@ imputeMissing(object, views = "all", factors = "all", type = c("inRange",
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{views}{vector containing the names of views (character) or index of views (numeric) to be imputed (default: "all")}
+\item{views}{character vector with the view names, or numeric vector with view indexes.}
 
-\item{factors}{vector with the factors indices (numeric) or factor names (character) to use (default is "all")}
+\item{factors}{character vector with the factor names, or numeric vector with the factor indexes.}
 
-\item{type}{type of imputations returned. By default values are imputed using "inRange". "response" gives mean for gaussian and poisson and probabilities for bernoulli , 
-"link" gives the linear predictions, "inRange" rounds the fitted values from "terms" for integer-valued distributions to the next integer.}
-}
-\value{
-List of imputed data, each list element corresponding to specified views.
+\item{type}{type of imputation. 
+"response" gives mean for gaussian and poisson and probabilities for bernoulli,
+"link" gives the linear predictions,
+"inRange" (default) rounds the fitted values from "terms" for integer-valued distributions to the next integer.}
 }
 \description{
-This function uses the latent factors and the weights infered from MOFA to impute missing values in the input views.
+This function uses the latent factors and the loadings infered in order to impute missing values.
 }
 \details{
-asd
-}
-\references{
-fill this
+matrix factorization models generate a denoised and condensed low-dimensional representation of the data which capture the main sources of heterogeneity of the data. 
+These representation can be used to do predictions using the equation \code{Y = WX}. For more details read the supplementary methods of the manuscript. \cr
+This method fills the \code{ImputedData} slot by replacing the missing values in the input data with the model predictions.
 }

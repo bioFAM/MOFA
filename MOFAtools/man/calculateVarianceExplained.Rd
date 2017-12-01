@@ -5,16 +5,14 @@
 \title{Calculate variance explained by the model}
 \usage{
 calculateVarianceExplained(object, views = "all", factors = "all",
-  perFeature = F, perView = F, totalVar = T, plotit = T)
+  perView = F, totalVar = T, plotit = T)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{views}{Views to use, default is "all"}
+\item{views}{character vector with the view names, or numeric vector with view indexes. Default is 'all'}
 
-\item{factors}{Latent factores to use, default is "all"}
-
-\item{perFeature}{boolean, whether to calculate in addition the variance explained (R2) per feature (default FALSE)}
+\item{factors}{character vector with the factor names, or numeric vector with the factor indexes. Default is 'all'}
 
 \item{perView}{boolean, whether to calculate in addition the variance explained (R2) per view, using all factors (default TRUE)}
 
@@ -31,5 +29,5 @@ As a measure of variance explained we adopt the coefficient of determination (R2
 For non-gaussian views the calculations are based on the normally-distributed pseudo-data (for more information on the non-gaussian model see Seeger & Bouchard, 2012).
 }
 \details{
-fill this
+TO-DO: IMPROVE THIS DOCUMENTATION
 }

@@ -5,20 +5,18 @@
 #' As a measure of variance explained we adopt the coefficient of determination (R2).
 #' For non-gaussian views the calculations are based on the normally-distributed pseudo-data (for more information on the non-gaussian model see Seeger & Bouchard, 2012).
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param views Views to use, default is "all"
-#' @param factors Latent factores to use, default is "all"
-#' @param perFeature boolean, whether to calculate in addition the variance explained (R2) per feature (default FALSE)
+#' @param views character vector with the view names, or numeric vector with view indexes. Default is 'all'
+#' @param factors character vector with the factor names, or numeric vector with the factor indexes. Default is 'all'
 #' @param perView boolean, whether to calculate in addition the variance explained (R2) per view, using all factors (default TRUE)
 #' @param totalVar calculate variance explained (R2) with respect to the total variance (TRUE) or the residual variance (FALSE? 
 #' @param plotit boolean, wether to produce a plot (default True)
-#' @details fill this
+#' @details TO-DO: IMPROVE THIS DOCUMENTATION
 #' @return a list with matrices with the amount of variation explained per factor and view, and optionally total variance explained per view and variance explained by each feature alone
 #' @import pheatmap ggplot2 reshape2
 #' @importFrom cowplot plot_grid
 #' @export
 
-calculateVarianceExplained <- function(object, views = "all", factors = "all", perFeature = F, perView = F,
-                                       totalVar = T, plotit = T) {
+calculateVarianceExplained <- function(object, views = "all", factors = "all", perView = F, totalVar = T, plotit = T) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -35,16 +33,16 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", p
   if (paste0(factors,sep="",collapse="") == "all") { 
     factors <- factorNames(object) 
     #old object are not compatible with factro names
-    if(is.null(factors)) factors <- 1:ncol(getExpectations(object,"Z","E"))
+    if(is.null(factors)) factors <- 1:ncol(getExpectations(object,"Z"))
   } else {
     stopifnot(all(factors %in% factorNames(object)))  
   }
   K <- length(factors)
 
   # Collect relevant expectations
-  SW <- getExpectations(object,"SW","E")
-  Z <- getExpectations(object,"Z","E")
-  Y <- getExpectations(object,"Y","E")
+  SW <- getExpectations(object,"SW")
+  Z <- getExpectations(object,"Z")
+  Y <- getExpectations(object,"Y")
   
   # Calculate predictions under the MOFA model using all or a single factor
   Z[is.na(Z)] <- 0 # replace masked values on Z by 0 (do not contribute to predicitons)
@@ -80,10 +78,6 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", p
     # per view
     fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T))
      
-    # per view and feature
-    if (perFeature)
-      fvar_md <- lapply(views, function(m) 1 - colSums((Y[[m]]-Ypred_m[[m]])**2,na.rm=T) / colSums(resNullModel[[m]]**2,na.rm=T))
-    
     # per factor and view
      if (totalVar) {
        fvar_mk <- as.matrix(sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((resNullModel[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) )))
@@ -91,18 +85,8 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", p
        fvar_mk <- as.matrix(sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((partialresNull[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(partialresNull[[m]]**2, na.rm=T) )))
      }
     
-    # per factor and view and feature
-    if (perFeature)
-      fvar_mdk <- lapply(views, function(m) lapply(factorsNonconst, function(k) 1 - colSums((resNullModel[[m]]-Ypred_mk[[m]][[k]])**2,na.rm=T) / colSums(resNullModel[[m]]**2,na.rm=T)))
-    
     # Set names
     names(fvar_m) <- views
-    if(perFeature){
-      names(fvar_md) <- views
-      names(fvar_mdk) <- views
-      for(i in names(fvar_md)) names(fvar_md[[i]]) <- colnames(object@TrainData[[i]])
-      for(i in names(fvar_mdk)) rownames(fvar_mdk[[i]]) <- colnames(object@TrainData[[i]])
-    }
     colnames(fvar_mk) <- views
     rownames(fvar_mk) <- factorsNonconst 
     
@@ -196,10 +180,6 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", p
     R2_list <- list(
       R2Total = fvar_m,
       R2PerFactor = fvar_mk)
-    if (perFeature) {
-      R2_list$R2PerFactorAndFeature = fvar_mdk
-      R2_list$R2PerFeature = fvar_md
-    }
     if (perView) {
       R2_list$PerView <- fvar_mk
     }

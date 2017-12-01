@@ -5,19 +5,19 @@
 
 #' @rdname trainCurveFactors
 #' @name trainCurveFactors
-#' @title Training Curve for number of active factors
-#' @description to-fill
+#' @title Training curve for the number of active factors
+#' @description the MOFA model starts with an initial number of factors and inactive factors are dropped during training if they explain small amounts of variation. 
+#' This allows the model to automatically infer the dimensionality of the latent space.
+#' The corresponding hyperparameters are defined in \code{\link{prepareMOFA}}. \cr
+#' All training statistics, including the number of active factors, can be fetch from the TrainStats slot of \code{\link{MOFAmodel}} .
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @import ggplot2 scales
 #' @export
 
-trainCurveFactors <- function(object, title="", titlesize=16, xlabel="Iteration", ylabel=NULL,
-                       linesize=1.2, xlim_down=NULL, xlim_up=NULL) {
+trainCurveFactors <- function(object) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") { stop("'object' has to be an instance of MOFAmodel") }
-  
-  if (is.null(ylabel)) { ylabel <- "Number of active latent varaibles" }
   
   # Collect training statistics
   idx = seq(1+object@TrainOpts$startdrop,length(object@TrainStats$activeK),object@TrainOpts$freqdrop)
@@ -25,15 +25,12 @@ trainCurveFactors <- function(object, title="", titlesize=16, xlabel="Iteration"
   data <- data.frame(time=idx, value=stat)
   
   # Plot
-  p <- ggplot2::ggplot(data, aes(x=time, y=value)) +
-    geom_line(size=linesize) +
-    ggtitle(title) + xlab(xlabel) + ylab(ylabel) +
-    scale_x_continuous(limits=c(xlim_down,xlim_up)) +
+  p <- ggplot(data, aes_string(x="time", y="value")) +
+    geom_line() +
+    labs(title="", x="Iteration", y="Number of active latent varaibles")
     # scale_y_discrete(limits=c(min(data$value)-1, max(data$value)+1)) +
-    scale_y_continuous(limits=c(min(data$value)-1, max(data$value)+1), breaks=scales::pretty_breaks()) +
+    # scale_y_continuous(limits=c(min(data$value)-1, max(data$value)+1), breaks=scales::pretty_breaks()) +
     theme(
-      plot.title = element_text(size=titlesize),
-      plot.margin = margin(10,10,10,10),
       axis.title.x=element_text(colour="black",size=rel(1.75), margin=margin(20,0,3,0)),
       axis.title.y=element_text(colour="black",size=rel(1.75), margin=margin(0,20,0,3)),
       axis.text.x=element_text(colour="black",size=rel(1.5)),
@@ -43,53 +40,45 @@ trainCurveFactors <- function(object, title="", titlesize=16, xlabel="Iteration"
       axis.line.x = element_line(color="black"),
       axis.line.y = element_line(color="black"),
       legend.position="none",
-      # legend.title = element_blank(),
-      # legend.direction="horizontal",
-      # legend.text = element_text(size=rel(2.5)),
-      # legend.key = element_rect(fill="white"),
-      # legend.key.size = unit(1.2, "cm"),
-      # legend.title=element_text(size=rel(1.5)),
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
       panel.background = element_blank()
     )
+    
   return(p)
 }
 
 
-#' @rdname trainCurveELBO
-#' @name trainCurveELBO
 #' @title Training curve for Evidence Lower Bound (ELBO)
-#' @description to-fill
+#' @name trainCurveELBO
+#' @rdname trainCurveELBO
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param statistic fill this
+#' @param log boolean indicating whether to apply log transform
+#' @description MOFA inference is done using the variational Bayes algorithm, which maximises a quantity called the Evidence Lower Bound (ELBO).
+#' The ELBO is supposed to increase monotonically up to convergence, but it can decrease substantially when dropping inactive factors.
+#' For more details read the supplementary methods
+#' The frequency of ELBO computation as well as the convergence criteria are defined as hyperparameters in \code{\link{prepareMOFA}}. \cr
+#' All Training statistics, including the ELBO, can be fetch from the TrainStats slot of \code{\link{MOFAmodel}} .
 #' @import ggplot2 scales
 #' @export
 
-trainCurveELBO <- function(object, log=F, title="", titlesize=16, xlabel="Iteration", ylabel=NULL,
-                       linesize=1.2, xlim_down=NULL, xlim_up=NULL) {
+trainCurveELBO <- function(object, log = F) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") { stop("'object' has to be an instance of MOFAmodel") }
-  if (is.null(ylabel)) { ylabel <- "Evidence lower bound" }
   
+  # Fetch ELBO from TrainStats  
   idx = seq(1,length(object@TrainStats$elbo),object@TrainOpts$elbofreq)
   stat = object@TrainStats$elbo[idx]
-  if (log) { stat <- -log(-stat); ylabel <- paste(ylabel,"(log)") }
+  
+  # Apply log transform
+  if (log==T) { stat <- -log(-stat) }
+  
   data <- data.frame(time=idx, value=stat)
-  
-  if (!is.null(xlim_down)) { data <- data[data$time>=xlim_down,] }
-  if (!is.null(xlim_up)) { data <- data[data$time<=xlim_up,] }
-  
-  p <- ggplot2::ggplot(data, aes(x=time, y=value)) +
-    geom_line(size=linesize) +
-    ggtitle(title) + xlab(xlabel) + ylab(ylabel) +
-    scale_x_continuous(limits=c(xlim_down,xlim_up)) +
-    # scale_y_continuous(limits=c(ylim_down,ylim_up), breaks=scales::pretty_breaks()) +
-    # scale_y_continuous(breaks=scales::pretty_breaks()) +
+  p <- ggplot2::ggplot(data, aes_string(x="time", y="value")) +
+    geom_line() +
+    labs(title="", x="Iteration", y="ELBO")
     theme(
-      plot.title = element_text(size=titlesize),
-      plot.margin = margin(10,10,10,10),
       axis.title.x=element_text(colour="black",size=rel(1.75), margin=margin(20,0,3,0)),
       axis.title.y=element_text(colour="black",size=rel(1.75), margin=margin(0,20,0,3)),
       axis.text.x=element_text(colour="black",size=rel(1.5)),

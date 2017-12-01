@@ -31,7 +31,7 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
   factors <- as.character(factors)
   if (paste0(factors,collapse="")=="all") { 
     factors <- factorNames(object) 
-    # if(is.null(factors)) factors <- 1:ncol(getExpectations(object,"Z","E"))
+    # if(is.null(factors)) factors <- 1:ncol(getExpectations(object,"Z"))
   } else {
     stopifnot(all(factors %in% factorNames(object)))  
   }
@@ -47,7 +47,9 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
   }
 
   # Get relevant data
-  W <- getExpectations(object,"SW","E")[[view]][features,factors]
+  # W <- getExpectations(object,"SW")[[view]][features,factors]
+  W <- getWeights(object, views=view, factors=factors)[[1]][features,]
+  
 
   # Set title
   # if (is.null(main)) { main <- paste("Loadings of Latent Factors on", view) }
@@ -98,7 +100,8 @@ plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = 
   if(!is.null(manual)) { stopifnot(class(manual)=="list"); stopifnot(all(Reduce(intersect,manual) %in% featureNames(object)[[view]]))  }
   
   # Collect expectations  
-  W <- getExpectations(object,"SW","E", as.data.frame = T)
+  # W <- getExpectations(object,"SW", as.data.frame = T)
+  W <- getWeights(object,views=view, factors=factor, as.data.frame = T)
   W <- W[W$factor==factor & W$view==view,]
   
     # Scale values
@@ -205,7 +208,7 @@ plotTopWeights <- function(object, view, factor, nfeatures = 5, abs = TRUE, scal
   # if(!is.null(manual_features)) { stopifnot(class(manual_features)=="list"); stopifnot(all(Reduce(intersect,manual_features) %in% featureNames(object)[[view]]))  }
   
   # Collect expectations  
-  W <- getWeights(object, factor=factor, view=view, as.data.frame=T)
+  W <- getWeights(object, factors=factor, views=view, as.data.frame=T)
 
   # Scale values by loading with highest (absolute) value
   if(scale) W$value <- W$value/max(abs(W$value))

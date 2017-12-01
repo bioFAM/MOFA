@@ -1,18 +1,13 @@
 
-#' @title prepareMOFA: Prepare an untrained MOFA object for training
+#' @title Prepare an untrained MOFA object for training
 #' @name prepareMOFA
-#' @description Function to set the training and model options, produces .txt files that are used for python as input and 
-#' creates an .sh file for calling MOFA with the specified options from the command line. These files are all stored in the specified directory.
+#' @description Function to prepare a MOFA model for training by defining data, model and training options.
 #' @param object an untrained MOFA object
-#' @param dir directory to store .txt and .sh files in
-#' @param DataOptions list of DataOptions (see getDefaultDataOpts for what options can be set here). If NULL, default options are used.
-#' @param ModelOptions list of ModelOptions (see getDefaultModelOpts for what options can be set here). If NULL, default options are used.
-#' @param TrainOptions list of TrainOptions (see getDefaultTrainOptions for what options can be set here). If NULL, default options are used.
-#' @param outFile name of output file from Python MOFA
-#' @param k number of latent factors to start with (default = 10)
-#' @param MOFAdir directory of the MOFA Pyhton package installation
-#' @details fill this
-#' @return a untrained MOFA object with specified ModelOpts and TrainOpts 
+#' @param DirOptions list with I/O options, it must contain a 'dataDir' element where temporary text files will be stored and a 'outFile' where the final model will be stored as an hdf5 object.
+#' @param DataOptions list of DataOptions (see getDefaultDataOpts for what options can be set here). If NULL, default data options are used.
+#' @param ModelOptions list of ModelOptions (see getDefaultModelOpts for what options can be set here). If NULL, default model options are used.
+#' @param TrainOptions list of TrainOptions (see getDefaultTrainOptions for what options can be set here). If NULL, default training options are used.
+#' @return a untrained MOFA object with specified DataOpts, ModelOpts and TrainOpts 
 #' @export
 
 prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = NULL, TrainOptions = NULL) {
@@ -25,9 +20,9 @@ prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = N
   dir.create(DirOptions$dataDir, showWarnings = F)
   
   # Store views as matrices in .txt files
-  message(sprintf("Storing input views in tmp folder %s...", DirOptions$dataDir))
+  message(sprintf("Storing input views in folder %s...", DirOptions$dataDir))
   for(view in viewNames(object)) {
-    write.table(t(object@TrainData[[view]]), file=file.path(DirOptions$dataDir, paste0(view,".txt")),
+    write.table(object@TrainData[[view]], file=file.path(DirOptions$dataDir, paste0(view,".txt")),
                 sep=" ", row.names=T, col.names=T, quote=F)
   }
   
@@ -77,10 +72,14 @@ prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = N
 
 
 
-#' @title getDefaultTrainOpts: Get default training options
+#' @title Get default training options
 #' @name getDefaultTrainOpts
 #' @description Function to obtain default training options
-#' @return list with training options
+#' @details The training options are the following: \cr
+#' maxiter: Maximum number of iterations. \cr
+#' tolerance: Convergence threshold based on the change in Evidence Lower Bound, we recommend this be around 0.01. \cr
+#' DropFactorThreshold: Threshold on fraction of variance explained to drop a factor. That is, factors explaining less than 'DropFactorThreshold' fraction of variance (in all views) will be dropped. \cr
+#' @return list with default training options
 #' @export
 getDefaultTrainOpts <- function() {
   TrainOpts <- list(
@@ -92,23 +91,32 @@ getDefaultTrainOpts <- function() {
 }
 
 
-#' @title getDefaultDataOpts: Get default data options
-#' @name getDefaultDatasOpts
+#' @title Get default data options
+#' @name getDefaultDataOpts
 #' @description Function to obtain default data options
-#' @return list with data options
+#' @details The data options are the following: \cr
+#' centerFeatures: boolean indicating whether to center the features to zero mean. This is not required as long as the option learnIntercept is set to TRUE in the model options. \cr
+#' scaleViews: boolean indicating whether to scale the views to unit variance. This is optional and recommended, but not required. \cr
+#' @return list with default data options
 #' @export
 getDefaultDataOpts <- function() {
   DataOpts <- list(
     centerFeatures = F,   # Center features to zero mean (does not apply to binary or count views)
-    scaleViews = T        # Scale views to unit variance (does not apply to binary or count views)
+    scaleViews = F        # Scale views to unit variance (does not apply to binary or count views)
   )
   return(DataOpts)
 }
 
-#' @title getDefaultModelOpts: Get default model options
+#' @title Get default model options
 #' @name getDefaultModelOpts
-#' @param object  untrained MOFA object to get model options for
+#' @param object untrained MOFA object to get model options for
 #' @description Function to obtain default model options
+#' @details The model options are the following: \cr
+#' likelihood: character vector with data likelihoods per view, 'gaussian' for (roughly) normally distributed data, 'bernoulli' for binary data and 'poisson' for count data
+#' numFactors: initial number of factors, we recommend this to be large enough, larger than 10. \cr
+#' learnIntercept: boolean indicating whether to learn the intercept (the means) per feature. This is always recommended, particularly if you have non-gaussian likelihoods. \cr
+#' sparsity: boolean indicating whether to use sparsity. This is always recommended, as it will make the loadings more interpretable. \cr
+#' covariates: (TO-DEFINE).
 #' @return  list with default model options
 #' @export
 getDefaultModelOpts <- function(object) {
@@ -132,8 +140,8 @@ getDefaultModelOpts <- function(object) {
   
   # Define default model options
   ModelOptions <- list(
-    learnIntercept = TRUE,      # (bool) include a constant factor of 1s to learn the mean of features (intercept)? If not, you need to center the data
     likelihood = likelihood,    # (character vector) likelihood per view [gaussian/bernoulli/poisson]
+    learnIntercept = TRUE,      # (bool) include a constant factor of 1s to learn the mean of features (intercept)? If not, you need to center the data
     numFactors = 25,            # (numeric) initial number of latent factors
     sparsity = T,               # use feature-wise sparsity?
     covariates = NULL           # no covariates by default

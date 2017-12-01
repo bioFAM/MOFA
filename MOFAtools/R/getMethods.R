@@ -1,42 +1,39 @@
 
-##########################################################
-## User-friendly functions to fetch data from the model ##
-##########################################################
+################################################
+## Get functions to fetch data from the model ##
+################################################
 
-#' @rdname getDimensions
 #' @name getDimensions
-#' @title wraper to extract dimensionalities from the MOFAmodel. 
+#' @title Extract dimensionalities from the model. 
 #' @description K indicates the number of factors, D indicates the number of features, N indicates the number of samples and M indicates the number of views.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @export
-#' 
 getDimensions <- function(object) {
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
   return(object@Dimensions)
 }
 
 
-#' @rdname getFactors
 #' @name getFactors
-#' @title wraper to extract the latent factors from the model
+#' @title Extract the latent factors from the model
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param as.data.frame: boolean indicating whether to return factors as a long data frame with columns (sample,factor,value), default is FALSE.
-#' @param include_intercept: boolean indicating where to include the intercept term of the model, default is TRUE.
-#' @param factors: vector with the factors indices (numeric) or factor names (character) to fetch.
-#' @return by default returns a matrix of dimensionality (N,K) where N is number of samples and k is number of factors. 
-#' Alternatively, with as.data.frame=TRUE, it returns a data frame with columns (sample,factor,value)
+#' @param factors character vector with the factor name(s), or numeric vector with the factor index(es). Default is "all"
+#' @param as.data.frame boolean indicating whether to return a long data frame instead of a matrix, default is FALSE.
+#' @param include_intercept boolean indicating where to include the intercept term of the model, if present. Default is TRUE.
+#' @return by default returns the latent factor matrix of dimensionality (N,K) where N is number of samples and K is number of factors.
+#' Alternatively, if as.data.frame is TRUE, returns a long-formatted data frame with columns (sample,factor,value)
 #' @export
 #' 
-getFactors <- function(object, as.data.frame = FALSE, include_intercept = TRUE, factors = "all") {
+getFactors <- function(object, factors = "all", as.data.frame = FALSE, include_intercept = TRUE) {
   
-  # Sanity check
+  # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
   
   # Get factors
   if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } else { stopifnot(all(factors %in% factorNames(object))) }
 
   # Collect factors
-  Z <- getExpectations(object,"Z","E",as.data.frame)
+  Z <- getExpectations(object,"Z",as.data.frame)
     if (as.data.frame==FALSE) {
       Z <- Z[,factors, drop=FALSE]
     } else {
@@ -57,14 +54,14 @@ getFactors <- function(object, as.data.frame = FALSE, include_intercept = TRUE, 
 
 #' @rdname getWeights
 #' @name getWeights
-#' @title wraper to extract the weights from the model
-#' @description to-fill
+#' @title Extract the weights from the model
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param views vector containing the names of views (character) or index of views (numeric) to be fetched.
-#' @param factors vector with the factors indices (numeric) or factor names (character) to fetch.
-#' @param as.data.frame: boolean indicating whether to return factors as a long data frame with columns (view,feature,factor,value), default is FALSE.
-#' @return by default returns a list of length M, where M is the number of views, of matrices with dimensionality (Dm,K) where Dm is number of features in view m and k is number of factors. 
-#' Alternatively, with as.data.frame=TRUE, it returns a data frame with columns (view,feature,factor,value)
+#' @param views character vector with the view name(s), or numeric vector with the view index(es), default is "all".
+#' @param factors character vector with the factor name(s) or numeric vector with the factor index(es), default is "all".
+#' @param as.data.frame boolean indicating whether to return a long data frame instead of a list of matrices, default is FALSE.
+#' @details TO-DO: INCLUDE FEATURES
+#' @return by default returns a list where each element is a loading matrix with dimensionality (D,K) where D is the number of features in this view and K is the number of factors.
+#' Alternatively, if as.data.frame is TRUE, returns a long-formatted data frame with columns (view,feature,factor,value)
 #' @export
 #' 
 getWeights <- function(object, views = "all", factors = "all", as.data.frame = F) {
@@ -77,8 +74,8 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
   if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } else { stopifnot(all(factors %in% factorNames(object))) }
   
   # Fetch weights
-  weights <- getExpectations(object,"SW","E",as.data.frame)
-  if (as.data.frame) {
+  weights <- getExpectations(object,"SW",as.data.frame)
+  if (as.data.frame==T) {
     weights <- weights[weights$view%in%views & weights$factor%in%factors, ]
   } else {
     weights <- lapply(views, function(m) weights[[m]][,factors,drop=F])
@@ -91,14 +88,13 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
 
 #' @rdname getTrainData
 #' @name getTrainData
-#' @title wraper to fetch training data from the model
-#' @description to-fill
+#' @title Fetch the training data
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param views vector containing the names of views (character) or index of views (numeric) to be fetched.
-#' @param features: list with feature indices (numeric) or names (character), with the same order as views (default is "all")
-#' @param as.data.frame: boolean indicating whether to return factors as a long data frame with columns (view,feature,sample,value), default is FALSE.
-#' @return if as.data.frame == FALSE it return a list of length M, where M is the number of views, with matrices of dimensionality (N,Dm) where N is the number of samples and Dm is the numher of features in view m.
-#' Alternatively, if as.data.frame == TRUE, it returns long data frame with columns (view,feature,sample,value).
+#' @param views character vector with the view name(s), or numeric vector with the view index(es), default is "all".
+#' @param features list of character vectors with the feature names or list of numeric vectors with the feature indices, default is "all"
+#' @param as.data.frame boolean indicating whether to return a long data frame instead of a list of matrices, default is FALSE.
+#' @return by default returns a list where each element is a training data matrix with dimensionality (D,N) where D is the number of features in this view and N is the number of samples.
+#' Alternatively, if as.data.frame is TRUE, returns a long-formatted data frame with columns (view,feature,sample,value).
 #' @export
 getTrainData <- function(object, views = "all", features = "all", as.data.frame = F) {
   
@@ -124,7 +120,7 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
   trainData <- lapply(1:length(trainData), function(m) trainData[[m]][features[[m]],,drop=F]); names(trainData) <- views
   
   # Convert to long data frame
-  if (as.data.frame) {
+  if (as.data.frame==T) {
     tmp <- lapply(views, function(m) { tmp <- reshape2::melt(trainData[[m]]); colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
     trainData <- do.call(rbind,tmp)
     trainData[,c("view","feature","sample")] <- sapply(trainData[,c("view","feature","sample")], as.character)
@@ -135,16 +131,17 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
   return(trainData)
 }
 
-#' @rdname getImputedData
+
+#' @title Fetch the imputed data
 #' @name getImputedData
-#' @title wraper to fetch imputed data from the model
-#' @description to-fill
+#' @rdname getImputedData
+#' @description collect the imputed data. It requires the previous use of the \code{\link{imputeMissing}} method.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param views vector containing the names of views (character) or index of views (numeric) to be fetched.
-#' @param features: list with feature indices (numeric) or names (character), with the same order as views (default is "all")
-#' @param as.data.frame: boolean indicating whether to return factors as a long data frame with columns (view,feature,sample,value), default is FALSE.
-#' @return if as.data.frame == FALSE it return a list of length M, where M is the number of views, with matrices of dimensionality (N,Dm) where N is the number of samples and Dm is the numher of features in view m.
-#' Alternatively, if as.data.frame == TRUE, it returns long data frame with columns (view,feature,sample,value).
+#' @param views character vector with the view name(s), or numeric vector with the view index(es), default is "all".
+#' @param features list of character vectors with the feature names or list of numeric vectors with the feature indices, default is "all"
+#' @param as.data.frame boolean indicating whether to return a long-formatted data frame instead of a list of matrices, default is FALSE.
+#' @return by default returns a list where each element is a matrix with dimensionality (D,N) where D is the number of features in this view and N is the number of samples.
+#' Alternatively, if as.data.frame is TRUE, returns a long-formatted data frame with columns (view,feature,sample,value).
 #' @export
 getImputedData <- function(object, views = "all", features = "all", as.data.frame = F) {
   
@@ -170,7 +167,7 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
   ImputedData <- lapply(1:length(ImputedData), function(m) ImputedData[[m]][features[[m]],,drop=F]); names(ImputedData) <- views
   
   # Convert to long data frame
-  if (as.data.frame) {
+  if (as.data.frame==T) {
     tmp <- lapply(views, function(m) { tmp <- reshape2::melt(ImputedData[[m]]); colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
     ImputedData <- do.call(rbind,tmp)
     ImputedData[,c("view","feature","sample")] <- sapply(ImputedData[,c("view","feature","sample")], as.character)
@@ -183,30 +180,44 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
 
 #' @rdname getCovariates
 #' @name getCovariates
-#' @title wraper to extract covariates from the MultiAssayExperiment stored in the InputData slot
-#' @description to-fill
+#' @title Extract covariates from the model
+#' @description this function extracts the covariates defined by the user. 
+#' Note that (for now) the model can be run with known covariates only if they are stored in the colData of the MultiAssayExperiment input object. See \code{\link{createMOFAmodel}}.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param names: names of the covariates
+#' @param names names of the covariates
 #' @export
 #' 
 getCovariates <- function(object, names) {
+  
+  # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
   if(class(object@InputData) != "MultiAssayExperiment") stop("To work with covariates, InputData has to be specified in form of a MultiAssayExperiment")  
   stopifnot(all(names %in% colnames(colData(object@InputData))))
-  return(colData(object@InputData)[,names])
+  
+  # Get covariates
+  covariates <- colData(object@InputData)[,names]
+  
+  return(covariates)
 }
 
 #' @rdname getExpectations
 #' @name getExpectations
-#' @title wraper to fetch particular expectations from the model
-#' @description to-fill
+#' @title Fetch expectations from the model
+#' @description this method extracts the expectations from the (variational) posterior distributions of a trained MOFAmodel.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param variable: variable name ('Z,'SW','Tau','Y','Theta' or 'Alpha')
-#' @param expectation: expectation name ('E' for the first moment and 'E2' for the second moment (not implemented))
-#' @param as.data.frame: output the result as a long data frame?
-#' @return to-fill
+#' @param variable variable name, 'Z' for factors, 'SW' for weights, 'Tau' for noise, 'Y' for pseudodata, 'Theta' for feature-wise spike-and-slab sparsity, 'AlphaW' for view and factor-wise ARD sparsity
+#' @param as.data.frame boolean indicating whether to output the result as a long data frame, default is FALSE.
+#' @details Technical note: MOFA is a Bayesian model where each variable has a prior distribution and a posterior distribution. 
+#' In particular, to gain speed we used the variational inference framework so true posterior distributions are replaced by approximated variational distributions.
+#' The priors and variational distributions of each variable are extensively described in the supplementary methods of the paper.
+#' @return the output varies depending on the variable of interest: \cr
+#' Z: a matrix with dimensions (samples,factors). If as.data.frame is TRUE, a long-formatted data frame with columns (sample,factor,value). \cr
+#' SW: a list of length (views) where each element is a matrix with dimensions (features,factors). If as.data.frame is TRUE, a long-formatted data frame with columns (view,feature,factor,value). \cr
+#' Y: a list of length (views) where each element is a matrix with dimensions (features,samples). If as.data.frame is TRUE, a long-formatted data frame with columns (view,feature,sample,value). \cr
+#' Theta: TO-FILL \cr
+#' Tau: TO-FILL
 #' @export
-getExpectations <- function(object, variable, expectation, as.data.frame=F) {
+getExpectations <- function(object, variable, as.data.frame = FALSE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -214,13 +225,13 @@ getExpectations <- function(object, variable, expectation, as.data.frame=F) {
   
   # Get expectations in single matrix or list of matrices (for multi-view nodes)
   if (variable=="Z") {
-    exp <- object@Expectations$Z[[expectation]]
+    exp <- object@Expectations$Z$E
   } else {
-    exp <- lapply(object@Expectations[[variable]], function(x) x[[expectation]])
+    exp <- lapply(object@Expectations[[variable]], function(x) x$E)
   }
   
   # Convert to long data frame
-  if (as.data.frame) {
+  if (as.data.frame==T) {
     if (variable=="Z") {
       tmp <- reshape2::melt(exp)
       colnames(tmp) <- c("sample","factor","value")
@@ -234,6 +245,7 @@ getExpectations <- function(object, variable, expectation, as.data.frame=F) {
       tmp <- do.call(rbind,tmp)
     }
     if (variable=="Tau") {
+      stop("Not implemented")
       tmp <- lapply(names(exp), function(m) { data.frame(view=m, feature=names(exp[[m]]), value=unname(exp[[m]])); tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character); return(tmp) })
       tmp <- do.call(rbind,tmp)
     }
@@ -242,7 +254,7 @@ getExpectations <- function(object, variable, expectation, as.data.frame=F) {
       tmp <- do.call(rbind,tmp)
     }
     if (variable=="Theta") {
-      stop()
+      stop("Not implemented")
       tmp <- lapply(names(exp), function(m) { tmp <- reshape2::melt(exp[[m]]); colnames(tmp) <- c("sample","feature","value"); tmp$view <- m; tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character); return(tmp) })
       tmp <- do.call(rbind,tmp)
     }
@@ -251,58 +263,4 @@ getExpectations <- function(object, variable, expectation, as.data.frame=F) {
   return(exp)
 }
 
-
-#' @rdname getParameters
-#' @name getParameters
-#' @title wraper to fetch particular parameters from the model
-#' @description to-fill
-#' @param object a \code{\link{MOFAmodel}} object.
-#' @param variable: variable name ('AlphaW')
-#' @param parameter: parameter name ('a')
-#' @param as.data.frame: output the result as a long data frame?
-#' @export
-getParameters <- function(object, variable, parameter, as.data.frame=F) {
-  
-  # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
-  stopifnot(variable %in% names(object@Parameters))
-  
-  # Get expectations in single matrix or list of matrices (for multi-view nodes)
-  if (variable=="Z") {
-    par <- object@Parameters$Z[[parameter]]
-  } else {
-    par <- lapply(object@Parameters[[variable]], function(x) x[[parameter]])
-  }
-  
-  # Convert to long data frame
-  if (as.data.frame) {
-    if (variable=="Z") {
-      tmp <- reshape2::melt(par)
-      colnames(tmp) <- c("sample","factor","value")
-    }
-    if (variable=="SW") {
-      tmp <- lapply(names(par), function(m) { tmp <- reshape2::melt(par[[m]]); colnames(tmp) <- c("feature","factor","value"); tmp <- cbind(view=m,tmp); return(tmp) })
-      tmp <- do.call(rbind,tmp)
-    }
-    if (variable=="Y") {
-      tmp <- lapply(names(par), function(m) { tmp <- reshape2::melt(par[[m]]); colnames(tmp) <- c("sample","feature","value"); tmp <- cbind(view=m,tmp); return(tmp) })
-      tmp <- do.call(rbind,tmp)
-    }
-    if (variable=="Tau") {
-      tmp <- lapply(names(par), function(m) data.frame(view=m, feature=names(par[[m]]), value=unname(par[[m]])) )
-      tmp <- do.call(rbind,tmp)
-    }
-    if (variable=="AlphaW") {
-      tmp <- lapply(names(par), function(m) tmp <- data.frame(view=m, factor=names(par[[m]]), value=unname(par[[m]])) )
-      tmp <- do.call(rbind,tmp)
-    }
-    if (variable=="Theta") {
-      # PROBLEM: THETA CAN BE (D,K) OR (K) 
-      stop("Not implemented")
-    }
-    # par <- cbind(variable = variable, tmp)
-    par <- tmp
-  }
-  
-}
 

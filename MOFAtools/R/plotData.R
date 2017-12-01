@@ -3,31 +3,44 @@
 ## Functions to visualise the training data ##
 ##############################################
 
-#' @title showDataHeatmap: plot heatmap of the observed data for the top weighted features
-#' @name showDataHeatmap
-#' @description Function to plot a heatmap of the original data using the most relevant features for a given latent variable.
+#' @title plotDataHeatmap: plot heatmap of selected features
+#' @name plotDataHeatmap
+#' @description Function to plot a heatmap for selected features, usually the ones with highest loadings in a given latent factor.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param view character vector with the view name or numeric vector with the index of the view.
-#' @param factor character vector with the factor name or numeric vector with the index of the factor.
-#' @param features if an integer, the total number of features to plot sorted by the corresponding weight.
-#' If a character vector, the manually-defined features to plot by the given order.
-#' @param plotWeights: boolean indicating whether to include the weight of each feature in the heatmap.
-#' @param transpose: boolean indicating whether to transpose the output heatmap (by default features as rows and samples as columns)
-#' @param ... further arguments that can be passed to pheatmap
-#' @details fill this
+#' @param view character vector with the view name, or numeric vector with the index of the view.
+#' @param factor character vector with the factor name, or numeric vector with the index of the factor.
+#' @param features if an integer, the total number of features to plot, based on the absolute value of the loading (50 by default).
+#' If a character vector, a set of manually-defined features to plot.
+#' @param includeWeights boolean indicating whether to include the weight of each feature as an extra annotation in the heatmap (FALSE by default).
+#' @param transpose boolean indicating whether to transpose the output heatmap (FALSE by default, which corresponds to features as rows and samples as columns)
+#' @param imputed boolean indicating whether to use the imputed data (FALSE by default)
+#' @param ... further arguments that can be passed to \code{\link[pheatmap]{pheatmap}}
+#' @details One of the first steps for the annotation of factors is to visualise the corresponding loadings using \code{\link{plotWeights}} or \code{\link{plotTopWeights}}. \cr
+#' These methods show you which features drive the heterogeneity of each factor. However, one might also be interested in directly visualising the heterogeneity in the original data, rather than looking at "abstract" weights. \cr
+#' This method plots a heatmap for selected features (by default the top ones with highest loading), which should reveal the underlying pattern of the data that is captured by the latent factor. \cr
+#' A similar function for doing scatterplots rather than heatmaps is \code{\link{plotDataScatter}}.
 #' @import pheatmap
 #' @export
-showDataHeatmap <- function(object, view, factor, features = 50, plotWeights = FALSE, transpose = FALSE, ...) {
+plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights = FALSE, transpose = FALSE, imputed = FALSE, ...) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   stopifnot(view %in% viewNames(object))
   stopifnot(factor %in% factorNames(object)) 
   
-  # Collect relevant expectations
-  W <- getExpectations(object,"SW","E")[[view]][,factor]
+  # Collect relevant data
+  W <- getExpectations(object,"SW")[[view]][,factor]
   Z <- getFactors(object)[,factor]
   Z <- Z[!is.na(Z)]
+  
+  if (imputed) {
+    data <- getImputedData(object, view)[[1]][,names(Z)]
+  } else {
+    data <- getTrainData(object, view)[[1]][,names(Z)]
+  }
+  
+  # Ignore samples with full missing views
+  data <- data[,apply(data, 2, function(x) !all(is.na(x)))]
   
   # Define features
   if (class(features) == "numeric") {
@@ -39,12 +52,6 @@ showDataHeatmap <- function(object, view, factor, features = 50, plotWeights = F
     stop("Features need to be either a numeric or character vector")
   }
   
-  # Get train data
-  data <- getTrainData(object, view)[[1]][,names(Z)]
-  
-  # Ignore samples with full missing views
-  data <- data[,apply(data, 2, function(x) !all(is.na(x)))]
-  
   # Sort samples according to latent factors
   order_samples <- names(sort(Z, decreasing=T))
   order_samples <- order_samples[order_samples %in% colnames(data)]
@@ -55,7 +62,7 @@ showDataHeatmap <- function(object, view, factor, features = 50, plotWeights = F
   
   # Plot heatmap
   # if(is.null(main)) main <- paste(view, "observations for the top weighted features of factor", factor)
-  if (plotWeights) { 
+  if (includeWeights) { 
     anno <- data.frame(row.names=names(W[features]), weight=W[features]) 
     if (transpose==T) {
       pheatmap::pheatmap(t(data), annotation_col=anno, ...)
@@ -70,35 +77,34 @@ showDataHeatmap <- function(object, view, factor, features = 50, plotWeights = F
 
 
 
-#' @title showDataScatter: scatterplot of the observed data for the most relevant features for a given factor
-#' @name showDataScatter
-#' @description Function to plot a scatterplot of the observed values for the most relevant features for a given factor
+#' @title plotDataScatter: scatterplot of features against latent factors
+#' @name plotDataScatter
+#' @description Function to do a scatterplot of feature(s) against a latent factor.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param view character vector with a view name or numeric vector with the index of the view.
-#' @param factor character vector with a factor name or numeric vector with the index of the factor.
-#' @param features if an integer, the total number of features to plot sorted by the corresponding weight.
-#' If a character vector, the manually-defined features to plot by the given order.
-#' @param color_by vector
-#' @param shape_by vector
-#' @details fill this
-#' @return fill this
+#' @param view character vector with a view name, or numeric vector with the index of the view.
+#' @param factor character vector with a factor name, or numeric vector with the index of the factor.
+#' @param features if an integer, the total number of features to plot (10 by default). If a character vector, a set of manually-defined features.
+#' @param color_by specifies groups or values used to color points. This can be either a character giving the name of a feature, or the name of covariate from the MultiAssayExperiment object, or a factor vector of same length as the number of samples.
+#' @param shape_by specifies groups or values used to shape points, same behaviour as 'color_by'
+#' @details One of the first steps for the annotation of factors is to visualise the loadings using \code{\link{plotWeights}} or \code{\link{plotTopWeights}}. \cr
+#' These methods show you which features drive the heterogeneity of each factor. However, one might also be interested in visualising the heterogeneity in the original data, rather than looking at "abstract" weights. \cr
+#' This method generates scatterplots of features against factors, so that you can observe the association between them. \cr
+#' A similar function for doing heatmaps rather than scatterplots is \code{\link{plotDataHeatmap}}.
 #' @import ggplot2
 #' @import dplyr
 #' @export
 
-showDataScatter <- function(object, view, factor, features=50, color_by=NULL, shape_by=NULL,
-                            xlabel="", ylabel="") {
+plotDataScatter <- function(object, view, factor, features = 10, color_by = NULL, shape_by = NULL) {
   
-  # Sanity checcks
+  # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(factor)==1)
   stopifnot(length(view)==1)
   if (!factor %in% factorNames(object)) stop(sprintf("The factor %s is not present in the object",factor))
   if (!view %in% viewNames(object)) stop(sprintf("The view %s is not present in the object",view))
   
-  # Collect data
+  # Collect relevant data
   N <- getDimensions(object)[["N"]]
-  
   Z <- getFactors(object)[,factor]
   W <- getWeights(views=view, factors=factor)
   Y <- object@TrainData[[view]]
@@ -118,14 +124,21 @@ showDataScatter <- function(object, view, factor, features=50, color_by=NULL, sh
   
   # Set color
   if (!is.null(color_by)) {
-    if (length(color_by) == 1 & is.character(color_by)) { # It is the name of a covariate 
+    colorLegend <- T
+    
+    # 'color_by' is the name of a covariate 
+    if (length(color_by) == 1 & is.character(color_by)) { 
       color_by <- as.factor(getCovariates(object, color_by))
-    } else if (length(color_by) > 1) { # It is a vector of length N
+    
+    # 'color_by' is a vector of length N
+    } else if (length(color_by) > 1) { 
       stopifnot(length(color_by) == N)
+      
+    # 'color_by' not recognised
     } else {
       stop("'color_by' was specified but it was not recognised, please read the documentation")
     }
-    colorLegend <- T
+    
   } else {
     color_by <- rep(TRUE,N)
     colorLegend <- F
@@ -133,15 +146,22 @@ showDataScatter <- function(object, view, factor, features=50, color_by=NULL, sh
   
   # Set shape
   if (!is.null(shape_by)) {
-    if (length(shape_by) == 1 & is.character(shape_by)) { # It is the name of a covariate 
+    shapeLegend <- T
+    
+    # 'shape_by' is the name of a covariate 
+    if (length(shape_by) == 1 & is.character(shape_by)) { 
       shape_by <- as.factor(getCovariates(object, shape_by))
-    } else if (length(shape_by) > 1) { # It is a vector of length N
+      
+    # 'shape_by is a vector of length N
+    } else if (length(shape_by) > 1) { 
       stopifnot(length(shape_by) == N)
       shape_by <- as.factor(shape_by)
+      
+    # 'shape_by not recognised
     } else {
       stop("'shape_by' was specified but it was not recognised, please read the documentation")
     }
-    shapeLegend <- T
+    
   } else {
     shape_by <- rep(TRUE,N)
     shapeLegend <- F
@@ -156,9 +176,9 @@ showDataScatter <- function(object, view, factor, features=50, color_by=NULL, sh
   #remove values missing color or shape annotation
   # if(!showMissing) df <- df[!(is.nan(df$shape_by) & !(is.nan(df$color_by))]
   
+  # Generate plot
   p <- ggplot(df, aes(x, value, color = color_by, shape = shape_by)) + 
     geom_point(color="black") + 
-    ggtitle("") + xlab(xlabel) + ylab(ylabel) + 
     stat_smooth(method="lm", color="blue", alpha=0.5) +
     facet_wrap(~feature, scales="free_y") +
     scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))]) +

@@ -1,29 +1,28 @@
 
-#######################################################
-## Functions to perform predict views ##
-#######################################################
+######################################
+## Functions to perform predictions ##
+######################################
 
-#' @title Predict values in a view from a fitted MOFA model
+#' @title Do predictions using a fitted MOFA model
 #' @name predict
-#' @description This function uses the latent factors and the weights infered from MOFA to predict values in the input views.
+#' @description This function uses the latent factors and the weights to do predictions in the input data
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param views vector containing the names of views (character) or index of views (numeric) to be predicted (default: "all")
-#' @param factors vector with the factors indices (numeric) or factor names (character) to use (default is "all")
-#' @param type type of prediction returned. By default values are predicted using "inRange". "response" gives mean for gaussian and poisson and probabilities for bernoulli , 
-#' "link" gives the linear predictions, "inRange" rounds the fitted values from "terms" for integer-valued distributions to the next integer.
-#' @details asd
-#' @return List of predicted data, each list element corresponding to specified views.
-#' @references fill this
+#' @param views character vector with the view name(s), or numeric vector with the view index(es), default is "all".
+#' @param factors character vector with the factor name(s) or numeric vector with the factor index(es), default is "all".
+#' @param type type of prediction returned. "response" gives mean for gaussian and poisson, and probabilities for bernoulli , 
+#' "link" gives the linear predictions, "inRange" rounds the fitted values from "terms" for integer-valued distributions to the next integer. Default is "inRange".
+#' @details the denoised and condensed low-dimensional representation of the data captures the main sources of heterogeneity of the data. 
+#' These representation can be used to do predictions using the equation Y = WX. This is the key step underlying imputation, see \code{\link{imputeMissing}} and Methods section of the article.
+#' @return List with data predictions, each element corresponding to a view.
 #' @export
 
-predict <- function(object, views="all", factors = "all", type = c("inRange","response", "link")){
+predict <- function(object, views = "all", factors = "all", type = c("inRange","response", "link")){
 
   # Sanity checks
-  if (class(object) != "MOFAmodel")
-    stop("'object' has to be an instance of MOFAmodel")
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   
   # Get views  
-  if (views=="all") {
+  if (paste0(views,sep="",collapse="") =="all") { 
     views = viewNames(object)
   } else {
     stopifnot(all(views%in%viewNames(object)))
@@ -37,15 +36,15 @@ predict <- function(object, views="all", factors = "all", type = c("inRange","re
     factors <- c("intercept", factors)
   } 
   
-  # Get weights
-  W <- getWeights(object, views="all", factors=factors)
-
-  # Get factors
-  Z <- getFactors(object)[,factors]
-  Z[is.na(Z)] <- 0 # set missing values in Z to 0 to exclude from imputations
- 
   # Get type of predictions wanted 
   type = match.arg(type)
+  
+  # Collect weights
+  W <- getWeights(object, views="all", factors=factors)
+
+  # Collect factors
+  Z <- getFactors(object)[,factors]
+  Z[is.na(Z)] <- 0 # set missing values in Z to 0 to exclude from imputations
  
   # Predict data based on MOFA model
   predictedData <- lapply(sapply(views, grep, viewNames(object)), function(viewidx){

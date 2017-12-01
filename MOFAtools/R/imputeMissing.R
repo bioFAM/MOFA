@@ -5,30 +5,34 @@
 
 #' @title Impute missing values from a fitted MOFA model
 #' @name imputeMissing
-#' @description This function uses the latent factors and the weights infered from MOFA to impute missing values in the input views.
+#' @description This function uses the latent factors and the loadings infered in order to impute missing values.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param views vector containing the names of views (character) or index of views (numeric) to be imputed (default: "all")
-#' @param factors vector with the factors indices (numeric) or factor names (character) to use (default is "all")
-#' @param type type of imputations returned. By default values are imputed using "inRange". "response" gives mean for gaussian and poisson and probabilities for bernoulli , 
-#' "link" gives the linear predictions, "inRange" rounds the fitted values from "terms" for integer-valued distributions to the next integer.
-#' @details asd
-#' @return List of imputed data, each list element corresponding to specified views.
-#' @references fill this
+#' @param views character vector with the view names, or numeric vector with view indexes.
+#' @param factors character vector with the factor names, or numeric vector with the factor indexes.
+#' @param type type of imputation. 
+#' "response" gives mean for gaussian and poisson and probabilities for bernoulli,
+#' "link" gives the linear predictions,
+#' "inRange" (default) rounds the fitted values from "terms" for integer-valued distributions to the next integer.
+#' @details matrix factorization models generate a denoised and condensed low-dimensional representation of the data which capture the main sources of heterogeneity of the data. 
+#' These representation can be used to do predictions using the equation \code{Y = WX}. For more details read the supplementary methods of the manuscript. \cr
+#' This method fills the \code{ImputedData} slot by replacing the missing values in the input data with the model predictions.
 #' @export
-imputeMissing <- function(object, views = "all", factors = "all", type = c("inRange","response", "link")){
+imputeMissing <- function(object, views = "all", factors = "all", type = c("inRange","response", "link")) {
   
-  type = match.arg(type)
-
-  # sanity checks are perfomred inside the predcit function
-  predData <- predict(object, views=views, factors = factors, type = type)
-
   # Get views  
-  if (views=="all") {
+  if (paste0(views,sep="",collapse="") =="all") { 
     views = viewNames(object)
   } else {
     stopifnot(all(views%in%viewNames(object)))
   }
+  
+  # Select imputation type  
+  type = match.arg(type)
+  
+  # Do predictions
+  predData <- predict(object, views=views, factors = factors, type = type)
 
+  # WHY IS THIS COMMENTED? CHECK
   #replace NAs with predicted values
   # imputedData <- getTrainData(object, views = views)
   # imputedData <- lapply(names(imputedData), function(viewnm) {
@@ -45,7 +49,8 @@ imputeMissing <- function(object, views = "all", factors = "all", type = c("inRa
 
   imputedData <- predData
 
-  # save in model slot  
+  # Save imputed data in the corresponding slot  
   object@ImputedData <- imputedData
-  object
+  
+  return(object)
 }

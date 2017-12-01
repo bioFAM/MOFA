@@ -2,7 +2,7 @@
 % Please edit documentation in R/predict.R
 \name{predict}
 \alias{predict}
-\title{Predict values in a view from a fitted MOFA model}
+\title{Do predictions using a fitted MOFA model}
 \usage{
 predict(object, views = "all", factors = "all", type = c("inRange",
   "response", "link"))
@@ -10,22 +10,20 @@ predict(object, views = "all", factors = "all", type = c("inRange",
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{views}{vector containing the names of views (character) or index of views (numeric) to be predicted (default: "all")}
+\item{views}{character vector with the view name(s), or numeric vector with the view index(es), default is "all".}
 
-\item{factors}{vector with the factors indices (numeric) or factor names (character) to use (default is "all")}
+\item{factors}{character vector with the factor name(s) or numeric vector with the factor index(es), default is "all".}
 
-\item{type}{type of prediction returned. By default values are predicted using "inRange". "response" gives mean for gaussian and poisson and probabilities for bernoulli , 
-"link" gives the linear predictions, "inRange" rounds the fitted values from "terms" for integer-valued distributions to the next integer.}
+\item{type}{type of prediction returned. "response" gives mean for gaussian and poisson, and probabilities for bernoulli , 
+"link" gives the linear predictions, "inRange" rounds the fitted values from "terms" for integer-valued distributions to the next integer. Default is "inRange".}
 }
 \value{
-List of predicted data, each list element corresponding to specified views.
+List with data predictions, each element corresponding to a view.
 }
 \description{
-This function uses the latent factors and the weights infered from MOFA to predict values in the input views.
+This function uses the latent factors and the weights to do predictions in the input data
 }
 \details{
-asd
-}
-\references{
-fill this
+the denoised and condensed low-dimensional representation of the data captures the main sources of heterogeneity of the data. 
+These representation can be used to do predictions using the equation Y = WX. This is the key step underlying imputation, see \code{\link{imputeMissing}} and Methods section of the article.
 }

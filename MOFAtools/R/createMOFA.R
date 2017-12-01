@@ -34,6 +34,13 @@ createMOFAobject <- function(data) {
 }
 
 # (Hidden) function to initialise a MOFAmodel object using a MultiAssayExperiment object
+#' @title plotTopWeights: visualise the top weights for a certain factor and view
+#' @name plotTopWeights
+#' @description The first step to annotate factors is to visualise the corresponding feature loadings. \cr
+#' This function zooms and displays the features with highest loading in a given latent factor and view. \cr
+#' In contrast, the function \code{showAllWeights} displays the entire distribution of weights.
+#' @param data a \link{MultiAssayExperiment} object
+#' @import MultiAssayExperiment
 .createMOFAobjectFromMAE <- function(data) {
 
   # Initialise MOFA object

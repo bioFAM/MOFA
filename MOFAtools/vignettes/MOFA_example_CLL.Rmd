@@ -16,6 +16,7 @@ For illustration we use the CLL data which is used in the MOFA publication.
 
 ```{r, warning=FALSE, message=FALSE}
 library(MOFAtools)
+# devtools::load_all("/Users/ricard/mofa/MOFAtools")
 ```
 
 # Step 1: Load data and create MOFA object
@@ -84,7 +85,7 @@ The most important options the user needs to define are:
 * DropFactorThreshold: Threshold on fraction of variance explained to define inactive factors. That is, factors explaining less than 'DropFactorThreshold' percentage of variation in all views will be dropped during training.
 ```{r}
 TrainOptions <- getDefaultTrainOpts()
-# TrainOptions$maxiter <- 10
+TrainOptions$maxiter <- 5
 TrainOptions
 ```
 
@@ -101,7 +102,7 @@ MOFAobject <- prepareMOFA(MOFAobject,
 ## Run MOFA
 This step can take some time (around 20 min with default parameters), for illustration we provide an existing trained model
 ```{r, eval=FALSE}
-MOFAobject <- runMOFA(MOFAobject, DirOptions)
+# MOFAobject <- runMOFA(MOFAobject, DirOptions)
 ```
 
 ```{r}
@@ -128,7 +129,7 @@ For details, please read the Methods section of the Manuscript.
 This is done by the 'calculateVarianceExplained' function. The resulting plot allows to get an overivew of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of the different views.
 
 ```{r}
-r2 <- calculateVarianceExplained(MOFAobject)
+# r2 <- calculateVarianceExplained(MOFAobject)
 ```
 
 ## Part 2: Characterisation of individual factors
@@ -138,7 +139,7 @@ For example, here we plot all weights from all factors in the Mutation data:
 ```{r}
 plotWeightsHeatmap(MOFAobject, "Mutations", factors=c(1,2,3,4,5), show_colnames=F)
 ```
-Similarly, we can also plot all weights for a single factor using the 'showAllWeights' function.
+Similarly, we can also plot all weights for a single factor using the 'plotWeights' function.
 For example, here we plot all weights from Factor 1 in the Mutation data:
 ```{r}
 plotWeights(MOFAobject, view = "Mutations", factor = "1")
@@ -155,9 +156,9 @@ From the previous plots, we can clearly see that Factor 1 is associated to IGHV 
 plotTopWeights(MOFAobject, "mRNA", "1")
 ```
 
-Finally, instead of looking at an the "abstract" weight, it is useful to observe the coordinated heterogeneity of the top features in the original data. This can be done using the 'showDataHeatmap' function.
+Finally, instead of looking at an the "abstract" weight, it is useful to observe the coordinated heterogeneity of the top features in the original data. This can be done using the 'plotDataHeatmap' function.
 ```{r}
-showDataHeatmap(MOFAobject, view="mRNA", factor="1", features=20, show_rownames=FALSE)
+plotDataHeatmap(MOFAobject, view="mRNA", factor="1", features=20, show_rownames=FALSE)
 ```
 
 ### Feature set enrichemnt analysis in the active views
@@ -227,7 +228,7 @@ head(MOFAdata)
 ```
 
 
-# Further functionalities
+# Further functionalities 
 
 ## Prediction of views
 With the 'predict' function, full views can be predicted based on the MOFA model with all or a subset of factors

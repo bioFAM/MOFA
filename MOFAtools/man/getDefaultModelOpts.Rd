@@ -2,7 +2,7 @@
 % Please edit documentation in R/prepareMOFA.R
 \name{getDefaultModelOpts}
 \alias{getDefaultModelOpts}
-\title{getDefaultModelOpts: Get default model options}
+\title{Get default model options}
 \usage{
 getDefaultModelOpts(object)
 }
@@ -14,4 +14,12 @@ list with default model options
 }
 \description{
 Function to obtain default model options
+}
+\details{
+The model options are the following: \cr
+likelihood: character vector with data likelihoods per view, 'gaussian' for (roughly) normally distributed data, 'bernoulli' for binary data and 'poisson' for count data
+numFactors: initial number of factors, we recommend this to be large enough, larger than 10. \cr
+learnIntercept: boolean indicating whether to learn the intercept (the means) per feature. This is always recommended, particularly if you have non-gaussian likelihoods. \cr
+sparsity: boolean indicating whether to use sparsity. This is always recommended, as it will make the loadings more interpretable. \cr
+covariates: (TO-DEFINE).
 }

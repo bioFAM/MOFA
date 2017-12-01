@@ -2,35 +2,36 @@
 % Please edit documentation in R/plotFactors.R
 \name{FactorHistPlot}
 \alias{FactorHistPlot}
-\title{Visualize histogram of one latent variable}
+\title{Visualize histogram of one latent factor}
 \usage{
-FactorHistPlot(object, factor, groups = NULL, name_groups = "",
-  alpha = 0.6, binwidth = NULL, showMissing = FALSE)
+FactorHistPlot(object, factor, group_by = NULL, group_names = "",
+  alpha = 0.6, binwidth = NULL, xlabel = "", showMissing = FALSE)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{factor}{one factors to plot}
+\item{factor}{character vector with the factor name or numeric vector with the index of the factor.}
 
-\item{groups}{specifies groups or values used to split histogram into groups and color. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.}
+\item{group_by}{specifies groups used to color the samples of the histogram. This can be either a character giving the name of a feature, or the name of a covariate if using a MultiAssayExperiment class, or a vector of same length as number of samples.}
 
-\item{name_groups}{name for groups (usually only used if groups is not a character itself)}
+\item{group_names}{name for groups (usually only used if groups is not a character itself)}
 
 \item{alpha}{transparency parameter}
 
-\item{binwidth}{binwidth for histogram}
+\item{binwidth}{binwidth for histogram (default is NULL, which uses ggplot's default calculation)}
 
-\item{showMissing}{boolean, if false, removes sample for which shape_by or color_by is missing}
+\item{xlabel}{define x-axis label (default is NULL)}
+
+\item{showMissing}{boolean indicating whether to remove sample for which 'group_by' is missing (default is FALSE)}
 }
 \value{
-fill this
+ggpplot object
 }
 \description{
-fill this
+generate a histogram of the sample values in a given latent factor
 }
 \details{
-asd
-}
-\references{
-fill this
+One of the first steps for the annotation of factors is to visualise and group/color them using known covariates such as phenotypic or clinical data.
+This method generates a histogram of the sample values in a given latent factor. Note that, similar to Principal Component Analysis, the factor values should be interpreted in a relative manner.
+Similar functions are \code{\link{FactorsScatterPlot}} for doing scatter plots and \code{\link{FactorBeeswarmPlot}} for doing Beeswarm plots
 }

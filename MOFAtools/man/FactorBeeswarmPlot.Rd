@@ -5,7 +5,7 @@
 \title{Visualize beeswarm plot of one latent variable}
 \usage{
 FactorBeeswarmPlot(object, factors, color_by = NULL, name_color = "",
-  showMissing = TRUE)
+  showMissing = FALSE)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
@@ -19,14 +19,13 @@ FactorBeeswarmPlot(object, factors, color_by = NULL, name_color = "",
 \item{showMissing}{boolean, if false, removes sample for which shape_by or color_by is missing}
 }
 \value{
-ggplot object containing the beeswarm plots
+ggplot object
 }
 \description{
 fill this
 }
 \details{
-asd
-}
-\references{
-fill this
+One of the main steps for the annotation of factors is to visualise and group/color them using known covariates or phenotypic data.
+This method generates a beeswarm plot of the sample values in a given latent factor. Note that, similar to Principal Component Analysis, the factor values should be interpreted in a relative manner.
+Similar functions are \code{\link{FactorsScatterPlot}} for doing scatter plots and \code{\link{FactorHistPlot}} for doing histogram plots
 }

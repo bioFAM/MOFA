@@ -29,7 +29,7 @@ ggplot object containing the scatterplot
 fill this
 }
 \details{
-asd
+TO-DO: IMPROVE THIS DOCUMENTATION
 }
 \references{
 fill this

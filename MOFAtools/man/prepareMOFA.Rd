@@ -2,7 +2,7 @@
 % Please edit documentation in R/prepareMOFA.R
 \name{prepareMOFA}
 \alias{prepareMOFA}
-\title{prepareMOFA: Prepare an untrained MOFA object for training}
+\title{Prepare an untrained MOFA object for training}
 \usage{
 prepareMOFA(object, DirOptions, DataOptions = NULL, ModelOptions = NULL,
   TrainOptions = NULL)
@@ -10,27 +10,17 @@ prepareMOFA(object, DirOptions, DataOptions = NULL, ModelOptions = NULL,
 \arguments{
 \item{object}{an untrained MOFA object}
 
-\item{DataOptions}{list of DataOptions (see getDefaultDataOpts for what options can be set here). If NULL, default options are used.}
+\item{DataOptions}{list of DataOptions (see getDefaultDataOpts for what options can be set here). If NULL, default data options are used.}
 
-\item{ModelOptions}{list of ModelOptions (see getDefaultModelOpts for what options can be set here). If NULL, default options are used.}
+\item{ModelOptions}{list of ModelOptions (see getDefaultModelOpts for what options can be set here). If NULL, default model options are used.}
 
-\item{TrainOptions}{list of TrainOptions (see getDefaultTrainOptions for what options can be set here). If NULL, default options are used.}
+\item{TrainOptions}{list of TrainOptions (see getDefaultTrainOptions for what options can be set here). If NULL, default training options are used.}
 
-\item{dir}{directory to store .txt and .sh files in}
-
-\item{outFile}{name of output file from Python MOFA}
-
-\item{k}{number of latent factors to start with (default = 10)}
-
-\item{MOFAdir}{directory of the MOFA Pyhton package installation}
+\item{DirOptions:}{list with I/O options, it must contain a 'dataDir' element where temporary text files will be stored and a 'outFile' where the final model will be stored as an hdf5 object.}
 }
 \value{
-a untrained MOFA object with specified ModelOpts and TrainOpts
+a untrained MOFA object with specified DataOpts, ModelOpts and TrainOpts
 }
 \description{
-Function to set the training and model options, produces .txt files that are used for python as input and 
-creates an .sh file for calling MOFA with the specified options from the command line. These files are all stored in the specified directory.
-}
-\details{
-fill this
+Function to prepare a MOFA model for training by defining data, model and training options.
 }

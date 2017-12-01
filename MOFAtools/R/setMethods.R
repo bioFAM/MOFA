@@ -1,8 +1,7 @@
 
-# General function to set names to the different expectations and parameters
+# General function to set names
 .setNames <- function(object, values, dimensionality) {
-  stopifnot(names(object@Parameters) == names(object@Expectations))
-  nodes <- names(object@Parameters)
+  nodes <- names(object@Expectations)
   views <- names(object@Dimensions$D)
   
   # Loop over training data
@@ -35,18 +34,6 @@
               names(object@Expectations[[node]][[m]][[expectation]]) <- values
           }
         }
-        # Loop over parameters
-        for (parameter in names(object@Parameters[[node]][[m]])) {
-          if (class(object@Parameters[[node]][[m]][[parameter]]) == "matrix") {
-            if (nrow(object@Parameters[[node]][[m]][[parameter]]) == dimensionality)
-              rownames(object@Parameters[[node]][[m]][[parameter]]) <- values
-            if (ncol(object@Parameters[[node]][[m]][[parameter]]) == dimensionality)
-              colnames(object@Parameters[[node]][[m]][[parameter]]) <- values
-          } else if (class(object@Parameters[[node]][[m]][[parameter]]) == "array") {
-            if (length(object@Parameters[[node]][[m]][[parameter]]) == dimensionality)
-              names(object@Parameters[[node]][[m]][[parameter]]) <- values
-          }
-        }
         
       }
       
@@ -66,18 +53,6 @@
         }
       }
       
-      # Loop over parameters
-      for (parameter in names(object@Parameters[[node]])) {
-        if (class(object@Parameters[[node]][[parameter]]) == "matrix") {
-          if (nrow(object@Parameters[[node]][[parameter]]) == dimensionality)
-            rownames(object@Parameters[[node]][[parameter]]) <- values
-          if (ncol(object@Parameters[[node]][[parameter]]) == dimensionality)
-            colnames(object@Parameters[[node]][[parameter]]) <- values
-        } else if (class(object@Parameters[[node]][[parameter]]) == "array") {
-          if (length(object@Parameters[[node]][[parameter]]) == dimensionality)
-            names(object@Parameters[[node]][[parameter]]) <- values
-        }
-      }
     }
   }
   
@@ -103,8 +78,6 @@ setReplaceMethod("factorNames", signature(object="MOFAmodel", value="vector"),
   function(object,value) {
    if (!methods::.hasSlot(object,"Expectations")  | length(object@Expectations) == 0)
      stop("Before assigning factor names you have to assign expectations")
-   if (!methods::.hasSlot(object,"Parameters") | length(object@Parameters) == 0)
-     stop("Before assigning factor names you have to assign parameters")
    if (methods::.hasSlot(object,"Dimensions") | length(object@Dimensions) == 0)
      if (!length(value)==object@Dimensions["K"])
        stop("Length of factor names does not match the dimensionality of the latent variable matrix")
@@ -138,8 +111,6 @@ setReplaceMethod("sampleNames", signature(object="MOFAmodel", value="vector"),
      stop("Before assigning sample names you have to assign the training data")
    if (!methods::.hasSlot(object,"Expectations") | length(object@Expectations) == 0)
      stop("Before assigning sample names you have to assign the expectations")
-   if (!methods::.hasSlot(object,"Parameters") | length(object@Parameters) == 0)
-     stop("Before assigning sample names you have to assign the parameters")
    if (methods::.hasSlot(object,"Dimensions") | length(object@Dimensions) == 0)
      if (!length(value)==object@Dimensions["N"])
        stop("Length of sample names does not match the dimensionality of the model")
@@ -171,8 +142,6 @@ setReplaceMethod("featureNames", signature(object="MOFAmodel", value="list"),
       stop("Before assigning feature names you have to assign the training data")
     if (!methods::.hasSlot(object,"Expectations")  | length(object@Expectations) == 0)
       stop("Before assigning feature names you have to assign the expectations")
-    if (!methods::.hasSlot(object,"Parameters")  | length(object@Parameters) == 0)
-      stop("Before assigning feature names you have to assign the parameters")
     if (methods::.hasSlot(object,"Dimensions")  | length(object@Dimensions) == 0)
       if (!all(sapply(value,length) == object@Dimensions[["D"]]))
         stop("Length of feature names does not match the dimensionality of the model")
@@ -211,12 +180,11 @@ setMethod("viewNames<-", signature(object="MOFAmodel", value="character"),
       stop("view names do not match the number of views in the training data")
     
     # We have to modify this
-    if(object@Status == "trained"){
-    multiview_nodes <- c("AlphaW","SW","Tau","Theta","Y")
-    for (node in multiview_nodes) { 
-      names(object@Expectations[[node]]) <- value 
-      names(object@Parameters[[node]]) <- value 
-    }
+    if (object@Status == "trained"){
+      multiview_nodes <- c("AlphaW","SW","Tau","Theta","Y")
+      for (node in multiview_nodes) { 
+        names(object@Expectations[[node]]) <- value 
+      }
     }
     
     names(object@TrainData) <- value
@@ -225,18 +193,24 @@ setMethod("viewNames<-", signature(object="MOFAmodel", value="character"),
     return(object)
 })
 
-####################################
+#################################
 ## Set and retrieve input data ##
-####################################
+#################################
 
-#' @rdname InputData
+#' @title Set and retrieve input data
+#' @name InputData
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @return a MultiAssayExperiment containign all input data and metadata
 #' @rdname InputData
 #' @export
 setMethod("InputData", signature(object="MOFAmodel"), function(object) { object@InputData } )
 
-#' @import methods
+#' @title Set and retrieve input data
+#' @docType methods
+#' @name InputData
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @rdname InputData
+#' @aliases inputData<-
+#' @export
 setMethod(".InputData<-", signature(object="MOFAmodel", value="MultiAssayExperiment"),
           function(object,value) {
             object@InputData <- value
@@ -350,21 +324,5 @@ setMethod("Expectations", "MOFAmodel", function(object) { object@Expectations } 
 setMethod(".Expectations<-", signature(object="MOFAmodel", value="list"),
   function(object,value) {
     object@Expectations <- value
-    object
-})
-
-#################################
-## Set and retrieve parameters ##
-#################################
-
-#' @param object a \code{\link{MOFAmodel}} object.
-#' @rdname Parameters
-#' @return value list of Parameters
-#' @rdname Parameters
-#' @export
-setMethod("Parameters", "MOFAmodel", function(object) { object@Parameters } )
-setMethod(".Parameters<-", signature(object="MOFAmodel", value="list"),
-  function(object,value) {
-    object@Parameters <- value
     object
 })

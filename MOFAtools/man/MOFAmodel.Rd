@@ -4,32 +4,22 @@
 \name{MOFAmodel}
 \alias{MOFAmodel}
 \alias{MOFAmodel-class}
-\title{Class to store a MultiOmics Factor Analysis (MOFA) model}
+\title{Class to store a Multi-Omics Factor Analysis (MOFA) model}
 \description{
-The \code{MOFAmodel} is an S4 class used to store all relevant data to analyse a MOFA model. \cr
-MOFAmodel contains the following information: \cr
-- Training statistics: evidence lower bound, number of active factors, likelihood, etc. \cr
-- Training options: maximum number of iterations, lower bound frequency calculation, etc. \cr
-- Model options: likelihoods, use of covariates, etc. \cr
-- Expectations: expected values of the distributions of the different variables. \cr
-- Parameters: parameters of the distributions of the different variables. \cr
-- Dimensions: dimensionalities. \cr
-- Training Data: the data used for fitting the MOFA model. \cr
-- Input Data: the input data before being parsed to Training Data.
+The \code{MOFAmodel} is an S4 class used to store all relevant data to analyse a MOFA model.
 }
 \section{Slots}{
 
  \itemize{
-   \item{\code{InputData}:}{Optional, MultiAssayExperiment object with all assays to be integrated in the MOFA model}
-   \item{\code{Expectations}:}{Nested list with numerical matrices of all expectations from all variables. The list has three levels, accessible by name subsetting: the first level contains the variables (SW, Alpha, etc.), the second level contains the expectation name (E,E2, etc.) and third level contains the view. }
-   \item{\code{Parameters}:}{Nested list with numerical matrices of all parameters from all variables. The list has three levels, accessible by name subsetting: the first level contains the variables (SW, Alpha, etc.), the second level contains the parameter name (mean,variance, etc.) and the third level contains the view. }
-   \item{\code{TrainStats}:}{List with the training statistics.}
-   \item{\code{TrainData}:}{List with the data matrices used for training.}
-   \item{\code{DataOpts}:}{List with the data processing options.}
-   \item{\code{TrainOpts}:}{List with the training options.}
-   \item{\code{ModelOpts}:}{List with the model options.}
-   \item{\code{Dimensions}:}{List with dimensionalities of the model. N for the number of samples, D for the number of features of each view, M for the number of views and K for the number of infered latent variables.}
-   \item{\code{ImputedData}:}{Optional, List with the data matrices containing imputed data.}
+   \item{\code{InputData}:}{ the input data before being parsed to Training Data. Either a MultiAssayExperiment object or a list of matrices.}
+   \item{\code{TrainData}:}{ the parsed data used to fit the MOFA model. A list of matrices.}
+   \item{\code{ImputedData}:}{ the parsed data with the missing values imputed using the MOFA model. A list of matrices.}
+   \item{\code{Expectations}:}{ expected values of the different variables of the model. Nested list of two levels, accessible by name subsetting: the first level contains the variable names (Z, SW, Alpha, etc.) and the second level contains the expectation name (E,E2, etc.) }
+   \item{\code{TrainStats}:}{List with the training statistics, for example evidence lower bound (ELBO), final number of active factors, etc.}
+   \item{\code{DataOpts}:}{List with the data processing options, for example whether to center or scale the data.}
+   \item{\code{TrainOpts}:}{List with the training options, for example maximum number of iterations, tolerance for convergence, lower bound frequency calculation, etc.}
+   \item{\code{ModelOpts}:}{List with the model options, for example data likelihoods, initial number of factors, use of sparsity, covariates, etc.}
+   \item{\code{Dimensions}:}{List with the relevant dimensionalities of the model. N for the number of samples, D for the number of features of each view, M for the number of views and K for the number of infered latent factors.}
    \item{\code{Status}:}{Auxiliary variable indicating whether the model has been trained or not}
 }
 }

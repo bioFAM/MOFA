@@ -19,19 +19,6 @@ prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = N
   # Create temporary folder to store data
   dir.create(DirOptions$dataDir, showWarnings = F)
   
-  # Store views as matrices in .txt files
-  message(sprintf("Storing input views in folder %s...", DirOptions$dataDir))
-  for(view in viewNames(object)) {
-    write.table(t(object@TrainData[[view]]), file=file.path(DirOptions$dataDir, paste0(view,".txt")),
-                sep=DataOptions$delimiter, row.names=T, col.names=T, quote=F)
-  }
-  
-  # Store covariates as a .txt file
-  if (!is.null(ModelOptions$covariates)) {
-  write.table(ModelOptions$covariates, file=file.path(DirOptions$dataDir, "covariates.txt"),
-              sep=DataOptions$delimiter, row.names=F, col.names=F, quote=F)
-  }
-  
   # Get data options
   message("Checking data options...")
   if (is.null(DataOptions)) {
@@ -41,7 +28,6 @@ prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = N
     # (To-do) Check that DataOpts is correct
     object@DataOpts <- DataOptions
   }
-  
   
   # Get training options
   message("Checking training options...")
@@ -65,6 +51,19 @@ prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = N
     # if(!class(ModelOptions) == "list" & !all(names(ModelOptions) == names(getDefaultModelOpts(object, silent=T)))) 
       # stop("'TrainOpts' are misspecified, use the list format provided by getDefaultModelOpts()")
     object@ModelOpts <- ModelOptions
+  }
+  
+  # Store views as matrices in .txt files
+  message(sprintf("Storing input views in folder %s...", DirOptions$dataDir))
+  for(view in viewNames(object)) {
+    write.table(t(object@TrainData[[view]]), file=file.path(DirOptions$dataDir, paste0(view,".txt")),
+                sep=DataOptions$delimiter, row.names=T, col.names=T, quote=F)
+  }
+  
+  # Store covariates as a .txt file
+  if (!is.null(ModelOptions$covariates)) {
+    write.table(ModelOptions$covariates, file=file.path(DirOptions$dataDir, "covariates.txt"),
+                sep=DataOptions$delimiter, row.names=F, col.names=F, quote=F)
   }
   
   # If output already exists, remove it

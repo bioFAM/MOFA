@@ -95,14 +95,16 @@ getDefaultTrainOpts <- function() {
 #' @name getDefaultDataOpts
 #' @description Function to obtain default data options
 #' @details The data options are the following: \cr
-#' centerFeatures: boolean indicating whether to center the features to zero mean. This is not required as long as the option learnIntercept is set to TRUE in the model options. \cr
-#' scaleViews: boolean indicating whether to scale the views to unit variance. This is optional and recommended, but not required. \cr
+#' centerFeatures: boolean indicating whether to center the features to zero mean. This is not required as long as the option learnIntercept is set to TRUE in the model options. Default is FALSE.\cr
+#' scaleViews: boolean indicating whether to scale the views to unit variance. This is optional and recommended, but not required. Default is FALSE. \cr
+#' removeIncompleteSamples: boolean indicating whether to remove incomplete samples that are not profiled in all omics. Default is FALSE
 #' @return list with default data options
 #' @export
 getDefaultDataOpts <- function() {
   DataOpts <- list(
     centerFeatures = F,   # Center features to zero mean (does not apply to binary or count views)
-    scaleViews = F        # Scale views to unit variance (does not apply to binary or count views)
+    scaleViews = F,        # Scale views to unit variance (does not apply to binary or count views)
+    removeIncompleteSamples = F # Remove incomplete samples that are not profiled in all omics?
   )
   return(DataOpts)
 }

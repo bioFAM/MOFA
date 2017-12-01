@@ -49,7 +49,7 @@ createMOFAobject <- function(data) {
   object@InputData <- data
   
   # Re-arrange data for training in MOFA to matrices, fill in NAs and store in TrainData slot
-  object@TrainData <- lapply(names(data), function(exp) .subset_augment(assays(data)[[exp]], unique(sampleMap(data)[,"colname"])))
+  object@TrainData <- lapply(names(data), function(exp) .subset_augment(assays(data)[[exp]], unique(sampleMap(data)[,"primary"])))
   
   return(object)
 }

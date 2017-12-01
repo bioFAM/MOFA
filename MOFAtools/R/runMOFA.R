@@ -39,6 +39,7 @@ runMOFA <- function(object, DirOptions) {
   
   if (object@DataOpts$centerFeatures == T) { command <- paste(command, "--center_features", sep=" ") }
   if (object@DataOpts$scaleViews == T) { command <- paste(command, "--scale_views", sep=" ") }
+  if (object@DataOpts$removeIncompleteSamples == T) { command <- paste(command, "--RemoveIncompleteSamples", sep=" ") }
   
   # Run!
   # system(command, ignore.stdout = F, ignore.stderr = T, wait=F)

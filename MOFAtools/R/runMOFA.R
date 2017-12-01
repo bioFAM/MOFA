@@ -108,7 +108,10 @@ runMOFA <- function(object, DirOptions, ..., mofaPath="mofa") {
     message("Running MOFA command: ", paste(collapse=" ", shQuote(c(mofaPath, argv))))
   }
   # Run!
-  system2(command=mofaPath, args=shQuote(argv), wait=T)
+  exitcode <- system2(command=mofaPath, args=shQuote(argv), wait=T)
+  if (exitcode != 0) {
+    stop(paste("mofa command failed with exit code", exitcode))
+  }
   
   # Load trained model
   object <- loadModel(DirOptions$outFile, object)

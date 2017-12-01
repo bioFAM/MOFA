@@ -30,7 +30,8 @@ def removeIncompleteSamples(data):
                 samples_to_remove.append(n)
                 break
 
-    print("A total of " + str(len(samples_to_remove)) + " sample(s) have at least a missing view and will be removed")
+    if len(samples_to_remove) > 0:
+        print("A total of " + str(len(samples_to_remove)) + " sample(s) have at least a missing view and will be removed")
 
     data_filt = [None]*M
     samples_to_keep = np.setdiff1d(range(N),samples_to_remove)
@@ -41,7 +42,6 @@ def removeIncompleteSamples(data):
 
 
 
-# 
 def maskData(data, data_opts):
     """ Method to mask values of the data, 
     It is mainly to test missing values and to evaluate imputation
@@ -108,7 +108,7 @@ def loadData(data_opts, verbose=True):
         Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"]).astype(pd.np.float32)
 
         # Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"])
-        print("Loaded %s with dim (%d,%d)..." % (file, Y[m].shape[0], Y[m].shape[1]))
+        print("Loaded %s with %d samples and %d features)..." % (file, Y[m].shape[0], Y[m].shape[1]))
 
         # Checking missing values on features
         # print max(np.isnan(Y[m]).mean(axis=1))

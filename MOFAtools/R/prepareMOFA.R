@@ -23,13 +23,13 @@ prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = N
   message(sprintf("Storing input views in folder %s...", DirOptions$dataDir))
   for(view in viewNames(object)) {
     write.table(t(object@TrainData[[view]]), file=file.path(DirOptions$dataDir, paste0(view,".txt")),
-                sep=" ", row.names=T, col.names=T, quote=F)
+                sep=DataOptions$delimiter, row.names=T, col.names=T, quote=F)
   }
   
   # Store covariates as a .txt file
   if (!is.null(ModelOptions$covariates)) {
   write.table(ModelOptions$covariates, file=file.path(DirOptions$dataDir, "covariates.txt"),
-              sep=" ", row.names=F, col.names=F, quote=F)
+              sep=DataOptions$delimiter, row.names=F, col.names=F, quote=F)
   }
   
   # Get data options
@@ -67,6 +67,11 @@ prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = N
     object@ModelOpts <- ModelOptions
   }
   
+  # If output already exists, remove it
+  if (file.exists(DirOptions$outFile)) {
+    file.remove(DirOptions$outFile)
+  }
+  
   return(object)
 }
 
@@ -85,7 +90,8 @@ getDefaultTrainOpts <- function() {
   TrainOpts <- list(
     maxiter = 10000,              # Maximum number of iterations
     tolerance = 0.01,            # Convergence threshold based on change in the evidence lower bound
-    DropFactorThreshold = 0.03   # Threshold on fraction of variance explained to drop a factor
+    DropFactorThreshold = 0.03,   # Threshold on fraction of variance explained to drop a factor
+    verbose = F
   )
   return(TrainOpts)
 }
@@ -102,6 +108,7 @@ getDefaultTrainOpts <- function() {
 #' @export
 getDefaultDataOpts <- function() {
   DataOpts <- list(
+    delimiter = "\t",   # Delimiter for the data
     centerFeatures = F,   # Center features to zero mean (does not apply to binary or count views)
     scaleViews = F,        # Scale views to unit variance (does not apply to binary or count views)
     removeIncompleteSamples = F # Remove incomplete samples that are not profiled in all omics?

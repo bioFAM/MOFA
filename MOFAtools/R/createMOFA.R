@@ -33,9 +33,8 @@ createMOFAobject <- function(data) {
   return(object)
 }
 
-# (Hidden) function to initialise a MOFAmodel object using a MultiAssayExperiment object
-#' @title plotTopWeights: visualise the top weights for a certain factor and view
-#' @name plotTopWeights
+#' @title .createMOFAobjectFromMAE: initialise a MOFAmodel using a MultiAssayExperiment object
+#' @name .createMOFAobjectFromMAE
 #' @description The first step to annotate factors is to visualise the corresponding feature loadings. \cr
 #' This function zooms and displays the features with highest loading in a given latent factor and view. \cr
 #' In contrast, the function \code{showAllWeights} displays the entire distribution of weights.
@@ -49,8 +48,22 @@ createMOFAobject <- function(data) {
   object@InputData <- data
   
   # Re-arrange data for training in MOFA to matrices, fill in NAs and store in TrainData slot
-  object@TrainData <- lapply(names(data), function(exp) .subset_augment(assays(data)[[exp]], unique(sampleMap(data)[,"primary"])))
-  
+  object@TrainData <- lapply(names(data), function(m) {
+    
+    # Extract general sample names
+    primary <- unique(sampleMap(data)[,"primary"])
+    
+    # Extract view
+    subdata <- assays(data)[[m]]
+    
+    # Rename view-specific sample IDs with the general sample names
+    stopifnot(colnames(subdata)==sampleMap(data)[sampleMap(data)[,"assay"]==m,"colname"])
+    colnames(subdata) <- sampleMap(data)[sampleMap(data)[,"assay"]==m,"primary"]
+    
+    # Fill subdata with NAs
+    subdata_filled <- .subset_augment(subdata,primary)
+    return(subdata_filled)
+  })
   return(object)
 }
 

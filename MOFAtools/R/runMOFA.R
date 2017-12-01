@@ -21,6 +21,7 @@ runMOFA <- function(object, DirOptions) {
   # "mofa",
   "--inFiles", paste(paste0(DirOptions$dataDir, "/", viewNames(object), ".txt"), collapse = " "),
   "--header_cols --header_rows",
+  "--delimiter", paste0('\'',object@DataOpts$delimiter,'\''),
   "--outFile", DirOptions$outFile,
   "--views", paste(viewNames(object), collapse=" "),
   "--likelihoods", paste(object@ModelOpts$likelihood, collapse=" "),
@@ -40,6 +41,13 @@ runMOFA <- function(object, DirOptions) {
   if (object@DataOpts$centerFeatures == T) { command <- paste(command, "--center_features", sep=" ") }
   if (object@DataOpts$scaleViews == T) { command <- paste(command, "--scale_views", sep=" ") }
   if (object@DataOpts$removeIncompleteSamples == T) { command <- paste(command, "--RemoveIncompleteSamples", sep=" ") }
+  
+  if (object@TrainOpts$verbose == T) { command <- paste(command, "--verbose", sep=" ") }
+  
+  # If output already exists, remove it
+  if (file.exists(DirOptions$outFile)) {
+    file.remove(DirOptions$outFile)
+  }
   
   # Run!
   # system(command, ignore.stdout = F, ignore.stderr = T, wait=F)

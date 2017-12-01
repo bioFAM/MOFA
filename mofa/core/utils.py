@@ -162,8 +162,8 @@ def loadData(data_opts, verbose=True):
             print("Scaling features for view " + str(m) + " to unit variance...")
             Y[m] = Y[m] / np.std(Y[m], axis=0, )
 
-    print("\nDimensionalities after data processing:")
-    for m in range(M): print("view %d has dimensionality (%d,%d)..." % (m, Y[m].shape[0], Y[m].shape[1]))
+    print("\nAfter data processing:")
+    for m in range(M): print("view %d has %d samples and %d features..." % (m, Y[m].shape[0], Y[m].shape[1]))
 
     return Y
 

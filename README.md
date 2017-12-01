@@ -120,7 +120,7 @@ We have built a semi-automated pipeline based on our experience annotating facto
 
 ## Tutorial
 
-An **example workflow** is provided in [the vignette](MOFAtools/vignettes/MOFA_example_CLL.Rmd). The vignette can be explored using: 
+An example workflow is provided in [the vignette](MOFAtools/vignettes/MOFA_example_CLL.Rmd). The vignette can be explored using: 
 ```r
 browseVignettes("MOFAtools")
 ```

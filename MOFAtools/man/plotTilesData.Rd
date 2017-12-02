@@ -4,17 +4,18 @@
 \alias{plotTilesData}
 \title{plotTilesData: tile plot of data availability for each sample}
 \usage{
-plotTilesData(object, cols = NULL)
+plotTilesData(object, colors = NULL)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{cols}{a vector of length M (number of views in object) specifying colors to use}
+\item{colors}{a vector specifying the colors per view.}
 }
 \description{
-Function to do a tile plot showing the availability of data per view and sample
+Function to do a tile plot showing the structure of the multi-omics input data
 }
 \details{
-This function is helpful to get an overview of the training data used for MOFA. 
-For each sample it shows in which view data is available.
+This function is helpful to get an overview of the structure of the training data used for MOFA. 
+It shows the number of samples, the number of views, the number of features, and the structure of missing values.
+In particular, it is useful to visualise incomplete data sets, where some samples are missing subsets of assays.
 }

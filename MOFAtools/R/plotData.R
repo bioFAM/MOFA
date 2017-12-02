@@ -3,23 +3,33 @@
 ## Functions to visualise the training data ##
 ##############################################
 
-#' @title plotDataHeatmap: plot heatmap of selected features
+#' @title plotDataHeatmap: plot data heatmap of relevant features
 #' @name plotDataHeatmap
-#' @description Function to plot a heatmap for selected features, usually the ones with highest loadings in a given latent factor.
+#' @description Function to plot a heatmap of the input data for relevant features, usually the ones with highest loadings in a given factor.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param view character vector with the view name, or numeric vector with the index of the view.
 #' @param factor character vector with the factor name, or numeric vector with the index of the factor.
-#' @param features if an integer, the total number of features to plot, based on the absolute value of the loading (50 by default).
-#' If a character vector, a set of manually-defined features to plot.
-#' @param includeWeights boolean indicating whether to include the weight of each feature as an extra annotation in the heatmap (FALSE by default).
-#' @param transpose boolean indicating whether to transpose the output heatmap (FALSE by default, which corresponds to features as rows and samples as columns)
-#' @param imputed boolean indicating whether to use the imputed data (FALSE by default)
+#' @param features if an integer, the total number of features to plot, based on the absolute value of the loading. Default is 50
+#' If a character vector, a set of manually-defined features.
+#' @param includeWeights boolean indicating whether to include the weight of each feature as an extra annotation in the heatmap. Default is FALSE.
+#' @param transpose boolean indicating whether to transpose the output heatmap. Default is FALSE, which corresponds to features as rows and samples as columns.
+#' @param imputed boolean indicating whether to use the imputed data instead of the original data. Default is FALSE.
 #' @param ... further arguments that can be passed to \code{\link[pheatmap]{pheatmap}}
-#' @details One of the first steps for the annotation of factors is to visualise the corresponding loadings using \code{\link{plotWeights}} or \code{\link{plotTopWeights}}. \cr
-#' These methods show you which features drive the heterogeneity of each factor. However, one might also be interested in directly visualising the heterogeneity in the original data, rather than looking at "abstract" weights. \cr
-#' This method plots a heatmap for selected features (by default the top ones with highest loading), which should reveal the underlying pattern of the data that is captured by the latent factor. \cr
+#' @details One of the first steps for the annotation of a given factor is to visualise the corresponding loadings, using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}.
+#' Both methods show you which are the top features that are driving the heterogeneity. \cr
+#' However, weights are a rather abstract measurements and one might also be interested in visualising the heterogeneity in the top features directly in the original data. This what the function \code{\link{plotDataHeatmap}} does.
+#' In particular, this method plots a heatmap for selected features (by default the top ones with highest loading), which should reveal the underlying pattern that is captured by the latent factor. \cr
 #' A similar function for doing scatterplots rather than heatmaps is \code{\link{plotDataScatter}}.
 #' @import pheatmap
+#' @examples
+#' # Load example of MOFA model
+#' model <- loadModel(system.file("extdata", "model15.hdf5", package = "MOFAtools"))
+#' 
+#' # Plot top 50 features for factor 1 in the mRNA view
+#' plotDataHeatmap(model, "mRNA", 1, 50)
+#' 
+#' # Plot top 50 features for factor 1 in the mRNA view, do not show feature or row names
+#' plotDataHeatmap(model, "mRNA", 1, 50, show_colnames = FALSE, show_rownames = FALSE) 
 #' @export
 plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights = FALSE, transpose = FALSE, imputed = FALSE, ...) {
   
@@ -207,69 +217,77 @@ plotDataScatter <- function(object, view, factor, features = 10, color_by = NULL
 
 #' @title plotTilesData: tile plot of data availability for each sample
 #' @name plotTilesData
-#' @description Function to do a tile plot showing the availability of data per view and sample
+#' @description Function to do a tile plot showing the structure of the multi-omics input data
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param cols a vector of length M (number of views in object) specifying colors to use
-#' @details This function is helpful to get an overview of the training data used for MOFA. 
-#' For each sample it shows in which view data is available.
+#' @param colors a vector specifying the colors per view.
+#' @details This function is helpful to get an overview of the structure of the training data used for MOFA. 
+#' It shows the number of samples, the number of views, the number of features, and the structure of missing values.
+#' In particular, it is useful to visualise incomplete data sets, where some samples are missing subsets of assays.
 #' @import ggplot2
 #' @import dplyr
 #' @import reshape2
 #' @export
 
-plotTilesData <- function(object, cols=NULL) {
+plotTilesData <- function(object, colors = NULL) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  
+  # Collect relevant data
   TrainData <- object@TrainData
   M <- getDimensions(object)[["M"]]
   
-  if(is.null(cols)) {
+  # Define colors  
+  if (is.null(colors)) {
     palette <- c("#D95F02", "#377EB8", "#E6AB02", "#31A354", "#7570B3", "#E7298A", "#66A61E",
                  "#A6761D", "#666666", "#E41A1C", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33",
                  "#A65628", "#F781BF", "#1B9E77")
-    if(M<17) cols <- palette[1:M] else cols <- rainbow(M)
+    if (M<17) colors <- palette[1:M] else colors <- rainbow(M)
   }
-  if(length(cols)!=M) stop("Length of 'cols' does not match the number of views")
-  names(cols) <- viewNames(object)
+  if (length(colors)!=M) stop("Length of 'colors' does not match the number of views")
+  names(colors) <- viewNames(object)
   
   
-  #binary matrix samples x views: Does a sample has at least one measurement in a given view?
+  # Define availability binary matrix to indicate whether assay j is profiled in sample i
   ovw <- sapply(TrainData, function(dat) apply(dat,2,function(s) !all(is.na(s))))
   
-  # sub set to samples with at least one measurement
+  # Remove samples with no measurements
   ovw <- ovw[apply(ovw,1,any),, drop=FALSE]
   
-  # melt to data.frame
-  molten_ovw <- melt(ovw, varnames =c("sample", "view"))
+  # Melt to data.frame
+  molten_ovw <- melt(ovw, varnames=c("sample", "view"))
   
   # order samples
   molten_ovw$sample <- factor(molten_ovw$sample, levels = rownames(ovw)[order(rowSums(ovw), decreasing = T)])
   n <- length(unique(molten_ovw$sample))
   
-  # number of samples and features per view
+  # Add number of samples and features per view
   molten_ovw$combi <- ifelse(molten_ovw$value, as.character(molten_ovw$view), "missing")
   molten_ovw$ntotal <- paste("n=", colSums(ovw)[as.character(molten_ovw$view) ], sep="")
   molten_ovw$ptotal <- paste("d=", sapply(TrainData, nrow)[as.character(molten_ovw$view) ], sep="")
     
-  # y-axis label
+  # Define y-axis label
   molten_ovw <-  mutate(molten_ovw,view_label = paste(view, ptotal, sep="\n"))
   
-  p <- ggplot(molten_ovw, aes(x=sample, y=view_label, fill=combi, width=0.7, height=0.9), col="black")+
-    geom_tile() +
-    guides(fill=F) +  xlab(paste0("Samples (n=",n,")")) + 
-    theme(axis.text.x =element_blank(),
-          panel.background = element_rect(fill="white"),
-          text = element_text(size=16),
-          axis.ticks.y = element_blank(),
-          axis.ticks.x= element_blank(),
-          axis.text.y = element_text(color="black"),
-          panel.grid = element_line(colour = "black"),
-          plot.margin = unit(c(5.5,2,5.5,5.5), "pt")) +
-    ylab("") +ggtitle("Samples available for training") +
+  # Plot
+  p <- ggplot(molten_ovw, aes(x=sample, y=view_label, fill=combi)) +
+    geom_tile(width=0.7, height=0.9, col="black") +
     geom_text(data=filter(molten_ovw, sample==levels(molten_ovw$sample)[1]),
-              aes(x=levels(molten_ovw$sample)[n/2],label=ntotal), size=6)+
-    scale_fill_manual(values = c('missing'="grey", cols))
+              aes(x=levels(molten_ovw$sample)[n/2],label=ntotal), size=6) +
+    scale_fill_manual(values = c('missing'="grey", colors)) +
+    # ggtitle("Samples available for training") +
+    xlab(paste0("Samples (n=",n,")")) + ylab("") +
+    guides(fill=F) + 
+    theme(
+      axis.text.x =element_blank(),
+      panel.background = element_rect(fill="white"),
+      text = element_text(size=16),
+      axis.ticks.y = element_blank(),
+      axis.ticks.x= element_blank(),
+      axis.text.y = element_text(color="black"),
+      panel.grid = element_line(colour = "black"),
+      plot.margin = unit(c(5.5,2,5.5,5.5), "pt")
+    ) 
   
   return(p)
 }

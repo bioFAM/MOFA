@@ -21,4 +21,4 @@ VignetteBuilder: knitr
 LazyData: true
 NeedsCompilation: yes
 RoxygenNote: 6.0.1
-System Requirements: Python (>=2.7.0), numpy, pandas, h5py, scipy, argparse, sklearn, mofa
+SystemRequirements: Python (>=2.7.0), numpy, pandas, h5py, scipy, argparse, sklearn, mofa

@@ -54,7 +54,7 @@ prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = N
   }
   
   # Store views as matrices in .txt files
-  message(sprintf("Storing input views in folder %s...", DirOptions$dataDir))
+  message(sprintf("Storing input views in %s...", DirOptions$dataDir))
   for(view in viewNames(object)) {
     write.table(t(object@TrainData[[view]]), file=file.path(DirOptions$dataDir, paste0(view,".txt")),
                 sep=object@DataOpts$delimiter, row.names=T, col.names=T, quote=F)

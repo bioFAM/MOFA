@@ -5,7 +5,7 @@
 
 #' @name getDimensions
 #' @title Extract dimensionalities from the model. 
-#' @description K indicates the number of factors, D indicates the number of features, N indicates the number of samples and M indicates the number of views.
+#' @description K indicates the number of factors, D indicates the number of features, N indicates the (total) number of samples and M indicates the number of views.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @export
 getDimensions <- function(object) {
@@ -17,11 +17,11 @@ getDimensions <- function(object) {
 #' @name getFactors
 #' @title Extract the latent factors from the model
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param factors character vector with the factor name(s), or numeric vector with the factor index(es). Default is "all"
-#' @param as.data.frame boolean indicating whether to return a long data frame instead of a matrix, default is FALSE.
+#' @param factors character vector with the factor name(s), or numeric vector with the factor index(es). Default is "all".
 #' @param include_intercept boolean indicating where to include the intercept term of the model, if present. Default is TRUE.
-#' @return by default returns the latent factor matrix of dimensionality (N,K) where N is number of samples and K is number of factors.
-#' Alternatively, if as.data.frame is TRUE, returns a long-formatted data frame with columns (sample,factor,value)
+#' @param as.data.frame boolean indicating whether to return a long data frame instead of a matrix, default is FALSE.
+#' @return By default returns the latent factor matrix of dimensionality (N,K), where N is number of samples and K is number of factors. \cr
+#' Alternatively, if as.data.frame is TRUE, returns a long-formatted data frame with columns (sample,factor,value).
 #' @export
 #' 
 getFactors <- function(object, factors = "all", as.data.frame = FALSE, include_intercept = TRUE) {
@@ -56,15 +56,14 @@ getFactors <- function(object, factors = "all", as.data.frame = FALSE, include_i
 #' @name getWeights
 #' @title Extract the weights from the model
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param views character vector with the view name(s), or numeric vector with the view index(es), default is "all".
-#' @param factors character vector with the factor name(s) or numeric vector with the factor index(es), default is "all".
-#' @param as.data.frame boolean indicating whether to return a long data frame instead of a list of matrices, default is FALSE.
-#' @details TO-DO: INCLUDE FEATURES
-#' @return by default returns a list where each element is a loading matrix with dimensionality (D,K) where D is the number of features in this view and K is the number of factors.
-#' Alternatively, if as.data.frame is TRUE, returns a long-formatted data frame with columns (view,feature,factor,value)
+#' @param views character vector with the view name(s), or numeric vector with the view index(es). Default is "all".
+#' @param factors character vector with the factor name(s) or numeric vector with the factor index(es). Default is "all".
+#' @param as.data.frame boolean indicating whether to return a long data frame instead of a list of matrices. Default is FALSE.
+#' @return By default returns a list where each element is a loading matrix with dimensionality (D,K), where D is the number of features in this view and K is the number of factors. \cr
+#' Alternatively, if as.data.frame is TRUE, returns a long-formatted data frame with columns (view,feature,factor,value).
 #' @export
 #' 
-getWeights <- function(object, views = "all", factors = "all", as.data.frame = F) {
+getWeights <- function(object, views = "all", factors = "all", as.data.frame = FALSE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -90,11 +89,11 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
 #' @name getTrainData
 #' @title Fetch the training data
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param views character vector with the view name(s), or numeric vector with the view index(es), default is "all".
-#' @param features list of character vectors with the feature names or list of numeric vectors with the feature indices, default is "all"
-#' @param as.data.frame boolean indicating whether to return a long data frame instead of a list of matrices, default is FALSE.
-#' @return by default returns a list where each element is a training data matrix with dimensionality (D,N) where D is the number of features in this view and N is the number of samples.
-#' Alternatively, if as.data.frame is TRUE, returns a long-formatted data frame with columns (view,feature,sample,value).
+#' @param views character vector with the view name(s), or numeric vector with the view index(es). Default is "all".
+#' @param features list of character vectors with the feature names or list of numeric vectors with the feature indices. Default is "all"
+#' @param as.data.frame boolean indicating whether to return a long data frame instead of a list of matrices. Default is FALSE.
+#' @details By default this function returns a list where each element is a data matrix with dimensionality (D,N) where D is the number of features and N is the number of samples. \cr
+#' Alternatively, if \code{as.data.frame} is \code{TRUE}, the function returns a long-formatted data frame with columns (view,feature,sample,value).
 #' @export
 getTrainData <- function(object, views = "all", features = "all", as.data.frame = F) {
   
@@ -135,15 +134,15 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
 #' @title Fetch the imputed data
 #' @name getImputedData
 #' @rdname getImputedData
-#' @description collect the imputed data. It requires the previous use of the \code{\link{imputeMissing}} method.
+#' @description Function to collect the imputed data. It requires the previous use of the \code{\link{imputeMissing}} method.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param views character vector with the view name(s), or numeric vector with the view index(es), default is "all".
-#' @param features list of character vectors with the feature names or list of numeric vectors with the feature indices, default is "all"
-#' @param as.data.frame boolean indicating whether to return a long-formatted data frame instead of a list of matrices, default is FALSE.
-#' @return by default returns a list where each element is a matrix with dimensionality (D,N) where D is the number of features in this view and N is the number of samples.
+#' @param views character vector with the view name(s), or numeric vector with the view index(es). Default is "all".
+#' @param features list of character vectors with the feature names or list of numeric vectors with the feature indices. Default is "all"
+#' @param as.data.frame boolean indicating whether to return a long-formatted data frame instead of a list of matrices. Default is FALSE.
+#' @return By default returns a list where each element is a matrix with dimensionality (D,N), where D is the number of features in this view and N is the number of samples. \cr
 #' Alternatively, if as.data.frame is TRUE, returns a long-formatted data frame with columns (view,feature,sample,value).
 #' @export
-getImputedData <- function(object, views = "all", features = "all", as.data.frame = F) {
+getImputedData <- function(object, views = "all", features = "all", as.data.frame = FALSE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -181,8 +180,8 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
 #' @rdname getCovariates
 #' @name getCovariates
 #' @title Extract covariates from the model
-#' @description this function extracts the covariates defined by the user. 
-#' Note that (for now) the model can be run with known covariates only if they are stored in the colData of the MultiAssayExperiment input object. See \code{\link{createMOFAmodel}}.
+#' @description (NOT PROPERLY IMPLEMENTED YET) this function extracts the covariates defined by the user. 
+#' Note that (for now) the model can be run with known covariates only if they are stored in the colData of the MultiAssayExperiment input object. See \code{\link{createMOFAobject}}.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param names names of the covariates
 #' @export
@@ -203,7 +202,7 @@ getCovariates <- function(object, names) {
 #' @rdname getExpectations
 #' @name getExpectations
 #' @title Fetch expectations from the model
-#' @description this method extracts the expectations from the (variational) posterior distributions of a trained MOFAmodel.
+#' @description Function to extract the expectations from the (variational) posterior distributions of a trained MOFAmodel.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param variable variable name, 'Z' for factors, 'SW' for weights, 'Tau' for noise, 'Y' for pseudodata, 'Theta' for feature-wise spike-and-slab sparsity, 'AlphaW' for view and factor-wise ARD sparsity
 #' @param as.data.frame boolean indicating whether to output the result as a long data frame, default is FALSE.

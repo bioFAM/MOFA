@@ -16,7 +16,6 @@ For illustration we use the CLL data which is used in the MOFA publication.
 
 ```{r, warning=FALSE, message=FALSE}
 library(MOFAtools)
-# devtools::load_all("/Users/ricard/mofa/MOFAtools")
 ```
 
 # Step 1: Load data and create MOFA object
@@ -54,6 +53,12 @@ MOFAobject
 
 ```
 
+
+## Overview of training data
+The function 'plotTilesData' can be used to obtain an overview of the data stored in the object for training. FOr each sample it shows in which views data are available.
+```{r}
+plotTilesData(MOFAobject)
+```
 
 # Step 2: Fit the MOFA model
 The next step is to fit the model. 

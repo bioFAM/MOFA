@@ -238,7 +238,7 @@ plotTilesData <- function(object, cols=NULL) {
   ovw <- sapply(TrainData, function(dat) apply(dat,2,function(s) !all(is.na(s))))
   
   # sub set to samples with at least one measurement
-  ovw <- ovw[apply(ovw,1,any),]
+  ovw <- ovw[apply(ovw,1,any),, drop=FALSE]
   
   # melt to data.frame
   molten_ovw <- melt(ovw, varnames =c("sample", "view"))

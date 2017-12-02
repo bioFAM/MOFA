@@ -204,3 +204,73 @@ plotDataScatter <- function(object, view, factor, features = 10, color_by = NULL
 }
 
 
+
+#' @title plotTilesData: tile plot of data availability for each sample
+#' @name plotTilesData
+#' @description Function to do a tile plot showing the availability of data per view and sample
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @param cols a vector of length M (number of views in object) specifying colors to use
+#' @details This function is helpful to get an overview of the training data used for MOFA. 
+#' For each sample it shows in which view data is available.
+#' @import ggplot2
+#' @import dplyr
+#' @import reshape2
+#' @export
+
+plotTilesData <- function(object, cols=NULL) {
+  
+  # Sanity checks
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  TrainData <- object@TrainData
+  M <- getDimensions(object)[["M"]]
+  
+  if(is.null(cols)) {
+    palette <- c("#D95F02", "#377EB8", "#E6AB02", "#31A354", "#7570B3", "#E7298A", "#66A61E",
+                 "#A6761D", "#666666", "#E41A1C", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33",
+                 "#A65628", "#F781BF", "#1B9E77")
+    if(M<17) cols <- palette[1:M] else cols <- rainbow(M)
+  }
+  if(length(cols)!=M) stop("Length of 'cols' does not match the number of views")
+  names(cols) <- viewNames(object)
+  
+  
+  #binary matrix samples x views: Does a sample has at least one measurement in a given view?
+  ovw <- sapply(TrainData, function(dat) apply(dat,2,function(s) !all(is.na(s))))
+  
+  # sub set to samples with at least one measurement
+  ovw <- ovw[apply(ovw,1,any),]
+  
+  # melt to data.frame
+  molten_ovw <- melt(ovw, varnames =c("sample", "view"))
+  
+  # order samples
+  molten_ovw$sample <- factor(molten_ovw$sample, levels = rownames(ovw)[order(rowSums(ovw), decreasing = T)])
+  n <- length(unique(molten_ovw$sample))
+  
+  # number of samples and features per view
+  molten_ovw$combi <- ifelse(molten_ovw$value, as.character(molten_ovw$view), "missing")
+  molten_ovw$ntotal <- paste("n=", colSums(ovw)[as.character(molten_ovw$view) ], sep="")
+  molten_ovw$ptotal <- paste("d=", sapply(TrainData, nrow)[as.character(molten_ovw$view) ], sep="")
+    
+  # y-axis label
+  molten_ovw <-  mutate(molten_ovw,view_label = paste(view, ptotal, sep="\n"))
+  
+  p <- ggplot(molten_ovw, aes(x=sample, y=view_label, fill=combi, width=0.7, height=0.9), col="black")+
+    geom_tile() +
+    guides(fill=F) +  xlab(paste0("Samples (n=",n,")")) + 
+    theme(axis.text.x =element_blank(),
+          panel.background = element_rect(fill="white"),
+          text = element_text(size=16),
+          axis.ticks.y = element_blank(),
+          axis.ticks.x= element_blank(),
+          axis.text.y = element_text(color="black"),
+          panel.grid = element_line(colour = "black"),
+          plot.margin = unit(c(5.5,2,5.5,5.5), "pt")) +
+    ylab("") +ggtitle("Samples available for training") +
+    geom_text(data=filter(molten_ovw, sample==levels(molten_ovw$sample)[1]),
+              aes(x=levels(molten_ovw$sample)[n/2],label=ntotal), size=6)+
+    scale_fill_manual(values = c('missing'="grey", cols))
+  
+  return(p)
+}
+

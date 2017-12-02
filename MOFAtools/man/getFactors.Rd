@@ -10,11 +10,11 @@ getFactors(object, factors = "all", as.data.frame = FALSE,
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{factors:}{character vector with the factor name(s), or numeric vector with the factor index(es). Default is "all"}
+\item{factors}{character vector with the factor name(s), or numeric vector with the factor index(es). Default is "all"}
 
-\item{as.data.frame:}{boolean indicating whether to return a long data frame instead of a matrix, default is FALSE.}
+\item{as.data.frame}{boolean indicating whether to return a long data frame instead of a matrix, default is FALSE.}
 
-\item{include_intercept:}{boolean indicating where to include the intercept term of the model, if present. Default is TRUE.}
+\item{include_intercept}{boolean indicating where to include the intercept term of the model, if present. Default is TRUE.}
 }
 \value{
 by default returns the latent factor matrix of dimensionality (N,K) where N is number of samples and K is number of factors.

@@ -11,9 +11,9 @@ getTrainData(object, views = "all", features = "all", as.data.frame = F)
 
 \item{views}{character vector with the view name(s), or numeric vector with the view index(es), default is "all".}
 
-\item{features:}{list of character vectors with the feature names or list of numeric vectors with the feature indices, default is "all"}
+\item{features}{list of character vectors with the feature names or list of numeric vectors with the feature indices, default is "all"}
 
-\item{as.data.frame:}{boolean indicating whether to return a long data frame instead of a list of matrices, default is FALSE.}
+\item{as.data.frame}{boolean indicating whether to return a long data frame instead of a list of matrices, default is FALSE.}
 }
 \value{
 by default returns a list where each element is a training data matrix with dimensionality (D,N) where D is the number of features in this view and N is the number of samples.

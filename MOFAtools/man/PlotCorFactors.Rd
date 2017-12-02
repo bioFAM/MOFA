@@ -16,6 +16,9 @@ PlotCorFactors(object, method = "pearson", ...)
 \value{
 symmetric matrix with the correlation coefficient between every pair of factors
 }
+\description{
+method to plot the correlation between the latent factors.
+}
 \details{
 this method plots the correlation matrix between the latent factors. \cr 
 Factors are encouraged to be uncorrelated due to the assumptions of the model. However, it is not a hard constraint such as in Principal Component Analysis and correlations between factors can happen, particularly with large number factors.

@@ -10,13 +10,13 @@ prepareMOFA(object, DirOptions, DataOptions = NULL, ModelOptions = NULL,
 \arguments{
 \item{object}{an untrained MOFA object}
 
+\item{DirOptions}{list with I/O options, it must contain a 'dataDir' element where temporary text files will be stored and a 'outFile' where the final model will be stored as an hdf5 object.}
+
 \item{DataOptions}{list of DataOptions (see getDefaultDataOpts for what options can be set here). If NULL, default data options are used.}
 
 \item{ModelOptions}{list of ModelOptions (see getDefaultModelOpts for what options can be set here). If NULL, default model options are used.}
 
 \item{TrainOptions}{list of TrainOptions (see getDefaultTrainOptions for what options can be set here). If NULL, default training options are used.}
-
-\item{DirOptions:}{list with I/O options, it must contain a 'dataDir' element where temporary text files will be stored and a 'outFile' where the final model will be stored as an hdf5 object.}
 }
 \value{
 a untrained MOFA object with specified DataOpts, ModelOpts and TrainOpts

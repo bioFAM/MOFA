@@ -13,7 +13,7 @@ getWeights(object, views = "all", factors = "all", as.data.frame = F)
 
 \item{factors}{character vector with the factor name(s) or numeric vector with the factor index(es), default is "all".}
 
-\item{as.data.frame:}{boolean indicating whether to return a long data frame instead of a list of matrices, default is FALSE.}
+\item{as.data.frame}{boolean indicating whether to return a long data frame instead of a list of matrices, default is FALSE.}
 }
 \value{
 by default returns a list where each element is a loading matrix with dimensionality (D,K) where D is the number of features in this view and K is the number of factors.

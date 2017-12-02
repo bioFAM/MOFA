@@ -9,9 +9,9 @@ getExpectations(object, variable, as.data.frame = FALSE)
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{variable:}{variable name, 'Z' for factors, 'SW' for weights, 'Tau' for noise, 'Y' for pseudodata, 'Theta' for feature-wise spike-and-slab sparsity, 'AlphaW' for view and factor-wise ARD sparsity}
+\item{variable}{variable name, 'Z' for factors, 'SW' for weights, 'Tau' for noise, 'Y' for pseudodata, 'Theta' for feature-wise spike-and-slab sparsity, 'AlphaW' for view and factor-wise ARD sparsity}
 
-\item{as.data.frame:}{boolean indicating whether to output the result as a long data frame, default is FALSE.}
+\item{as.data.frame}{boolean indicating whether to output the result as a long data frame, default is FALSE.}
 }
 \value{
 the output varies depending on the variable of interest: \cr

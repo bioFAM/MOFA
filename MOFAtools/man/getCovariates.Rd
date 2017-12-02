@@ -9,7 +9,7 @@ getCovariates(object, names)
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{names:}{names of the covariates}
+\item{names}{names of the covariates}
 }
 \description{
 this function extracts the covariates defined by the user. 

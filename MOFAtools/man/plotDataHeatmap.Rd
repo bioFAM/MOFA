@@ -17,13 +17,13 @@ plotDataHeatmap(object, view, factor, features = 50, includeWeights = FALSE,
 \item{features}{if an integer, the total number of features to plot, based on the absolute value of the loading (50 by default).
 If a character vector, a set of manually-defined features to plot.}
 
+\item{includeWeights}{boolean indicating whether to include the weight of each feature as an extra annotation in the heatmap (FALSE by default).}
+
+\item{transpose}{boolean indicating whether to transpose the output heatmap (FALSE by default, which corresponds to features as rows and samples as columns)}
+
+\item{imputed}{boolean indicating whether to use the imputed data (FALSE by default)}
+
 \item{...}{further arguments that can be passed to \code{\link[pheatmap]{pheatmap}}}
-
-\item{includeWeights:}{boolean indicating whether to include the weight of each feature as an extra annotation in the heatmap (FALSE by default).}
-
-\item{transpose:}{boolean indicating whether to transpose the output heatmap (FALSE by default, which corresponds to features as rows and samples as columns)}
-
-\item{imputed:}{boolean indicating whether to use the imputed data (FALSE by default)}
 }
 \description{
 Function to plot a heatmap for selected features, usually the ones with highest loadings in a given latent factor.

@@ -9,11 +9,9 @@ trainCurveELBO(object, log = F)
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{statistic}{fill this}
+\item{log}{boolean indicating whether to apply log transform}
 }
 \description{
-to-fill
-
 MOFA inference is done using the variational Bayes algorithm, which maximises a quantity called the Evidence Lower Bound (ELBO).
 The ELBO is supposed to increase monotonically up to convergence, but it can decrease substantially when dropping inactive factors.
 For more details read the supplementary methods

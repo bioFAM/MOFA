@@ -9,6 +9,7 @@
 #' @param object an untrained \code{\link{MOFAmodel}}
 #' @param DirOptions list with I/O options, should contain at least 'dataDir' where the input matrices as stored as .txt files and 'outFile' where the model is going to be stored as a .hdf5 file
 #' @param ... Extra options to add to the mofa command
+#' @param mofaPath Path the the mofa script. Use this if mofa is not in your $PATH.
 #' @return a trained \code{\link{MOFAmodel}}
 #' @export
 runMOFA <- function(object, DirOptions, ..., mofaPath="mofa") {

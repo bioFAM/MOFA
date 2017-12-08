@@ -80,11 +80,11 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", p
      
     # per factor and view
      if (totalVar) {
-       fvar_mk <- as.matrix(sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((resNullModel[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) )))
+       fvar_mk <- matrix(sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((resNullModel[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) )), ncol=length(views), nrow=length(factorsNonconst))
      } else {
-       fvar_mk <- as.matrix(sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((partialresNull[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(partialresNull[[m]]**2, na.rm=T) )))
+       fvar_mk <- matrix(sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((partialresNull[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(partialresNull[[m]]**2, na.rm=T) )), ncol=length(views), nrow=length(factorsNonconst))
      }
-    
+
     # Set names
     names(fvar_m) <- views
     colnames(fvar_mk) <- views

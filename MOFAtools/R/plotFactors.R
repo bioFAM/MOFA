@@ -175,7 +175,7 @@ FactorBeeswarmPlot <- function(object, factors, color_by = NULL, name_color="", 
       legend.position = "right", 
       legend.direction = "vertical",
       legend.key = element_blank()
-      ) + facet_wrap(~factor)
+      ) + facet_wrap(~factor, scales="free")
   
   # If color_by is numeric, define the default gradient
   if (is.numeric(color_by)) { p <- p + scale_color_gradientn(colors=terrain.colors(10)) }

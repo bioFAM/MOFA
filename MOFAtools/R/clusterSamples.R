@@ -20,12 +20,14 @@ clusterSamples <- function(object, k, factors = "all") {
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   
+
   # Define factors
-  if (paste(factors, collapse="")=="all") { 
-    factors <- factorNames(object) 
-  } else {
-    stopifnot(all(factors %in% factorNames(object)))  
-  }
+  if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } 
+    else if(is.numeric(factors)) {
+      if (object@ModelOpts$learnIntercept == T) factors <- factorNames(object)[factors+1]
+      else factors <- factorNames(object)[factors]
+    }
+      else{ stopifnot(all(factors %in% factorNames(object))) }
   
   # Collect relevant data
   Z <- getFactors(object, factors=factors, include_intercept=F)

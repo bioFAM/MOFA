@@ -36,8 +36,12 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   stopifnot(view %in% viewNames(object))
-  stopifnot(factor %in% factorNames(object)) 
-  
+
+  if(is.numeric(factor)) {
+      if (object@ModelOpts$learnIntercept == T) factor <- factorNames(object)[factor+1]
+      else factor <- factorNames(object)[factor]
+    } else{ stopifnot(factor %in% factorNames(object)) }
+
   # Collect relevant data
   W <- getExpectations(object,"SW")[[view]][,factor]
   Z <- getFactors(object)[,factor]
@@ -110,9 +114,13 @@ plotDataScatter <- function(object, view, factor, features = 10, color_by = NULL
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(factor)==1)
   stopifnot(length(view)==1)
-  if (!factor %in% factorNames(object)) stop(sprintf("The factor %s is not present in the object",factor))
   if (!view %in% viewNames(object)) stop(sprintf("The view %s is not present in the object",view))
-  
+
+  if(is.numeric(factor)) {
+      if (object@ModelOpts$learnIntercept == T) factor <- factorNames(object)[factor+1]
+      else factor <- factorNames(object)[factor]
+    } else{ stopifnot(factor %in% factorNames(object)) }
+      
   # Collect relevant data
   N <- getDimensions(object)[["N"]]
   Z <- getFactors(object)[,factor]

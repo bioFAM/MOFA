@@ -28,13 +28,16 @@ predict <- function(object, views = "all", factors = "all", type = c("inRange","
     stopifnot(all(views%in%viewNames(object)))
   }
   
-  # Get factors
-  if (factors=="all") {
-    factors = factorNames(object)
-  } else {
-    stopifnot(all(factors%in%factorNames(object)))
-    factors <- c("intercept", factors)
-  } 
+    # Get factors
+  if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } 
+    else if(is.numeric(factors)) {
+      if (object@ModelOpts$learnIntercept == T) factors <- factorNames(object)[factors+1]
+      else factors <- factorNames(object)[factors]
+    }
+      else{ stopifnot(all(factors %in% factorNames(object))) }
+
+  # add intercept factor for prediction
+  if(!"intercept" %in% factors & object@ModelOpts$learnIntercept) factors <- c("intercept", factors)  
   
   # Get type of predictions wanted 
   type = match.arg(type)

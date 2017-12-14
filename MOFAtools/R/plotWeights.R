@@ -27,17 +27,13 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   stopifnot(all(view %in% viewNames(object)))  
   
-  # Define factors
-  factors <- as.character(factors)
-  if (paste0(factors,collapse="")=="all") { 
-    factors <- factorNames(object) 
-    # if(is.null(factors)) factors <- 1:ncol(getExpectations(object,"Z"))
-  } else {
-    stopifnot(all(factors %in% factorNames(object)))  
-  }
-  
-  # Remove intercept factor
-  if(object@ModelOpts$learnIntercept==T) { factors <- factors[factors != factorNames(object)[1]] }
+  # Get factors
+  if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } 
+    else if(is.numeric(factors)) {
+      if (object@ModelOpts$learnIntercept == T) factors <- factorNames(object)[factors+1]
+      else factors <- factorNames(object)[factors]
+    }
+      else{ stopifnot(all(factors %in% factorNames(object))) }
   
   # Define features
   if (paste(features,collapse="")=="all") { 
@@ -94,9 +90,14 @@ plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = 
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
-  stopifnot(all(view %in% viewNames(object)))  
-  factor <- as.character(factor)
-  stopifnot(factor %in% factorNames(object))
+  stopifnot(all(view %in% viewNames(object))) 
+
+  # Get factor
+  if(is.numeric(factor)) {
+      if (object@ModelOpts$learnIntercept == T) factor <- factorNames(object)[factor+1]
+      else factor <- factorNames(object)[factor]
+    } else{ stopifnot(factor %in% factorNames(object)) }
+
   if(!is.null(manual)) { stopifnot(class(manual)=="list"); stopifnot(all(Reduce(intersect,manual) %in% featureNames(object)[[view]]))  }
   
   # Collect expectations  

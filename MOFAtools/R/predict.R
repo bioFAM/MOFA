@@ -39,7 +39,7 @@ predict <- function(object, views = "all", factors = "all", type = c("inRange","
 
   # add intercept factor for prediction
   if(!"intercept" %in% factors & object@ModelOpts$learnIntercept & include_intercept) factors <- c("intercept", factors)  
-  
+  if(!include_intercept & "intercept" %in% factors) factors <- factors[factors!="intercept"]
   # Get type of predictions wanted 
   type = match.arg(type)
   

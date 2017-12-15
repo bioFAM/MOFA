@@ -132,7 +132,7 @@ browseVignettes("MOFAtools")
 ```
 sh: mofa: command not found
 ```
-This occurs if the mofa binary is not in the $PATH of Rstudio. This will be fixed in a new update, a simple workaround is to get the full path of the mofa executable by doing:
+This occurs if the mofa binary is not in the $PATH of R. This will be fixed in a new update, a simple workaround is to get the full path of the mofa executable by doing on the terminal:
 ```
 which mofa
 ```

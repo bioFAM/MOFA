@@ -36,10 +36,10 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 * **plotWeights**: plot all loadings for a given factor and view  
 
 ## Inspect factors
-* **FactorsCorPlot**: correlation plot between factors. Ideally, they should be uncorrelated  
-* **FactorsScatterPlot**: scatterplot between two factors, this is similar to doing a PCA plot  
-* **FactorsScatterPairs**: pairwise combination of scatterplots between multiple factors  
-* **FactorBeeswarmPlot**: beeswarm plot for a single factor  
+* **plotFactorCor**: correlation plot between factors. Ideally, they should be uncorrelated  
+* **plotFactorScatter**: scatterplot between two factors, this is similar to doing a PCA plot  
+* **plotFactorScatters**: pairwise combination of scatterplots between multiple factors  
+* **plotFactorBeeswarm**: beeswarm plot for a single factor  
 
 ## Inspect training data
 * **showDataHeatmap**: heatmap of the training data using only top features for a given factor. This is very useful to map the factors and features back to the original data  

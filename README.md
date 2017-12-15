@@ -61,7 +61,7 @@ A list of all **relevant methods** with a short description can be found [here](
 ### Step 1: Fitting the model
 There are two ways of doing this:
 * **Using the command line tool**: modify and run the script [run_basic.sh](mofa/run/run_basic.sh). If you are very familar with the model and want to play with more advanced options, you can use instead [run_advanced.sh](mofa/run/run_advanced.sh).
-* **Using the R wrapper**: for the ones not comfortable with the command line we built an R wrapper. See [the vignette](MOFAtools/vignettes/MOFA_example_CLL.Rmd).
+* **Using the R wrapper**: for the ones not comfortable with the command line we built an R wrapper. See [the vignette](http://htmlpreview.github.com/?https://github.com/PMBio/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_CLL.html).
 
 
 No matter which option you went for, if everything is successful, you should observe an output analogous to the following:
@@ -120,7 +120,8 @@ We have built a semi-automated pipeline based on our experience annotating facto
 
 ## Tutorial
 
-An example workflow is provided in [the vignette](MOFAtools/vignettes/MOFA_example_CLL.Rmd). The vignette can be explored using: 
+An example workflow is provided in [the vignette](http://htmlpreview.github.com/?https://github.com/PMBio/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_CLL.html). The vignette can be explored using:
+
 ```r
 browseVignettes("MOFAtools")
 ```

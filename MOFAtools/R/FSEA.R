@@ -36,19 +36,24 @@ FeatureSetEnrichmentAnalysis <- function(object, view, feature.sets, factors = "
   statistical.test <- match.arg(statistical.test)
 
 
-  # Collect factors
-  if (paste0(factors,sep="",collapse="") == "all") { 
-    factors <- factorNames(object)
-    if (object@ModelOpts$learnIntercept == T) { factors <- factors[-1] }
-  } else if(!all(factors %in% factorNames(object))) stop("Factors do not match factor names in the model")
+  # Define factors
+  if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } 
+    else if(is.numeric(factors)) {
+      if (object@ModelOpts$learnIntercept == T) factors <- factorNames(object)[factors+1]
+      else factors <- factorNames(object)[factors]
+    }
+      else{ stopifnot(all(factors %in% factorNames(object))) }
+
+  # remove intercept factors
+  factors <- factors[factors!="intercept"]
   
   # Collect observed data
   data <- object@TrainData[[view]]
   data <- t(data)
   
   # Collect relevant expectations
-  W <- getExpectations(object,"SW")[[view]][,factors, drop=FALSE]
-  Z <- getExpectations(object,"Z")[,factors, drop=FALSE]
+  W <- getWeights(object, view,factors)[[view]]
+  Z <- getFactors(object,factors)
   
   # Check that there is no constant factor
   stopifnot( all(apply(Z,2,var, na.rm=T)>0) )

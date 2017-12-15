@@ -134,7 +134,7 @@ For details, please read the Methods section of the Manuscript.
 This is done by the 'calculateVarianceExplained' function. The resulting plot allows to get an overivew of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of the different views.
 
 ```{r}
-# r2 <- calculateVarianceExplained(MOFAobject)
+r2 <- calculateVarianceExplained(MOFAobject)
 ```
 
 ## Part 2: Characterisation of individual factors
@@ -142,28 +142,28 @@ This is done by the 'calculateVarianceExplained' function. The resulting plot al
 To get an overview of the weights across all factors in a given view you can use the 'plotWeightsHeatmap' function.
 For example, here we plot all weights from all factors in the Mutation data:
 ```{r}
-plotWeightsHeatmap(MOFAobject, "Mutations", factors=c(1,2,3,4,5), show_colnames=F)
+plotWeightsHeatmap(MOFAobject, "Mutations", factors=1:5, show_colnames=F)
 ```
 Similarly, we can also plot all weights for a single factor using the 'plotWeights' function.
 For example, here we plot all weights from Factor 1 in the Mutation data:
 ```{r}
-plotWeights(MOFAobject, view = "Mutations", factor = "1")
+plotWeights(MOFAobject, view = "Mutations", factor = 1)
 ```
 If you are only interested in looking at the top features you can use the 'plotTopWeights' function.
 For example, here we plot the mutations with largest loadings on Factor 1:
 ```{r}
-plotTopWeights(MOFAobject, "Mutations", "1")
+plotTopWeights(MOFAobject, "Mutations", 1)
 ```
 Features with large weight in a given factor means that they follow the pattern of covariation associated with the factor. For example, if a factor is capturing sex differences, then the largest weights will be associated with features that show sex-specific effects.
 
 From the previous plots, we can clearly see that Factor 1 is associated to IGHV status. Now if we look at the mRNA view, the top features will also be associated to IGHV status:
 ```{r}
-plotTopWeights(MOFAobject, "mRNA", "1")
+plotTopWeights(MOFAobject, "mRNA", 1)
 ```
 
 Finally, instead of looking at an the "abstract" weight, it is useful to observe the coordinated heterogeneity of the top features in the original data. This can be done using the 'plotDataHeatmap' function.
 ```{r}
-plotDataHeatmap(MOFAobject, view="mRNA", factor="1", features=20, show_rownames=FALSE)
+plotDataHeatmap(MOFAobject, view="mRNA", factor=1, features=20, show_rownames=FALSE)
 ```
 
 ### Feature set enrichemnt analysis in the active views
@@ -190,7 +190,7 @@ Barplot_FeatureSetEnrichmentAnalysis(fsea.out, alpha=0.01)
 
 (b) Factor-specific:
 ```{r}
-interestingFactors <- c("4","5")
+interestingFactors <- 4:5
 for (factor in interestingFactors) {
   lineplot <- LinePlot_FeatureSetEnrichmentAnalysis(fsea.out, factor, threshold=0.01, max.pathways=10)
   print(lineplot)
@@ -202,17 +202,17 @@ for (factor in interestingFactors) {
 
 Samples can be visualized along factors of interest using the 'FactorsScatterPlot' function.
 ```{r}
-FactorsScatterPlot(MOFAobject, factors = c("1", "2"), color_by = "IGHV", shape_by = "trisomy12")
+FactorsScatterPlot(MOFAobject, factors = 1:2, color_by = "IGHV", shape_by = "trisomy12")
 ```
 
 An overview of pair-wise sctterplots for all or a subset of factors is produced by the 'FactorsScatterPairs' function
 ```{r}
-FactorsScatterPairs(MOFAobject, factors = c("1", "2", "3", "4"), color_by = "IGHV")
+FactorsScatterPairs(MOFAobject, factors = 1:4, color_by = "IGHV")
 ```
 
 A single factor can be visualised using the 'FactorBeeswarmPlot' function
 ```{r}
-FactorBeeswarmPlot(MOFAobject, factors = "1", color_by = "IGHV")
+FactorBeeswarmPlot(MOFAobject, factors = 1, color_by = "IGHV")
 ```
 
 ## Customized analysis
@@ -251,8 +251,8 @@ imputedDrugs <- getImputedData(MOFAobject, view="Drugs")
 ## Clustering of samples based on latent factors
 Samples can be clustered according to their values on some or all latent factors using the 'clusterSamples' function. CLusters can for example be visualised using the FactorsScatterPlot function
 ```{r}
-h <- clusterSamples(MOFAobject, k=2, factors="1")
-FactorsScatterPlot(MOFAobject, factors=c("1","2"), color_by=h$cluster)
+h <- clusterSamples(MOFAobject, k=2, factors=1)
+FactorsScatterPlot(MOFAobject, factors=1:2, color_by=h$cluster)
 ```
 
 

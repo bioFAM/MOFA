@@ -39,7 +39,7 @@ compareModels <- function(models, comparison = "all", ...) {
   LFs <- lapply(seq_along(models), function(modelidx){
     model <- models[[modelidx]]
     Z <- getExpectations(model, 'Z', 'E')
-    if(!is.null(model@ModelOpts$learnIntercept)) if(model@ModelOpts$learnIntercept) Z <- Z[,-1]
+    if(!is.null(model@ModelOpts$learnIntercept)) if(model@ModelOpts$learnIntercept) Z <- Z[,-1, drop=FALSE]
     if(is.null(rownames(Z))) rownames(Z) <- rownames(model@TrainData[[1]])
     if(is.null(colnames(Z))) 
       if(!is.null(model@ModelOpts$learnIntercept)) {
@@ -58,7 +58,7 @@ compareModels <- function(models, comparison = "all", ...) {
       stop("No common samples in all models for comparison")
     
     #subset LFs to common samples
-    LFscommon <- Reduce(cbind, lapply(LFs, function(Z) Z[commonSamples,]))
+    LFscommon <- Reduce(cbind, lapply(LFs, function(Z) Z[commonSamples,, drop=FALSE]))
 
     # calculate correlation
     corLFs <- cor(LFscommon, use="complete.obs")
@@ -69,12 +69,13 @@ compareModels <- function(models, comparison = "all", ...) {
     
     #plot heatmap
     # if(is.null(main)) main <- "Absolute correlation between latent factors"
+    if(length(unique(as.numeric(abs(corLFs))))>1){
     pheatmap(abs(corLFs), show_rownames = F,
              color = colorRampPalette(c("white",RColorBrewer::brewer.pal(9,name="YlOrRd")))(100),
              # color=colorRampPalette(c("white", "orange" ,"red"))(100), 
              # annotation_col = modelAnnot, main= main , ...)
              ...)
-    
+    } else warning("No plot produced as correlations consist of only one value")
     return(corLFs)
   }
   
@@ -91,7 +92,9 @@ compareModels <- function(models, comparison = "all", ...) {
           else{
           # if(is.null(main)) main <- paste("Absolute correlation between factors in model", i,"and",j)
           corLFs_pairs <- cor(LFs1[common_pairwise,], LFs2[common_pairwise,], use="complete.obs")
+          if(length(unique(abs(corLFs_pairs)))>1){
           pheatmap(abs(corLFs_pairs),color=colorRampPalette(c("white", "orange" ,"red"))(100), ...)
+          } else warning("No plot produced as correlations consist of only one value")
           corLFs_pairs
           }
         })

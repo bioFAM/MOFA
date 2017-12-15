@@ -17,7 +17,7 @@ getDimensions <- function(object) {
 #' @name getFactors
 #' @title Extract the latent factors from the model
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param factors character vector with the factor name(s), or numeric vector with the factor index(es). Default is "all".
+#' @param factors character vector with the factor name(s), or numeric vector with the factor index(es) (here 0 corresponds to the intercept factor if included in the model). Default is "all".
 #' @param include_intercept boolean indicating where to include the intercept term of the model, if present. Default is TRUE.
 #' @param as.data.frame boolean indicating whether to return a long data frame instead of a matrix, default is FALSE.
 #' @return By default returns the latent factor matrix of dimensionality (N,K), where N is number of samples and K is number of factors. \cr
@@ -30,7 +30,12 @@ getFactors <- function(object, factors = "all", as.data.frame = FALSE, include_i
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
   
   # Get factors
-  if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } else { stopifnot(all(factors %in% factorNames(object))) }
+  if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } 
+    else if(is.numeric(factors)) {
+      if (object@ModelOpts$learnIntercept == T) factors <- factorNames(object)[factors+1]
+      else factors <- factorNames(object)[factors]
+    }
+      else{ stopifnot(all(factors %in% factorNames(object))) }
 
   # Collect factors
   Z <- getExpectations(object,"Z",as.data.frame)
@@ -57,7 +62,7 @@ getFactors <- function(object, factors = "all", as.data.frame = FALSE, include_i
 #' @title Extract the weights from the model
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param views character vector with the view name(s), or numeric vector with the view index(es). Default is "all".
-#' @param factors character vector with the factor name(s) or numeric vector with the factor index(es). Default is "all".
+#' @param factors character vector with the factor name(s) or numeric vector with the factor index(es) (here 0 corresponds to the intercept factor if included in the model). Default is "all".
 #' @param as.data.frame boolean indicating whether to return a long data frame instead of a list of matrices. Default is FALSE.
 #' @return By default returns a list where each element is a loading matrix with dimensionality (D,K), where D is the number of features in this view and K is the number of factors. \cr
 #' Alternatively, if as.data.frame is TRUE, returns a long-formatted data frame with columns (view,feature,factor,value).
@@ -70,8 +75,15 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
   
   # Get views and factors
   if (paste0(views,collapse="") == "all") { views <- viewNames(object) } else { stopifnot(all(views %in% viewNames(object))) }
-  if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } else { stopifnot(all(factors %in% factorNames(object))) }
-  
+
+  # Get factors
+  if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } 
+    else if(is.numeric(factors)) {
+      if (object@ModelOpts$learnIntercept == T) factors <- factorNames(object)[factors+1]
+      else factors <- factorNames(object)[factors+1]
+    }
+      else{ stopifnot(all(factors %in% factorNames(object))) }
+        
   # Fetch weights
   weights <- getExpectations(object,"SW",as.data.frame)
   if (as.data.frame==T) {

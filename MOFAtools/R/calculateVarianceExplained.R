@@ -30,18 +30,21 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", p
   M <- length(views)
 
   # Define factors
-  if (paste0(factors,sep="",collapse="") == "all") { 
-    factors <- factorNames(object) 
-    #old object are not compatible with factro names
-    if(is.null(factors)) factors <- 1:ncol(getExpectations(object,"Z"))
-  } else {
-    stopifnot(all(factors %in% factorNames(object)))  
-  }
+  if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } 
+    else if(is.numeric(factors)) {
+      if (object@ModelOpts$learnIntercept == T) factors <- factorNames(object)[factors+1]
+      else factors <- factorNames(object)[factors]
+    }
+      else{ stopifnot(all(factors %in% factorNames(object))) }
+
+  # add intercept factor as null model
+  if(!"intercept" %in% factors & object@ModelOpts$learnIntercept) factors <- c("intercept", factors)  
+  
   K <- length(factors)
 
   # Collect relevant expectations
-  SW <- getExpectations(object,"SW")
-  Z <- getExpectations(object,"Z")
+  SW <- getWeights(object,views,factors)
+  Z <- getFactors(object,factors)
   Y <- getExpectations(object,"Y")
   
   # Calculate predictions under the MOFA model using all or a single factor
@@ -80,11 +83,11 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", p
      
     # per factor and view
      if (totalVar) {
-       fvar_mk <- as.matrix(sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((resNullModel[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) )))
+       fvar_mk <- matrix(sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((resNullModel[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) )), ncol=length(views), nrow=length(factorsNonconst))
      } else {
-       fvar_mk <- as.matrix(sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((partialresNull[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(partialresNull[[m]]**2, na.rm=T) )))
+       fvar_mk <- matrix(sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((partialresNull[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(partialresNull[[m]]**2, na.rm=T) )), ncol=length(views), nrow=length(factorsNonconst))
      }
-    
+
     # Set names
     names(fvar_m) <- views
     colnames(fvar_mk) <- views

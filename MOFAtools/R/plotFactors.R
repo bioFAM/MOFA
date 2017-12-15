@@ -157,14 +157,13 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color="", 
   Z$color_by <- color_by[Z$sample]
   
   # Generate plot
-  p <- ggplot(Z, aes_string(x="factor", y="value")) + 
+  p <- ggplot(Z, aes_string(x=0, y="value")) + 
     ggbeeswarm::geom_quasirandom(aes(color=color_by)) +
-    labs(x="Latent factor(s)", y="") +
+    ylab("Factor value") + xlab("") +
+    scale_x_continuous(breaks=NULL) +
     theme(
-      # axis.text.x = element_blank(),
-      axis.text.x = element_text(size = rel(1.5), color = "black", margin=margin(5,0,0,0)),
       axis.text.y = element_text(size = rel(1.5), color = "black"),
-      axis.title.x = element_text(size = rel(1.4), color = "black"),
+      axis.title.y = element_text(size = rel(1.5), color = "black"),
       axis.line = element_line(color = "black", size = 0.4),
       axis.ticks.length = unit(0.25,"cm"),
       axis.ticks = element_line(color = "black"),
@@ -176,7 +175,7 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color="", 
       legend.position = "right", 
       legend.direction = "vertical",
       legend.key = element_blank()
-      ) + facet_wrap(~factor)
+      ) + facet_wrap(~factor, scales="free")
   
   # If color_by is numeric, define the default gradient
   if (is.numeric(color_by)) { p <- p + scale_color_gradientn(colors=terrain.colors(10)) }

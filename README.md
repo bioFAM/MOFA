@@ -127,6 +127,19 @@ browseVignettes("MOFAtools")
 
 ## Frequently asked questions
 
+**I get the following error when running MOFA:**
+```
+sh: mofa: command not found
+```
+This occurs if the mofa binary is not in the $PATH of Rstudio. This will be fixed in a new update, a simple workaround is to get the full path of the mofa executable by doing:
+```
+which mofa
+```
+and then copy the path into runMOFA:
+```
+runMOFA(object, DirOptions, ..., mofaPath="PUT THE PATH HERE")
+```
+
 **I get the following error when installing the R package:**
 ```
 ERROR: dependencies 'pcaMethods', 'MultiAssayExperiment' are not available for package 'MOFAtools'

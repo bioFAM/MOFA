@@ -442,6 +442,11 @@ def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_na
     assert len(np.unique(view_names)) == len(view_names), 'View names must be unique'
     assert len(np.unique(sample_names)) == len(sample_names), 'Sample names must be unique'
 
+    # Create output directory
+    if not os.path.isdir(os.path.dirname(outfile)):
+        print("Output directory does not exist, creating it...")
+        os.makedirs(os.path.dirname(outfile))
+
     # For some reason h5py orders the datasets alphabetically, so we have to modify the likelihood accordingly
     idx = sorted(range(len(view_names)), key=lambda k: view_names[k])
     tmp = [model_opts["likelihood"][idx[m]] for m in range(len(model_opts["likelihood"]))]

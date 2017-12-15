@@ -5,7 +5,7 @@
 
 
 #' @title Visualize histogram of one latent factor
-#' @name FactorHistPlot
+#' @name plotFactorHist
 #' @description generate a histogram of the sample values in a given latent factor
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param factor character vector with the factor name or numeric vector with the index of the factor.
@@ -21,7 +21,7 @@
 #' @return ggpplot object
 #' @import ggplot2
 #' @export
-FactorHistPlot <- function(object, factor, group_by = NULL, group_names = "", alpha = 0.6, binwidth = NULL, xlabel = "", showMissing = FALSE) {
+plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", alpha = 0.6, binwidth = NULL, xlabel = "", showMissing = FALSE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -96,7 +96,7 @@ FactorHistPlot <- function(object, factor, group_by = NULL, group_names = "", al
 
 
 #' @title Visualize beeswarm plot of one latent variable
-#' @name FactorBeeswarmPlot
+#' @name plotFactorBeeswarm
 #' @description fill this
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param factors factors to plot
@@ -111,7 +111,7 @@ FactorHistPlot <- function(object, factor, group_by = NULL, group_names = "", al
 #' @import ggbeeswarm
 #' @import grDevices
 #' @export
-FactorBeeswarmPlot <- function(object, factors, color_by = NULL, name_color="", showMissing = FALSE) {
+plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color="", showMissing = FALSE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel")  stop("'object' has to be an instance of MOFAmodel")
@@ -188,7 +188,7 @@ FactorBeeswarmPlot <- function(object, factors, color_by = NULL, name_color="", 
 }
 
 #' @title Visualize scatterplot of two latent variables
-#' @name FactorsScatterPlot
+#' @name plotFactorScatter
 #' @description fill this
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param factors vector of two factor to plot
@@ -202,7 +202,7 @@ FactorBeeswarmPlot <- function(object, factors, color_by = NULL, name_color="", 
 #' @references fill this
 #' @import ggplot2
 #' @export
-FactorsScatterPlot <- function (object, factors, color_by = NULL, shape_by = NULL, name_color="",
+plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL, name_color="",
                          name_shape="", showMissing = TRUE) {
   
   # Sanity checks
@@ -309,7 +309,7 @@ FactorsScatterPlot <- function (object, factors, color_by = NULL, shape_by = NUL
   
   
 #' @title Visualize scatterplot of all latent variables in a pair-wise grid
-#' @name FactorsScatterPairs
+#' @name plotFactorScatters
 #' @description fill this
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param factors vector of factors to plot or "all"
@@ -323,8 +323,7 @@ FactorsScatterPlot <- function (object, factors, color_by = NULL, shape_by = NUL
 #' @references fill this
 #' @import ggplot2 GGally grDevices
 #' @export
-#' 
-FactorsScatterPairs <- function(object, factors = "all", showMissing=TRUE, 
+plotFactorScatters <- function(object, factors = "all", showMissing=TRUE, 
                          color_by=NULL, name_color="",  
                          shape_by=NULL, name_shape="") {
   
@@ -348,7 +347,7 @@ FactorsScatterPairs <- function(object, factors = "all", showMissing=TRUE,
   # Remove constant factors 
   tmp <- apply(Z,2,var,na.rm=T)
   if (any(tmp==0)) {
-    message(paste0("Removing constant factors: ", paste(which(tmp==0), collapse="")))
+    # message(paste0("Removing constant factors: ", paste(which(tmp==0), collapse="")))
     Z <- Z[,!tmp==0]
     factors <- factors[!tmp==0]
   }
@@ -474,7 +473,7 @@ FactorsScatterPairs <- function(object, factors = "all", showMissing=TRUE,
 
 
 #' @title Plot the correlation matrix between the latent factors
-#' @name PlotCorFactors
+#' @name plotFactorCor
 #' @description method to plot the correlation between the latent factors.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param method a character string indicating which correlation coefficient is to be computed: pearson (default), kendall, or spearman.
@@ -485,7 +484,7 @@ FactorsScatterPairs <- function(object, factors = "all", showMissing=TRUE,
 #' @return symmetric matrix with the correlation coefficient between every pair of factors
 #' @import corrplot
 #' @export
-PlotCorFactors <- function(object, method = "pearson", ...) {
+plotFactorCor <- function(object, method = "pearson", ...) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")

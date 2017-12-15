@@ -125,5 +125,8 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   } else {
     stop("The model has no active factors")
   }
+  
+  # Check for intercept factors
+  findInterceptFactors(object)
 }
 

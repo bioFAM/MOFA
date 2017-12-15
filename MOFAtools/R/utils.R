@@ -1,3 +1,19 @@
+
+findInterceptFactors <- function(object, cor_threshold = 0.8) {
+  # Sanity checks
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
+  
+  data <- getTrainData(object)
+  factors <- getFactors(object, include_intercept = F)
+  
+  r <- lapply(data, function(x) abs(cor(apply(x,2,mean),factors, use="complete.obs")))
+  for (i in names(r)) {
+    if (any(r[[i]]>cor_threshold))
+      cat(paste0("Warning: factor ",which(r[[i]]>cor_threshold)," is capturing a size factor effect in ", i, " view, which indicates that input data might not be properly normalised...\n"))
+  }
+} 
+
+
 subset_augment <- function(mat, pats) {
   pats <- unique(pats)
   mat <- t(mat)
@@ -37,7 +53,7 @@ detectPassengers <- function(object, views = "all", factors = "all", r2_threshol
   r2 <- calculateVarianceExplained(object, views = views, factors = factors, plotit = F, totalVar = T)$R2PerFactor
   unique_factors <- names(which(rowSums(r2>=r2_threshold)==1))
   
-  # Mask samples that have full missing views
+  # Mask samples that are unique in the unique factors
   missing <- sapply(getTrainData(object,views), function(view) sampleNames(object)[apply(view, 2, function(x) all(is.na(x)))] )
   names(missing) <- viewNames(object)
   for (factor in unique_factors) {

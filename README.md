@@ -128,7 +128,7 @@ browseVignettes("MOFAtools")
 
 ## Frequently asked questions
 
-**I get the following error when running MOFA:**
+** (1) I get the following error when running MOFA:**
 ```
 sh: mofa: command not found
 ```
@@ -141,7 +141,7 @@ and then copy the path into runMOFA:
 runMOFA(object, DirOptions, ..., mofaPath="PUT THE PATH HERE")
 ```
 
-**I get the following error when installing the R package:**
+** (2) I get the following error when installing the R package:**
 ```
 ERROR: dependencies 'pcaMethods', 'MultiAssayExperiment' are not available for package 'MOFAtools'
 ```

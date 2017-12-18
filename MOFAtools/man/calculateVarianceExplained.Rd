@@ -5,7 +5,7 @@
 \title{Calculate variance explained by the model}
 \usage{
 calculateVarianceExplained(object, views = "all", factors = "all",
-  perView = F, totalVar = T, plotit = T)
+  plotit = T, include_intercept = TRUE)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
@@ -14,20 +14,20 @@ calculateVarianceExplained(object, views = "all", factors = "all",
 
 \item{factors}{character vector with the factor names, or numeric vector with the factor indexes. Default is 'all'}
 
-\item{perView}{boolean, whether to calculate in addition the variance explained (R2) per view, using all factors (default TRUE)}
-
-\item{totalVar}{calculate variance explained (R2) with respect to the total variance (TRUE) or the residual variance (FALSE?}
-
 \item{plotit}{boolean, wether to produce a plot (default True)}
+
+\item{include_intercept}{include the intercept factor for calculation of variance explained (only used when an intercept was learned)}
 }
 \value{
 a list with matrices with the amount of variation explained per factor and view, and optionally total variance explained per view and variance explained by each feature alone
 }
 \description{
-Method to calculate variance explained by the MOFA model for each view and latent factor, and optionally also for each feature.
+Method to calculate variance explained by the MOFA model for each view and latent factor.
 As a measure of variance explained we adopt the coefficient of determination (R2).
-For non-gaussian views the calculations are based on the normally-distributed pseudo-data (for more information on the non-gaussian model see Seeger & Bouchard, 2012).
+For non-gaussian views the calculations are based on the normally-distributed pseudo-data (for more information on the non-gaussian model see Supplementary Methods of the MOFA paper or Seeger & Bouchard, 2012).
 }
 \details{
-TO-DO: IMPROVE THIS DOCUMENTATION
+This function takes a trained MOFA model as input and calculates for each view the coefficient of determination (R2),
+i.e. the proportion of variance in the data explained by the MOFA factor(s) (both jointly and for each individual factor). In case of non-Gaussian data the variance explained on the 
+Gaussian pseudo-data is calculated.
 }

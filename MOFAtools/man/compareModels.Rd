@@ -10,6 +10,8 @@ compareModels(models, comparison = "all", ...)
 \item{models}{a list containing \code{\link{MOFAmodel}} objects.}
 
 \item{comparison}{tye of comparison, either 'pairwise' or 'all'}
+
+\item{...}{extra arguments passed to pheatmap}
 }
 \value{
 Plots a heatmap of correlation of Latent Factors in all models when 'comparison' is 'all'. 
@@ -23,7 +25,7 @@ Ideally, the output should look like a block diagonal matrix, suggesting that al
 If not, it suggests that some factors are weak and not captured by all models.
 }
 \details{
-asd
+TO-FILL
 }
 \references{
 fill this

@@ -5,7 +5,7 @@
 \title{Do predictions using a fitted MOFA model}
 \usage{
 predict(object, views = "all", factors = "all", type = c("inRange",
-  "response", "link"))
+  "response", "link"), include_intercept = TRUE)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}

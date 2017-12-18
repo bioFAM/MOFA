@@ -202,17 +202,17 @@ for (factor in interestingFactors) {
 
 Samples can be visualized along factors of interest using the 'FactorsScatterPlot' function.
 ```{r}
-FactorsScatterPlot(MOFAobject, factors = 1:2, color_by = "IGHV", shape_by = "trisomy12")
+plotFactorScatter(MOFAobject, factors = 1:2, color_by = "IGHV", shape_by = "trisomy12")
 ```
 
 An overview of pair-wise sctterplots for all or a subset of factors is produced by the 'FactorsScatterPairs' function
 ```{r}
-FactorsScatterPairs(MOFAobject, factors = 1:4, color_by = "IGHV")
+plotFactorScatters(MOFAobject, factors = 1:4, color_by = "IGHV")
 ```
 
 A single factor can be visualised using the 'FactorBeeswarmPlot' function
 ```{r}
-FactorBeeswarmPlot(MOFAobject, factors = 1, color_by = "IGHV")
+plotFactorBeeswarm(MOFAobject, factors = 1, color_by = "IGHV")
 ```
 
 ## Customized analysis
@@ -252,7 +252,7 @@ imputedDrugs <- getImputedData(MOFAobject, view="Drugs")
 Samples can be clustered according to their values on some or all latent factors using the 'clusterSamples' function. CLusters can for example be visualised using the FactorsScatterPlot function
 ```{r}
 h <- clusterSamples(MOFAobject, k=2, factors=1)
-FactorsScatterPlot(MOFAobject, factors=1:2, color_by=h$cluster)
+plotFactorScatters(MOFAobject, factors=1:2, color_by=h$cluster)
 ```
 
 

@@ -1,8 +1,12 @@
 
 # General function to set names
-.setNames <- function(object, values, dimensionality) {
+.setNames <- function(object, values, dimensionality, views="all") {
   nodes <- names(object@Expectations)
-  views <- names(object@Dimensions$D)
+  if (paste0(views,collapse="") == "all") { 
+    views <- names(object@Dimensions$D) 
+  } else {
+    stopifnot(all(views%in%names(object@Dimensions$D) ))
+  } 
   
   # Loop over training data
   for (m in views) {
@@ -17,7 +21,8 @@
   for (node in nodes) {
     
     # Multi-view nodes
-    if (setequal(names(object@Expectations[[node]]),views)) {
+    if (node != "Z") {
+    # if (setequal(names(object@Expectations[[node]]),views)) {
       
       # Loop over views
       for (m in views) {
@@ -148,9 +153,10 @@ setReplaceMethod("featureNames", signature(object="MOFAmodel", value="list"),
     if (!all(sapply(value,length)==sapply(object@TrainData,nrow)))
       stop("feature names do not match the dimensionality of the data (columns)")
     
-    for (m in 1:length(object@TrainData))
-      object <- .setNames(object, value[[m]], object@Dimensions[["D"]][[m]])
-    object
+    for (m in 1:length(object@TrainData)) {
+      object <- .setNames(object, value[[m]], object@Dimensions[["D"]][m], names(object@Dimensions[["D"]][m]))
+    }
+    return(object)
 })
 
 #################################

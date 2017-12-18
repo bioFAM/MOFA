@@ -4,21 +4,22 @@
 \alias{getImputedData}
 \title{Fetch the imputed data}
 \usage{
-getImputedData(object, views = "all", features = "all", as.data.frame = F)
+getImputedData(object, views = "all", features = "all",
+  as.data.frame = FALSE)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{views}{character vector with the view name(s), or numeric vector with the view index(es), default is "all".}
+\item{views}{character vector with the view name(s), or numeric vector with the view index(es). Default is "all".}
 
-\item{features}{list of character vectors with the feature names or list of numeric vectors with the feature indices, default is "all"}
+\item{features}{list of character vectors with the feature names or list of numeric vectors with the feature indices. Default is "all"}
 
-\item{as.data.frame}{boolean indicating whether to return a long-formatted data frame instead of a list of matrices, default is FALSE.}
+\item{as.data.frame}{boolean indicating whether to return a long-formatted data frame instead of a list of matrices. Default is FALSE.}
 }
 \value{
-by default returns a list where each element is a matrix with dimensionality (D,N) where D is the number of features in this view and N is the number of samples.
+By default returns a list where each element is a matrix with dimensionality (D,N), where D is the number of features in this view and N is the number of samples. \cr
 Alternatively, if as.data.frame is TRUE, returns a long-formatted data frame with columns (view,feature,sample,value).
 }
 \description{
-collect the imputed data. It requires the previous use of the \code{\link{imputeMissing}} method.
+Function to collect the imputed data. It requires the previous use of the \code{\link{imputeMissing}} method.
 }

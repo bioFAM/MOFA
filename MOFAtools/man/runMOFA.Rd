@@ -4,12 +4,16 @@
 \alias{runMOFA}
 \title{runMOFA:}
 \usage{
-runMOFA(object, DirOptions)
+runMOFA(object, DirOptions, ..., mofaPath = "mofa")
 }
 \arguments{
 \item{object}{an untrained \code{\link{MOFAmodel}}}
 
 \item{DirOptions}{list with I/O options, should contain at least 'dataDir' where the input matrices as stored as .txt files and 'outFile' where the model is going to be stored as a .hdf5 file}
+
+\item{...}{Extra options to add to the mofa command}
+
+\item{mofaPath}{Path the the mofa script. Use this if mofa is not in your $PATH.}
 }
 \value{
 a trained \code{\link{MOFAmodel}}

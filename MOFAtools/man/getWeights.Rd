@@ -4,21 +4,18 @@
 \alias{getWeights}
 \title{Extract the weights from the model}
 \usage{
-getWeights(object, views = "all", factors = "all", as.data.frame = F)
+getWeights(object, views = "all", factors = "all", as.data.frame = FALSE)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{views}{character vector with the view name(s), or numeric vector with the view index(es), default is "all".}
+\item{views}{character vector with the view name(s), or numeric vector with the view index(es). Default is "all".}
 
-\item{factors}{character vector with the factor name(s) or numeric vector with the factor index(es), default is "all".}
+\item{factors}{character vector with the factor name(s) or numeric vector with the factor index(es) (here 0 corresponds to the intercept factor if included in the model). Default is "all".}
 
-\item{as.data.frame}{boolean indicating whether to return a long data frame instead of a list of matrices, default is FALSE.}
+\item{as.data.frame}{boolean indicating whether to return a long data frame instead of a list of matrices. Default is FALSE.}
 }
 \value{
-by default returns a list where each element is a loading matrix with dimensionality (D,K) where D is the number of features in this view and K is the number of factors.
-Alternatively, if as.data.frame is TRUE, returns a long-formatted data frame with columns (view,feature,factor,value)
-}
-\details{
-TO-DO: INCLUDE FEATURES
+By default returns a list where each element is a loading matrix with dimensionality (D,K), where D is the number of features in this view and K is the number of factors. \cr
+Alternatively, if as.data.frame is TRUE, returns a long-formatted data frame with columns (view,feature,factor,value).
 }

@@ -12,7 +12,8 @@
 #' If not, it suggests that some factors are weak and not captured by all models.
 #' @param models a list containing \code{\link{MOFAmodel}} objects.
 #' @param comparison tye of comparison, either 'pairwise' or 'all'
-#' @details asd
+#' @param ... extra arguments passed to pheatmap
+#' @details TO-FILL
 #' @return Plots a heatmap of correlation of Latent Factors in all models when 'comparison' is 'all'. 
 #' Otherwise, for each pair of models, a seperate heatmap is produced comparing one model againt the other.
 #' The corresponding correlation matrix or list or pairwise correlation matrices is returned

@@ -17,7 +17,7 @@
 #' @param xlabel define x-axis label (default is NULL)
 #' @details One of the first steps for the annotation of factors is to visualise and group/color them using known covariates such as phenotypic or clinical data.
 #' This method generates a histogram of the sample values in a given latent factor. Note that, similar to Principal Component Analysis, the factor values should be interpreted in a relative manner.
-#' Similar functions are \code{\link{FactorsScatterPlot}} for doing scatter plots and \code{\link{FactorBeeswarmPlot}} for doing Beeswarm plots
+#' Similar functions are \code{\link{plotFactorScatters}} for doing scatter plots and \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots
 #' @return ggpplot object
 #' @import ggplot2
 #' @export
@@ -105,7 +105,7 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
 #' @param showMissing boolean, if false, removes sample for which shape_by or color_by is missing
 #' @details One of the main steps for the annotation of factors is to visualise and group/color them using known covariates or phenotypic data.
 #' This method generates a beeswarm plot of the sample values in a given latent factor. Note that, similar to Principal Component Analysis, the factor values should be interpreted in a relative manner.
-#' Similar functions are \code{\link{FactorsScatterPlot}} for doing scatter plots and \code{\link{FactorHistPlot}} for doing histogram plots
+#' Similar functions are \code{\link{plotFactorScatters}} for doing scatter plots and \code{\link{plotFactorHist}} for doing histogram plots
 #' @return ggplot object
 #' @import ggplot2
 #' @import ggbeeswarm

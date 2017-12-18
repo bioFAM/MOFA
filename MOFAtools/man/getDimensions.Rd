@@ -10,5 +10,5 @@ getDimensions(object)
 \item{object}{a \code{\link{MOFAmodel}} object.}
 }
 \description{
-K indicates the number of factors, D indicates the number of features, N indicates the number of samples and M indicates the number of views.
+K indicates the number of factors, D indicates the number of features, N indicates the (total) number of samples and M indicates the number of views.
 }

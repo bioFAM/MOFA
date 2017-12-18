@@ -22,7 +22,7 @@ Theta: TO-FILL \cr
 Tau: TO-FILL
 }
 \description{
-this method extracts the expectations from the (variational) posterior distributions of a trained MOFAmodel.
+Function to extract the expectations from the (variational) posterior distributions of a trained MOFAmodel.
 }
 \details{
 Technical note: MOFA is a Bayesian model where each variable has a prior distribution and a posterior distribution. 

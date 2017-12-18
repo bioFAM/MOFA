@@ -12,6 +12,6 @@ getCovariates(object, names)
 \item{names}{names of the covariates}
 }
 \description{
-this function extracts the covariates defined by the user. 
+(NOT PROPERLY IMPLEMENTED YET) this function extracts the covariates defined by the user. 
 Note that (for now) the model can be run with known covariates only if they are stored in the colData of the MultiAssayExperiment input object. See \code{\link{createMOFAobject}}.
 }

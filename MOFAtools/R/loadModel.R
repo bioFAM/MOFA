@@ -77,8 +77,8 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   
   # Set view, sample, featuure and factor names
   viewNames(object) <- names(object@TrainData)
-  MOFAtools::sampleNames(object) <- colnames(object@TrainData[[1]])
-  MOFAtools::featureNames(object) <- lapply(object@TrainData,rownames)
+  sampleNames(object) <- colnames(object@TrainData[[1]])
+  featureNames(object) <- lapply(object@TrainData,rownames)
   factorNames(object) <- as.character(1:object@Dimensions[["K"]])
     
   # Rename covariates, including intercept
@@ -127,6 +127,6 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   }
   
   # Check for intercept factors
-  findInterceptFactors(object)
+  # findInterceptFactors(object)
 }
 

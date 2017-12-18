@@ -16,7 +16,8 @@
 #' @return List with data predictions, each element corresponding to a view.
 #' @export
 
-predict <- function(object, views = "all", factors = "all", type = c("inRange","response", "link")){
+predict <- function(object, views = "all", factors = "all", type = c("inRange","response", "link"),
+  include_intercept=TRUE){
 
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -37,8 +38,8 @@ predict <- function(object, views = "all", factors = "all", type = c("inRange","
       else{ stopifnot(all(factors %in% factorNames(object))) }
 
   # add intercept factor for prediction
-  if(!"intercept" %in% factors & object@ModelOpts$learnIntercept) factors <- c("intercept", factors)  
-  
+  if(!"intercept" %in% factors & object@ModelOpts$learnIntercept & include_intercept) factors <- c("intercept", factors)  
+  if(!include_intercept & "intercept" %in% factors) factors <- factors[factors!="intercept"]
   # Get type of predictions wanted 
   type = match.arg(type)
   

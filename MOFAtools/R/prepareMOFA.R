@@ -6,7 +6,7 @@
 #' @param DirOptions list with I/O options, it must contain a 'dataDir' element where temporary text files will be stored and a 'outFile' where the final model will be stored as an hdf5 object.
 #' @param DataOptions list of DataOptions (see getDefaultDataOpts for what options can be set here). If NULL, default data options are used.
 #' @param ModelOptions list of ModelOptions (see getDefaultModelOpts for what options can be set here). If NULL, default model options are used.
-#' @param TrainOptions list of TrainOptions (see getDefaultTrainOptions for what options can be set here). If NULL, default training options are used.
+#' @param TrainOptions list of TrainOptions (see getDefaultTrainOpts for what options can be set here). If NULL, default training options are used.
 #' @return a untrained MOFA object with specified DataOpts, ModelOpts and TrainOpts 
 #' @export
 

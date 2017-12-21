@@ -16,7 +16,7 @@ prepareMOFA(object, DirOptions, DataOptions = NULL, ModelOptions = NULL,
 
 \item{ModelOptions}{list of ModelOptions (see getDefaultModelOpts for what options can be set here). If NULL, default model options are used.}
 
-\item{TrainOptions}{list of TrainOptions (see getDefaultTrainOptions for what options can be set here). If NULL, default training options are used.}
+\item{TrainOptions}{list of TrainOptions (see getDefaultTrainOpts for what options can be set here). If NULL, default training options are used.}
 }
 \value{
 a untrained MOFA object with specified DataOpts, ModelOpts and TrainOpts

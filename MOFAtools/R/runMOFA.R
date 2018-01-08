@@ -44,7 +44,7 @@ runMOFA <- function(object, DirOptions, ..., mofaPath="mofa") {
   }
   arglist$learnIntercept <- as.logical(object@ModelOpts$learnIntercept)
   if (! object@ModelOpts$sparsity) {
-    arglist$learnTheta <- 0
+    arglist$learnTheta <- rep(0, object@Dimensions$M) 
   } else {
     arglist$learnTheta <- NULL
   }

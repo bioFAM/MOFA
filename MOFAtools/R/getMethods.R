@@ -83,7 +83,7 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
       if (object@ModelOpts$learnIntercept == T) {
         factors <- factorNames(object)[factors+1]
       } else {
-        factors <- factorNames(object)[factors+1]
+        factors <- factorNames(object)[factors]
       }
     } else { stopifnot(all(factors %in% factorNames(object))) }
         

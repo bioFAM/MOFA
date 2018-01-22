@@ -33,5 +33,5 @@ generate a histogram of the sample values in a given latent factor
 \details{
 One of the first steps for the annotation of factors is to visualise and group/color them using known covariates such as phenotypic or clinical data.
 This method generates a histogram of the sample values in a given latent factor. Note that, similar to Principal Component Analysis, the factor values should be interpreted in a relative manner.
-Similar functions are \code{\link{FactorsScatterPlot}} for doing scatter plots and \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots
+Similar functions are \code{\link{plotFactorScatters}} for doing scatter plots and \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots
 }

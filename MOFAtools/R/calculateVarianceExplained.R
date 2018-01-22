@@ -1,22 +1,23 @@
 
 #' @title Calculate variance explained by the model
 #' @name calculateVarianceExplained
-#' @description Method to calculate variance explained by the MOFA model for each view and latent factor, and optionally also for each feature.
+#' @description Method to calculate variance explained by the MOFA model for each view and latent factor.
 #' As a measure of variance explained we adopt the coefficient of determination (R2).
-#' For non-gaussian views the calculations are based on the normally-distributed pseudo-data (for more information on the non-gaussian model see Seeger & Bouchard, 2012).
+#' For non-gaussian views the calculations are based on the normally-distributed pseudo-data (for more information on the non-gaussian model see Supplementary Methods of the MOFA paper or Seeger & Bouchard, 2012).
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param views character vector with the view names, or numeric vector with view indexes. Default is 'all'
 #' @param factors character vector with the factor names, or numeric vector with the factor indexes. Default is 'all'
-#' @param perView boolean, whether to calculate in addition the variance explained (R2) per view, using all factors (default TRUE)
-#' @param totalVar calculate variance explained (R2) with respect to the total variance (TRUE) or the residual variance (FALSE? 
 #' @param plotit boolean, wether to produce a plot (default True)
-#' @details TO-DO: IMPROVE THIS DOCUMENTATION
+#' @param include_intercept include the intercept factor for calculation of variance explained (only used when an intercept was learned)
+#' @details This function takes a trained MOFA model as input and calculates for each view the coefficient of determination (R2),
+#' i.e. the proportion of variance in the data explained by the MOFA factor(s) (both jointly and for each individual factor). In case of non-Gaussian data the variance explained on the 
+#' Gaussian pseudo-data is calculated. 
 #' @return a list with matrices with the amount of variation explained per factor and view, and optionally total variance explained per view and variance explained by each feature alone
 #' @import pheatmap ggplot2 reshape2
 #' @importFrom cowplot plot_grid
 #' @export
 
-calculateVarianceExplained <- function(object, views = "all", factors = "all", perView = F, totalVar = T, plotit = T) {
+calculateVarianceExplained <- function(object, views = "all", factors = "all", plotit = T, include_intercept=TRUE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -36,74 +37,76 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", p
       else factors <- factorNames(object)[factors]
     }
       else{ stopifnot(all(factors %in% factorNames(object))) }
+  factors <- factors[factors!="intercept"]
 
-  # add intercept factor as null model
-  if(!"intercept" %in% factors & object@ModelOpts$learnIntercept) factors <- c("intercept", factors)  
+  # check whether the intercept was learned
+  if(!object@ModelOpts$learnIntercept & include_intercept) {
+    include_intercept <- FALSE
+    warning("No intercept was learned in MOFA.\n Intercept is not included in the model prediction.")
+  }
   
   K <- length(factors)
 
-  # Collect relevant expectations
+  # Collect relevant expectations, for non-Gaussian liklihoods pseudodata is considered
   SW <- getWeights(object,views,factors)
   Z <- getFactors(object,factors)
   Y <- getExpectations(object,"Y")
   
-  # Calculate predictions under the MOFA model using all or a single factor
-  Z[is.na(Z)] <- 0 # replace masked values on Z by 0 (do not contribute to predicitons)
-  Ypred_m <- lapply(views, function(m) Z%*%t(SW[[m]])); names(Ypred_m) <- views
-  Ypred_mk <- lapply(views, function(m) {
-                      ltmp <- lapply(factors, function(k) Z[,k]%*%t(SW[[m]][,k]) ); names(ltmp) <- factors; ltmp
-                    }); names(Ypred_mk) <- views
-  
-  # # Mask the predictions (unnecessary as difference below is NA already)
-  # for (m in views) { 
-  #   Ypred_m[[m]][which(is.na(Y[[m]]))] <- NA 
-  #   for (k in factors) {
-  #     Ypred_mk[[m]][[k]][which(is.na(Y[[m]]))] <- NA 
-  #   }
-  # }
-
-  # Calculate prediction under the null model (intercept only)
-    #by default the null model is using the intercept LF if present and not the actual mean
-    NullModel <- lapply(views, function(m)  {
-      # take intercept from samples which are not missing (same for all patients)
-      if(object@ModelOpts$learnIntercept==T) apply(Ypred_mk[[m]][["intercept"]],2, function(c) unique(c[!is.na(c)]))
-        else apply(Y[[m]],2,mean,na.rm=T)
+  # Calulcate feature-wise mean as null model
+    FeatureMean <- lapply(views, function(m)  {
+      apply(Y[[m]],2,mean,na.rm=T)
       })
-    names(NullModel) <- views
+    names(FeatureMean) <- views
+
+  # Sweep out the feature-wise mean to calculate null model residuals
+    resNullModel <- lapply(views, function(m) sweep(Y[[m]],2,FeatureMean[[m]],"-"))
+    names(resNullModel) <- views
+
+  # replace masked values on Z by 0 (do not contribute to predicitons)
+  Z[is.na(Z)] <- 0 
     
-    resNullModel <- lapply(views, function(m) sweep(Y[[m]],2,NullModel[[m]],"-")); names(resNullModel) <- views
-    partialresNull <- lapply(views, function(m) sweep(Ypred_m[[m]],2,NullModel[[m]],"-")); names(partialresNull) <- views
-    
-  # Remove intercept factor if present
-  if(object@ModelOpts$learnIntercept==T) factorsNonconst <- factors[-1] else  factorsNonconst <- factors
-    
+  # Calculate predictions under the MOFA model using all (non-intercept) factors
+  Ypred_m <- lapply(views, function(m) Z%*%t(SW[[m]])); names(Ypred_m) <- views
+
+  # Calculate predictions under the MOFA model using each (non-intercept) factors on its own
+  Ypred_mk <- lapply(views, function(m) {
+                      ltmp <- lapply(factors, function(k) Z[,k]%*%t(SW[[m]][,k]) )
+                      names(ltmp) <- factors
+                      ltmp
+                    })
+  names(Ypred_mk) <- views
+  
+  # If an intercept is included, regress out the intercept from the data
+  if(include_intercept){
+      intercept <- getWeights(object,views,"intercept")
+      Y <- lapply(views, function(m) sweep(Y[[m]],2,intercept[[m]],"-"))
+      names(Y) <- views
+  }
+
   # Calculate coefficient of determination
-    # per view
+    ## per view
     fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T))
      
-    # per factor and view
-     if (totalVar) {
-       fvar_mk <- matrix(sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((resNullModel[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) )), ncol=length(views), nrow=length(factorsNonconst))
-     } else {
-       fvar_mk <- matrix(sapply(views, function(m) sapply(factorsNonconst, function(k) 1 - sum((partialresNull[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(partialresNull[[m]]**2, na.rm=T) )), ncol=length(views), nrow=length(factorsNonconst))
-     }
+    ## per factor and view
+    fvar_mk <- matrix(sapply(views, function(m) sapply(factors, function(k) 1 - sum((Y[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) )), ncol=length(views), nrow=length(factors))
 
-    # Set names
+
+    ## Set names
     names(fvar_m) <- views
     colnames(fvar_mk) <- views
-    rownames(fvar_mk) <- factorsNonconst 
+    rownames(fvar_mk) <- factors
     
     # calculate variance explained by view 
     # TO-DO: CHECK AND TOO SLOW
-    if (perView) {
-      stop()
-      fvar_mk <- sapply(views, function(m) sapply(factorsNonconst, function(l) sum(sapply(factorsNonconst, function(k) cov(Ypred_mk[[m]][[l]], Ypred_mk[[m]][[k]])))))
-    }
+    # if (perView) {
+    #   stop()
+    #   fvar_mk <- sapply(views, function(m) sapply(factors, function(l) sum(sapply(factors, function(k) cov(Ypred_mk[[m]][[l]], Ypred_mk[[m]][[k]])))))
+    # }
     
     # Plot the variance explained
     if (plotit) {
       
-      # Sort factors
+      ## Sort factors accorcing to hier. clustering
       fvar_mk_df <- reshape2::melt(fvar_mk, varnames=c("factor","view"))
       fvar_mk_df$factor <- factor(fvar_mk_df$factor)
       if (ncol(fvar_mk)>1) {
@@ -128,13 +131,8 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", p
           axis.ticks =  element_blank(),
           panel.background = element_blank()
           )
-      
       hm <- hm + ggtitle("Variance explained per factor")  + 
-      if (totalVar) {
-        guides(fill=guide_colorbar("R2"))
-      } else {
-        guides(fill=guide_colorbar("Residual R2")) 
-      }
+              guides(fill=guide_colorbar("R2"))
         
       # Plot 2: barplot with coefficient of determination (R2) per view
       fvar_m_df <- data.frame(view=names(fvar_m), R2=fvar_m)
@@ -157,24 +155,20 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", p
           axis.text.y = element_text(size=12, color="black"),
           axis.title.y = element_text(size=13, color="black"),
           axis.line = element_line(size=rel(1.0), color="black")
-            )
+        )
       
       # Join the two plots
-      # Need to fix alignment using e.g. gtable...
-      # gg_R2 <- gridExtra::arrangeGrob(hm, bplt, ncol=1, heights=c(length(factorsNonconst),7) )
-      # gg_R2 <- gridExtra::arrangeGrob(bplt, hm, ncol=1, heights=c(1/2,1/2) )
-      # gridExtra::grid.arrange(gg_R2)
-      p <- plot_grid(bplt, hm, align="v", nrow=2, rel_heights=c(1/3,2/3))
+      p <- plot_grid(bplt, hm, align="v", nrow=2, rel_heights=c(1/3,2/3), axis="l")
       print(p)
       
-      # Plot 3: variance explained per view (TO CHECK)
-      if (perView) {
-        cols  <- c(RColorBrewer::brewer.pal(9, "Set1"),RColorBrewer::brewer.pal(8, "Dark2"))
-        par(mfrow=c(1,2))
-        barplot(t(t(fvar_mk)/colSums(fvar_mk)), col = cols, horiz = T, main = "Variance components per view", ncol = 2)
-        plot.new()
-        legend("center", fill=cols, legend=factorsNonconst)
-      }
+      # # Plot 3: variance explained per view (TO CHECK)
+      # if (perView) {
+      #   cols  <- c(RColorBrewer::brewer.pal(9, "Set1"),RColorBrewer::brewer.pal(8, "Dark2"))
+      #   par(mfrow=c(1,2))
+      #   barplot(t(t(fvar_mk)/colSums(fvar_mk)), col = cols, horiz = T, main = "Variance components per view", ncol = 2)
+      #   plot.new()
+      #   legend("center", fill=cols, legend=factors)
+      # }
      
     }
     
@@ -183,9 +177,10 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", p
     R2_list <- list(
       R2Total = fvar_m,
       R2PerFactor = fvar_mk)
-    if (perView) {
-      R2_list$PerView <- fvar_mk
-    }
+
+    # if (perView) {
+    #   R2_list$PerView <- fvar_mk
+    # }
   
   return(R2_list)
  

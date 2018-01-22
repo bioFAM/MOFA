@@ -27,5 +27,5 @@ fill this
 \details{
 One of the main steps for the annotation of factors is to visualise and group/color them using known covariates or phenotypic data.
 This method generates a beeswarm plot of the sample values in a given latent factor. Note that, similar to Principal Component Analysis, the factor values should be interpreted in a relative manner.
-Similar functions are \code{\link{plotFactorsScatter}} for doing scatter plots and \code{\link{plotFactorHist}} for doing histogram plots
+Similar functions are \code{\link{plotFactorScatters}} for doing scatter plots and \code{\link{plotFactorHist}} for doing histogram plots
 }

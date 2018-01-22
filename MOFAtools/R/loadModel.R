@@ -114,7 +114,7 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   
     # Order factors in order of variance explained
     if (sortFactors == T) {
-      r2 <- rowSums(calculateVarianceExplained(object,totalVar=T,plotit=F)$R2PerFactor)
+      r2 <- rowSums(calculateVarianceExplained(object,plotit=F)$R2PerFactor)
       order_factors <- c(names(r2)[order(r2, decreasing = T)])
       if (object@ModelOpts$learnIntercept==T) { order_factors <- c("intercept",order_factors) }
       object <- subsetFactors(object,order_factors)

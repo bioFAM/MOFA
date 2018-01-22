@@ -171,7 +171,8 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color="", 
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(), 
       panel.background = element_blank(),
-      legend.title=element_text(size=15, hjust=0.5, color="black"),
+      legend.title=element_text(size=20, hjust=0.5, color="black"),
+      legend.text=element_text(size=18, hjust=0.5, color="black"),
       legend.position = "right", 
       legend.direction = "vertical",
       legend.key = element_blank()
@@ -351,7 +352,7 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
     factors <- factors[!tmp==0]
   }
   
-    # Set color
+  # Set color
   colorLegend <- T
   if (!is.null(color_by)) {
     # It is the name of a covariate or a feature in the TrainData
@@ -386,7 +387,7 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
       if(name_shape=="") name_shape <- shape_by
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData(object), rownames)
-      if(shape_by %in% Reduce(union,featureNames)) {
+      if (shape_by %in% Reduce(union,featureNames)) {
         viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
         shape_by <- TrainData[[viewidx]][shape_by,]
       } else if(class(object@InputData) == "MultiAssayExperiment"){

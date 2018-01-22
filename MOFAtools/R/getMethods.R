@@ -93,8 +93,8 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
     weights <- weights[weights$view%in%views & weights$factor%in%factors, ]
   } else {
     weights <- lapply(views, function(m) weights[[m]][,factors,drop=F])
-    # if (length(views)==1) { weights <- weights[[1]] }
     names(weights) <-  views
+    # if (length(views)==1) { weights <- weights[[1]] }
   }
   return(weights)
 }
@@ -202,6 +202,7 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
 #' @export
 #' 
 getCovariates <- function(object, names) {
+  stop("Not implemented")
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  

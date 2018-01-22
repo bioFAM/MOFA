@@ -6,14 +6,15 @@
 #' @return an untrained MOFA model object
 #' @export
 createMOFAobject <- function(data) {
+  
   if (class(data) == "MultiAssayExperiment") {
-    message("Creating MOFA object from a MultiAssayExperiment object...")
+    # message("Creating MOFA object from a MultiAssayExperiment object...")
     object <- .createMOFAobjectFromMAE(data)
   } else if (class(data) == "list") {
-    message("Creating MOFA object from list of matrices...")
+    # message("Creating MOFA object from list of matrices...")
     object <- .createMOFAobjectFromList(data)
   } else {
-    stop("Data has to be provided either as a MultiAssayExperiment object or as a list of matrices ")
+    stop("Data has to be provided either as a list of matrices or as a MultiAssayExperiment object")
   }
   
   # Set dimensionalities
@@ -29,6 +30,8 @@ createMOFAobject <- function(data) {
     viewNames(object) <- paste("view",1:length(object@TrainData), sep="_")
     warning(paste0("View names are not specified in data, renaming them to: ",paste("view",1:length(object@TrainData), sep="_")))
   }
+  
+  print(object)
   
   return(object)
 }

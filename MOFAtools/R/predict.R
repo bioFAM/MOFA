@@ -23,46 +23,64 @@ predict <- function(object, views = "all", factors = "all", type = c("inRange","
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   
   # Get views  
-  if (paste0(views,sep="",collapse="") =="all") { 
-    views = viewNames(object)
+  if (is.numeric(views)) {
+    stopifnot(all(views<=object@Dimensions$M))
+    views <- viewNames(object)[views] 
   } else {
-    stopifnot(all(views%in%viewNames(object)))
+    if (paste0(views,sep="",collapse="") =="all") { 
+      views = viewNames(object)
+    } else {
+      stopifnot(all(views%in%viewNames(object)))
+    }
   }
   
-    # Get factors
-  if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } 
-    else if(is.numeric(factors)) {
+  # Get factors
+  if (paste0(factors,collapse="") == "all") { 
+    factors <- factorNames(object) 
+  } else if(is.numeric(factors)) {
       if (object@ModelOpts$learnIntercept == T) factors <- factorNames(object)[factors+1]
       else factors <- factorNames(object)[factors]
-    }
-      else{ stopifnot(all(factors %in% factorNames(object))) }
+  } else { 
+    stopifnot(all(factors %in% factorNames(object))) 
+  }
 
   # add intercept factor for prediction
   if(!"intercept" %in% factors & object@ModelOpts$learnIntercept & include_intercept) factors <- c("intercept", factors)  
   if(!include_intercept & "intercept" %in% factors) factors <- factors[factors!="intercept"]
+  
   # Get type of predictions wanted 
   type = match.arg(type)
   
   # Collect weights
-  W <- getWeights(object, views="all", factors=factors)
+  W <- getWeights(object, views=views, factors=factors)
 
   # Collect factors
   Z <- getFactors(object)[,factors]
   Z[is.na(Z)] <- 0 # set missing values in Z to 0 to exclude from imputations
  
   # Predict data based on MOFA model
-  predictedData <- lapply(sapply(views, grep, viewNames(object)), function(viewidx){
+  # predictedData <- lapply(sapply(views, grep, viewNames(object)), function(viewidx){
+  predictedData <- lapply(views, function(i){
     
     # calculate terms based on linear model
-    predictedView <- t(Z%*% t(W[[viewidx]])) 
+    predictedView <- t(Z%*% t(W[[i]])) 
     
     # make predicitons based on underlying likelihood
-    if(type!="link"){
-    lk <- object@ModelOpts$likelihood[viewidx]
-    if(lk == "gaussian") predictedView <- predictedView
-      else if (lk == "bernoulli") {predictedView <- (exp(predictedView)/(1+exp(predictedView))); if(type=="inRange") predictedView <- round(predictedView)}
-        else if (lk == "poisson") {predictedView <- (exp(predictedView)); if(type=="inRange") predictedView <- round(predictedView)}
-          else stop("Liklihood not implemented for imputation")
+    if (type!="link") {
+      lk <- object@ModelOpts$likelihood[i]
+      if (lk == "gaussian") { 
+        predictedView <- predictedView 
+      }
+      else if (lk == "bernoulli") { 
+        predictedView <- (exp(predictedView)/(1+exp(predictedView)))
+        if (type=="inRange") predictedView <- round(predictedView)
+      } else if (lk == "poisson") { 
+        predictedView <- (exp(predictedView))
+        if(type=="inRange") predictedView <- round(predictedView)
+      }
+      else { 
+        stop("Likelihood not implemented for imputation") 
+      }
     }
     predictedView
   })

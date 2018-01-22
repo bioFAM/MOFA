@@ -1,0 +1,71 @@
+---
+title: " Vignette illustrating how to regress out technical effects using MOFA"
+author: "Ricard Argelaguet and Britta Velten"
+date: "`r Sys.Date()`"
+output:
+  BiocStyle::html_document:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Example_CLL}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# (UNDER CONSTRUCTION)
+
+# Introduction
+Intuitively, MOFA can be viewed as a versatile and statistically rigorous generalization of principal component analysis (PCA) to multi-omics data. Given several data matrices with measurements of multiple ‘omics data types, MOFA infers a low-dimensional data representation in terms of (hidden) factors. The learnt factors represent the driving sources of variation across data modalities, which include both biological and technical effects. Importantly, MOFA disentangles whether these underlying axes of heterogeneity are unique to a single data modality or are manifested in multiple modalities.
+
+## Do I need to regress out technical effects?
+It depends. In MOFA the factors capture independent sources of variation, which means that if Factor 1 captures a batch effect, the other factors are not influenced by this. Hence, you can proceed to characterise the MOFA factors without worrying about the batch effect. However, if the technical effect is strong, it is likely that the other factors become underrepresented, and refitting the model after removing the batch effect might yield better resolution. In addition, further downstream analysis such as differential expression require that the technical sources of variation are accounted for.
+
+## How to regress out technical effects?
+Several approaches exist to regress out technical effects, such as Combat (Johnson et al, 2007) or PEER (Stegle et al, 2012). MOFA follows a similar underlying model than PEER, but it has the advantage that it pools information from multiple views and it disentangles the variation from all data modalities at the same time. 
+
+
+In MOFA, factors are regressed by subtracting its effect from the original data. If $K$ are to be regressed out from view $m$:
+$$Y_{regressed}^m = Y^m - \sum_{k=1}^K \mathbf{w}^m_k \mathbf{z}_k$$
+where $Y^{m}$ are the observations, $\mathbf{z}_k$ are the values of factor $k$ and $\mathbf{w}^m_k$ are the corresponding weights. 
+
+# Example: XXX data
+```{r, warning=FALSE, message=FALSE}
+library(MOFAtools)
+```
+
+
+## Step 1: Load a trained MOFA model
+```{r}
+MOFAmodel <- loadModel(XXX)
+```
+
+### Overview of the data
+DATA DESCRIPTION
+```{r}
+plotTileData(MOFAmodel)
+```
+
+## Step 2: Variance decomposition
+
+The first step in the analysis of any MOFA model is the variance decomposition plot. The function `CalculateVarianceExplained` shows the fraction of variance explained by each factor in each view. Hence, it give san overview of which factors are active in which views and how strong the effect is:
+```{r}
+r2 <- calculateVarianceExplained(MOFAmodel)
+```
+In this case XXXXXXXXX
+
+## Step 3: Characterisation of batch effects
+The easiest way to characterise batch effects is to plot the latent factors and color the samples based on the known technical covariates.
+```{r}
+
+```
+
+Also, you can inspect the corresponding loadings, which in the case of technical factors tend to be large for a lot of features. In other words, weights for technical factors are usually non-spare, as they tend to have widespread effect in most features.
+```{r}
+plotWeightsHeatmap(MOFAobject, "Mutations", factors=1:5, show_colnames=F)
+plotWeights(MOFAobject, view = "Mutations", factor = 1)
+```
+
+## Step 4: Regress out technical effect
+
+## Step 5: Retrain the model
+
+

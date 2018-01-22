@@ -11,9 +11,10 @@
 #' @param factor character vector with the factor name, or numeric vector with the index of the factor.
 #' @param features if an integer, the total number of features to plot, based on the absolute value of the loading. Default is 50
 #' If a character vector, a set of manually-defined features.
-#' @param includeWeights boolean indicating whether to include the weight of each feature as an extra annotation in the heatmap. Default is FALSE.
+#' @param includeWeights boolean indicating whether to include the weight of each feature as an extra annotation in the heatmap. Default is TRUE
 #' @param transpose boolean indicating whether to transpose the output heatmap. Default is FALSE, which corresponds to features as rows and samples as columns.
 #' @param imputed boolean indicating whether to use the imputed data instead of the original data. Default is FALSE.
+#' @param sortSamples boolean indicating whether to sort samples using the corresponding values in the latent factor. Default is FALSE.
 #' @param ... further arguments that can be passed to \code{\link[pheatmap]{pheatmap}}
 #' @details One of the first steps for the annotation of a given factor is to visualise the corresponding loadings, using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}.
 #' Both methods show you which are the top features that are driving the heterogeneity. \cr
@@ -31,7 +32,7 @@
 #' # Plot top 50 features for factor 1 in the mRNA view, do not show feature or row names
 #' plotDataHeatmap(model, "mRNA", 1, 50, show_colnames = FALSE, show_rownames = FALSE) 
 #' @export
-plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights = FALSE, transpose = FALSE, imputed = FALSE, ...) {
+plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights = FALSE, transpose = FALSE, imputed = FALSE, sortSamples = TRUE, ...) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -43,7 +44,7 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
     } else{ stopifnot(factor %in% factorNames(object)) }
 
   # Collect relevant data
-  W <- getExpectations(object,"SW")[[view]][,factor]
+  W <- getWeights(object)[[view]][,factor]
   Z <- getFactors(object)[,factor]
   Z <- Z[!is.na(Z)]
   
@@ -65,11 +66,14 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
   } else {
     stop("Features need to be either a numeric or character vector")
   }
+  data <- data[features,]
   
   # Sort samples according to latent factors
-  order_samples <- names(sort(Z, decreasing=T))
-  order_samples <- order_samples[order_samples %in% colnames(data)]
-  data <- data[features,order_samples]
+  if (sortSamples==T) {
+    order_samples <- names(sort(Z, decreasing=T))
+    order_samples <- order_samples[order_samples %in% colnames(data)]
+    data <- data[,order_samples]
+  }
   
   # Transpose the data
   if (transpose==T) { data <- t(data) }
@@ -108,7 +112,9 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
 #' @import dplyr
 #' @export
 
-plotDataScatter <- function(object, view, factor, features = 10, color_by = NULL, shape_by = NULL) {
+plotDataScatter <- function(object, view, factor, features = 10,
+                            color_by=NULL, name_color="",  
+                            shape_by=NULL, name_shape="") {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -124,13 +130,13 @@ plotDataScatter <- function(object, view, factor, features = 10, color_by = NULL
   # Collect relevant data
   N <- getDimensions(object)[["N"]]
   Z <- getFactors(object)[,factor]
-  W <- getWeights(views=view, factors=factor)
+  W <- getWeights(object, views=view, factors=factor)[,1]
   Y <- object@TrainData[[view]]
   
   # Get features
   if (class(features) == "numeric") {
-    tmp <- names(tail(sort(abs(W)), n=features))
-    stopifnot(all(tmp %in% featureNames(object)[[view]]))
+    features <- names(tail(sort(abs(W)), n=features))
+    stopifnot(all(features %in% featureNames(object)[[view]]))
   } else if (class(features)=="character") {
     stopifnot(all(features %in% featureNames(object)[[view]]))
   } else {
@@ -141,45 +147,54 @@ plotDataScatter <- function(object, view, factor, features = 10, color_by = NULL
   
   
   # Set color
+  colorLegend <- T
   if (!is.null(color_by)) {
-    colorLegend <- T
-    
-    # 'color_by' is the name of a covariate 
-    if (length(color_by) == 1 & is.character(color_by)) { 
-      color_by <- as.factor(getCovariates(object, color_by))
-    
-    # 'color_by' is a vector of length N
-    } else if (length(color_by) > 1) { 
+    # It is the name of a covariate or a feature in the TrainData
+    if (length(color_by) == 1 & is.character(color_by)) {
+      if(name_color=="") name_color <- color_by
+      TrainData <- getTrainData(object)
+      featureNames <- lapply(TrainData(object), rownames)
+      if(color_by %in% Reduce(union,featureNames)) {
+        viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
+        color_by <- TrainData[[viewidx]][color_by,]
+      } else if(class(object@InputData) == "MultiAssayExperiment"){
+        color_by <- getCovariates(object, color_by)
+      }
+      else stop("'color_by' was specified but it was not recognised, please read the documentation")
+      # It is a vector of length N
+    } else if (length(color_by) > 1) {
       stopifnot(length(color_by) == N)
-      
-    # 'color_by' not recognised
+      # color_by <- as.factor(color_by)
     } else {
       stop("'color_by' was specified but it was not recognised, please read the documentation")
     }
-    
   } else {
     color_by <- rep(TRUE,N)
     colorLegend <- F
   }
   
   # Set shape
+  shapeLegend <- T
   if (!is.null(shape_by)) {
-    shapeLegend <- T
-    
-    # 'shape_by' is the name of a covariate 
-    if (length(shape_by) == 1 & is.character(shape_by)) { 
-      shape_by <- as.factor(getCovariates(object, shape_by))
-      
-    # 'shape_by is a vector of length N
-    } else if (length(shape_by) > 1) { 
+    # It is the name of a covariate 
+    if (length(shape_by) == 1 & is.character(shape_by)) {
+      if(name_shape=="") name_shape <- shape_by
+      TrainData <- getTrainData(object)
+      featureNames <- lapply(TrainData(object), rownames)
+      if (shape_by %in% Reduce(union,featureNames)) {
+        viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
+        shape_by <- TrainData[[viewidx]][shape_by,]
+      } else if(class(object@InputData) == "MultiAssayExperiment"){
+        shape_by <- getCovariates(object, shape_by)
+      }
+      else stop("'shape_by' was specified but it was not recognised, please read the documentation")
+      # It is a vector of length N
+      # It is a vector of length N
+    } else if (length(shape_by) > 1) {
       stopifnot(length(shape_by) == N)
-      shape_by <- as.factor(shape_by)
-      
-    # 'shape_by not recognised
     } else {
       stop("'shape_by' was specified but it was not recognised, please read the documentation")
     }
-    
   } else {
     shape_by <- rep(TRUE,N)
     shapeLegend <- F
@@ -189,14 +204,15 @@ plotDataScatter <- function(object, view, factor, features = 10, color_by = NULL
   # Create data frame 
   df1 <- data.frame(sample=names(Z), x = Z, shape_by = shape_by, color_by = color_by, stringsAsFactors=F)
   df2 <- getTrainData(object, views=view, features = list(features), as.data.frame=T)
-  df <- left_join(df1,df2, by="sample")
+  df <- dplyr::left_join(df1,df2, by="sample")
   
   #remove values missing color or shape annotation
   # if(!showMissing) df <- df[!(is.nan(df$shape_by) & !(is.nan(df$color_by))]
   
   # Generate plot
-  p <- ggplot(df, aes(x, value, color = color_by, shape = shape_by)) + 
-    geom_point(color="black") + 
+  p <- ggplot(df, aes_string(x = "x", y = "value", color = "color_by", shape = "shape_by")) + 
+    geom_point() +
+    # ggbeeswarm::geom_quasirandom() +
     stat_smooth(method="lm", color="blue", alpha=0.5) +
     facet_wrap(~feature, scales="free_y") +
     scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))]) +

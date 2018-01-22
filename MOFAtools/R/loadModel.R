@@ -75,12 +75,15 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   # K=tail(training_stats$activeK[!is.nan(training_stats$activeK)],n=1)
   object@Dimensions[["K"]] <- ncol(object@Expectations$Z$E)
   
-  # Set view, sample, featuure and factor names
+  # Set view, sample, feature and factor names
   viewNames(object) <- names(object@TrainData)
   sampleNames(object) <- colnames(object@TrainData[[1]])
   featureNames(object) <- lapply(object@TrainData,rownames)
   factorNames(object) <- as.character(1:object@Dimensions[["K"]])
-    
+  
+  #
+  names(object@ModelOpts$likelihood) <- viewNames(object)
+  
   # Rename covariates, including intercept
   # if (object@ModelOpts$learnIntercept == TRUE) factorNames(object) <- c("intercept",as.character(1:(object@Dimensions[["K"]]-1)))
   # if (!is.null(object@ModelOpts$covariates)) {

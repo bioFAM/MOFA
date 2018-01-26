@@ -88,7 +88,7 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
     } else { stopifnot(all(factors %in% factorNames(object))) }
         
   # Fetch weights
-  weights <- getExpectations(object,"SW",as.data.frame)
+  weights <- getExpectations(object,"W",as.data.frame)
   if (as.data.frame==T) {
     weights <- weights[weights$view%in%views & weights$factor%in%factors, ]
   } else {
@@ -220,14 +220,14 @@ getCovariates <- function(object, names) {
 #' @title Fetch expectations from the model
 #' @description Function to extract the expectations from the (variational) posterior distributions of a trained MOFAmodel.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param variable variable name, 'Z' for factors, 'SW' for weights, 'Tau' for noise, 'Y' for pseudodata, 'Theta' for feature-wise spike-and-slab sparsity, 'AlphaW' for view and factor-wise ARD sparsity
+#' @param variable variable name, 'Z' for factors, 'W' for weights, 'Tau' for noise, 'Y' for pseudodata, 'Theta' for feature-wise spike-and-slab sparsity, 'AlphaW' for view and factor-wise ARD sparsity
 #' @param as.data.frame boolean indicating whether to output the result as a long data frame, default is FALSE.
 #' @details Technical note: MOFA is a Bayesian model where each variable has a prior distribution and a posterior distribution. 
 #' In particular, to gain speed we used the variational inference framework so true posterior distributions are replaced by approximated variational distributions.
 #' The priors and variational distributions of each variable are extensively described in the supplementary methods of the paper.
 #' @return the output varies depending on the variable of interest: \cr
 #' Z: a matrix with dimensions (samples,factors). If as.data.frame is TRUE, a long-formatted data frame with columns (sample,factor,value). \cr
-#' SW: a list of length (views) where each element is a matrix with dimensions (features,factors). If as.data.frame is TRUE, a long-formatted data frame with columns (view,feature,factor,value). \cr
+#' W: a list of length (views) where each element is a matrix with dimensions (features,factors). If as.data.frame is TRUE, a long-formatted data frame with columns (view,feature,factor,value). \cr
 #' Y: a list of length (views) where each element is a matrix with dimensions (features,samples). If as.data.frame is TRUE, a long-formatted data frame with columns (view,feature,sample,value). \cr
 #' Theta: TO-FILL \cr
 #' Tau: TO-FILL
@@ -239,11 +239,12 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
   stopifnot(variable %in% names(object@Expectations))
   
   # Get expectations in single matrix or list of matrices (for multi-view nodes)
-  if (variable=="Z") {
-    exp <- object@Expectations$Z$E
-  } else {
-    exp <- lapply(object@Expectations[[variable]], function(x) x$E)
-  }
+  exp <- object@Expectations[[variable]]
+  # if (variable=="Z") {
+  #   exp <- object@Expectations$Z
+  # } else {
+  #   exp <- lapply(object@Expectations[[variable]], function(x) x$E)
+  # }
   
   # Convert to long data frame
   if (as.data.frame==T) {
@@ -251,27 +252,47 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
       tmp <- reshape2::melt(exp)
       colnames(tmp) <- c("sample","factor","value")
     }
-    if (variable=="SW") {
-      tmp <- lapply(names(exp), function(m) { tmp <- reshape2::melt(exp[[m]]); colnames(tmp) <- c("feature","factor","value"); tmp$view <- m;  tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character); return(tmp) })
+    else if (variable=="W") {
+      tmp <- lapply(names(exp), function(m) { 
+        tmp <- reshape2::melt(exp[[m]])
+        colnames(tmp) <- c("feature","factor","value");
+        tmp$view <- m
+        tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character)
+        return(tmp) 
+      })
       tmp <- do.call(rbind.data.frame,tmp)
     }
-    if (variable=="Y") {
-      tmp <- lapply(names(exp), function(m) { tmp <- reshape2::melt(exp[[m]]); colnames(tmp) <- c("sample","feature","value"); tmp$view <- m;  tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character); return(tmp) })
+    else if (variable=="Y") {
+      tmp <- lapply(names(exp), function(m) { 
+        tmp <- reshape2::melt(exp[[m]])
+        colnames(tmp) <- c("sample","feature","value")
+        tmp$view <- m
+        tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character)
+        return(tmp) 
+      })
       tmp <- do.call(rbind,tmp)
     }
-    if (variable=="Tau") {
+    else if (variable=="Tau") {
       stop("Not implemented")
-      tmp <- lapply(names(exp), function(m) { data.frame(view=m, feature=names(exp[[m]]), value=unname(exp[[m]])); tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character); return(tmp) })
+      # tmp <- lapply(names(exp), function(m) { 
+      #   data.frame(view=m, feature=names(exp[[m]]), value=unname(exp[[m]]))
+      #   tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character)
+      #   return(tmp) 
+      # })
+      # tmp <- do.call(rbind,tmp)
+    }
+    else if (variable=="AlphaW") {
+      tmp <- lapply(names(exp), function(m) { 
+        tmp <- data.frame(view=m, factor=names(exp[[m]]), value=unname(exp[[m]]))
+        tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character)
+        return(tmp) 
+      })
       tmp <- do.call(rbind,tmp)
     }
-    if (variable=="AlphaW") {
-      tmp <- lapply(names(exp), function(m) { tmp <- data.frame(view=m, factor=names(exp[[m]]), value=unname(exp[[m]])); tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character); return(tmp) })
-      tmp <- do.call(rbind,tmp)
-    }
-    if (variable=="Theta") {
+    else if (variable=="Theta") {
       stop("Not implemented")
-      tmp <- lapply(names(exp), function(m) { tmp <- reshape2::melt(exp[[m]]); colnames(tmp) <- c("sample","feature","value"); tmp$view <- m; tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character); return(tmp) })
-      tmp <- do.call(rbind,tmp)
+      # tmp <- lapply(names(exp), function(m) { tmp <- reshape2::melt(exp[[m]]); colnames(tmp) <- c("sample","feature","value"); tmp$view <- m; tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character); return(tmp) })
+      # tmp <- do.call(rbind,tmp)
     }
     exp <- tmp
   }

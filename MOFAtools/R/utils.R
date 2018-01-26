@@ -1,4 +1,57 @@
 
+.inferLikelihoods <- function(object) {
+  likelihood <- rep(x="gaussian", times=object@Dimensions$M)
+  names(likelihood) <- viewNames(object)
+  
+  for (view in viewNames(object)) {
+    data <- getTrainData(object, view)[[1]]
+    # if (all(data %in% c(0,1,NA))) {
+    if (length(unique(data[!is.na(data)]))==2) {
+      likelihood[view] <- "bernoulli"
+    } else if (all(data%%1==0)) {
+      likelihood[view] <- "poisson"
+    }
+  }
+  
+  return(likelihood)
+}
+
+.updateOldModel <- function(object) {
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
+  
+  # Update node names
+  if ("SW" %in% names(object@Expectations)) {
+    # object@ModelOpts$schedule[object@ModelOpts$schedule == "SW"] <- "W" # schedule is depreciated from ModelOpts
+    names(object@Expectations)[names(object@Expectations)=="SW"] <- "W"
+    colnames(object@TrainStats$elbo_terms)[colnames(object@TrainStats$elbo_terms)=="SW"] <- "W"
+  }
+  
+  # Update expectations
+  if (is.list(object@Expectations$Z)) {
+    object@Expectations$Z <- object@Expectations$Z$E
+    for (view in viewNames(object)) {
+      object@Expectations$AlphaW[[view]] <- object@Expectations$AlphaW[[view]]$E
+      object@Expectations$W[[view]] <- object@Expectations$W[[view]]$E
+      object@Expectations$Tau[[view]] <- object@Expectations$Tau[[view]]$E
+      object@Expectations$Theta[[view]] <- object@Expectations$Theta[[view]]$E
+      object@Expectations$Y[[view]] <- object@Expectations$Y[[view]]$E
+    }
+  }
+  
+  # update learnMean to learnIntercept
+  if ("learnMean" %in% names(object@ModelOpts)) {
+    tmp <- names(object@ModelOpts)
+    tmp[tmp=="learnMean"] <- "learnIntercept"
+    names(object@ModelOpts) <- tmp
+  }
+  object@ModelOpts$learnIntercept <- as.logical(object@ModelOpts$learnIntercept)
+  
+  
+  return(object)
+}
+
+# Function to find factors that act like an intercept term for the sample, 
+# which means that they capture global mean effects
 findInterceptFactors <- function(object, cor_threshold = 0.8) {
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
@@ -11,7 +64,7 @@ findInterceptFactors <- function(object, cor_threshold = 0.8) {
     if (any(r[[i]]>cor_threshold))
       cat(paste0("Warning: factor ",which(r[[i]]>cor_threshold)," is capturing a size factor effect in ", i, " view, which indicates that input data might not be properly normalised...\n"))
   }
-} 
+}
 
 
 subset_augment <- function(mat, pats) {
@@ -50,7 +103,7 @@ detectPassengers <- function(object, views = "all", factors = "all", r2_threshol
   Z <- getFactors(object)
   
   # Identify factors unique to a single view by calculating relative R2 per factor
-  r2 <- calculateVarianceExplained(object, views = views, factors = factors, plotit = F, totalVar = T)$R2PerFactor
+  r2 <- calculateVarianceExplained(object, views = views, factors = factors)$R2PerFactor
   unique_factors <- names(which(rowSums(r2>=r2_threshold)==1))
   
   # Mask samples that are unique in the unique factors
@@ -66,7 +119,7 @@ detectPassengers <- function(object, views = "all", factors = "all", r2_threshol
   }
   
   # Replace the latent matrix
-  object@Expectations$Z$E <- Z
+  object@Expectations$Z <- Z
   
   return(object)
   

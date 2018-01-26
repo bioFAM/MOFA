@@ -28,17 +28,15 @@
       for (m in views) {
         
         # Loop over expectations
-        for (expectation in names(object@Expectations[[node]][[m]])) {
-          if (class(object@Expectations[[node]][[m]][[expectation]]) == "matrix") {
-            if (nrow(object@Expectations[[node]][[m]][[expectation]]) == dimensionality)
-              rownames(object@Expectations[[node]][[m]][[expectation]]) <- values
-            if (ncol(object@Expectations[[node]][[m]][[expectation]]) == dimensionality)
-              colnames(object@Expectations[[node]][[m]][[expectation]]) <- values
-          } else if (class(object@Expectations[[node]][[m]][[expectation]]) == "array") {
-            if (length(object@Expectations[[node]][[m]][[expectation]]) == dimensionality)
-              names(object@Expectations[[node]][[m]][[expectation]]) <- values
+          if (class(object@Expectations[[node]][[m]]) == "matrix") {
+            if (nrow(object@Expectations[[node]][[m]]) == dimensionality)
+              rownames(object@Expectations[[node]][[m]]) <- values
+            if (ncol(object@Expectations[[node]][[m]]) == dimensionality)
+              colnames(object@Expectations[[node]][[m]]) <- values
+          } else if (class(object@Expectations[[node]][[m]]) == "array") {
+            if (length(object@Expectations[[node]][[m]]) == dimensionality)
+              names(object@Expectations[[node]][[m]]) <- values
           }
-        }
         
       }
       
@@ -46,17 +44,15 @@
     } else {
       
       # Loop over expectations
-      for (expectation in names(object@Expectations[[node]])) {
-        if (class(object@Expectations[[node]][[expectation]]) == "matrix") {
-          if (nrow(object@Expectations[[node]][[expectation]]) == dimensionality)
-            rownames(object@Expectations[[node]][[expectation]]) <- values
-          if (ncol(object@Expectations[[node]][[expectation]]) == dimensionality)
-            colnames(object@Expectations[[node]][[expectation]]) <- values
-        } else if (class(object@Expectations[[node]][[expectation]]) == "array") {
-          if (length(object@Expectations[[node]][[expectation]]) == dimensionality)
-            names(object@Expectations[[node]][[expectation]]) <- values
+        if (class(object@Expectations[[node]]) == "matrix") {
+          if (nrow(object@Expectations[[node]]) == dimensionality)
+            rownames(object@Expectations[[node]]) <- values
+          if (ncol(object@Expectations[[node]]) == dimensionality)
+            colnames(object@Expectations[[node]]) <- values
+        } else if (class(object@Expectations[[node]]) == "array") {
+          if (length(object@Expectations[[node]]) == dimensionality)
+            names(object@Expectations[[node]]) <- values
         }
-      }
       
     }
   }
@@ -73,7 +69,7 @@
 #' @aliases factorNames,MOFAmodel-method
 #' @return character vector with the features names
 #' @export
-setMethod("factorNames", signature(object="MOFAmodel"), function(object) { colnames(object@Expectations$Z$E) } )
+setMethod("factorNames", signature(object="MOFAmodel"), function(object) { colnames(object@Expectations$Z) } )
 
 #' @rdname factorNames
 #' @param value a character vector of factor names
@@ -86,7 +82,7 @@ setReplaceMethod("factorNames", signature(object="MOFAmodel", value="vector"),
    if (methods::.hasSlot(object,"Dimensions") | length(object@Dimensions) == 0)
      if (!length(value)==object@Dimensions["K"])
        stop("Length of factor names does not match the dimensionality of the latent variable matrix")
-   if(!length(value)==ncol(object@Expectations$Z$E)) 
+   if(!length(value)==ncol(object@Expectations$Z)) 
      stop("factor names do not match the number of columns in the latent variable matrix")
     
    object <- .setNames(object, value, object@Dimensions[["K"]])
@@ -187,7 +183,7 @@ setMethod("viewNames<-", signature(object="MOFAmodel", value="character"),
     
     # We have to modify this
     if (object@Status == "trained"){
-      multiview_nodes <- c("AlphaW","SW","Tau","Theta","Y")
+      multiview_nodes <- c("AlphaW","W","Tau","Theta","Y")
       for (node in multiview_nodes) { 
         names(object@Expectations[[node]]) <- value 
       }

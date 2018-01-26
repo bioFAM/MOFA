@@ -43,7 +43,7 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
   }
 
   # Get relevant data
-  # W <- getExpectations(object,"SW")[[view]][features,factors]
+  # W <- getExpectations(object,"W")[[view]][features,factors]
   W <- getWeights(object, views=view, factors=factors)[[1]][features,]
   
 
@@ -101,7 +101,7 @@ plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = 
   if(!is.null(manual)) { stopifnot(class(manual)=="list"); stopifnot(all(Reduce(intersect,manual) %in% featureNames(object)[[view]]))  }
   
   # Collect expectations  
-  # W <- getExpectations(object,"SW", as.data.frame = T)
+  # W <- getExpectations(object,"W", as.data.frame = T)
   W <- getWeights(object,views=view, factors=factor, as.data.frame = T)
   W <- W[W$factor==factor & W$view==view,]
   
@@ -201,7 +201,7 @@ plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = 
 #' @param scale scales all loading by absolute value of maximal loading
 #' @import ggplot2
 #' @export
-plotTopWeights <- function(object, view, factor, nfeatures = 5, abs = TRUE, scale = TRUE, sign = "both") {
+plotTopWeights <- function(object, view, factor, nfeatures = 10, abs = TRUE, scale = TRUE, sign = "both") {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")

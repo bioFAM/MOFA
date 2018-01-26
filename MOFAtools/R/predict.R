@@ -16,8 +16,7 @@
 #' @return List with data predictions, each element corresponding to a view.
 #' @export
 
-predict <- function(object, views = "all", factors = "all", type = c("inRange","response", "link"),
-  include_intercept=TRUE){
+predict <- function(object, views = "all", factors = "all", type = c("inRange","response", "link"), include_intercept = TRUE) {
 
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")

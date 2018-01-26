@@ -26,7 +26,7 @@
 compareModels <- function(models, comparison = "all", ...) {
   
   # Sanity checks
-  if(class(models)!="list")
+  if(!is.list(models))
     stop("'models' has to be a list")
   if (!all(sapply(models, function (l) class(l)=="MOFAmodel")))
     stop("Each element of the the list 'models' has to be an instance of MOFAmodel")
@@ -39,20 +39,16 @@ compareModels <- function(models, comparison = "all", ...) {
   # get latent factors
   LFs <- lapply(seq_along(models), function(modelidx){
     model <- models[[modelidx]]
-    Z <- getExpectations(model, 'Z', 'E')
-    if(!is.null(model@ModelOpts$learnIntercept)) if(model@ModelOpts$learnIntercept) Z <- Z[,-1, drop=FALSE]
-    if(is.null(rownames(Z))) rownames(Z) <- rownames(model@TrainData[[1]])
-    if(is.null(colnames(Z))) 
-      if(!is.null(model@ModelOpts$learnIntercept)) {
-        if(model@ModelOpts$learnIntercept)  colnames(Z) <- paste("LF", 2:(ncol(Z)+1), sep="")
-        }else
-          colnames(Z) <- paste("LF", 1:ncol(Z), sep="")
+    Z <- getFactors(model)
+    if (model@ModelOpts$learnIntercept==TRUE) 
+      Z <- Z[,-1, drop=FALSE]
     Z
     })
-  for(i in seq_along(LFs)) 
+  
+  for (i in seq_along(LFs)) 
     colnames(LFs[[i]]) <- paste(names(models)[i], colnames(LFs[[i]]), sep="_")
   
-  if(comparison=="all") {
+  if (comparison=="all") {
     #get common samples between models
     commonSamples <- Reduce(intersect,lapply(LFs, rownames))
     if(is.null(commonSamples)) 

@@ -108,7 +108,7 @@ def loadData(data_opts, verbose=True):
         Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"]).astype(pd.np.float32)
 
         # Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"])
-        print("Loaded %s with %d samples and %d features)..." % (file, Y[m].shape[0], Y[m].shape[1]))
+        print("Loaded %s with %d samples and %d features..." % (file, Y[m].shape[0], Y[m].shape[1]))
 
         # Checking missing values on features
         # print max(np.isnan(Y[m]).mean(axis=1))
@@ -302,15 +302,14 @@ def saveParameters(model, hdf5, view_names=None):
                 node_subgrp.create_dataset("%s" % (param_name), data=parameters[param_name].T)
     pass
 
-def saveExpectations(model, hdf5, view_names=None, only_first_moments=True):
+def saveExpectations(model, hdf5, view_names=None):
     """ Method to save the expectations of the model in an hdf5 file
     
     PARAMETERS
     ----------
     model: a BayesNet instance
     hdf5: 
-    view_names
-    only_first_moments
+    view_names:
     """
     # Get nodes from the model
     nodes = model.getNodes()
@@ -323,42 +322,32 @@ def saveExpectations(model, hdf5, view_names=None, only_first_moments=True):
         # Collect node expectations
         expectations = nodes[node].getExpectations()
 
-        # Create subgroup for the node
-        node_subgrp = exp_grp.create_group(node)
 
         # Multi-view nodes
         if type(expectations) == list:
 
+            # Create subgroup for the node
+            node_subgrp = exp_grp.create_group(node)
+
             # Iterate over views
             for m in range(len(expectations)):
                 if view_names is not None:
-                    tmp = view_names[m]
+                    view = view_names[m]
                 else:
-                    tmp = "%d" % m
+                    view = "%d" % m
 
-                # Create subsubgroup for the view
-                view_subgrp = node_subgrp.create_group(tmp)
-
-                # Loop through the expectations
-                if only_first_moments: 
-                    if node == "SW":
-                        expectations[m] = {'E':expectations[m]["E"], 'ES':expectations[m]["ES"], 'EW':expectations[m]["EW"]}
+                # Collect expectations
+                exp = expectations[m]["E"]
+                if exp  is not None:
+                    if type(exp) == ma.core.MaskedArray:
+                        tmp = ma.filled(exp, fill_value=np.nan)
+                        node_subgrp.create_dataset(view, data=tmp.T)
                     else:
-                        expectations[m] = {'E':expectations[m]["E"]}
-
-                if expectations[m] is not None:
-                    for exp_name in expectations[m].keys():
-                        if type(expectations[m][exp_name]) == ma.core.MaskedArray:
-                            tmp = ma.filled(expectations[m][exp_name], fill_value=np.nan)
-                            view_subgrp.create_dataset(exp_name, data=tmp.T)
-                        else:
-                            view_subgrp.create_dataset(exp_name, data=expectations[m][exp_name].T)
+                        node_subgrp.create_dataset(view, data=exp.T)
 
         # Single-view nodes
         else:
-            if only_first_moments: expectations = {'E':expectations["E"]}
-            for exp_name in expectations.keys():
-                node_subgrp.create_dataset("%s" % (exp_name), data=expectations[exp_name].T)
+            exp_grp.create_dataset(node, data=expectations["E"].T)
 
 def saveTrainingStats(model, hdf5):
     """ Method to save the training statistics in an hdf5 file
@@ -437,7 +426,10 @@ def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_na
     
     PARAMETERS
     ----------
+    TO-FILL....
     """
+
+    # QC checks
     assert model.trained == True, "Model is not trained yet"
     assert len(np.unique(view_names)) == len(view_names), 'View names must be unique'
     assert len(np.unique(sample_names)) == len(sample_names), 'Sample names must be unique'
@@ -447,16 +439,31 @@ def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_na
         print("Output directory does not exist, creating it...")
         os.makedirs(os.path.dirname(outfile))
 
-    # For some reason h5py orders the datasets alphabetically, so we have to modify the likelihood accordingly
+    # For some reason h5py orders the datasets alphabetically, so we have to sort the likelihoods accordingly
     idx = sorted(range(len(view_names)), key=lambda k: view_names[k])
     tmp = [model_opts["likelihood"][idx[m]] for m in range(len(model_opts["likelihood"]))]
     model_opts["likelihood"] = tmp
 
+    # Open HDF5 handler
     hdf5 = h5py.File(outfile,'w')
+
+    # Save expectations
     saveExpectations(model,hdf5,view_names)
-    saveParameters(model,hdf5,view_names)
+
+    # Save parameters
+    # saveParameters(model,hdf5,view_names)
+
+    # Save training statistics
     saveTrainingStats(model,hdf5)
+
+    # Save training options
     saveTrainingOpts(train_opts,hdf5)
+
+    # Save model options
     saveModelOpts(model_opts,hdf5)
+
+    # Save training data
     saveTrainingData(model, hdf5, view_names, sample_names, feature_names)
+
+    # Close HDF5 file
     hdf5.close()

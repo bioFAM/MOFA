@@ -28,7 +28,7 @@ createMOFAobject <- function(data) {
     viewNames(object) <- names(data) 
   } else { 
     viewNames(object) <- paste("view",1:length(object@TrainData), sep="_")
-    warning(paste0("View names are not specified in data, renaming them to: ",paste("view",1:length(object@TrainData), sep="_")))
+    warning(paste0("View names are not specified in data, renaming them to: ",paste("view",1:length(object@TrainData), collapse=" "), "\n"))
   }
   
   print(object)
@@ -77,7 +77,18 @@ createMOFAobject <- function(data) {
   # Initialise MOFA object
   object <- new("MOFAmodel")
   object@Status <- "untrained"
+  
+  # Fetch or assign sample names
   samples <- Reduce(union, lapply(data, colnames))
+  if (is.null(samples)) {
+    N <- unique(sapply(data,ncol))
+    if (length(N)>1) { 
+      stop("If the matrices have no column (samples) names that can be used to match the different views, all matrices must have the same number of columns")
+    }
+    samples <- as.character(1:N)
+    for (m in 1:length(data)) { colnames(data[[m]]) <- samples }
+  }
+  
   object@TrainData <- lapply(data, function(view) .subset_augment(view, samples))
   return(object)
 }

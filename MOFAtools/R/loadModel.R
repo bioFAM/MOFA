@@ -41,17 +41,13 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   }
     
   # Load model options
-  if (length(object@ModelOpts) == 0) {
-    tryCatch(object@ModelOpts <- as.list(h5read(file, 'model_opts',read.attributes=T)), error = function(x) { print("Model opts not found, not loading it...") })
-  }
+  tryCatch(object@ModelOpts <- as.list(h5read(file, 'model_opts',read.attributes=T)), error = function(x) { print("Model opts not found, not loading it...") })
+  object@ModelOpts$sparsity <- as.logical(object@ModelOpts$sparsity)
   
-  # TO REMOVE....
-  if ("learnMean" %in% names(object@ModelOpts)) {
-    tmp <- names(object@ModelOpts)
-    tmp[tmp=="learnMean"] <- "learnIntercept"
-    names(object@ModelOpts) <- tmp
-  }
-  object@ModelOpts$learnIntercept <- as.logical(object@ModelOpts$learnIntercept)
+  # COMMENTED BECAUSE We always need to load the model options, as h5py sort the views alphabetically
+  # if (length(object@ModelOpts) == 0) {
+  #   tryCatch(object@ModelOpts <- as.list(h5read(file, 'model_opts',read.attributes=T)), error = function(x) { print("Model opts not found, not loading it...") })
+  # }
   
   # Load training data
   tryCatch( {
@@ -68,12 +64,15 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
     }, error = function(x) { print("Error loading the training data...") })
   
   
+  # Update old models
+  object <- .updateOldModel(object)
+  
   # Load dimensions
   object@Dimensions[["M"]] <- length(object@TrainData)
   object@Dimensions[["N"]] <- ncol(object@TrainData[[1]])
   object@Dimensions[["D"]] <- sapply(object@TrainData,nrow)
   # K=tail(training_stats$activeK[!is.nan(training_stats$activeK)],n=1)
-  object@Dimensions[["K"]] <- ncol(object@Expectations$Z$E)
+  object@Dimensions[["K"]] <- ncol(object@Expectations$Z)
   
   # Set view, sample, feature and factor names
   viewNames(object) <- names(object@TrainData)
@@ -81,7 +80,7 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   featureNames(object) <- lapply(object@TrainData,rownames)
   factorNames(object) <- as.character(1:object@Dimensions[["K"]])
   
-  #
+  # Add names to likelihood vector
   names(object@ModelOpts$likelihood) <- viewNames(object)
   
   # Rename covariates, including intercept
@@ -94,42 +93,42 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   #   }
   # }
   
-  # Rename factors
+  
+  # Rename factors if intercept is included
   if (object@ModelOpts$learnIntercept == TRUE) {
-    intercept_idx <- names(which(sapply(apply(object@Expectations$Z$E,2,unique),length)==1))
+    intercept_idx <- names(which(sapply(apply(object@Expectations$Z,2,unique),length)==1))
     factornames <- as.character(1:(object@Dimensions[["K"]]))
     factornames[factornames==intercept_idx] <- "intercept"
     factorNames(object) <- factornames
     # object@Dimensions[["K"]] <- object@Dimensions[["K"]] - 1
   }
   # if (!is.null(object@ModelOpts$covariates)) {
-  #   stop("Not working")
+  #   stop("Covariates not working")
   # }
   
-  # Parse factors
-  if ((object@Dimensions$K-as.numeric(object@ModelOpts$learnIntercept))>0) {
-    
-    # (TO-DO) Mask passenger factors
-    # object <- detectPassengers(object)
-  
-    # Order factors in order of variance explained
-    if (sortFactors == T) {
-      r2 <- rowSums(calculateVarianceExplained(object,plotit=F)$R2PerFactor)
-      order_factors <- c(names(r2)[order(r2, decreasing = T)])
-      if (object@ModelOpts$learnIntercept==T) { order_factors <- c("intercept",order_factors) }
-      object <- subsetFactors(object,order_factors)
-      if (object@ModelOpts$learnIntercept==T) { 
-        factorNames(object) <- c("intercept",1:(object@Dimensions$K-1))
-      } else {
-        factorNames(object) <- c(1:object@Dimensions$K) 
-      }
+  # Parse factors: Mask passenger samples
+  object <- detectPassengers(object)
+
+  # Parse factors: order factors in order of variance explained
+  if (sortFactors == T) {
+    r2 <- rowSums(calculateVarianceExplained(object)$R2PerFactor)
+    order_factors <- c(names(r2)[order(r2, decreasing = T)])
+    if (object@ModelOpts$learnIntercept==T) { order_factors <- c("intercept",order_factors) }
+    object <- subsetFactors(object,order_factors)
+    if (object@ModelOpts$learnIntercept==T) { 
+      factorNames(object) <- c("intercept",1:(object@Dimensions$K-1))
+    } else {
+      factorNames(object) <- c(1:object@Dimensions$K) 
     }
-    return(object)
-  } else {
-    stop("The model has no active factors")
   }
+  
   
   # Check for intercept factors
   # findInterceptFactors(object)
+  
+  # Do quality control on the model
+  qualityControl(object)
+  
+  return(object)
 }
 

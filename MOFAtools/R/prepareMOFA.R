@@ -80,17 +80,22 @@ prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = N
 #' @name getDefaultTrainOpts
 #' @description Function to obtain default training options
 #' @details The training options are the following: \cr
-#' maxiter: Maximum number of iterations. \cr
-#' tolerance: Convergence threshold based on the change in Evidence Lower Bound, we recommend this be around 0.01. \cr
-#' DropFactorThreshold: Threshold on fraction of variance explained to drop a factor. That is, factors explaining less than 'DropFactorThreshold' fraction of variance (in all views) will be dropped. \cr
+#' maxiter: numeric indicating the maximum number of iterations. \cr
+#' tolerance: numeric indicating the convergence threshold based on the change in Evidence Lower Bound. 
+#' For quick exploration we recommend this to be around 1.0, and for a thorough training we recommend a value of 0.01. \cr
+#' learnFactors: logical indicating whether to learn the number of factors based on the the minimum fraction of variance explained? \cr
+#' DropFactorThreshold: numeric indicating the threshold on fraction of variance explained to drop a factor. 
+#' That is, factors explaining less than 'DropFactorThreshold' fraction of variance (in all views) will be dropped. \cr
+#' verbose: logical indicating whether to generate a verbose output? \cr
 #' @return list with default training options
 #' @export
 getDefaultTrainOpts <- function() {
   TrainOpts <- list(
     maxiter = 10000,              # Maximum number of iterations
-    tolerance = 0.01,            # Convergence threshold based on change in the evidence lower bound
+    tolerance = 0.01,             # Convergence threshold based on change in the evidence lower bound
+    learnFactors = TRUE,          # (bool) learn the number of factors?
     DropFactorThreshold = 0.03,   # Threshold on fraction of variance explained to drop a factor
-    verbose = F
+    verbose = F                   # verbosity?
   )
   return(TrainOpts)
 }
@@ -100,9 +105,11 @@ getDefaultTrainOpts <- function() {
 #' @name getDefaultDataOpts
 #' @description Function to obtain default data options
 #' @details The data options are the following: \cr
-#' centerFeatures: boolean indicating whether to center the features to zero mean. This is not required as long as the option learnIntercept is set to TRUE in the model options. Default is FALSE.\cr
-#' scaleViews: boolean indicating whether to scale the views to unit variance. This is optional and recommended, but not required. Default is FALSE. \cr
-#' removeIncompleteSamples: boolean indicating whether to remove incomplete samples that are not profiled in all omics. Default is FALSE
+#' delimiter: character indicating the delimiter in the input data.\cr
+#' centerFeatures: logical indicating whether to center the features to zero mean. Default is FALSE. 
+#' This is not required as long as the option learnIntercept is set to TRUE in the model options. \cr
+#' scaleViews: logical indicating whether to scale the views to unit variance. This is optional and recommended, but not required. Default is FALSE. \cr
+#' removeIncompleteSamples: logical indicating whether to remove incomplete samples that are not profiled in all omics. Default is FALSE.
 #' @return list with default data options
 #' @export
 getDefaultDataOpts <- function() {
@@ -120,11 +127,11 @@ getDefaultDataOpts <- function() {
 #' @param object untrained MOFA object to get model options for
 #' @description Function to obtain default model options
 #' @details The model options are the following: \cr
-#' likelihood: character vector with data likelihoods per view, 'gaussian' for (roughly) normally distributed data, 'bernoulli' for binary data and 'poisson' for count data
-#' numFactors: initial number of factors, we recommend this to be large enough, larger than 10. \cr
-#' learnIntercept: boolean indicating whether to learn the intercept (the means) per feature. This is always recommended, particularly if you have non-gaussian likelihoods. \cr
-#' sparsity: boolean indicating whether to use sparsity. This is always recommended, as it will make the loadings more interpretable. \cr
-#' covariates: (TO-DEFINE).
+#' likelihood: character vector with data likelihoods per view, 'gaussian' for continuous data, 'bernoulli' for binary data and 'poisson' for count data. \cr
+#' numFactors: numeric indicating the initial number of factors. If you have no prior expectation, we recommend this to be larger than 10. Default is 25. \cr
+#' learnIntercept: logical indicating whether to learn the intercept (the means) per feature. This is always recommended, particularly if you have non-gaussian likelihoods. Default is TRUE. \cr
+#' sparsity: logical indicating whether to use sparsity. This is always recommended, as it will make the loadings more interpretable. Default is TRUE. \cr
+#' covariates: not implemented yet.
 #' @return  list with default model options
 #' @export
 getDefaultModelOpts <- function(object) {
@@ -136,22 +143,16 @@ getDefaultModelOpts <- function(object) {
   if (!.hasSlot(object,"TrainData")) stop("TrainData slot needs to be specified before getting ModelOpts")
   
   # Guess likelihood type
-  likelihood = rep("gaussian", object@Dimensions[["M"]]); names(likelihood) <- viewNames(object)
-  # for (view in viewNames(object)) {
-  #   data <- getTrainData(object, view)
-  #   if (all(data %in% c(0,1,NA))) {
-  #     likelihood[view] <- "bernoulli"
-  #   } else if (all(data%%1==0)) {
-  #     likelihood[view] <- "poisson"
-  #   }
-  # }
+  # likelihood = rep("gaussian", object@Dimensions[["M"]]); names(likelihood) <- viewNames(object)
+  likelihood <- .inferLikelihoods(object)
+  message(paste0("Default likelihoods guessed automatically are: ",paste(likelihood,collapse=" ")))
   
   # Define default model options
   ModelOptions <- list(
     likelihood = likelihood,    # (character vector) likelihood per view [gaussian/bernoulli/poisson]
     learnIntercept = TRUE,      # (bool) include a constant factor of 1s to learn the mean of features (intercept)? If not, you need to center the data
     numFactors = 25,            # (numeric) initial number of latent factors
-    sparsity = T,               # use feature-wise sparsity?
+    sparsity = TRUE,               # use feature-wise sparsity?
     covariates = NULL           # no covariates by default
   )
   

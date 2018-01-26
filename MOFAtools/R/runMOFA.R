@@ -31,6 +31,13 @@ runMOFA <- function(object, DirOptions, ..., mofaPath="mofa") {
     dropR2 =  object@TrainOpts$DropFactorThreshold,
     tolerance = object@TrainOpts$tolerance
   )
+  
+  # Decide whether to learn factors
+  if (object@TrainOpts$learnFactors == F) {
+    arglist$dropR2 <- 0.00
+  } else {
+    if (arglist$dropR2==0) { stop("learnFactors is TRUE but dropR2 is 0")}
+  }
 
   # Setting the below arguments to NULL doesn't actually add them to
   # the argument list, but reserves that argument name to prevent
@@ -55,9 +62,11 @@ runMOFA <- function(object, DirOptions, ..., mofaPath="mofa") {
   arglist$verbose <- as.logical(object@TrainOpts$verbose)
 
   extra.arglist <- list(...)
-  if (any(is.na(names(extra.arglist)) | names(extra.arglist) == "")) {
-    stop("All extra options must be named")
-  }
+  
+  # WARNING: is.na() applied to non-(list or vector) of type 'NULL
+  # if (any(is.na(names(extra.arglist)) | names(extra.arglist) == "")) {
+  #   stop("All extra options must be named")
+  # }
 
   # Remove leading "--" from extra arg names if present (it will be
   # added back later)

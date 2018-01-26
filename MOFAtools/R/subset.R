@@ -19,10 +19,10 @@ subsetFactors <- function(object, factors) {
   if (is.numeric(factors)) stopifnot(all(factors %in% 1:object@Dimensions[["K"]]))
   
   # Subset expectations
-  object@Expectations$Z$E <- object@Expectations$Z$E[,factors]
-  object@Expectations$AlphaW <- sapply(object@Expectations$AlphaW, function(m) sapply(m, function(x) x[factors], simplify = F, USE.NAMES = T), simplify = F, USE.NAMES = T)
-  object@Expectations$SW <- sapply(object@Expectations$SW, function(m) sapply(m, function(x) x[,factors], simplify = F, USE.NAMES = T), simplify = F, USE.NAMES = T)
-  object@Expectations$Theta <- sapply(object@Expectations$Theta, function(m) sapply(m, function(x) x[factors], simplify = F, USE.NAMES = T), simplify = F, USE.NAMES = T)
+  object@Expectations$Z <- object@Expectations$Z[,factors]
+  object@Expectations$AlphaW <- sapply(object@Expectations$AlphaW, function(x) x[factors], simplify = F, USE.NAMES = T)
+  object@Expectations$W <- sapply(object@Expectations$W, function(x) x[,factors], simplify = F, USE.NAMES = T)
+  object@Expectations$Theta <- sapply(object@Expectations$Theta, function(x) x[factors], simplify = F, USE.NAMES = T)
   
   # Subset factor names
   factorNames(object) <- factors

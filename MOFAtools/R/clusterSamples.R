@@ -10,13 +10,14 @@
 #' or using multiple factors, where you combine multiple sources of variation. \cr
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param k number of clusters
-#' @param factors character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. Default is 'all'
-#' @details In some cases, due to model technicalities, samples can have missing values in a particular latent factor. In such a case, these samples would be ignored removed.
+#' @param factors character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. Default is 'all'\#' @param factors character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. Default is 'all'
+#' @param ... other arguments that can be passed to the kmeans function
+#' @details In some cases, due to model technicalities, samples can have missing values in the latent factor space. In such a case, these samples are currently removed.
 #' @return output from \code{\link{kmeans}} function
 #' @export
 #' 
 
-clusterSamples <- function(object, k, factors = "all") {
+clusterSamples <- function(object, k, factors = "all", ...) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -41,7 +42,7 @@ clusterSamples <- function(object, k, factors = "all") {
   Z <- Z[haveAllZ,]
 
   # Perform k-means clustering
-  kmeans.out <- kmeans(Z, k)
+  kmeans.out <- kmeans(Z, centers=k,  ...)
 
   return(kmeans.out)  
 

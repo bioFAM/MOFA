@@ -4,7 +4,7 @@
 \alias{plotTopWeights}
 \title{plotTopWeights: visualise the top weights for a certain factor and view}
 \usage{
-plotTopWeights(object, view, factor, nfeatures = 5, abs = TRUE,
+plotTopWeights(object, view, factor, nfeatures = 10, abs = TRUE,
   scale = TRUE, sign = "both")
 }
 \arguments{

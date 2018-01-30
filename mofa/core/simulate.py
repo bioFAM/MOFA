@@ -138,8 +138,7 @@ class Simulate(object):
                         # Y[m][n,d] = s.dot(Z[n,:],W[m][d,:].T) + Mu[m][d] + norm.rvs(loc=0,scale=1/s.sqrt(Tau[m][d]))
 
         elif likelihood == "warp":
-            print "Not implemented"
-            exit()
+            raise NotImplementedError()
             # for m in range(self.M):
             #     Y[m] = s.exp(s.dot(Z,W[m].T) + Mu[m] + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m]), size=[self.N, self.D[m]]))
 

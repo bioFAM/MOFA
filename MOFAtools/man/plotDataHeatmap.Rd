@@ -5,7 +5,7 @@
 \title{plotDataHeatmap: plot data heatmap of relevant features}
 \usage{
 plotDataHeatmap(object, view, factor, features = 50, includeWeights = FALSE,
-  transpose = FALSE, imputed = FALSE, ...)
+  transpose = FALSE, imputed = FALSE, sortSamples = TRUE, ...)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
@@ -17,11 +17,13 @@ plotDataHeatmap(object, view, factor, features = 50, includeWeights = FALSE,
 \item{features}{if an integer, the total number of features to plot, based on the absolute value of the loading. Default is 50
 If a character vector, a set of manually-defined features.}
 
-\item{includeWeights}{boolean indicating whether to include the weight of each feature as an extra annotation in the heatmap. Default is FALSE.}
+\item{includeWeights}{boolean indicating whether to include the weight of each feature as an extra annotation in the heatmap. Default is TRUE}
 
 \item{transpose}{boolean indicating whether to transpose the output heatmap. Default is FALSE, which corresponds to features as rows and samples as columns.}
 
 \item{imputed}{boolean indicating whether to use the imputed data instead of the original data. Default is FALSE.}
+
+\item{sortSamples}{boolean indicating whether to sort samples using the corresponding values in the latent factor. Default is FALSE.}
 
 \item{...}{further arguments that can be passed to \code{\link[pheatmap]{pheatmap}}}
 }

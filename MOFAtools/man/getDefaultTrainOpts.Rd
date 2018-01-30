@@ -14,7 +14,11 @@ Function to obtain default training options
 }
 \details{
 The training options are the following: \cr
-maxiter: Maximum number of iterations. \cr
-tolerance: Convergence threshold based on the change in Evidence Lower Bound, we recommend this be around 0.01. \cr
-DropFactorThreshold: Threshold on fraction of variance explained to drop a factor. That is, factors explaining less than 'DropFactorThreshold' fraction of variance (in all views) will be dropped. \cr
+maxiter: numeric indicating the maximum number of iterations. \cr
+tolerance: numeric indicating the convergence threshold based on the change in Evidence Lower Bound. 
+For quick exploration we recommend this to be around 1.0, and for a thorough training we recommend a value of 0.01. \cr
+learnFactors: logical indicating whether to learn the number of factors based on the the minimum fraction of variance explained? \cr
+DropFactorThreshold: numeric indicating the threshold on fraction of variance explained to drop a factor. 
+That is, factors explaining less than 'DropFactorThreshold' fraction of variance (in all views) will be dropped. \cr
+verbose: logical indicating whether to generate a verbose output? \cr
 }

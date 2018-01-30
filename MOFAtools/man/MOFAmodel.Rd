@@ -14,7 +14,7 @@ The \code{MOFAmodel} is an S4 class used to store all relevant data to analyse a
    \item{\code{InputData}:}{ the input data before being parsed to Training Data. Either a MultiAssayExperiment object or a list of matrices.}
    \item{\code{TrainData}:}{ the parsed data used to fit the MOFA model. A list of matrices.}
    \item{\code{ImputedData}:}{ the parsed data with the missing values imputed using the MOFA model. A list of matrices.}
-   \item{\code{Expectations}:}{ expected values of the different variables of the model. Nested list of two levels, accessible by name subsetting: the first level contains the variable names (Z, SW, Alpha, etc.) and the second level contains the expectation name (E,E2, etc.) }
+   \item{\code{Expectations}:}{ expected values of the different variables of the model. Nested list of two levels, accessible by name subsetting: the first level contains the variable names (Z, W, AlphaW, etc.) and the second level contains the expectation name (E,E2, etc.) }
    \item{\code{TrainStats}:}{List with the training statistics, for example evidence lower bound (ELBO), final number of active factors, etc.}
    \item{\code{DataOpts}:}{List with the data processing options, for example whether to center or scale the data.}
    \item{\code{TrainOpts}:}{List with the training options, for example maximum number of iterations, tolerance for convergence, lower bound frequency calculation, etc.}

@@ -4,14 +4,16 @@
 \alias{clusterSamples}
 \title{K-means clustering on samples based on latent factors}
 \usage{
-clusterSamples(object, k, factors = "all")
+clusterSamples(object, k, factors = "all", ...)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
 \item{k}{number of clusters}
 
-\item{factors}{character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. Default is 'all'}
+\item{factors}{character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. Default is 'all'\#' @param factors character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. Default is 'all'}
+
+\item{...}{other arguments that can be passed to the kmeans function}
 }
 \value{
 output from \code{\link{kmeans}} function

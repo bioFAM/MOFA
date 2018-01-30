@@ -9,14 +9,14 @@ getExpectations(object, variable, as.data.frame = FALSE)
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{variable}{variable name, 'Z' for factors, 'SW' for weights, 'Tau' for noise, 'Y' for pseudodata, 'Theta' for feature-wise spike-and-slab sparsity, 'AlphaW' for view and factor-wise ARD sparsity}
+\item{variable}{variable name, 'Z' for factors, 'W' for weights, 'Tau' for noise, 'Y' for pseudodata, 'Theta' for feature-wise spike-and-slab sparsity, 'AlphaW' for view and factor-wise ARD sparsity}
 
 \item{as.data.frame}{boolean indicating whether to output the result as a long data frame, default is FALSE.}
 }
 \value{
 the output varies depending on the variable of interest: \cr
 Z: a matrix with dimensions (samples,factors). If as.data.frame is TRUE, a long-formatted data frame with columns (sample,factor,value). \cr
-SW: a list of length (views) where each element is a matrix with dimensions (features,factors). If as.data.frame is TRUE, a long-formatted data frame with columns (view,feature,factor,value). \cr
+W: a list of length (views) where each element is a matrix with dimensions (features,factors). If as.data.frame is TRUE, a long-formatted data frame with columns (view,feature,factor,value). \cr
 Y: a list of length (views) where each element is a matrix with dimensions (features,samples). If as.data.frame is TRUE, a long-formatted data frame with columns (view,feature,sample,value). \cr
 Theta: TO-FILL \cr
 Tau: TO-FILL

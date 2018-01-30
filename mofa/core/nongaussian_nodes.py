@@ -177,7 +177,9 @@ class Poisson_PseudoY(PseudoY_Seeger):
         Z = self.markov_blanket["Z"].getExpectation()
         SW = self.markov_blanket["SW"].getExpectation()
         tmp = self.ratefn(s.dot(Z,SW.T))
-        lb = s.sum( self.obs*s.log(tmp) - tmp)
+        # lb = s.sum( self.obs*s.log(tmp) - tmp)
+        # lb = s.nansum(self.obs*s.log(tmp) - tmp)
+        lb = ma.masked_invalid(self.obs*s.log(tmp) - tmp).sum()
         return lb
 class Bernoulli_PseudoY(PseudoY_Seeger):
     """

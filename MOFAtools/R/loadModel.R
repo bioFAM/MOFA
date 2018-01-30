@@ -41,13 +41,13 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   }
     
   # Load model options
-  tryCatch(object@ModelOpts <- as.list(h5read(file, 'model_opts',read.attributes=T)), error = function(x) { print("Model opts not found, not loading it...") })
-  object@ModelOpts$sparsity <- as.logical(object@ModelOpts$sparsity)
-  
   # COMMENTED BECAUSE We always need to load the model options, as h5py sort the views alphabetically
   # if (length(object@ModelOpts) == 0) {
   #   tryCatch(object@ModelOpts <- as.list(h5read(file, 'model_opts',read.attributes=T)), error = function(x) { print("Model opts not found, not loading it...") })
   # }
+  tryCatch(object@ModelOpts <- as.list(h5read(file, 'model_opts',read.attributes=T)), error = function(x) { print("Model opts not found, not loading it...") })
+  object@ModelOpts$sparsity <- as.logical(object@ModelOpts$sparsity)
+  
   
   # Load training data
   tryCatch( {
@@ -63,6 +63,15 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
     object@TrainData <- TrainData
     }, error = function(x) { print("Error loading the training data...") })
   
+  
+  # Sanity check on the order of the likelihoods
+  if (!is.null(attr(TrainData,"likelihood"))) {
+    lik <- attr(TrainData,"likelihood")
+    if (!all(object@ModelOpts$likelihood == lik)) {
+      object@ModelOpts$likelihood <- lik
+      names(object@ModelOpts$likelihood) <- names(TrainData)
+    }
+  }
   
   # Update old models
   object <- .updateOldModel(object)

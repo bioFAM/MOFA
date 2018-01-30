@@ -74,11 +74,12 @@ predict <- function(object, views = "all", factors = "all", type = c("inRange","
         predictedView <- (exp(predictedView)/(1+exp(predictedView)))
         if (type=="inRange") predictedView <- round(predictedView)
       } else if (lk == "poisson") { 
-        predictedView <- (exp(predictedView))
+        # predictedView <- (exp(predictedView))
+        predictedView <- log(1 + exp(predictedView))
         if(type=="inRange") predictedView <- round(predictedView)
       }
       else { 
-        stop("Likelihood not implemented for imputation") 
+        stop(sprintf("Likelihood %s not implemented for imputation",lk)) 
       }
     }
     predictedView

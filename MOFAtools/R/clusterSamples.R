@@ -6,11 +6,12 @@
 #' @title K-means clustering on samples based on latent factors
 #' @name clusterSamples
 #' @description latent factors are continuous in nature but they can be used to predict clusters of samples, similar to what the iCluster model does (Shen, 2009). \cr
-#' The clustering can be performed in a single factor, which is equivalent to setting a manual threshold; or using multiple factors, where you combine multiple sources of variation. \cr
+#' The clustering can be performed in a single factor, which is equivalent to setting a manual threshold; 
+#' or using multiple factors, where you combine multiple sources of variation. \cr
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param k number of clusters
 #' @param factors character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. Default is 'all'
-#' @details In some cases, due to model technicalities, samples can have missing values in the latent factor space. In such a case, these samples are currently removed.
+#' @details In some cases, due to model technicalities, samples can have missing values in a particular latent factor. In such a case, these samples would be ignored removed.
 #' @return output from \code{\link{kmeans}} function
 #' @export
 #' 

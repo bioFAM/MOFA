@@ -23,12 +23,12 @@ subsetFactors <- function(object, factors) {
   object@Expectations$AlphaW <- sapply(object@Expectations$AlphaW, function(x) x[factors], simplify = F, USE.NAMES = T)
   object@Expectations$W <- sapply(object@Expectations$W, function(x) x[,factors], simplify = F, USE.NAMES = T)
   object@Expectations$Theta <- sapply(object@Expectations$Theta, function(x) x[factors], simplify = F, USE.NAMES = T)
-  
-  # Subset factor names
-  factorNames(object) <- factors
-  
+
   # Modify dimensionality
   object@Dimensions[["K"]] <- length(factors)
+  
+  # Modify factor names
+  factorNames(object) <- as.character(1:object@Dimensions[["K"]])
   
   return(object)
 }

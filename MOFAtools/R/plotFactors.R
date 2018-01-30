@@ -496,7 +496,7 @@ plotFactorCor <- function(object, method = "pearson", ...) {
   if(object@ModelOpts$learnIntercept==TRUE) Z <- Z[,-1]
   
   # Compute and plot correlation
-  r <- cor(x=Z, y=Z, method=method, use = "complete.obs")
+  r <- abs(cor(x=Z, y=Z, method=method, use = "complete.obs"))
   p <- corrplot::corrplot(r, tl.col="black", ...)
   
   return(r)

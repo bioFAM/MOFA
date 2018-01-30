@@ -398,7 +398,7 @@ def saveModelOpts(opts, hdf5):
         grp.create_dataset(k, data=np.asarray(v).astype('S'))
     grp[k].attrs['names'] = np.asarray(list(opts.keys())).astype('S')
 
-def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_names=None):
+def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_names=None, likelihoods=None):
     """ Method to save the training data in an hdf5 file
     
     PARAMETERS
@@ -412,14 +412,18 @@ def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_na
     data = model.getTrainingData()
     data_grp = hdf5.create_group("data")
     featuredata_grp = hdf5.create_group("features")
-    # hdf5.create_dataset("samples", data=sample_names)
     hdf5.create_dataset("samples", data=np.array(sample_names, dtype='S50'))
+
+    if likelihoods is not None:
+        data_grp.attrs['likelihood'] = np.array(likelihoods, dtype='S50')
+
     for m in range(len(data)):
         view = view_names[m] if view_names is not None else str(m)
         data_grp.create_dataset(view, data=data[m].data.T)
         if feature_names is not None:
             # data_grp.attrs['features'] = np.array(feature_names[m], dtype='S')
             featuredata_grp.create_dataset(view, data=np.array(feature_names[m], dtype='S50'))
+        
 
 def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_names=None, feature_names=None):
     """ Method to save the model in an hdf5 file
@@ -463,7 +467,7 @@ def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_na
     saveModelOpts(model_opts,hdf5)
 
     # Save training data
-    saveTrainingData(model, hdf5, view_names, sample_names, feature_names)
+    saveTrainingData(model, hdf5, view_names, sample_names, feature_names, model_opts["likelihood"])
 
     # Close HDF5 file
     hdf5.close()

@@ -92,7 +92,7 @@ prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = N
 getDefaultTrainOpts <- function() {
   TrainOpts <- list(
     maxiter = 10000,              # Maximum number of iterations
-    tolerance = 0.01,             # Convergence threshold based on change in the evidence lower bound
+    tolerance = 0.05,             # Convergence threshold based on change in the evidence lower bound
     learnFactors = TRUE,          # (bool) learn the number of factors?
     DropFactorThreshold = 0.03,   # Threshold on fraction of variance explained to drop a factor
     verbose = F                   # verbosity?
@@ -145,7 +145,7 @@ getDefaultModelOpts <- function(object) {
   # Guess likelihood type
   # likelihood = rep("gaussian", object@Dimensions[["M"]]); names(likelihood) <- viewNames(object)
   likelihood <- .inferLikelihoods(object)
-  message(paste0("Default likelihoods guessed automatically are: ",paste(likelihood,collapse=" ")))
+  message(paste0("Likelihoods guessed automatically: ",paste(likelihood,collapse=" ")))
   
   # Define default model options
   ModelOptions <- list(

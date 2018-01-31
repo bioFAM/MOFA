@@ -166,7 +166,7 @@ Finally, instead of looking at an the "abstract" weight, it is useful to observe
 plotDataHeatmap(MOFAobject, view="mRNA", factor=1, features=20, show_rownames=FALSE)
 ```
 
-### Feature set enrichemnt analysis in the active views
+### Feature set enrichment analysis in the active views
 Sometimes looking at the loadings of single features can be challenging, and often the combination of signal from functionally related sets of features (i.e. gene ontologies) is required.
 
 Here we implemented a function for feature set enrichment analysis method (FeatureSetEnrichmentAnalysis) derived from the [PCGSE package](https://cran.r-project.org/web/packages/PCGSE/index.html).

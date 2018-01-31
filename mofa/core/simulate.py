@@ -138,13 +138,15 @@ class Simulate(object):
                         # Y[m][n,d] = s.dot(Z[n,:],W[m][d,:].T) + Mu[m][d] + norm.rvs(loc=0,scale=1/s.sqrt(Tau[m][d]))
 
         elif likelihood == "warp":
-            for m in range(self.M):
-                Y[m] = s.exp(s.dot(Z,W[m].T) + Mu[m] + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m]), size=[self.N, self.D[m]]))
+            raise NotImplementedError()
+            # for m in range(self.M):
+            #     Y[m] = s.exp(s.dot(Z,W[m].T) + Mu[m] + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m]), size=[self.N, self.D[m]]))
 
 
         # Sample observations using a poisson likelihood
         elif likelihood == "poisson":
-            # Slow way
+
+            ## Unvectorised
             # for m in range(self.M):
             #     for n in range(self.N):
             #         for d in range(self.D[m]):
@@ -156,33 +158,43 @@ class Simulate(object):
             #             # Use the more likely values
             #             Y[m][n,d] = s.special.round(rate)
 
-            # Fast way
+            ## Vectorised
             for m in range(self.M):
                 F = s.dot(Z,W[m].T)
-                # F = s.dot(Z,W[m].T) + norm.rvs(loc=0,scale=s.sqrt(1/Tau[m]))
                 rate = s.log(1+s.exp(F))
-                # Sample from the Poisson distribution
-                # MAYBE THIS REQUIRES RESHAPING
-                # Y[m] = poisson.rvs(rate)
-                # Use the more likely values
+
+                # Without noise
                 Y[m] = s.special.round(rate)
+
+                # With noise, sample from the Poisson distribution
+                # Y[m] = poisson.rvs(rate)
 
         # Sample observations using a bernoulli likelihood
         elif likelihood == "bernoulli":
             for m in range(self.M):
+
+                ## Vectorised 
+
+                # without noise
+                f = sigmoid( s.dot(Z,W[m].T) )
+                Y[m] = s.special.round(f)
+
+                # with noise
+                # f = sigmoid( s.dot(Z,W[m].T) )
+                # Y[m] = bernoulli.rvs(f)
+
+                ## Unvectorised
+
                 # for n in range(self.N):
                     # for d in range(self.D[m]):
                         # Without noise
                         # f = sigmoid( s.dot(Z[n,:],W[m][d,:].T) )
-                        # With noise, problem: it shifts the sigmoid...
-                        # f = sigmoid( s.dot(Z[n,:],W[m][d,:].T) + norm.rvs(loc=0,scale=1/s.sqrt(Tau[m][d])) )
 
-                        # Sample from the Bernoulli distributionn
+                        # With noise
                         # Y[m][n,d] = bernoulli.rvs(f)
                         # Use the more likely state
                         # Y[m][n,d] = s.special.round(f)
-                f = sigmoid( s.dot(Z,W[m].T) )
-                Y[m] = s.special.round(f)
+
 
         # Introduce missing values into the data
         if missingness > 0.0:

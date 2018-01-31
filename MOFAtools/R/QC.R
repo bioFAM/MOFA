@@ -45,13 +45,17 @@ qualityControl <- function(object, verbose = F) {
   # Check that there are no features with complete missing values
   if (verbose==T) message("Checking there are no features with complete missing values...")
   for (view in viewNames(object)) {
-    stopifnot(all(apply(object@TrainData[[view]],1, function(x) mean(is.na(x))) < 1))
+    if (any(apply(object@TrainData[[view]],1, function(x) mean(is.na(x))) == 1)) {
+      print("Warning: you have features which only contain missing values, consider removing them...")
+    }
   }
   
   # Check that there are no features with zero variance
   if (verbose==T) message("Checking there are no features with zero variance...")
   for (view in viewNames(object)) {
-    stopifnot(all(apply(object@TrainData[[view]],1,var,na.rm=T) > 0))
+    if (any(apply(object@TrainData[[view]],1,var,na.rm=T) == 0)) {
+      print("Warning: you have features with zero variance, consider removing them...")
+    }
   }
   
   # Check that the likelihoods match the data distribution

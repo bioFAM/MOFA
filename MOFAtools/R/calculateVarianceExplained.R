@@ -13,8 +13,6 @@
 #' i.e. the proportion of variance in the data explained by the MOFA factor(s) (both jointly and for each individual factor). 
 #' In case of non-Gaussian data the variance explained on the Gaussian pseudo-data is calculated. 
 #' @return a list with matrices with the amount of variation explained per factor and view, and optionally total variance explained per view and variance explained by each feature alone
-#' @import pheatmap ggplot2 reshape2
-#' @importFrom cowplot plot_grid
 #' @export
 
 calculateVarianceExplained <- function(object, views = "all", factors = "all", include_intercept = TRUE, ...) {
@@ -108,7 +106,17 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", i
  
 }
 
-
+#' @title Plot variance explained by the model
+#' @name plotVarianceExplained
+#' @description Method to plot variance explained (R-squared) by the MOFA model for each view and latent factor. \cr
+#' As a measure of variance explained for gaussian data we adopt the coefficient of determination (R2). \cr
+#' For details on the computation see the help of the \code{\link{calculateVarianceExplained}} function
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @param cluster logical indicating whether to do hierarchical clustering on the plot
+#' @return ggplot object
+#' @import pheatmap ggplot2 reshape2
+#' @importFrom cowplot plot_grid
+#' @export
 plotVarianceExplained <- function(object, cluster = T, ...) {
   
   # Calculate Variance Explained

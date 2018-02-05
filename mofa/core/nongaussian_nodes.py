@@ -23,8 +23,14 @@ import numpy.ma as ma
 
 from .variational_nodes import Unobserved_Variational_Node
 from .nodes import Node
-from .utils import sigmoid, lambdafn
 
+
+def sigmoid(X):
+    return s.divide(1.,1.+s.exp(-X))
+    # return 1./(1.+s.exp(-X))
+
+def lambdafn(X):
+    return s.tanh(X/2.)/(4.*X)
 
 ##############################
 ## General pseudodata nodes ##
@@ -124,6 +130,20 @@ class PseudoY_Seeger(PseudoY):
         SW = self.markov_blanket["SW"].getExpectation()
         self.params["zeta"] = s.dot(Z,SW.T)
 
+    def calculateELBO(self):
+        # Compute Lower Bound using the Gaussian likelihood with pseudodata
+        # TO-DO: MASK MISSING VALUES???
+        Z = self.markov_blanket["Z"].getExpectation()
+        SW = self.markov_blanket["SW"].getExpectation()
+        tau = self.markov_blanket["Tau"].getExpectation()
+        N = Z.shape[0]
+        lb = 0.5*(N*ma.sum(s.log(tau)) - ma.sum(tau*(self.E-s.dot(Z,SW.T))**2 )) # (1) tau is of shape (D,) (2) missing a constant term
+
+        # tau_expanded = s.repeat(tau[None,:],N,0)
+        # tau_expanded = ma.masked_where(ma.getmask(self.obs), tau_expanded)
+        # lb = 0.5*( ma.sum(s.log(tau_expanded)) - ma.sum(tau_expanded*(self.E-s.dot(Z,SW.T))**2 ) ) # (1) tau is of shape (D,) (2) missing a constant term
+        return lb
+
 class Poisson_PseudoY(PseudoY_Seeger):
     """
     Class for a Poisson pseudodata node.
@@ -160,8 +180,8 @@ class Poisson_PseudoY(PseudoY_Seeger):
         assert s.all(self.obs >= 0), "Data must not contain negative numbers"
 
     def ratefn(self, X):
-        # Poisson rate function
-        return s.log(1+s.exp(X))
+        # Poisson rate function proposed in Seeger et al.
+        return s.log(1.+s.exp(X))
 
     def clip(self, threshold):
         # The local bound degrades with the presence of large values in the observed data, which should be clipped
@@ -170,22 +190,21 @@ class Poisson_PseudoY(PseudoY_Seeger):
     def updateExpectations(self):
         # Update the pseudodata
         tau = self.markov_blanket["Tau"].getValue()
-        self.E = self.params["zeta"] - sigmoid(self.params["zeta"])*(1-self.obs/self.ratefn(self.params["zeta"]))/tau[None,:]
+        self.E = self.params["zeta"] - sigmoid(self.params["zeta"])*(1.-self.obs/self.ratefn(self.params["zeta"]))/tau[None,:]
 
     def calculateELBO(self):
         # Compute Lower Bound using the Poisson likelihood with observed data
         Z = self.markov_blanket["Z"].getExpectation()
         SW = self.markov_blanket["SW"].getExpectation()
         tmp = self.ratefn(s.dot(Z,SW.T))
-        # lb = s.sum( self.obs*s.log(tmp) - tmp)
-        # lb = s.nansum(self.obs*s.log(tmp) - tmp)
         lb = ma.masked_invalid(self.obs*s.log(tmp) - tmp).sum()
         return lb
 class Bernoulli_PseudoY(PseudoY_Seeger):
     """
-    Class for a Bernoulli (0,1 data) pseudodata node 
+    Class for a Bernoulli pseudodata node used to model binary data
     Likelihood:
-        p(y|x) = (e^{yx}) / (1+e^x)  (1)
+        p(y|x) = (e^{yx}) / (1+e^x)
+    Log likelihood:
         f(x) = -log p(y|x) = log(1+e^x) - yx
 
     The second derivative is upper bounded by tau=0.25
@@ -193,7 +212,7 @@ class Bernoulli_PseudoY(PseudoY_Seeger):
     Folloiwng Seeger et al, the data follows a Bernoulli distribution but the pseudodata follows a
     normal distribution with mean E[W]*E[Z] and precision 'tau'
 
-    IMPROVE EXPLANATION
+    TO-DO: IMPROVE EXPLANATION
 
     Pseudodata is updated as follows:
         yhat_ij = zeta_ij - f'(zeta_ij)/tau
@@ -203,22 +222,24 @@ class Bernoulli_PseudoY(PseudoY_Seeger):
     def __init__(self, dim, obs, params=None, E=None):
         # - dim (2d tuple): dimensionality of each view
         # - obs (ndarray): observed data
+        # - params (ndarray): parameters
         # - E (ndarray): initial expected value of pseudodata
         PseudoY_Seeger.__init__(self, dim=dim, obs=obs, params=params, E=E)
 
         # Initialise the observed data
-        assert s.all( (self.obs==0) | (self.obs==1) ), "Data must be binary"
+        assert s.all( (self.obs==0) | (self.obs==1) ), "Data must be binary, encoded as zeroes and ones"
 
     def updateExpectations(self):
         # Update the pseudodata
+        # TO-DO: WE SHOULD EXTRACT THE 4. FROM THE TAU NODE, WHICH IS A CONSTANT NODE
         self.E = self.params["zeta"] - 4.*(sigmoid(self.params["zeta"]) - self.obs)
 
     def calculateELBO(self):
-        # Compute Lower Bound using the Bernoulli likelihood with observed data
+        # Compute Lower Bound using the Bernoulli likelihood in the observed data
         Z = self.markov_blanket["Z"].getExpectation()
         SW = self.markov_blanket["SW"].getExpectation()
         tmp = s.dot(Z,SW.T)
-        lik = s.sum( self.obs*tmp - s.log(1+s.exp(tmp)) )
+        lik = ma.sum( self.obs*tmp - s.log(1.+s.exp(tmp)) )
         return lik
 class Binomial_PseudoY(PseudoY_Seeger):
     """
@@ -350,5 +371,5 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY):
         Z = self.markov_blanket["Z"].getExpectation()
         SW = self.markov_blanket["SW"].getExpectation()
         tmp = s.dot(Z,SW.T)
-        lik = ma.sum( self.obs*tmp - s.log(1+s.exp(tmp)) )
+        lik = ma.sum( self.obs*tmp - s.log(1.+s.exp(tmp)) )
         return lik

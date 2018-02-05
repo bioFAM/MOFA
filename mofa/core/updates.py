@@ -77,6 +77,11 @@ class Y_Node(Constant_Variational_Node):
         tauQ_param = self.markov_blanket["Tau"].getParameters("Q")
         tauP_param = self.markov_blanket["Tau"].getParameters("P")
         tau_exp = self.markov_blanket["Tau"].getExpectations()
+
+        # IMPORTANT: THE CALCULATION OF THIS ELBO TERM ASSUMES THAT THE TAU UPDATE HAS BEEN DONE BEFOREHAND
+        # WHAT IF MISSING VALUES? THIS TAKES INTO ACCOUNT ALL DATA
+        
+        # TO_DO: ADD ALSO NORMAL FORMULA
         lik = self.likconst + 0.5*s.sum(self.N*(tau_exp["lnE"])) - s.dot(tau_exp["E"],tauQ_param["b"]-tauP_param["b"])
         return lik
 

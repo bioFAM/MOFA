@@ -222,10 +222,6 @@ def logdet(X):
     # UC = np.linalg.cholesky(X)
     # return 2*sum(np.log(np.diag(UC)))
 
-# NOT HERE
-def sigmoid(X):
-    return np.divide(1.,1.+np.exp(-X))
-    # return 1./(1.+np.exp(-X))
 
 # NOT HERE
 def ddot(d, mtx, left=True):
@@ -246,9 +242,6 @@ def ddot(d, mtx, left=True):
     else:
         return d*mtx
 
-# NOT HERE
-def lambdafn(X):
-    return np.tanh(X/2.)/(4.*X)
 
 def saveParameters(model, hdf5, view_names=None):
     """ Method to save the parameters of the model in an hdf5 file

@@ -14,8 +14,8 @@ import warnings
 from scipy.stats import bernoulli, norm, gamma, uniform, poisson, binom
 from random import sample
 
-from .utils import sigmoid
-
+def sigmoid(X):
+    return s.divide(1.,1.+s.exp(-X))
 
 class Simulate(object):
     def __init__(self, M, N, D, K):
@@ -164,24 +164,23 @@ class Simulate(object):
                 rate = s.log(1+s.exp(F))
 
                 # Without noise
-                Y[m] = s.special.round(rate)
+                # Y[m] = s.special.round(rate)
 
                 # With noise, sample from the Poisson distribution
-                # Y[m] = poisson.rvs(rate)
+                Y[m] = poisson.rvs(rate).astype(float)
 
         # Sample observations using a bernoulli likelihood
         elif likelihood == "bernoulli":
             for m in range(self.M):
 
                 ## Vectorised 
+                f = sigmoid( s.dot(Z,W[m].T) )
 
                 # without noise
-                f = sigmoid( s.dot(Z,W[m].T) )
-                Y[m] = s.special.round(f)
+                # Y[m] = s.special.round(f)
 
                 # with noise
-                # f = sigmoid( s.dot(Z,W[m].T) )
-                # Y[m] = bernoulli.rvs(f)
+                Y[m] = bernoulli.rvs(f).astype(float)
 
                 ## Unvectorised
 

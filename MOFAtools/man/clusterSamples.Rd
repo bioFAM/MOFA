@@ -20,7 +20,8 @@ output from \code{\link{kmeans}} function
 }
 \description{
 latent factors are continuous in nature but they can be used to predict clusters of samples, similar to what the iCluster model does (Shen, 2009). \cr
-The clustering can be performed in a single factor, which is equivalent to setting a manual threshold; or using multiple factors, where you combine multiple sources of variation. \cr
+The clustering can be performed in a single factor, which is equivalent to setting a manual threshold; 
+or using multiple factors, where you combine multiple sources of variation. \cr
 }
 \details{
 In some cases, due to model technicalities, samples can have missing values in the latent factor space. In such a case, these samples are currently removed.

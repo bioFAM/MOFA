@@ -113,6 +113,7 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", i
 #' For details on the computation see the help of the \code{\link{calculateVarianceExplained}} function
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param cluster logical indicating whether to do hierarchical clustering on the plot
+#' @param ... extra arguments to be passed to \code{\link{calculateVarianceExplained}}
 #' @return ggplot object
 #' @import pheatmap ggplot2 reshape2
 #' @importFrom cowplot plot_grid

@@ -2,6 +2,7 @@
 #' @name qualityControl
 #' @description (TO-FILL) Method to do quality control on a MOFA model. \cr
 #' @param object a \code{\link{MOFAmodel}} object.
+#' @param verbose logical indicating whether to have a verbose output
 #' @return a \code{\link{MOFAmodel}} model.
 #' @importFrom rhdf5 h5read
 #' @export

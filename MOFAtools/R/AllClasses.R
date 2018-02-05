@@ -14,7 +14,7 @@
 #'    A list with one matrix per view.}
 #'    \item{\code{ImputedData}:}{ the parsed data with the missing values imputed using the MOFA model. 
 #'    A list with one matrix per view.}
-#'    \item{\code{Expectations}:}{ expected values of the different variables of the model. 
+#'    \item{\code{Expectations}:}{ expected values of the different variables of the model. }
 #'    A list of matrices, one per variable. The most relevant are "W" for weights and "Z" for factors.
 #'    \item{\code{TrainStats}:}{ list with training statistics such as evidence lower bound (ELBO), number of active factors, etc.}
 #'    \item{\code{DataOpts}:}{ list with the data processing options such as whether to center or scale the data.}

@@ -17,7 +17,8 @@ runMOFA <- function(object, DirOptions, ..., mofaPath="mofa") {
   # Sanity checks
   if (! is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(all(c("dataDir","outFile") %in% names(DirOptions)))
-
+  if (object@Status=="trained") { stop("The model is already trained! If you want to retrain, create a new untrained MOFAmodel") }
+  
   arglist <- list(
     inFiles = paste0(DirOptions$dataDir, "/", viewNames(object), ".txt"),
     header_cols = TRUE,

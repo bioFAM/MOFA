@@ -28,6 +28,7 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   object@Expectations <- h5read(file,"expectations")
   object@Status <- "trained"
   
+  
   # Load training statistics
   tryCatch( {
     object@TrainStats <- h5read(file, 'training_stats',read.attributes=T);
@@ -57,12 +58,16 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
     for (m in names(TrainData)) {
       rownames(TrainData[[m]]) <- sampleData
       colnames(TrainData[[m]]) <- featureData[[m]]
-      TrainData[[m]][is.nan(TrainData[[m]])] <- NA
     }
     TrainData <- lapply(TrainData, t)
     object@TrainData <- TrainData
     }, error = function(x) { print("Error loading the training data...") })
   
+  # Replace NaN by NA
+  for (m in names(TrainData)) {
+    # object@Expectations[[m]][is.nan(object@Expectations[[m]])] <- NA
+    TrainData[[m]][is.nan(TrainData[[m]])] <- NA
+  }
   
   # Sanity check on the order of the likelihoods
   if (!is.null(attr(TrainData,"likelihood"))) {

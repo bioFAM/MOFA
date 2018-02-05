@@ -8,13 +8,13 @@
 createMOFAobject <- function(data) {
   
   if (class(data) == "MultiAssayExperiment") {
-    # message("Creating MOFA object from a MultiAssayExperiment object...")
+    message("Creating MOFA object from a MultiAssayExperiment object...")
     object <- .createMOFAobjectFromMAE(data)
   } else if (class(data) == "list") {
-    # message("Creating MOFA object from list of matrices...")
+    message("Creating MOFA object from list of matrices, make sure that samples are columns and features are rows...")
     object <- .createMOFAobjectFromList(data)
   } else {
-    stop("Data has to be provided either as a list of matrices or as a MultiAssayExperiment object")
+    stop("Error: input data has to be provided either as a list of matrices or as a MultiAssayExperiment object")
   }
   
   # Set dimensionalities

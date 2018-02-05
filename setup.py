@@ -1,6 +1,8 @@
 from setuptools import setup
 from setuptools import find_packages
 
+import sys
+
 def setup_package():
   install_requires = ['pandas', 'scipy', 'numpy', 'sklearn', 'argparse', 'h5py']
   console_scripts = [ 'mofa=mofa.core.init_asd:entry_point'],
@@ -21,4 +23,7 @@ def setup_package():
   setup(**metadata)
 
 if __name__ == '__main__':
+  if sys.version_info < (2,7):
+    sys.exit('Sorry, Python < 2.7 is not supported')
+    
   setup_package()

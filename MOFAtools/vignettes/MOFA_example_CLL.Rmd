@@ -131,10 +131,10 @@ Part 2: Characterisation of individual factors:
 For details, please read the Methods section of the Manuscript.
 
 ## Part 1: Disentangling the heterogeneity, calculation of variance explained by each factor in each view
-This is done by the 'calculateVarianceExplained' function. The resulting plot allows to get an overivew of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of the different views.
+This is done by the 'plotVarianceExplained' function. The resulting plot allows to get an overivew of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of the different views.
 
 ```{r}
-r2 <- calculateVarianceExplained(MOFAobject)
+r2 <- plotVarianceExplained(MOFAobject)
 ```
 
 ## Part 2: Characterisation of individual factors

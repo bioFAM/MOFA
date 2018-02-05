@@ -5,7 +5,8 @@
 
 #' @name getDimensions
 #' @title Extract dimensionalities from the model. 
-#' @description K indicates the number of factors, D indicates the number of features, N indicates the (total) number of samples and M indicates the number of views.
+#' @description K indicates the number of factors, D indicates the number of features, 
+#' N indicates the (total) number of samples and M indicates the number of views.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @export
 getDimensions <- function(object) {

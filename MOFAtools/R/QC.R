@@ -45,6 +45,7 @@ qualityControl <- function(object, verbose = F) {
   # Check that there are no features with complete missing values
   if (verbose==T) message("Checking there are no features with complete missing values...")
   for (view in viewNames(object)) {
+    # FIX THIS
     if (!all(apply(object@TrainData[[view]],1, function(x) mean(is.na(x))) < 1, na.rm=T)) {
       print("Warning: you have features which only contain missing values, consider removing them...")
     }

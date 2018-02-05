@@ -29,7 +29,7 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 * **getImputedData**: get imputed data  
 
 ## Disentangle sources of variation
-* **calculateVarianceExplained**: calculate variance explained by each factor in each view. This is the key plot of MOFA and should always be done before inspecting factors or weights. It can retrieve either the fraction of total variation (totalVar=T) or the fraction of residual variation (totalVar=F), use both options.  
+* **plotVarianceExplained**: plot the variance explained by each factor in each view. This is the key plot of MOFA and should always be done before inspecting factors or weights.
 
 ## Inspect loadings
 * **plotTopWeights**: plot the top loadings for a given factor and view  

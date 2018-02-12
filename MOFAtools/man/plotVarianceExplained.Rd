@@ -10,6 +10,8 @@ plotVarianceExplained(object, cluster = T, ...)
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
 \item{cluster}{logical indicating whether to do hierarchical clustering on the plot}
+
+\item{...}{extra arguments to be passed to \code{\link{calculateVarianceExplained}}}
 }
 \value{
 ggplot object

@@ -3,24 +3,27 @@
 ## Functions to cluster samples based on latent factors ##
 ##########################################################
 
-#' @title K-means clustering on samples based on latent factors
+#' @title clusterSamples: K-means clustering on samples based on latent factors
 #' @name clusterSamples
-#' @description latent factors are continuous in nature but they can be used to predict clusters of samples, similar to what the iCluster model does (Shen, 2009). \cr
+#' @description MOFA factors are continuous in nature but they can be used to predict discrete clusters of samples, 
+#' similar to the iCluster model (Shen, 2009). \cr
 #' The clustering can be performed in a single factor, which is equivalent to setting a manual threshold; 
-#' or using multiple factors, where you combine multiple sources of variation. \cr
-#' @param object a \code{\link{MOFAmodel}} object.
+#' or using multiple factors, where multiple sources of variation are aggregated. \cr
+#' Importantly, this type of clustering is not weighted and does not take into account the different importance of the latent factors. 
+#' @param object a trained \code{\link{MOFAmodel}} object.
 #' @param k number of clusters
-#' @param factors character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. Default is 'all'\#' @param factors character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. Default is 'all'
-#' @param ... other arguments that can be passed to the kmeans function
-#' @details In some cases, due to model technicalities, samples can have missing values in the latent factor space. In such a case, these samples are currently removed.
+#' @param factors character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. 
+#' Default is 'all'
+#' @param ... extra arguments  passed to \code{\link{kmeans}}
+#' @details In some cases, due to model technicalities, samples can have missing values in the latent factor space. 
+#' In such a case, these samples are currently ignored in the clustering procedure.
 #' @return output from \code{\link{kmeans}} function
 #' @export
 #' 
-
 clusterSamples <- function(object, k, factors = "all", ...) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   
 
   # Define factors

@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotFactors.R
 \name{plotFactorScatters}
 \alias{plotFactorScatters}
-\title{Visualize scatterplot of all latent variables in a pair-wise grid}
+\title{Pairwise scatterplots of multiple latent factors}
 \usage{
 plotFactorScatters(object, factors = "all", showMissing = TRUE,
   color_by = NULL, name_color = "", shape_by = NULL, name_shape = "")
@@ -10,27 +10,36 @@ plotFactorScatters(object, factors = "all", showMissing = TRUE,
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{factors}{vector of factors to plot or "all"}
+\item{factors}{character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. 
+Default is 'all'}
 
-\item{showMissing}{boolean, if false, removes sample for which shape_by or color_by is missing}
+\item{showMissing}{logical indicating whether to include samples for which \code{shape_by} or \code{color_by} is missing}
 
-\item{color_by}{specifies groups or values used to color points. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.}
+\item{color_by}{specifies groups or values used to color the samples. 
+This can be either: 
+a character giving the name of a feature present in the training data, 
+a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
+or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.}
 
 \item{name_color}{name for color legend (usually only used if color_by is not a character itself)}
 
-\item{shape_by}{specifies groups or values used for point shapes. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.}
+\item{shape_by}{specifies groups or values used to shape the samples. 
+This can be either: 
+a character giving the name of a feature present in the training data, 
+a character giving the same of a covariate (only if using MultiAssayExperiment as input), 
+or a vector of the same length as the number of samples specifying discrete groups.}
 
 \item{name_shape}{name for shape legend (usually only used if shape_by is not a character itself)}
 }
 \value{
-fill this
+\code{ggplot2} object
 }
 \description{
-fill this
+Scatterplots of the sample values for pair-wise combinations of multiple latent factors.
 }
 \details{
-asd
-}
-\references{
-fill this
+One of the first steps for the annotation of factors is to visualise and group/color them using known covariates such as phenotypic or clinical data.
+This method generates multiple scatterplots for pairwise combinations of several latent factors.
+Similar functions are \code{\link{plotFactorScatter}} for doing single scatter plots and 
+\code{\link{plotFactorBeeswarm}} for doing Beeswarm plots for single factors.
 }

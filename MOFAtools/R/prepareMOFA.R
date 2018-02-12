@@ -1,20 +1,42 @@
 
-#' @title Prepare an untrained MOFA object for training
+#' @title prepare a MOFA model for training
 #' @name prepareMOFA
-#' @description Function to prepare a MOFA model for training by defining data, model and training options.
-#' @param object an untrained MOFA object
-#' @param DirOptions list with I/O options, it must contain a 'dataDir' element where temporary text files will be stored and a 'outFile' where the final model will be stored as an hdf5 object.
-#' @param DataOptions list of DataOptions (see getDefaultDataOpts for what options can be set here). If NULL, default data options are used.
-#' @param ModelOptions list of ModelOptions (see getDefaultModelOpts for what options can be set here). If NULL, default model options are used.
-#' @param TrainOptions list of TrainOptions (see getDefaultTrainOpts for what options can be set here). If NULL, default training options are used.
-#' @return a untrained MOFA object with specified DataOpts, ModelOpts and TrainOpts 
+#' @description Function to prepare a \code{\link{MOFAmodel}} object for training. It requires defining data, model and training options.
+#' @param object an untrained \code{\link{MOFAmodel}}
+#' @param DirOptions list with Input/Output options, which must contain a 'dataDir' element where temporary text files will be stored 
+#' and an 'outFile' with hdf5 extension where the final model will be stored.
+#' @param DataOptions list of DataOptions (see \code{\link{getDefaultDataOpts}} details). 
+#' If NULL, default data options are used.
+#' @param ModelOptions list of ModelOptions (see \code{\link{getDefaultModelOpts}} for details). 
+#' If NULL, default model options are used.
+#' @param TrainOptions list of TrainOptions (see \code{\link{getDefaultTrainOpts}} for details). 
+#' If NULL, default training options are used.
+#' @return Returns an untrained \code{\link{MOFAmodel}} with specified data, model and training options
 #' @export
-
+#' @examples
+#' # Generate a random data set
+#' data <- list("gaussian_view"=matrix(rnorm(100,mean=0,sd=1),10,10), "poisson_view"=matrix(rpois(100, lambda=1),10,10))
+#' # Create a MOFA object
+#' MOFAobject <- createMOFA(data)
+#' # Define I/O options
+#' DirOptions <- list("dataDir" = tempdir(), "outFile" = tempfile())
+#' # Define Data Options
+#' DataOptions <- getDefaultDataOpts()
+#' # Define Model Options
+#' ModelOptions <- getDefaultModelOpts(MOFAobject)
+#' ModelOptions$likelihood <- ("gaussian","poisson")
+#' ModelOptions <- getDefaultModelOpts(MOFAobject)
+#' # Define Training Options
+#' TrainOptions <- getDefaultTrainOpts()
+#' TrainOptions$maxiter <- 100
+#' # Prepare MOFA object for training
+#' MOFAobject <- prepareMOFA(MOFAobject, DirOptions, DataOptions, ModelOptions, TrainOptions)
+#' # train a MOFA model
+#' MOFAobject <- runMOFA(MOFAobject, DirOptions)
 prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = NULL, TrainOptions = NULL) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel")
-    stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   
   # Create temporary folder to store data
   dir.create(DirOptions$dataDir, showWarnings = F)
@@ -78,21 +100,25 @@ prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = N
 
 #' @title Get default training options
 #' @name getDefaultTrainOpts
-#' @description Function to obtain default training options
+#' @description Function to obtain the default training options.
 #' @details The training options are the following: \cr
-#' maxiter: numeric indicating the maximum number of iterations. \cr
-#' tolerance: numeric indicating the convergence threshold based on the change in Evidence Lower Bound. 
-#' For quick exploration we recommend this to be around 1.0, and for a thorough training we recommend a value of 0.01. \cr
-#' learnFactors: logical indicating whether to learn the number of factors based on the the minimum fraction of variance explained? \cr
-#' DropFactorThreshold: numeric indicating the threshold on fraction of variance explained to drop a factor. 
-#' That is, factors explaining less than 'DropFactorThreshold' fraction of variance (in all views) will be dropped. \cr
-#' verbose: logical indicating whether to generate a verbose output? \cr
-#' @return list with default training options
+#' \itemize{
+#'  \item{\strong{maxiter}:}{ numeric indicating the maximum number of iterations. 
+#'  Default is 1000, but we recommend using the convergence criteria.}
+#'  \item{\strong{tolerance}:}{ numeric indicating the convergence threshold based on the change in Evidence Lower Bound (deltaELBO). 
+#'  For quick exploration we recommend this to be around 1.0, and for a thorough training we recommend a value of 0.01}
+#'  \item{\strong{learnFactors}:}{ logical indicating whether to learn the number of factors. 
+#'  The criteria to shut down factors is based on a minimum fraction of variance explained, defined in the DropFactorThreshold option}
+#'  \item{\strong{DropFactorThreshold}:}{ numeric indicating the threshold on fraction of variance explained to consider a factor inactive and drop it from the model.
+#'  For example, a value of 0.01 implies that factors explaining less than 1\% of variance (in each view) will be dropped.}
+#'  \item{\strong{verbose}:}{ logical indicating whether to generate a verbose output.}
+#' }
+#' @return Returns a list with default training options
 #' @export
 getDefaultTrainOpts <- function() {
   TrainOpts <- list(
-    maxiter = 10000,              # Maximum number of iterations
-    tolerance = 0.05,             # Convergence threshold based on change in the evidence lower bound
+    maxiter = 1000,               # Maximum number of iterations
+    tolerance = 0.1,              # Convergence threshold based on change in the evidence lower bound
     learnFactors = TRUE,          # (bool) learn the number of factors?
     DropFactorThreshold = 0.03,   # Threshold on fraction of variance explained to drop a factor
     verbose = F                   # verbosity?
@@ -103,41 +129,56 @@ getDefaultTrainOpts <- function() {
 
 #' @title Get default data options
 #' @name getDefaultDataOpts
-#' @description Function to obtain default data options
+#' @description Function to obtain the default data options.
 #' @details The data options are the following: \cr
-#' delimiter: character indicating the delimiter in the input data.\cr
-#' centerFeatures: logical indicating whether to center the features to zero mean. Default is FALSE. 
-#' This is not required as long as the option learnIntercept is set to TRUE in the model options. \cr
-#' scaleViews: logical indicating whether to scale the views to unit variance. This is optional and recommended, but not required. Default is FALSE. \cr
-#' removeIncompleteSamples: logical indicating whether to remove incomplete samples that are not profiled in all omics. Default is FALSE.
-#' @return list with default data options
+#' \itemize{
+#'  \item{\strong{scaleViews}:}{ logical indicating whether to scale views to have the same unit variance. 
+#'  As long as the scale differences between the data sets is not massive, this is not required.
+#'  Default is FALSE.}
+#'  \item{\strong{centerFeatures}:}{ logical indicating whether to learn the intercept (the means) in a per feature basis.
+#'   This prevents you from having to center the data, so this option is always recommended. Default is TRUE.}
+#'  \item{\strong{removeIncompleteSamples}:}{ logical indicating whether to remove samples that are not profiled in all omics. 
+#'   We recommend this for testing. Default is FALSE.}
+#'  \item{\strong{delimiter}:}{ character indicating the delimiter in the input matrices stored as text files. 
+#'   The matrices are stored internally by MOFA, so unless you are modifying this, use the default value.}
+#' }
+#' 
+#' @return Returns a list with the default data options.
 #' @export
 getDefaultDataOpts <- function() {
   DataOpts <- list(
-    delimiter = "\t",   # Delimiter for the data
-    centerFeatures = F,   # Center features to zero mean (does not apply to binary or count views)
-    scaleViews = F,        # Scale views to unit variance (does not apply to binary or count views)
-    removeIncompleteSamples = F # Remove incomplete samples that are not profiled in all omics?
+    delimiter = "\t",            # Delimiter for the data
+    centerFeatures = F,          # Center features to zero mean (does not apply to binary or count views)
+    scaleViews = F,              # Scale views to unit variance (does not apply to binary or count views)
+    removeIncompleteSamples = F  # Remove incomplete samples that are not profiled in all omics?
   )
   return(DataOpts)
 }
 
 #' @title Get default model options
 #' @name getDefaultModelOpts
-#' @param object untrained MOFA object to get model options for
-#' @description Function to obtain default model options
+#' @param object an untrained \code{\link{MOFAmodel}} object
+#' @description Function to obtain the default model options.
 #' @details The model options are the following: \cr
-#' likelihood: character vector with data likelihoods per view, 'gaussian' for continuous data, 'bernoulli' for binary data and 'poisson' for count data. \cr
-#' numFactors: numeric indicating the initial number of factors. If you have no prior expectation, we recommend this to be larger than 10. Default is 25. \cr
-#' learnIntercept: logical indicating whether to learn the intercept (the means) per feature. This is always recommended, particularly if you have non-gaussian likelihoods. Default is TRUE. \cr
-#' sparsity: logical indicating whether to use sparsity. This is always recommended, as it will make the loadings more interpretable. Default is TRUE. \cr
-#' covariates: not implemented yet.
-#' @return  list with default model options
+#' \itemize{
+#'  \item{\strong{likelihood}:}{ character vector with data likelihoods per view: 
+#'  'gaussian' for continuous data, 'bernoulli' for binary data and 'poisson' for count data.
+#'  By default, they are guessed internally.}
+#'  \item{\strong{numFactors}:}{ numeric indicating the initial number of factors. 
+#'  If you want to learn the number of factors automaticallty and you have no prior expectation, 
+#'  we recommend setting this to a large value, around 50. Default is 25.}
+#'  \item{\strong{learnIntercept}:}{ logical indicating whether to learn an intercept term to capture differences in feature means.
+#'  This prevents you from having to center the data, so this option is always recommended. Default is TRUE.}
+#'  \item{\strong{sparsity}:}{ logical indicating whether to use the sparse model. 
+#'  This is always recommended, as it will make the loadings more interpretable. Default is TRUE.}
+#'  \item{\strong{covariates}:}{ ignore, not implemented yet.}
+#' }
+#' @return Returns a list with the default model options.
 #' @export
 getDefaultModelOpts <- function(object) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   if (!.hasSlot(object,"Dimensions") | length(object@Dimensions) == 0) stop("Dimensions of object need to be defined before getting ModelOpts")
   if (!.hasSlot(object,"InputData")) stop("InputData slot needs to be specified before getting ModelOpts")
   if (!.hasSlot(object,"TrainData")) stop("TrainData slot needs to be specified before getting ModelOpts")
@@ -152,7 +193,7 @@ getDefaultModelOpts <- function(object) {
     likelihood = likelihood,    # (character vector) likelihood per view [gaussian/bernoulli/poisson]
     learnIntercept = TRUE,      # (bool) include a constant factor of 1s to learn the mean of features (intercept)? If not, you need to center the data
     numFactors = 25,            # (numeric) initial number of latent factors
-    sparsity = TRUE,               # use feature-wise sparsity?
+    sparsity = TRUE,            # use feature-wise sparsity?
     covariates = NULL           # no covariates by default
   )
   

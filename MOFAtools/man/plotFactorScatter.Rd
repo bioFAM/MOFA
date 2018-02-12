@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotFactors.R
 \name{plotFactorScatter}
 \alias{plotFactorScatter}
-\title{Visualize scatterplot of two latent variables}
+\title{Scatterplot of two latent factors}
 \usage{
 plotFactorScatter(object, factors, color_by = NULL, shape_by = NULL,
   name_color = "", name_shape = "", showMissing = TRUE)
@@ -10,27 +10,36 @@ plotFactorScatter(object, factors, color_by = NULL, shape_by = NULL,
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{factors}{vector of two factor to plot}
+\item{factors}{a vector of length two with the two factor to plot. Factors can be specified either as a characters
+with the factor name(s), or as numeric with the index of the factor(s) to use.}
 
-\item{color_by}{specifies groups or values used to color points. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.}
+\item{color_by}{specifies groups or values used to color the samples. 
+This can be either: 
+a character giving the name of a feature present in the training data, 
+a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
+or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.}
 
-\item{shape_by}{specifies groups or values used for point shapes. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.}
+\item{shape_by}{specifies groups or values used to shape the samples. 
+This can be either: 
+a character giving the name of a feature present in the training data, 
+a character giving the same of a covariate (only if using MultiAssayExperiment as input), 
+or a vector of the same length as the number of samples specifying discrete groups.}
 
 \item{name_color}{name for color legend (usually only used if color_by is not a character itself)}
 
 \item{name_shape}{name for shape legend (usually only used if shape_by is not a character itself)}
 
-\item{showMissing}{boolean, if false, removes sample for which shape_by or color_by is missing}
+\item{showMissing}{logical indicating whether to include samples for which \code{shape_by} or \code{color_by} is missing}
 }
 \value{
-ggplot object containing the scatterplot
+\code{ggplot2} object
 }
 \description{
-fill this
+Scatterplot of the sample values for two latent factors
 }
 \details{
-TO-DO: IMPROVE THIS DOCUMENTATION
-}
-\references{
-fill this
+One of the first steps for the annotation of factors is to visualise and group/color them using known covariates such as phenotypic or clinical data.
+This method generates a single scatterplot for the combination of two latent factors.
+Similar functions are \code{\link{plotFactorScatters}} for doing multiple scatter plots and 
+\code{\link{plotFactorBeeswarm}} for doing Beeswarm plots for single factors.
 }

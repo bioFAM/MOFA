@@ -2,25 +2,28 @@
 % Please edit documentation in R/plotFactors.R
 \name{plotFactorCor}
 \alias{plotFactorCor}
-\title{Plot the correlation matrix between the latent factors}
+\title{Plot correlation matrix between latent factors}
 \usage{
 plotFactorCor(object, method = "pearson", ...)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{method}{a character string indicating which correlation coefficient is to be computed: pearson (default), kendall, or spearman.}
+\item{method}{a character indicating the type of correlation coefficient to be computed: pearson (default), kendall, or spearman.}
 
-\item{...}{arguments passed to \code{corrplot}}
+\item{...}{arguments passed to \code{\link[corrplot]{corrplot}}}
 }
 \value{
-symmetric matrix with the correlation coefficient between every pair of factors
+symmetric matrix with the correlation coefficient between every pair of factors.
 }
 \description{
-method to plot the correlation between the latent factors.
+Function to plot the correlation coefficient between the latent factors.
 }
 \details{
-this method plots the correlation matrix between the latent factors. \cr 
-Factors are encouraged to be uncorrelated due to the assumptions of the model. However, it is not a hard constraint such as in Principal Component Analysis and correlations between factors can happen, particularly with large number factors.
-Generally, correlated factors are redundant and should be avoided, as they make interpretation harder. Therefore, if you have too many correlated factors we suggest you run the model again reducing the number of factors.
+This method plots the correlation matrix between the latent factors. \cr 
+The model encourages the factors to be uncorrelated, so this function usually yields a diagonal correlation matrix. \cr 
+However, it is not a hard constraint such as in Principal Component Analysis and correlations between factors can occur, 
+particularly with large number factors. \cr
+Generally, correlated factors are redundant and should be avoided, as they make interpretation harder. Therefore, 
+if you have too many correlated factors we suggest you try reducing the number of factors.
 }

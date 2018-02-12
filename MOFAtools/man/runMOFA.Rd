@@ -2,22 +2,30 @@
 % Please edit documentation in R/runMOFA.R
 \name{runMOFA}
 \alias{runMOFA}
-\title{runMOFA:}
+\title{train an untrained MOFA model}
 \usage{
 runMOFA(object, DirOptions, ..., mofaPath = "mofa")
 }
 \arguments{
-\item{object}{an untrained \code{\link{MOFAmodel}}}
+\item{object}{an untrained \code{\link{MOFAmodel}} object}
 
-\item{DirOptions}{list with I/O options, should contain at least 'dataDir' where the input matrices as stored as .txt files and 'outFile' where the model is going to be stored as a .hdf5 file}
+\item{DirOptions}{list with I/O options, it should contain at least two entries: \cr
+'dataDir' where the input matrices as stored as text files. \cr
+'outFile' where the model is going to be stored as an hdf5 file.}
 
 \item{...}{Extra options to add to the mofa command}
 
-\item{mofaPath}{Path the the mofa script. Use this if mofa is not in your $PATH.}
+\item{mofaPath}{Path the the mofa executable. To be modified if the \code{mofa} Python package is not recognised by Rstudio.}
 }
 \value{
-a trained \code{\link{MOFAmodel}}
+a trained \code{\link{MOFAmodel}} object
 }
 \description{
-train a \code{\link{MOFAmodel}}
+Function to train an untrained \code{\link{MOFAmodel}} object.
+}
+\details{
+In this step the R package is calling the \code{mofa} Python package, where the the training is performed. \cr
+The interface with Python is not great for now. Sometimes the training might freeze, but it is running from the background, just be patient! \cr
+It is important the \code{mofa} executable is on your $PATH so that R can detect it. This will generally be the case, 
+but if it is not, then you need to specify it manually in the \code{mofaPath} argument. Please, read our FAQ for troubleshooting. \cr
 }

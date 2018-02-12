@@ -2,25 +2,29 @@
 % Please edit documentation in R/prepareMOFA.R
 \name{prepareMOFA}
 \alias{prepareMOFA}
-\title{Prepare an untrained MOFA object for training}
+\title{prepareMOFA}
 \usage{
 prepareMOFA(object, DirOptions, DataOptions = NULL, ModelOptions = NULL,
   TrainOptions = NULL)
 }
 \arguments{
-\item{object}{an untrained MOFA object}
+\item{object}{an untrained \code{\link{MOFAmodel}}}
 
-\item{DirOptions}{list with I/O options, it must contain a 'dataDir' element where temporary text files will be stored and a 'outFile' where the final model will be stored as an hdf5 object.}
+\item{DirOptions}{list with I/O options, it must contain a 'dataDir' element where temporary text files will be stored 
+and an 'outFile' with hdf5 extension where the final model will be stored.}
 
-\item{DataOptions}{list of DataOptions (see getDefaultDataOpts for what options can be set here). If NULL, default data options are used.}
+\item{DataOptions}{list of DataOptions (see \code{\link{getDefaultDataOpts}} details). 
+If NULL, default data options are used.}
 
-\item{ModelOptions}{list of ModelOptions (see getDefaultModelOpts for what options can be set here). If NULL, default model options are used.}
+\item{ModelOptions}{list of ModelOptions (see \code{\link{getDefaultModelOpts}} for details). 
+If NULL, default model options are used.}
 
-\item{TrainOptions}{list of TrainOptions (see getDefaultTrainOpts for what options can be set here). If NULL, default training options are used.}
+\item{TrainOptions}{list of TrainOptions (see \code{\link{getDefaultTrainOpts}} for details). 
+If NULL, default training options are used.}
 }
 \value{
-a untrained MOFA object with specified DataOpts, ModelOpts and TrainOpts
+a untrained \code{\link{MOFAmodel}} with specified DataOpts, ModelOpts and TrainOpts
 }
 \description{
-Function to prepare a MOFA model for training by defining data, model and training options.
+Function to prepare a \code{\link{MOFAmodel}} object for training. It requires defining data, model and training options.
 }

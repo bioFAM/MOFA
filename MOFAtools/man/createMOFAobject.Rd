@@ -2,16 +2,22 @@
 % Please edit documentation in R/createMOFA.R
 \name{createMOFAobject}
 \alias{createMOFAobject}
-\title{Initialize a \code{\link{MOFAmodel}} object with multi-omic data}
+\title{Initialize a MOFA object}
 \usage{
 createMOFAobject(data)
 }
 \arguments{
-\item{data}{either MultiAssayExperiment or list of matrices with features as rows and samples as columns}
+\item{data}{either \code{MultiAssayExperiment} or a list of matrices with features as rows and samples as columns.}
 }
 \value{
-an untrained MOFA model object
+An untrained \code{\link{MOFAmodel}} object
 }
 \description{
-Method to initialize a MOFAmodel object
+Method to initialize a \code{\link{MOFAmodel}} object with a multi-omics data set.
+}
+\details{
+If the multi-omics data is provided as a list of matrices, please make sure that features 
+are stored as rows and samples are stored as columns. \cr 
+If the matrices have sample names, we will use them to match the different matrices, filling the corresponding missing values. \cr
+If matrices have no column names, all matrices must have the same number of columns, and you are responsible for filling in missing values.
 }

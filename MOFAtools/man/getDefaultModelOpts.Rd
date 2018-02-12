@@ -7,19 +7,27 @@
 getDefaultModelOpts(object)
 }
 \arguments{
-\item{object}{untrained MOFA object to get model options for}
+\item{object}{an untrained \code{\link{MOFAmodel}} object}
 }
 \value{
-list with default model options
+List with the default model options.
 }
 \description{
-Function to obtain default model options
+Function to obtain the default model options.
 }
 \details{
 The model options are the following: \cr
-likelihood: character vector with data likelihoods per view, 'gaussian' for continuous data, 'bernoulli' for binary data and 'poisson' for count data. \cr
-numFactors: numeric indicating the initial number of factors. If you have no prior expectation, we recommend this to be larger than 10. Default is 25. \cr
-learnIntercept: logical indicating whether to learn the intercept (the means) per feature. This is always recommended, particularly if you have non-gaussian likelihoods. Default is TRUE. \cr
-sparsity: logical indicating whether to use sparsity. This is always recommended, as it will make the loadings more interpretable. Default is TRUE. \cr
-covariates: not implemented yet.
+\itemize{
+ \item{\strong{likelihood}:}{ character vector with data likelihoods per view: 
+ 'gaussian' for continuous data, 'bernoulli' for binary data and 'poisson' for count data.
+ By default, they are guessed internally.}
+ \item{\strong{numFactors}:}{ numeric indicating the initial number of factors. 
+ If you want to learn the number of factors automaticallty and you have no prior expectation, 
+ we recommend setting this to a large value, around 50. Default is 25.}
+ \item{\strong{learnIntercept}:}{ logical indicating whether to learn the intercept (the means) in a per feature basis.
+This prevents you from having to center the data, so this option is always recommended. Default is TRUE.}
+ \item{\strong{sparsity}:}{ logical indicating whether to use the sparsity priors. 
+This is always recommended, as it will make the loadings more interpretable. Default is TRUE.}
+ \item{\strong{covariates}:}{ ignore, not implemented yet.}
+}
 }

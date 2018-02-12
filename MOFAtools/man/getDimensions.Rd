@@ -2,7 +2,7 @@
 % Please edit documentation in R/getMethods.R
 \name{getDimensions}
 \alias{getDimensions}
-\title{Extract dimensionalities from the model.}
+\title{getDimensions}
 \usage{
 getDimensions(object)
 }
@@ -10,6 +10,9 @@ getDimensions(object)
 \item{object}{a \code{\link{MOFAmodel}} object.}
 }
 \description{
+Extract dimensionalities from the model.
+}
+\details{
 K indicates the number of factors, D indicates the number of features, 
 N indicates the (total) number of samples and M indicates the number of views.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotData.R
 \name{plotTilesData}
 \alias{plotTilesData}
-\title{plotTilesData: tile plot of data availability for each sample}
+\title{Tile plot of the multi-omics data}
 \usage{
 plotTilesData(object, colors = NULL)
 }
@@ -12,10 +12,10 @@ plotTilesData(object, colors = NULL)
 \item{colors}{a vector specifying the colors per view.}
 }
 \description{
-Function to do a tile plot showing the structure of the multi-omics input data
+Function to do a tile plot showing the missing value structure of the multi-omics input data
 }
 \details{
-This function is helpful to get an overview of the structure of the training data used for MOFA. 
+This function is helpful to get an overview of the missing value structure of the training data used for MOFA. 
 It shows the number of samples, the number of views, the number of features, and the structure of missing values.
 In particular, it is useful to visualise incomplete data sets, where some samples are missing subsets of assays.
 }

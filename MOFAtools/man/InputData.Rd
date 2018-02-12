@@ -4,11 +4,15 @@
 \name{InputData}
 \alias{InputData}
 \alias{InputData}
+\alias{inputData<-}
+\alias{InputData}
 \alias{InputData}
 \alias{inputData<-}
 \title{Set and retrieve input data}
 \usage{
 InputData(object)
+
+.InputData(object) <- value
 
 \S4method{InputData}{MOFAmodel}(object)
 

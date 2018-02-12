@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotWeights.R
 \name{plotTopWeights}
 \alias{plotTopWeights}
-\title{plotTopWeights: visualise the top weights for a certain factor and view}
+\title{Plot top weights}
 \usage{
 plotTopWeights(object, view, factor, nfeatures = 10, abs = TRUE,
   scale = TRUE, sign = "both")
@@ -10,20 +10,24 @@ plotTopWeights(object, view, factor, nfeatures = 10, abs = TRUE,
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{view}{character vector with the view name or numeric vector with the index of the view.}
+\item{view}{character vector with the voiew name, or numeric vector with the index of the view to use.}
 
-\item{factor}{character vector with the factor name or numeric vector with the index of the factor.}
+\item{factor}{character vector with the factor name, or numeric vector with the index of the factor to use.}
 
 \item{nfeatures}{number of top features to display.}
 
-\item{abs}{take absolute value of the weights? (default=TRUE)}
+\item{abs}{logical indicating whether to use the absolute value of the weights.}
 
-\item{scale}{scales all loading by absolute value of maximal loading}
+\item{scale}{logical indicating whether to scale all loadings from 0 to 1.}
 
-\item{sign}{can be 'positive', 'negative' or 'both' to show only positive, negative or all weigths, respectively}
+\item{sign}{can be 'positive', 'negative' or 'both' to show only positive, negative or all weigths, respectively.}
 }
 \description{
-The first step to annotate factors is to visualise the corresponding feature loadings. \cr
-This function zooms and displays the features with highest loading in a given latent factor and view. \cr
-In contrast, the function \code{showAllWeights} displays the entire distribution of weights.
+An important step to annotate factors is to visualise the corresponding feature loadings. \cr
+This function displays the top features with highest loading. 
+In contrast, the function \code{\link{plotTopWeights}} plots all loadings for a given latent factor and view.
+}
+\details{
+The weights of the features within a view are relative andthey should not be interpreted in an absolute scale.
+Therefore, for interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
 }

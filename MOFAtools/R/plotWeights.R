@@ -3,28 +3,26 @@
 ## Functions to visualise the weights ##
 ########################################
 
-#' @title plotWeightsHeatmap: show heatmap of the factor loadings in a specific view
+#' @title Plot heatmap of the weights
 #' @name plotWeightsHeatmap
-#' @description Function to visualize loadings for a given set of factors in a given view. This is useful to see the overall pattern of the weights but it is not very useful to characterise the factors.
-#'  If you want to individually look at the top weights for a given factor we recommend the function showAllWeights and showTopWeights
-#' @param object a \code{\link{MOFAmodel}} object.
-#' @param view view name
-#' @param features name of the features to include (default: "all")
-#' @param factors name of the factors to include (default: "all")
-#' @param threshold threshold on absolute weight values, features/factors that are below this threshold in all factors/features are removed
-#' @param color to fill 
-#' @param breaks to fill
-#' @param ... further arguments that can be passed to pheatmap
-#' @details fill this
-#' @return fill this
-#' @import pheatmap
-#' @importFrom RColorBrewer brewer.pal 
-#' @importFrom grDevices colorRampPalette
+#' @description Function to visualize the loadings for a given set of factors in a given view. \cr 
+#' This is useful to visualize the overall pattern of the weights but not to individually characterise the factors. \cr
+#' To inspect the loadings of individual factors, use the functions \code{\link{plotWeights}} and \code{\link{plotTopWeights}}
+#' @param object a trained \code{\link{MOFAmodel}} object.
+#' @param view character vector with the view name(s), or numeric vector with the index of the view(s) to use. 
+#' Default is 'all'
+#' @param features character vector with the feature name(s), or numeric vector with the index of the feature(s) to use. 
+#' Default is 'all'
+#' @param factors character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. 
+#' Default is 'all'
+#' @param threshold threshold on absolute weight values, so that loadings with a magnitude below this threshold (in all factors) are removed
+#' @param ... extra arguments passed to \code{\link[pheatmap]{pheatmap}}.
+#' @importFrom pheatmap pheatmap
 #' @export
-plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", threshold = 0, color = NULL, breaks = NULL, ...) {
+plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", threshold = 0, ...) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(all(view %in% viewNames(object)))  
   
   # Get factors
@@ -51,45 +49,46 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
   # if (is.null(main)) { main <- paste("Loadings of Latent Factors on", view) }
   
   # set colors and breaks if not specified
-  if (is.null(color) & is.null(breaks)) {
-    palLength <- 100
-    minV <- min(W)
-    maxV <- max(W)
-    color <- colorRampPalette(colors=c("black", "blue", "white", "orange","red"))(palLength)
-    breaks <- c(seq(minV, 0, length.out=ceiling(palLength/2) + 1), 
-                seq(maxV/palLength,maxV, length.out=floor(palLength/2)))
-  }
+  # if (is.null(color) & is.null(breaks)) {
+  #   palLength <- 100
+  #   minV <- min(W)
+  #   maxV <- max(W)
+  #   color <- colorRampPalette(colors=c("black", "blue", "white", "orange","red"))(palLength)
+  #   breaks <- c(seq(minV, 0, length.out=ceiling(palLength/2) + 1), 
+  #               seq(maxV/palLength,maxV, length.out=floor(palLength/2)))
+  # }
   
-  # remove columns and rows below threshold
+  # apply thresholding of loadings
   W <- W[!apply(W,1,function(r) all(abs(r)<threshold)),]
   W <- W[,!apply(W,2,function(r) all(abs(r)<threshold))]
 
   # Plot heatmap
-  pheatmap::pheatmap(t(W), color=color, breaks=breaks, fontsize=15, ...)
+  pheatmap::pheatmap(t(W), ...)
 }
 
 
 
-#' @title plotWeights: visualise the distribution of loadings for a certain factor in a given view
+#' @title Plot Weights
 #' @name plotWeights
-#' @description The first step to annotate factors is to visualise the corresponding feature loadings. \cr
-#' This function shows all loadings for a given latent factor and view. . \cr
-#' In contrast, the function \code{showTopWeights} zooms and displays the features with highest loading.
+#' @description An important step to annotate factors is to visualise the corresponding feature loadings. \cr
+#' This function plots all loadings for a given latent factor and view, labeling the top ones. \cr
+#' In contrast, the function \code{\link{plotTopWeights}} displays only the top features with highest loading.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param view name of view from which to get the corresponding weights
-#' @param factor name of the factor
-#' @param nfeatures number of features to label
-#' @param abs take absolute value of the weights?
-#' @param manual features to be manually labelled. A list of character vectors.
+#' @param view character vector with the voiew name, or numeric vector with the index of the view to use.
+#' @param factor character vector with the factor name, or numeric vector with the index of the factor to use.
+#' @param nfeatures number of top features to label.
+#' @param abs logical indicating whether to use the absolute value of the weights.
+#' @param manual A nested list of character vectors with features to be manually labelled.
 #' @param color_manual a character vector with colors, one for each element of 'manual'
-#' @param scale boolean, scale all loadings from 0 to 1? 
-#' @details the weights of the features within a view are relative to each other, they should not be interpreted in an absolute scale
+#' @param scale logical indicating whether to scale all loadings from 0 to 1.
+#' @details The weights of the features within a view are relative andthey should not be interpreted in an absolute scale.
+#' Therefore, for interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
 #' @import ggplot2 ggrepel
 #' @export
 plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = NULL, color_manual = NULL, scale = TRUE) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(all(view %in% viewNames(object))) 
 
   # Get factor
@@ -186,25 +185,31 @@ plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = 
 }
 
 
-
-#' @title plotTopWeights: visualise the top weights for a certain factor and view
+#' @title Plot top weights
 #' @name plotTopWeights
-#' @description The first step to annotate factors is to visualise the corresponding feature loadings. \cr
-#' This function zooms and displays the features with highest loading in a given latent factor and view. \cr
-#' In contrast, the function \code{showAllWeights} displays the entire distribution of weights.
-#' @param object a \code{\link{MOFAmodel}} object.
-#' @param view character vector with the view name or numeric vector with the index of the view.
-#' @param factor character vector with the factor name or numeric vector with the index of the factor.
+#' @description Plot top weights for a given latent in a given view.
+#' @param object a trained \code{\link{MOFAmodel}} object.
+#' @param view character vector with the view name, or numeric vector with the index of the view to use.
+#' @param factor character vector with the factor name, or numeric vector with the index of the factor to use.
 #' @param nfeatures number of top features to display.
-#' @param abs take absolute value of the weights? (default=TRUE)
-#' @param sign can be 'positive', 'negative' or 'both' to show only positive, negative or all weigths, respectively
-#' @param scale scales all loading by absolute value of maximal loading
+#' Default is 10
+#' @param abs logical indicating whether to use the absolute value of the weights.
+#' Default is TRUE
+#' @param sign can be 'positive', 'negative' or 'both' to show only positive, negative or all weigths, respectively.
+#' Default is 'both'.
+#' @param scale logical indicating whether to scale all loadings from 0 to 1.
+#' Default is TRUE.
+#' @details An important step to annotate factors is to visualise the corresponding feature loadings. \cr
+#' This function displays the top features with highest loading whereas the function \code{\link{plotTopWeights}} plots all loadings for a given latent factor and view. \cr
+#' Importantly, the weights of the features within a view have relative values and they should not be interpreted in an absolute scale.
+#' Therefore, for interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
 #' @import ggplot2
+#' @return Returns a \code{ggplot2} object
 #' @export
 plotTopWeights <- function(object, view, factor, nfeatures = 10, abs = TRUE, scale = TRUE, sign = "both") {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(view %in% viewNames(object))
   # if(!is.null(manual_features)) { stopifnot(class(manual_features)=="list"); stopifnot(all(Reduce(intersect,manual_features) %in% featureNames(object)[[view]]))  }
   

@@ -3,23 +3,29 @@
 ## Functions to visualise the training data ##
 ##############################################
 
-#' @title plotDataHeatmap: plot data heatmap of relevant features
+#' @title Plot heatmap of relevant features
 #' @name plotDataHeatmap
-#' @description Function to plot a heatmap of the input data for relevant features, usually the ones with highest loadings in a given factor.
+#' @description Function to plot a heatmap of the input data for relevant features, 
+#' usually the ones with highest loadings in a given factor.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param view character vector with the view name, or numeric vector with the index of the view.
 #' @param factor character vector with the factor name, or numeric vector with the index of the factor.
-#' @param features if an integer, the total number of features to plot, based on the absolute value of the loading. Default is 50
-#' If a character vector, a set of manually-defined features.
-#' @param includeWeights boolean indicating whether to include the weight of each feature as an extra annotation in the heatmap. Default is TRUE
-#' @param transpose boolean indicating whether to transpose the output heatmap. Default is FALSE, which corresponds to features as rows and samples as columns.
-#' @param imputed boolean indicating whether to use the imputed data instead of the original data. Default is FALSE.
-#' @param sortSamples boolean indicating whether to sort samples using the corresponding values in the latent factor. Default is FALSE.
+#' @param features if an integer, the total number of features to plot, based on the absolute value of the loading.
+#' If a character vector, a set of manually-defined features. 
+#' Default is 50.
+#' @param includeWeights logical indicating whether to include the weight of each feature as an extra annotation in the heatmap. 
+#' Default is FALSE.
+#' @param transpose logical indicating whether to transpose the output heatmap. 
+#' Default corresponds to features as rows and samples as columns.
+#' @param imputed logical indicating whether to plot the imputed data instead of the original data. 
+#' Default is FALSE.
+#' @param sortSamples logical indicating whether to sort samples using the corresponding values in the latent factor, rather than clustering. 
+#' Default is FALSE.
 #' @param ... further arguments that can be passed to \code{\link[pheatmap]{pheatmap}}
-#' @details One of the first steps for the annotation of a given factor is to visualise the corresponding loadings, using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}.
-#' Both methods show you which are the top features that are driving the heterogeneity. \cr
-#' However, weights are a rather abstract measurements and one might also be interested in visualising the heterogeneity in the top features directly in the original data. This what the function \code{\link{plotDataHeatmap}} does.
-#' In particular, this method plots a heatmap for selected features (by default the top ones with highest loading), which should reveal the underlying pattern that is captured by the latent factor. \cr
+#' @details One of the first steps for the annotation of a given factor is to visualise the corresponding loadings, 
+#' using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}, which show you which are the top features that are driving the heterogeneity. \cr
+#' However, one might also be interested in visualising the direct relationship between features and factors, rather than looking at "abstract" weights. \cr
+#' This function generates a heatmap for selected features, which should reveal, im the original data space, the underlying pattern that is captured by the latent factor. \cr
 #' A similar function for doing scatterplots rather than heatmaps is \code{\link{plotDataScatter}}.
 #' @import pheatmap
 #' @examples
@@ -35,7 +41,7 @@
 plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights = FALSE, transpose = FALSE, imputed = FALSE, sortSamples = TRUE, ...) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(view %in% viewNames(object))
 
   if(is.numeric(factor)) {
@@ -95,29 +101,37 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
 
 
 
-#' @title plotDataScatter: scatterplot of features against latent factors
+#' @title Scatterplots of feature values against latent factors
 #' @name plotDataScatter
-#' @description Function to do a scatterplot of feature(s) against a latent factor.
+#' @description Function to do a scatterplot of the feature(s) values against the latent factor values.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param view character vector with a view name, or numeric vector with the index of the view.
 #' @param factor character vector with a factor name, or numeric vector with the index of the factor.
 #' @param features if an integer, the total number of features to plot (10 by default). If a character vector, a set of manually-defined features.
-#' @param color_by specifies groups or values used to color points. This can be either a character giving the name of a feature, or the name of covariate from the MultiAssayExperiment object, or a factor vector of same length as the number of samples.
-#' @param shape_by specifies groups or values used to shape points, same behaviour as 'color_by'
-#' @details One of the first steps for the annotation of factors is to visualise the loadings using \code{\link{plotWeights}} or \code{\link{plotTopWeights}}. \cr
-#' These methods show you which features drive the heterogeneity of each factor. However, one might also be interested in visualising the heterogeneity in the original data, rather than looking at "abstract" weights. \cr
-#' This method generates scatterplots of features against factors, so that you can observe the association between them. \cr
+#' @param color_by specifies groups or values used to color the samples. 
+#' This can be either: 
+#' a character giving the name of a feature, 
+#' a character giving the same of a covariate (only if using MultiAssayExperiment as input), 
+#' or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.
+#' @param shape_by specifies groups or values used to shape the samples. 
+#' This can be either: 
+#' a character giving the name of a feature present in the training data, 
+#' a character giving the same of a covariate (only if using MultiAssayExperiment as input), 
+#' or a vector of the same length as the number of samples specifying discrete groups.
+#' @details One of the first steps for the annotation of factors is to visualise the loadings using \code{\link{plotWeights}} or \code{\link{plotTopWeights}}, 
+#' which show you which features drive the heterogeneity of each factor. 
+#' However, one might also be interested in visualising the direct relationship between features and factors, rather than looking at "abstract" weights. \cr
+#' This function generates scatterplots of features against factors, so that you can observe the association between them. \cr
 #' A similar function for doing heatmaps rather than scatterplots is \code{\link{plotDataHeatmap}}.
 #' @import ggplot2
 #' @import dplyr
 #' @export
-
 plotDataScatter <- function(object, view, factor, features = 10,
                             color_by=NULL, name_color="",  
                             shape_by=NULL, name_shape="") {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(factor)==1)
   stopifnot(length(view)==1)
   if (!view %in% viewNames(object)) stop(sprintf("The view %s is not present in the object",view))
@@ -239,23 +253,22 @@ plotDataScatter <- function(object, view, factor, features = 10,
 
 
 
-#' @title plotTilesData: tile plot of data availability for each sample
+#' @title Tile plot of the multi-omics data
 #' @name plotTilesData
-#' @description Function to do a tile plot showing the structure of the multi-omics input data
+#' @description Function to do a tile plot showing the missing value structure of the multi-omics input data
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param colors a vector specifying the colors per view.
-#' @details This function is helpful to get an overview of the structure of the training data used for MOFA. 
+#' @details This function is helpful to get an overview of the missing value structure of the training data used for MOFA. 
 #' It shows the number of samples, the number of views, the number of features, and the structure of missing values.
 #' In particular, it is useful to visualise incomplete data sets, where some samples are missing subsets of assays.
 #' @import ggplot2
 #' @import dplyr
 #' @import reshape2
 #' @export
-
 plotTilesData <- function(object, colors = NULL) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   
   # Collect relevant data
   TrainData <- object@TrainData

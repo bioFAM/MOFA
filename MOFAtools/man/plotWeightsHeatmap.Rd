@@ -2,35 +2,29 @@
 % Please edit documentation in R/plotWeights.R
 \name{plotWeightsHeatmap}
 \alias{plotWeightsHeatmap}
-\title{plotWeightsHeatmap: show heatmap of the factor loadings in a specific view}
+\title{Plot heatmap of the weights}
 \usage{
 plotWeightsHeatmap(object, view, features = "all", factors = "all",
-  threshold = 0, color = NULL, breaks = NULL, ...)
+  threshold = 0, ...)
 }
 \arguments{
-\item{object}{a \code{\link{MOFAmodel}} object.}
+\item{object}{a trained \code{\link{MOFAmodel}} object.}
 
-\item{view}{view name}
+\item{view}{character vector with the view name(s), or numeric vector with the index of the view(s) to use. 
+Default is 'all'}
 
-\item{features}{name of the features to include (default: "all")}
+\item{features}{character vector with the feature name(s), or numeric vector with the index of the feature(s) to use. 
+Default is 'all'}
 
-\item{factors}{name of the factors to include (default: "all")}
+\item{factors}{character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. 
+Default is 'all'}
 
-\item{threshold}{threshold on absolute weight values, features/factors that are below this threshold in all factors/features are removed}
+\item{threshold}{threshold on absolute weight values, so that loadings with a magnitude below this threshold (in all factors) are removed}
 
-\item{color}{to fill}
-
-\item{breaks}{to fill}
-
-\item{...}{further arguments that can be passed to pheatmap}
-}
-\value{
-fill this
+\item{...}{extra arguments passed to \code{\link[pheatmap]{pheatmap}}.}
 }
 \description{
-Function to visualize loadings for a given set of factors in a given view. This is useful to see the overall pattern of the weights but it is not very useful to characterise the factors.
- If you want to individually look at the top weights for a given factor we recommend the function showAllWeights and showTopWeights
-}
-\details{
-fill this
+Function to visualize the loadings for a given set of factors in a given view. \cr 
+This is useful to visualize the overall pattern of the weights but not to individually characterise the factors. \cr
+To inspect the loadings of individual factors, use the functions \code{\link{plotWeights}} and \code{\link{plotTopWeights}}
 }

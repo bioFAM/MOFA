@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotFactors.R
 \name{plotFactorBeeswarm}
 \alias{plotFactorBeeswarm}
-\title{Visualize beeswarm plot of one latent variable}
+\title{Beeswarm plot of a single latent factor}
 \usage{
 plotFactorBeeswarm(object, factors, color_by = NULL, name_color = "",
   showMissing = FALSE)
@@ -10,22 +10,27 @@ plotFactorBeeswarm(object, factors, color_by = NULL, name_color = "",
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{factors}{factors to plot}
+\item{factors}{character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. 
+Default is 'all'}
 
-\item{color_by}{specifies groups or values used to color points. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.}
+\item{color_by}{specifies groups or values used to color the samples. 
+This can be either: 
+a character giving the name of a feature, 
+a character giving the same of a covariate (only if using MultiAssayExperiment as input), 
+or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.}
 
 \item{name_color}{name for color legend (usually only used if color_by is not a character itself)}
 
-\item{showMissing}{boolean, if false, removes sample for which shape_by or color_by is missing}
+\item{showMissing}{logical indicating whether to remove samples for which \code{shape_by} or \code{color_by} is missing.}
 }
 \value{
 ggplot object
 }
 \description{
-fill this
+Beeswarm plot of the sample values in a given latent factor
 }
 \details{
-One of the main steps for the annotation of factors is to visualise and group/color them using known covariates or phenotypic data.
-This method generates a beeswarm plot of the sample values in a given latent factor. Note that, similar to Principal Component Analysis, the factor values should be interpreted in a relative manner.
-Similar functions are \code{\link{plotFactorScatters}} for doing scatter plots and \code{\link{plotFactorHist}} for doing histogram plots
+One of the main steps for the annotation of factors is to visualise and color them using known covariates or phenotypic data.
+This method generates a beeswarm plot of the sample values in a given latent factor.
+Similar functions are \code{\link{plotFactorScatter}} for doing scatter plots and \code{\link{plotFactorHist}} for doing histogram plots
 }

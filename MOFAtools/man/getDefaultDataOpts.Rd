@@ -7,16 +7,21 @@
 getDefaultDataOpts()
 }
 \value{
-list with default data options
+List with the default data options.
 }
 \description{
-Function to obtain default data options
+Function to obtain the default data options.
 }
 \details{
 The data options are the following: \cr
-delimiter: character indicating the delimiter in the input data.\cr
-centerFeatures: logical indicating whether to center the features to zero mean. Default is FALSE. 
-This is not required as long as the option learnIntercept is set to TRUE in the model options. \cr
-scaleViews: logical indicating whether to scale the views to unit variance. This is optional and recommended, but not required. Default is FALSE. \cr
-removeIncompleteSamples: logical indicating whether to remove incomplete samples that are not profiled in all omics. Default is FALSE.
+\itemize{
+ \item{\strong{delimiter}:}{ character indicating the delimiter in the input matrices stored as text files. 
+  The matrices are stored internally by MOFA, so unless you are modifying this, use the default value.}
+ \item{\strong{centerFeatures}:}{ logical indicating whether to scale the views to unit variance.
+  This is optional and recommended, but not required. Default is FALSE.}
+ \item{\strong{scaleViews}:}{ logical indicating whether to learn the intercept (the means) in a per feature basis.
+  This prevents you from having to center the data, so this option is always recommended. Default is TRUE.}
+ \item{\strong{removeIncompleteSamples}:}{ logical indicating whether to remove samples that are not profiled in all omics. 
+  We recommend this for testing. Default is FALSE.}
+}
 }

@@ -4,24 +4,29 @@
 ###########################################
 
 
-#' @title Visualize histogram of one latent factor
+#' @title Plot histogram of latent factor values
 #' @name plotFactorHist
-#' @description generate a histogram of the sample values in a given latent factor
-#' @param object a \code{\link{MOFAmodel}} object.
+#' @description Plot a histogram of latent factor values.
+#' @param object a trained \code{\link{MOFAmodel}} object.
 #' @param factor character vector with the factor name or numeric vector with the index of the factor.
-#' @param group_by specifies groups used to color the samples of the histogram. This can be either a character giving the name of a feature, or the name of a covariate if using a MultiAssayExperiment class, or a vector of same length as number of samples.
-#' @param group_names name for groups (usually only used if groups is not a character itself)
-#' @param alpha transparency parameter
-#' @param binwidth binwidth for histogram (default is NULL, which uses ggplot's default calculation)
-#' @param showMissing boolean indicating whether to remove sample for which 'group_by' is missing (default is FALSE)
-#' @param xlabel define x-axis label (default is NULL)
-#' @details One of the first steps for the annotation of factors is to visualise and group/color them using known covariates such as phenotypic or clinical data.
-#' This method generates a histogram of the sample values in a given latent factor. Note that, similar to Principal Component Analysis, the factor values should be interpreted in a relative manner.
-#' Similar functions are \code{\link{plotFactorScatters}} for doing scatter plots and \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots
-#' @return ggpplot object
+#' @param group_by specifies groups used to color the samples of the histogram. 
+#' This can be either: 
+#' a character giving the name of a feature,
+#' the name of a covariate (only if using a \code{\link{MultiAssayExperiment}} as input), 
+#' or a vector of the same length as the number of samples.
+#' @param group_names names for the groups.
+#' @param alpha transparency parameter. 
+#' Default is 0.5
+#' @param binwidth binwidth for histogram. Default is \code{NULL}, which uses \code{ggplot2} default calculation.
+#' @param showMissing boolean indicating whether to remove sample for which \code{group_by} is missing (default is FALSE)
+#' @details One of the first steps for the annotation of factors is to visualise and color them using known covariates such as phenotypic or clinical data. \cr
+#' This method generates a histogram of the sample values in a given latent factor. \cr
+#' Similar functions are \code{\link{plotFactorScatter}} for doing scatter plots between pairs of factors 
+#' and \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots of single factors.
+#' @return Returns a \code{ggplot2} object
 #' @import ggplot2
 #' @export
-plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", alpha = 0.6, binwidth = NULL, xlabel = "", showMissing = FALSE) {
+plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", alpha = 0.5, binwidth = NULL, showMissing = FALSE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -72,8 +77,6 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
   # Generate plot
   p <- ggplot(Z, aes_string(x="value", group="group_by")) + 
     geom_histogram(aes(fill=group_by), alpha=alpha, binwidth=binwidth, position="identity") + 
-    xlab(xlabel) + 
-    ylab("Count") + 
     scale_y_continuous(expand=c(0,0)) +
     guides(fill=guide_legend(title=group_names)) +
     theme(plot.margin = margin(40,40,20,20), 
@@ -95,33 +98,38 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
 }
 
 
-#' @title Visualize beeswarm plot of one latent variable
+#' @title Beeswarm plot of latent factors
 #' @name plotFactorBeeswarm
-#' @description fill this
-#' @param object a \code{\link{MOFAmodel}} object.
-#' @param factors factors to plot
-#' @param color_by specifies groups or values used to color points. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.
+#' @description Beeswarm plot of the latent factor values.
+#' @param object a trained \code{\link{MOFAmodel}} object.
+#' @param factors character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. 
+#' Default is 'all'
+#' @param color_by specifies groups or values used to color the samples. 
+#' This can be either: 
+#' a character giving the name of a feature, 
+#' a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
+#' or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.
 #' @param name_color name for color legend (usually only used if color_by is not a character itself)
-#' @param showMissing boolean, if false, removes sample for which shape_by or color_by is missing
-#' @details One of the main steps for the annotation of factors is to visualise and group/color them using known covariates or phenotypic data.
-#' This method generates a beeswarm plot of the sample values in a given latent factor. Note that, similar to Principal Component Analysis, the factor values should be interpreted in a relative manner.
-#' Similar functions are \code{\link{plotFactorScatters}} for doing scatter plots and \code{\link{plotFactorHist}} for doing histogram plots
-#' @return ggplot object
+#' @param showMissing logical indicating whether to remove samples for which \code{shape_by} or \code{color_by} is missing.
+#' @details One of the main steps for the annotation of factors is to visualise and color them using known covariates or phenotypic data. \cr
+#' This function generates a Beeswarm plot of the sample values in a given latent factor. \cr
+#' Similar functions are \code{\link{plotFactorScatter}} for doing scatter plots and \code{\link{plotFactorHist}} for doing histogram plots
+#' @return Returns a \code{ggplot2} object
 #' @import ggplot2
 #' @import ggbeeswarm
 #' @import grDevices
 #' @export
-plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color="", showMissing = FALSE) {
+plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = "", showMissing = FALSE) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel")  stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
 
   # Collect relevant data
   N <- object@Dimensions[["N"]]
   Z <- getFactors(object, factors=factors, include_intercept=FALSE, as.data.frame=T)
   Z$factor <- as.factor(Z$factor)
   
- # Set color
+  # Set color
   colorLegend <- T
   if (!is.null(color_by)) {
     # It is the name of a covariate or a feature in the TrainData
@@ -187,19 +195,30 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color="", 
   return(p)
 }
 
-#' @title Visualize scatterplot of two latent variables
+#' @title Scatterplot of two latent factors
 #' @name plotFactorScatter
-#' @description fill this
-#' @param object a \code{\link{MOFAmodel}} object.
-#' @param factors vector of two factor to plot
-#' @param color_by specifies groups or values used to color points. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.
-#' @param shape_by specifies groups or values used for point shapes. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.
+#' @description Scatterplot of the values of two latent factors.
+#' @param object a trained \code{\link{MOFAmodel}} object.
+#' @param factors a vector of length two with the factors to plot. Factors can be specified either as a characters
+#' using the factor names, or as numeric with the index of the factors
+#' @param color_by specifies groups or values used to color the samples. 
+#' This can be either 
+#' a character giving the name of a feature present in the training data, 
+#' a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
+#' or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.
+#' @param shape_by specifies groups or values used to shape the samples. 
+#' This can be either
+#' a character giving the name of a feature present in the training data, 
+#' a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
+#' or a vector of the same length as the number of samples specifying discrete groups.
 #' @param name_color name for color legend (usually only used if color_by is not a character itself)
 #' @param name_shape name for shape legend (usually only used if shape_by is not a character itself)
-#' @param showMissing boolean, if false, removes sample for which shape_by or color_by is missing
-#' @details TO-DO: IMPROVE THIS DOCUMENTATION
-#' @return ggplot object containing the scatterplot
-#' @references fill this
+#' @param showMissing logical indicating whether to include samples for which \code{shape_by} or \code{color_by} is missing
+#' @details One of the first steps for the annotation of factors is to visualise and group/color them using known covariates such as phenotypic or clinical data.
+#' This method generates a single scatterplot for the combination of two latent factors.
+#' Similar functions are \code{\link{plotFactorScatters}} for doing multiple scatter plots and 
+#' \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots for single factors.
+#' @return Returns a \code{ggplot2} object
 #' @import ggplot2
 #' @export
 plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL, name_color="",
@@ -308,20 +327,31 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
 }
   
   
-#' @title Visualize scatterplot of all latent variables in a pair-wise grid
+#' @title Pairwise scatterplots of multiple latent factors
 #' @name plotFactorScatters
-#' @description fill this
+#' @description Scatterplots of the sample values for pair-wise combinations of multiple latent factors.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param factors vector of factors to plot or "all"
-#' @param color_by specifies groups or values used to color points. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.
-#' @param shape_by specifies groups or values used for point shapes. This can be either a character giving the name of a feature or covariate or a vector of same length as number of samples specifying a group or value for each sample.
+#' @param factors character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. 
+#' Default is 'all'
+#' @param color_by specifies groups or values used to color the samples. 
+#' This can be either: 
+#' a character giving the name of a feature present in the training data, 
+#' a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
+#' or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.
+#' @param shape_by specifies groups or values used to shape the samples. 
+#' This can be either: 
+#' a character giving the name of a feature present in the training data, 
+#' a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
+#' or a vector of the same length as the number of samples specifying discrete groups.
 #' @param name_color name for color legend (usually only used if color_by is not a character itself)
 #' @param name_shape name for shape legend (usually only used if shape_by is not a character itself)
-#' @param showMissing boolean, if false, removes sample for which shape_by or color_by is missing
-#' @details asd
-#' @return fill this
-#' @references fill this
-#' @import ggplot2 GGally grDevices
+#' @param showMissing logical indicating whether to include samples for which \code{shape_by} or \code{color_by} is missing
+#' @details One of the first steps for the annotation of factors is to visualise and group/color them using known covariates such as phenotypic or clinical data.
+#' This method generates multiple scatterplots for pairwise combinations of several latent factors.
+#' Similar functions are \code{\link{plotFactorScatter}} for doing single scatter plots and 
+#' \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots for single factors.
+#' @return \code{ggplot2} object
+#' @import ggplot2
 #' @export
 plotFactorScatters <- function(object, factors = "all", showMissing=TRUE, 
                          color_by=NULL, name_color="",  
@@ -472,17 +502,20 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
   
 
 
-#' @title Plot the correlation matrix between the latent factors
+#' @title Plot correlation matrix between latent factors
 #' @name plotFactorCor
-#' @description method to plot the correlation between the latent factors.
-#' @param object a \code{\link{MOFAmodel}} object.
-#' @param method a character string indicating which correlation coefficient is to be computed: pearson (default), kendall, or spearman.
-#' @param ... arguments passed to \code{corrplot}
-#' @details this method plots the correlation matrix between the latent factors. \cr 
-#' Factors are encouraged to be uncorrelated due to the assumptions of the model. However, it is not a hard constraint such as in Principal Component Analysis and correlations between factors can happen, particularly with large number factors.
-#' Generally, correlated factors are redundant and should be avoided, as they make interpretation harder. Therefore, if you have too many correlated factors we suggest you run the model again reducing the number of factors.
-#' @return symmetric matrix with the correlation coefficient between every pair of factors
-#' @import corrplot
+#' @description Function to plot the correlation matrix between the latent factors.
+#' @param object a trained \code{\link{MOFAmodel}} object.
+#' @param method a character indicating the type of correlation coefficient to be computed: pearson (default), kendall, or spearman.
+#' @param ... arguments passed to \code{\link[corrplot]{corrplot}}
+#' @details This method plots the correlation matrix between the latent factors. \cr 
+#' The model encourages the factors to be uncorrelated, so this function usually yields a diagonal correlation matrix. \cr 
+#' However, it is not a hard constraint such as in Principal Component Analysis and correlations between factors can occur, 
+#' particularly with large number factors. \cr
+#' Generally, correlated factors are redundant and should be avoided, as they make interpretation harder. Therefore, 
+#' if you have too many correlated factors we suggest you try reducing the number of factors.
+#' @return Returns a symmetric matrix with the correlation coefficient between every pair of factors.
+#' @importFrom corrplot corrplot
 #' @export
 plotFactorCor <- function(object, method = "pearson", ...) {
   
@@ -497,7 +530,7 @@ plotFactorCor <- function(object, method = "pearson", ...) {
   
   # Compute and plot correlation
   r <- abs(cor(x=Z, y=Z, method=method, use = "complete.obs"))
-  p <- corrplot::corrplot(r, tl.col="black", ...)
+  p <- corrplot(r, tl.col="black", ...)
   
   return(r)
 }

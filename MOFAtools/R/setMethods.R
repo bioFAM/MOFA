@@ -1,5 +1,5 @@
 
-# General function to set names
+# (Hidden) General function to set names
 .setNames <- function(object, values, dimensionality, views="all") {
   nodes <- names(object@Expectations)
   if (paste0(views,collapse="") == "all") { 

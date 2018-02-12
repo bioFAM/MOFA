@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotWeights.R
 \name{plotWeights}
 \alias{plotWeights}
-\title{plotWeights: visualise the distribution of loadings for a certain factor in a given view}
+\title{Plot Weights}
 \usage{
 plotWeights(object, view, factor, nfeatures = 10, abs = FALSE,
   manual = NULL, color_manual = NULL, scale = TRUE)
@@ -10,25 +10,26 @@ plotWeights(object, view, factor, nfeatures = 10, abs = FALSE,
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{view}{name of view from which to get the corresponding weights}
+\item{view}{character vector with the voiew name, or numeric vector with the index of the view to use.}
 
-\item{factor}{name of the factor}
+\item{factor}{character vector with the factor name, or numeric vector with the index of the factor to use.}
 
-\item{nfeatures}{number of features to label}
+\item{nfeatures}{number of top features to label.}
 
-\item{abs}{take absolute value of the weights?}
+\item{abs}{logical indicating whether to use the absolute value of the weights.}
 
-\item{manual}{features to be manually labelled. A list of character vectors.}
+\item{manual}{A nested list of character vectors with features to be manually labelled.}
 
 \item{color_manual}{a character vector with colors, one for each element of 'manual'}
 
-\item{scale}{boolean, scale all loadings from 0 to 1?}
+\item{scale}{logical indicating whether to scale all loadings from 0 to 1.}
 }
 \description{
-The first step to annotate factors is to visualise the corresponding feature loadings. \cr
-This function shows all loadings for a given latent factor and view. . \cr
-In contrast, the function \code{showTopWeights} zooms and displays the features with highest loading.
+An important step to annotate factors is to visualise the corresponding feature loadings. \cr
+This function plots all loadings for a given latent factor and view, labeling the top ones. \cr
+In contrast, the function \code{\link{plotTopWeights}} displays only the top features with highest loading.
 }
 \details{
-the weights of the features within a view are relative to each other, they should not be interpreted in an absolute scale
+The weights of the features within a view are relative andthey should not be interpreted in an absolute scale.
+Therefore, for interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
 }

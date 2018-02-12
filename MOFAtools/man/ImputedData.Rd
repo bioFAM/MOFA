@@ -3,10 +3,14 @@
 \docType{methods}
 \name{ImputedData}
 \alias{ImputedData}
+\alias{ImputedData}
+\alias{ImputedData<-}
 \alias{ImputedData,MOFAmodel-method}
 \title{ImputedData: set and retrieve imputed data}
 \usage{
 ImputedData(object)
+
+.ImputedData(object) <- value
 
 \S4method{ImputedData}{MOFAmodel}(object)
 }

@@ -3,10 +3,14 @@
 \docType{methods}
 \name{TrainData}
 \alias{TrainData}
+\alias{TrainData}
+\alias{TrainData<-}
 \alias{TrainData,MOFAmodel-method}
 \title{TrainData: set and retrieve training data}
 \usage{
 TrainData(object)
+
+.TrainData(object) <- value
 
 \S4method{TrainData}{MOFAmodel}(object)
 }

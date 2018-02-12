@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotData.R
 \name{plotDataHeatmap}
 \alias{plotDataHeatmap}
-\title{plotDataHeatmap: plot data heatmap of relevant features}
+\title{Plot heatmap of relevant features}
 \usage{
 plotDataHeatmap(object, view, factor, features = 50, includeWeights = FALSE,
   transpose = FALSE, imputed = FALSE, sortSamples = TRUE, ...)
@@ -14,27 +14,33 @@ plotDataHeatmap(object, view, factor, features = 50, includeWeights = FALSE,
 
 \item{factor}{character vector with the factor name, or numeric vector with the index of the factor.}
 
-\item{features}{if an integer, the total number of features to plot, based on the absolute value of the loading. Default is 50
-If a character vector, a set of manually-defined features.}
+\item{features}{if an integer, the total number of features to plot, based on the absolute value of the loading.
+If a character vector, a set of manually-defined features. 
+Default is 50.}
 
-\item{includeWeights}{boolean indicating whether to include the weight of each feature as an extra annotation in the heatmap. Default is TRUE}
+\item{includeWeights}{logical indicating whether to include the weight of each feature as an extra annotation in the heatmap. 
+Default is FALSE.}
 
-\item{transpose}{boolean indicating whether to transpose the output heatmap. Default is FALSE, which corresponds to features as rows and samples as columns.}
+\item{transpose}{logical indicating whether to transpose the output heatmap. 
+Default corresponds to features as rows and samples as columns.}
 
-\item{imputed}{boolean indicating whether to use the imputed data instead of the original data. Default is FALSE.}
+\item{imputed}{logical indicating whether to plot the imputed data instead of the original data. 
+Default is FALSE.}
 
-\item{sortSamples}{boolean indicating whether to sort samples using the corresponding values in the latent factor. Default is FALSE.}
+\item{sortSamples}{logical indicating whether to sort samples using the corresponding values in the latent factor, rather than clustering. 
+Default is FALSE.}
 
 \item{...}{further arguments that can be passed to \code{\link[pheatmap]{pheatmap}}}
 }
 \description{
-Function to plot a heatmap of the input data for relevant features, usually the ones with highest loadings in a given factor.
+Function to plot a heatmap of the input data for relevant features, 
+usually the ones with highest loadings in a given factor.
 }
 \details{
-One of the first steps for the annotation of a given factor is to visualise the corresponding loadings, using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}.
-Both methods show you which are the top features that are driving the heterogeneity. \cr
-However, weights are a rather abstract measurements and one might also be interested in visualising the heterogeneity in the top features directly in the original data. This what the function \code{\link{plotDataHeatmap}} does.
-In particular, this method plots a heatmap for selected features (by default the top ones with highest loading), which should reveal the underlying pattern that is captured by the latent factor. \cr
+One of the first steps for the annotation of a given factor is to visualise the corresponding loadings, 
+using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}, which show you which are the top features that are driving the heterogeneity. \cr
+However, one might also be interested in visualising the direct relationship between features and factors, rather than looking at "abstract" weights. \cr
+This function generates a heatmap for selected features, which should reveal, im the original data space, the underlying pattern that is captured by the latent factor. \cr
 A similar function for doing scatterplots rather than heatmaps is \code{\link{plotDataScatter}}.
 }
 \examples{

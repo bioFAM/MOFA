@@ -10,18 +10,26 @@ predict(object, views = "all", factors = "all", type = c("inRange",
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{views}{character vector with the view name(s), or numeric vector with the view index(es), default is "all".}
+\item{views}{character vector with the view name(s), or numeric vector with the view index(es). 
+Default is "all".}
 
-\item{factors}{character vector with the factor name(s) or numeric vector with the factor index(es), default is "all".}
+\item{factors}{character vector with the factor name(s) or numeric vector with the factor index(es). 
+Default is "all".}
 
-\item{type}{type of prediction returned. "response" gives mean for gaussian and poisson, and probabilities for bernoulli , 
-"link" gives the linear predictions, "inRange" rounds the fitted values from "terms" for integer-valued distributions to the next integer. Default is "inRange".}
+\item{type}{type of prediction returned, either: 
+"response" gives the response vector, the mean for Gaussian and Poisson, and probabilities for Bernoulli, 
+"link" gives the linear predictions, 
+"inRange" rounds the fitted values integer-valued distributions to the next integer. \cr
+Default is "inRange".}
+
+\item{include_intercept}{logical indicating whether to include the intercept factors for the prediction, if present.
+Default is TRUE.}
 }
 \value{
 List with data predictions, each element corresponding to a view.
 }
 \description{
-This function uses the latent factors and the weights to do predictions in the input data
+This function uses the latent factors and the weights to do data predictions.
 }
 \details{
 the denoised and condensed low-dimensional representation of the data captures the main sources of heterogeneity of the data. 

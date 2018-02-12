@@ -2,23 +2,27 @@
 % Please edit documentation in R/prepareMOFA.R
 \name{getDefaultTrainOpts}
 \alias{getDefaultTrainOpts}
-\title{Get default training options}
+\title{getDefaultTrainOpts}
 \usage{
 getDefaultTrainOpts()
 }
 \value{
-list with default training options
+A list with default training options
 }
 \description{
-Function to obtain default training options
+Function to obtain the default training options.
 }
 \details{
 The training options are the following: \cr
-maxiter: numeric indicating the maximum number of iterations. \cr
-tolerance: numeric indicating the convergence threshold based on the change in Evidence Lower Bound. 
-For quick exploration we recommend this to be around 1.0, and for a thorough training we recommend a value of 0.01. \cr
-learnFactors: logical indicating whether to learn the number of factors based on the the minimum fraction of variance explained? \cr
-DropFactorThreshold: numeric indicating the threshold on fraction of variance explained to drop a factor. 
-That is, factors explaining less than 'DropFactorThreshold' fraction of variance (in all views) will be dropped. \cr
-verbose: logical indicating whether to generate a verbose output? \cr
+\itemize{
+ \item{\strong{maxiter}:}{ numeric indicating the maximum number of iterations. 
+ Default is 1000 but we recommend using the convergence criteria.}
+ \item{\strong{tolerance}:}{ numeric indicating the convergence threshold based on the change in Evidence Lower Bound (deltaELBO). 
+ For quick exploration we recommend this to be around 1.0, and for a thorough training we recommend a value of 0.01}
+ \item{\strong{learnFactors}:}{ logical indicating whether to learn the number of factors. 
+ The criteria to shut down factors is based on a minimum fraction of variance explained, defined in the DropFactorThreshold option}
+ \item{\strong{DropFactorThreshold}:}{ numeric indicating the threshold on fraction of variance explained to consider a factor inactive and drop it from the model.
+ A value of for example 0.01 implies that factors explaining less than 1\% of variance (in each view) will be dropped.}
+ \item{\strong{verbose}:}{ logical indicating whether to generate a verbose output.}
+}
 }

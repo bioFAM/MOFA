@@ -2,16 +2,15 @@
 % Please edit documentation in R/QC.R
 \name{qualityControl}
 \alias{qualityControl}
-\title{Quality control of a MOFA model}
+\title{qualityControl}
 \usage{
 qualityControl(object, verbose = F)
 }
 \arguments{
-\item{object}{a \code{\link{MOFAmodel}} object.}
-}
-\value{
-a \code{\link{MOFAmodel}} model.
+\item{object}{a trained \code{\link{MOFAmodel}} object.}
+
+\item{verbose}{logical indicating whether to generate a verbose output.}
 }
 \description{
-(TO-FILL) Method to do quality control on a MOFA model. \cr
+Function to do quality control on a \code{\link{MOFAmodel}} object. \cr
 }

@@ -2,20 +2,27 @@
 % Please edit documentation in R/getMethods.R
 \name{getWeights}
 \alias{getWeights}
-\title{Extract the weights from the model}
+\title{getWeights}
 \usage{
 getWeights(object, views = "all", factors = "all", as.data.frame = FALSE)
 }
 \arguments{
-\item{object}{a \code{\link{MOFAmodel}} object.}
+\item{object}{a trained \code{\link{MOFAmodel}} object.}
 
-\item{views}{character vector with the view name(s), or numeric vector with the view index(es). Default is "all".}
+\item{views}{character vector with the view name(s), or numeric vector with the view index(es). 
+Default is "all".}
 
-\item{factors}{character vector with the factor name(s) or numeric vector with the factor index(es) (here 0 corresponds to the intercept factor if included in the model). Default is "all".}
+\item{factors}{character vector with the factor name(s) or numeric vector with the factor index(es). \cr
+Default is "all".}
 
-\item{as.data.frame}{boolean indicating whether to return a long data frame instead of a list of matrices. Default is FALSE.}
+\item{as.data.frame}{logical indicating whether to return a long data frame instead of a list of matrices. 
+Default is \code{FALSE}.}
 }
 \value{
-By default returns a list where each element is a loading matrix with dimensionality (D,K), where D is the number of features in this view and K is the number of factors. \cr
-Alternatively, if as.data.frame is TRUE, returns a long-formatted data frame with columns (view,feature,factor,value).
+By default it returns a list where each element is a loading matrix with dimensionality (D,K), 
+where D is the number of features and K is the number of factors. \cr
+Alternatively, if \code{as.data.frame} is \code{TRUE}, returns a long-formatted data frame with columns (view,feature,factor,value).
+}
+\description{
+Extract the weights from the model.
 }

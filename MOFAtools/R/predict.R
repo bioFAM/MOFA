@@ -5,19 +5,26 @@
 
 #' @title Do predictions using a fitted MOFA model
 #' @name predict
-#' @description This function uses the latent factors and the weights to do predictions in the input data
+#' @description This function uses the latent factors and the weights to do data predictions.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param views character vector with the view name(s), or numeric vector with the view index(es), default is "all".
-#' @param factors character vector with the factor name(s) or numeric vector with the factor index(es), default is "all".
-#' @param type type of prediction returned. "response" gives mean for gaussian and poisson, and probabilities for bernoulli , 
-#' @param include_intercept logical indicating whether to include the intercept factors for the prediction (default is TRUE)
-#' "link" gives the linear predictions, "inRange" rounds the fitted values from "terms" for integer-valued distributions to the next integer. Default is "inRange".
+#' @param views character vector with the view name(s), or numeric vector with the view index(es). 
+#' Default is "all".
+#' @param factors character vector with the factor name(s) or numeric vector with the factor index(es). 
+#' Default is "all".
+#' @param type type of prediction returned, either: 
+#' "response" gives the response vector, the mean for Gaussian and Poisson, and probabilities for Bernoulli, 
+#' "link" gives the linear predictions, 
+#' "inRange" rounds the fitted values integer-valued distributions to the next integer. \cr
+#' Default is "inRange".
+#' @param include_intercept logical indicating whether to include the intercept factors for the prediction, if present.
+#' Default is TRUE.
 #' @details the denoised and condensed low-dimensional representation of the data captures the main sources of heterogeneity of the data. 
 #' These representation can be used to do predictions using the equation Y = WX. This is the key step underlying imputation, see \code{\link{imputeMissing}} and Methods section of the article.
-#' @return List with data predictions, each element corresponding to a view.
+#' @return Returns a list with data predictions, each element corresponding to a view.
 #' @export
-
-predict <- function(object, views = "all", factors = "all", type = c("inRange","response", "link"), include_intercept = TRUE) {
+predict <- function(object, views = "all", factors = "all", 
+                    type = c("inRange","response", "link"), 
+                    include_intercept = TRUE) {
 
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")

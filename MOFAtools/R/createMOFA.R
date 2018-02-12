@@ -1,17 +1,22 @@
 
-#' @title Initialize a \code{\link{MOFAmodel}} object with multi-omic data
+#' @title Initialize a MOFA object
 #' @name createMOFAobject
-#' @description Method to initialize a MOFAmodel object
-#' @param data either MultiAssayExperiment or list of matrices with features as rows and samples as columns
-#' @return an untrained MOFA model object
+#' @description Method to initialize a \code{\link{MOFAmodel}} object with a multi-omics data set.
+#' @param data either a \code{MultiAssayExperiment} or a list of matrices with features as rows and samples as columns.
+#' @details
+#' If the multi-omics data is provided as a list of matrices, please make sure that features 
+#' are stored as rows and samples are stored as columns. \cr 
+#' If the matrices have sample names, we will use them to match the different matrices, filling the corresponding missing values. \cr
+#' If matrices have no column names, all matrices must have the same number of columns, and you are responsible for filling any missing values.
+#' @return Returns an untrained \code{\link{MOFAmodel}} object
 #' @export
 createMOFAobject <- function(data) {
   
-  if (class(data) == "MultiAssayExperiment") {
+  if (is(data,"MultiAssayExperiment")) {
     message("Creating MOFA object from a MultiAssayExperiment object...")
     object <- .createMOFAobjectFromMAE(data)
-  } else if (class(data) == "list") {
-    message("Creating MOFA object from list of matrices, make sure that samples are columns and features are rows...")
+  } else if (is(data,"list")) {
+    message("Creating MOFA object from list of matrices, please make sure that samples are columns and features are rows...")
     object <- .createMOFAobjectFromList(data)
   } else {
     stop("Error: input data has to be provided either as a list of matrices or as a MultiAssayExperiment object")
@@ -36,9 +41,7 @@ createMOFAobject <- function(data) {
   return(object)
 }
 
-#' @title .createMOFAobjectFromMAE: initialise a MOFAmodel using a MultiAssayExperiment object
-#' @name .createMOFAobjectFromMAE
-#' @param data a \link{MultiAssayExperiment} object
+# (Hidden) function to initialise a MOFAmodel object using a MultiAssayExperiment
 #' @import MultiAssayExperiment
 .createMOFAobjectFromMAE <- function(data) {
 
@@ -92,7 +95,7 @@ createMOFAobject <- function(data) {
 
 
 
-
+# (Hidden) function to fill NAs for missing samples
 .subset_augment<-function(mat, pats) {
   pats <- unique(pats)
   mat <- t(mat)

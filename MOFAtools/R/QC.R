@@ -1,14 +1,13 @@
-#' @title Quality control of a MOFA model
+#' @title qualityControl
 #' @name qualityControl
-#' @description (TO-FILL) Method to do quality control on a MOFA model. \cr
-#' @param object a \code{\link{MOFAmodel}} object.
-#' @param verbose logical indicating whether to have a verbose output
-#' @return a \code{\link{MOFAmodel}} model.
-#' @importFrom rhdf5 h5read
+#' @description Function to do quality control on a \code{\link{MOFAmodel}} object. \cr
+#' @param object a trained \code{\link{MOFAmodel}} object.
+#' @param verbose logical indicating whether to generate a verbose output.
 #' @export
-
+#'
 qualityControl <- function(object, verbose = F) {
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
+  if (object@Status != "trained") stop("This function only works in a trained MOFAmodel")
   
   # Check that the model has view names
   if (verbose==T) message("Checking view names...")
@@ -21,7 +20,7 @@ qualityControl <- function(object, verbose = F) {
   # Check that the model has feature names
   if (verbose==T) message("Checking feature names...")
   stopifnot(!is.null(featureNames(object)))
-  
+
   # Check that the model has the right node names
   if (verbose==T) message("Checking nodes...")
   stopifnot(identical(sort(c("W","Z","Theta","Tau","AlphaW","Y")), sort(names(object@Expectations))))
@@ -41,8 +40,9 @@ qualityControl <- function(object, verbose = F) {
   stopifnot(all(sapply(object@Expectations$AlphaW, is.numeric)))
   
   # Check that the dimensionalities match
+  # TO-DO...
   if (verbose==T) message("Checking dimensionalities...")
-
+  
   # Check that there are no features with complete missing values
   if (verbose==T) message("Checking there are no features with complete missing values...")
   for (view in viewNames(object)) {
@@ -68,6 +68,5 @@ qualityControl <- function(object, verbose = F) {
     if (lk != predicted_lik[view])
       message(sprintf("Warning, view %s should follow a %s distribution rather than %s ", view, predicted_lik[view], lk))
   }
-  
   
 }

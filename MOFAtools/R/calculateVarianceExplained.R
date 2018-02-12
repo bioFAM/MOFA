@@ -14,7 +14,6 @@
 #' In case of non-Gaussian data the variance explained on the Gaussian pseudo-data is calculated. 
 #' @return a list with matrices with the amount of variation explained per factor and view, and optionally total variance explained per view and variance explained by each feature alone
 #' @export
-
 calculateVarianceExplained <- function(object, views = "all", factors = "all", include_intercept = TRUE, ...) {
   
   # Sanity checks

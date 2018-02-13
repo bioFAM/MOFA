@@ -303,8 +303,8 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
   xlabel <- paste("Latent factor", factors[1])
   ylabel <- paste("Latent factor", factors[2])
                                 
-  p <- ggplot(df, aes_string(x = "x", y = "y", color = "color_by", shape = "shape_by")) + 
-      geom_point() + xlab(xlabel) + ylab(ylabel) +
+  p <- ggplot(df, aes_string(x = "x", y = "y")) + 
+      geom_point(aes_string(color = "color_by", shape = "shape_by")) + xlab(xlabel) + ylab(ylabel) +
       # scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))]) +
       theme(plot.margin = margin(20, 20, 10, 10), 
             axis.text = element_text(size = rel(1), color = "black"), 

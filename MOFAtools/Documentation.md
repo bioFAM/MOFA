@@ -6,8 +6,7 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 * **DataOpts**: data processing options
 * **ModelOpts**: model options
 * **TrainStats**: training statistics
-* **Expectations**: random variables' expectations
-* **Parameters**: random variables' parameters
+* **Expectations**: expectations of the different random variables
 
 # List of relevant functions
 
@@ -30,6 +29,7 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 
 ## Disentangle sources of variation
 * **plotVarianceExplained**: plot the variance explained by each factor in each view. This is the key plot of MOFA and should always be done before inspecting factors or weights.
+* **calculateVarianceExplained**: calculate and return the variance explained by each factor in each view.
 
 ## Inspect loadings
 * **plotTopWeights**: plot the top loadings for a given factor and view  
@@ -42,8 +42,9 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 * **plotFactorBeeswarm**: beeswarm plot for a single factor  
 
 ## Inspect training data
-* **showDataHeatmap**: heatmap of the training data using only top features for a given factor. This is very useful to map the factors and features back to the original data  
-* **showDataScatter**: scatterplot of the data using only top features for a given factor  
+* **plotTilesData**: plot overview of the input data, including the number of samples, views, features, and the missing assays.
+* **plotDataHeatmap**: heatmap of the training data using only top features for a given factor. This is very useful to map the factors and features back to the original data  
+* **plotDataScatter**: scatterplot of the data using only top features for a given factor  
 
 ## Feature set enrichment analysis
 * **FeatureSetEnrichmentAnalysis**: do feature set enrichment analysis. Takes a bit amount of options, check the example on the vignette  

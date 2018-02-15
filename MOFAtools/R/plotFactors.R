@@ -158,13 +158,15 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = ""
   names(color_by) <- sampleNames(object)
   if(length(unique(color_by)) < 5) color_by <- as.factor(color_by)
 
-  # Remove samples with missing values
-  if (!showMissing) {
-    Z <- Z[!is.nan(Z$value),]
-  }
   Z$color_by <- color_by[Z$sample]
   
-  # Generate plot
+  # Remove samples with missing values
+  if (!showMissing) {
+    Z <- Z[complete.cases(Z),]
+    # Z <- Z[!is.na(Z$value),]
+  }
+  
+  Z# Generate plot
   p <- ggplot(Z, aes_string(x=0, y="value")) + 
     ggbeeswarm::geom_quasirandom(aes(color=color_by)) +
     ylab("Factor value") + xlab("") +

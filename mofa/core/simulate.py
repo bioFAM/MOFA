@@ -164,10 +164,10 @@ class Simulate(object):
                 rate = s.log(1+s.exp(F))
 
                 # Without noise
-                # Y[m] = s.special.round(rate)
+                Y[m] = s.special.round(rate)
 
                 # With noise, sample from the Poisson distribution
-                Y[m] = poisson.rvs(rate).astype(float)
+                # Y[m] = poisson.rvs(rate).astype(float)
 
         # Sample observations using a bernoulli likelihood
         elif likelihood == "bernoulli":
@@ -177,10 +177,10 @@ class Simulate(object):
                 f = sigmoid( s.dot(Z,W[m].T) )
 
                 # without noise
-                # Y[m] = s.special.round(f)
+                Y[m] = s.special.round(f)
 
                 # with noise
-                Y[m] = bernoulli.rvs(f).astype(float)
+                # Y[m] = bernoulli.rvs(f).astype(float)
 
                 ## Unvectorised
 

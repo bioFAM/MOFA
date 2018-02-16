@@ -216,8 +216,9 @@ class initModel(object):
                 # Jaakkola
                 tau_list[m] = Tau_Jaakkola(dim=((self.N,self.D[m])), value=1.)
             elif self.lik[m] == "binomial":
-                tmp = 0.25*s.amax(self.data["tot"][m],axis=0)
-                tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
+                print("Not implemented")
+                # tmp = 0.25*s.amax(self.data["tot"][m],axis=0)
+                # tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
             elif self.lik[m] == "gaussian":
                 tau_list[m] = Tau_Node(dim=(self.D[m],), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
         self.Tau = Multiview_Mixed_Node(self.M,*tau_list)

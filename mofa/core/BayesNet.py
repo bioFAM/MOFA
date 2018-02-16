@@ -89,30 +89,39 @@ class BayesNet(object):
                 mask = self.nodes["Y"].getNodes()[m].getMask()
 
                 # Calculate predictions and mask them
-                Ypred_m = s.dot(Z, W[m].T)
-                Ypred_m[mask] = 0.
+                # Ypred_m = s.dot(Z, W[m].T)
+                # Ypred_m[mask] = 0.
+                Ym = Y[m]
+                Ym[mask] = 0.
 
-                # If there is an intercept term, regress it out, as it greatly decreases the fraction of variance explained by the other factors
+                # If there is an intercept term, regress it out
                 # (THIS IS NOT IDEAL...)
                 if s.all(Z[:,0]==1.):
                     Ypred_m_intercept = s.outer(Z[:,0], W[m][:,0].T) 
                     Ypred_m_intercept[mask] = 0. # DO WE NEED TO DO THIS???
-                    Ypred_m -= Ypred_m_intercept
+                    # Ypred_m -= Ypred_m_intercept
+                    Ym -= Ypred_m_intercept
+
                     all_r2[:,0] = 1.
-                    SS = (Ypred_m**2.).sum()
+                    # SS = (Ypred_m**2.).sum()
+                    SS = (Ym**2.).sum()
                     for k in range(1,self.dim['K']):
                         Ypred_mk = s.outer(Z[:,k], W[m][:,k])
                         Ypred_mk[mask] = 0.
-                        Res = ((Ypred_m - Ypred_mk)**2.).sum()
+                        # Res = ((Ypred_m - Ypred_mk)**2.).sum()
+                        Res = ((Ym - Ypred_mk)**2.).sum()
                         all_r2[m,k] = 1. - Res/SS
                 # No intercept term
                 else:
-                    SS = (Ypred_m**2.).sum()
+                    # SS = (Ypred_m**2.).sum()
+                    SS = (Ym**2.).sum()
                     for k in range(self.dim['K']):
                         Ypred_mk = s.outer(Z[:,k], W[m][:,k])
                         Ypred_mk[mask] = 0.
-                        Res = ((Ypred_m - Ypred_mk)**2.).sum()
+                        Res = ((Ym - Ypred_mk)**2.).sum()
+                        # Res = ((Ypred_m - Ypred_mk)**2.).sum()
                         all_r2[m,k] = 1. - Res/SS
+
 
             if by_r2 is not None:
                 drop_dic["by_r2"] = s.where( (all_r2>by_r2).sum(axis=0) == 0)[0]

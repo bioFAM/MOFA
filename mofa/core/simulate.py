@@ -136,6 +136,7 @@ class Simulate(object):
                 # for n in range(self.N):
                     # for d in range(self.D[m]):
                         # Y[m][n,d] = s.dot(Z[n,:],W[m][d,:].T) + Mu[m][d] + norm.rvs(loc=0,scale=1/s.sqrt(Tau[m][d]))
+            F = Y
 
         elif likelihood == "warp":
             raise NotImplementedError()
@@ -174,10 +175,10 @@ class Simulate(object):
             for m in range(self.M):
 
                 ## Vectorised 
-                f = sigmoid( s.dot(Z,W[m].T) )
+                F = sigmoid( s.dot(Z,W[m].T) )
 
                 # without noise
-                Y[m] = s.special.round(f)
+                Y[m] = s.special.round(F)
 
                 # with noise
                 # Y[m] = bernoulli.rvs(f).astype(float)
@@ -211,4 +212,4 @@ class Simulate(object):
         for m in range(self.M):
             Y[m] = pd.DataFrame(data=Y[m])
 
-        return Y
+        return F,Y

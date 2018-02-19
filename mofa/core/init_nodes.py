@@ -82,7 +82,7 @@ class initModel(object):
 
                 elif qmean == "pca": # Latent variables are initialised from PCA in the concatenated matrix
                     pca = sklearn.decomposition.PCA(n_components=self.K, copy=True, whiten=True)
-                    pca.fit(s.concatenate(self.data,axis=0).T)
+                    pca.fit(s.concatenate(self.data,axis=1).T)
                     qmean = pca.components_.T
 
             elif isinstance(qmean,s.ndarray):

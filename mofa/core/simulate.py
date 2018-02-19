@@ -126,17 +126,18 @@ class Simulate(object):
         """
 
         Y = [ s.zeros((self.N,self.D[m])) for m in range(self.M) ]
+        F = [ s.zeros((self.N,self.D[m])) for m in range(self.M) ]
 
         if likelihood == "gaussian":
             # Vectorised
             for m in range(self.M):
-                Y[m] = s.dot(Z,W[m].T) + Mu[m] + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m]), size=[self.N, self.D[m]])
+                F[m] = s.dot(Z,W[m].T) + Mu[m] + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m]), size=[self.N, self.D[m]])
+                Y[m] = F[m]
             # Non-vectorised, slow
             # for m in range(self.M):
                 # for n in range(self.N):
                     # for d in range(self.D[m]):
                         # Y[m][n,d] = s.dot(Z[n,:],W[m][d,:].T) + Mu[m][d] + norm.rvs(loc=0,scale=1/s.sqrt(Tau[m][d]))
-            F = Y
 
         elif likelihood == "warp":
             raise NotImplementedError()
@@ -161,11 +162,10 @@ class Simulate(object):
 
             ## Vectorised
             for m in range(self.M):
-                F = s.dot(Z,W[m].T)
-                rate = s.log(1+s.exp(F))
+                F[m] = s.dot(Z,W[m].T)
 
                 # Without noise
-                Y[m] = s.special.round(rate)
+                Y[m] = s.special.round(s.log(1+s.exp(F[m])))
 
                 # With noise, sample from the Poisson distribution
                 # Y[m] = poisson.rvs(rate).astype(float)
@@ -175,10 +175,10 @@ class Simulate(object):
             for m in range(self.M):
 
                 ## Vectorised 
-                F = sigmoid( s.dot(Z,W[m].T) )
+                F[m] = s.dot(Z,W[m].T)
 
                 # without noise
-                Y[m] = s.special.round(F)
+                Y[m] = s.special.round(sigmoid(F[m]))
 
                 # with noise
                 # Y[m] = bernoulli.rvs(f).astype(float)

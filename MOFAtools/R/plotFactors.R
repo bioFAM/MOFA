@@ -166,7 +166,7 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = ""
     # Z <- Z[!is.na(Z$value),]
   }
   
-  Z# Generate plot
+  # Generate plot
   p <- ggplot(Z, aes_string(x=0, y="value")) + 
     ggbeeswarm::geom_quasirandom(aes(color=color_by)) +
     ylab("Factor value") + xlab("") +
@@ -189,7 +189,8 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = ""
       ) + facet_wrap(~factor, scales="free")
   
   # If color_by is numeric, define the default gradient
-  if (is.numeric(color_by)) { p <- p + scale_color_gradientn(colors=terrain.colors(10)) }
+  # if (is.numeric(color_by)) { p <- p + scale_color_gradientn(colors=terrain.colors(10)) }
+  if (is.numeric(color_by)) { p <- p + scale_color_gradientn(colors=colorRampPalette(rev(brewer.pal(n = 5, name = "RdYlBu")))(10)) }
   
   # Add legend
   if (colorLegend) { p <- p + labs(color=name_color) } else { p <- p + guides(color = FALSE) }

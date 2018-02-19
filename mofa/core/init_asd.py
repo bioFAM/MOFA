@@ -241,8 +241,8 @@ def entry_point():
   ##############################################
 
   # Latent variables
-  # model_opts["initZ"] = { 'mean':"random", 'var':s.ones((K,)), 'E':None, 'E2':None }
-  model_opts["initZ"] = { 'mean':"pca", 'var':s.ones((K,)), 'E':None, 'E2':None }
+  model_opts["initZ"] = { 'mean':"random", 'var':s.ones((K,)), 'E':None, 'E2':None }
+  # model_opts["initZ"] = { 'mean':"pca", 'var':s.ones((K,)), 'E':None, 'E2':None }
 
   # Tau
   model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(D[m])*100 for m in range(M)] }

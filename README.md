@@ -109,7 +109,7 @@ Importantly, these factors can have different activity patterns in different omi
 Decoupling this heterogeneity is a mandatory first step in the analysis of multi-omics data. For example, this is the variance decomposition plot for the Chronic Lymphocytic Leukemia data set analysed in the paper:
 
 <p align="center"> 
-<img src="images/varianceDecomp.png" style="width: 50%; height: 50%"/>​
+<img src="images/varExplained.png" style="width: 50%; height: 50%"/>​
 </p>
 
 

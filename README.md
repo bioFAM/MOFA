@@ -52,7 +52,7 @@ The workflow of MOFA consists of two steps:
 **(2) Downstream analysis**: once the factors are inferred they need to be characterised as technical or biological sources of variation by looking at the corresponding weights, doing (gene set) enrichment analysis, plotting the factors, correlating factors with known covariates, etc. Also, one can do imputation of missing values and prediction of clinical outcomes using the latent factors.
 
 <p align="center"> 
-<img src="workflow.png">
+<img src="images/workflow.png">
 </p>
 
 A list of all **relevant methods** with a short description can be found [here](https://github.com/PMBio/MOFA/blob/master/MOFAtools/Documentation.md)  
@@ -106,7 +106,11 @@ There are two important quantities to keep track of:
 ### Step 2: Disentangle the variability
 MOFA disentangles the heterogeneity of a high-dimensional multi-omics data set into a reduced set of latent factors that capture global sources of variation. 
 Importantly, these factors can have different activity patterns in different omics. For example, a batch effect might be affecting the RNA data but not the Methylation data. 
-Decoupling this heterogeneity is a mandatory first step in the analysis of multi-omics data.
+Decoupling this heterogeneity is a mandatory first step in the analysis of multi-omics data. For example, this is the variance decomposition plot for the Chronic Lymphocytic Leukemia data set analysed in the paper:
+
+<p align="center"> 
+<img src="images/varianceDecomp.png" style="width: 50%; height: 50%"/>​
+</p>
 
 
 ### Step 3: Annotation of factors
@@ -117,12 +121,14 @@ We have built a semi-automated pipeline based on our experience annotating facto
 (2) **Inspection of top weighted features**: for example, if a factor is associated to the sex of the individual, the mRNA data will have very high loadings for genes located in the X and Y chromosomes.
 (3) **Feature set enrichment analysis**: particularly when having large amounts of features, the inspection of loadings is challenging, and doing gene ontology enrichment analysis can be useful.  
 
-### Step 4: Using the factors to get biological insights
+### Step 4: Using the factors to get biological insights in downstream analysis
 The latent factors can be used for several purposes, such as:
 (1) **Dimensionality reduction**: similar to PCA, dimensionality reduction plots can be obtained by plotting the Factors against each other.
 (2) **Imputation**: Factors can be used to predict missing values, including entire missing assays.
 (3) **Predicting clinical response**: if the factors capture phenotypical information, they can capture clinical covariates of interst
-(4) **Regressing out technical effects**: if a factor is capturing an undesired technical effect, its effect can be regressed out from your original data matrix.
+(4) **Regressing out technical effects**: if a factor is capturing an undesired technical effect, its effect can be regressed out from your original data matrix. 
+
+Please refer to the paper for details on the different analysis. 
 
 ## Tutorial
 An example workflow is provided in [the vignette](http://htmlpreview.github.com/?https://github.com/PMBio/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_CLL.html).

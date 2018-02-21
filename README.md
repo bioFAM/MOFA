@@ -18,7 +18,7 @@ For more details you can read our preprint: https://www.biorxiv.org/content/earl
  
 
 ## Installation
-MOFA is run exclusively from R, but it requires some python dependencies that you need to install. Here is how to install it:
+MOFA is run exclusively from R, but it requires some python dependencies that you need to install. Here is how to do it:
 
 ### Python dependencies 
 We are on the process of uploading it to PyPI. For now, you can install it using:

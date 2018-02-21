@@ -121,12 +121,14 @@ We have built a semi-automated pipeline based on our experience annotating facto
 (2) **Inspection of top weighted features**: for example, if a factor is associated to the sex of the individual, the mRNA data will have very high loadings for genes located in the X and Y chromosomes.  
 (3) **Feature set enrichment analysis**: particularly when having large amounts of features, the inspection of loadings is challenging, and doing gene ontology enrichment analysis can be useful.  
 
+Please refer to the paper for details on the different analysis.  
+
 ### Step 4: Using the factors to get biological insights in downstream analysis
-The latent factors can be used for several purposes, such as:
-(1) **Dimensionality reduction**: similar to PCA, dimensionality reduction plots can be obtained by plotting the Factors against each other. 
-(2) **Imputation**: Factors can be used to predict missing values, including entire missing assays. 
-(3) **Predicting clinical response**: if the factors capture phenotypical information, they can capture clinical covariates of interest. 
-(4) **Regressing out technical effects**: if a factor is capturing an undesired technical effect, its effect can be regressed out from your original data matrix. 
+The latent factors can be used for several purposes, such as:  
+(1) **Dimensionality reduction**: similar to PCA, dimensionality reduction plots can be obtained by plotting the Factors against each other.  
+(2) **Imputation**: Factors can be used to predict missing values, including entire missing assays.  
+(3) **Predicting clinical response**: if the factors capture phenotypical information, they can capture clinical covariates of interest.  
+(4) **Regressing out technical effects**: if a factor is capturing an undesired technical effect, its effect can be regressed out from your original data matrix.  
 
 Please refer to the paper for details on the different analysis. 
 

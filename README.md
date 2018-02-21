@@ -70,15 +70,12 @@ If everything is successful, you should observe an output analogous to the follo
   ###                                                     ###
   ###########################################################
 
-
 ##################
 ## Loading data ##
 ##################
 
 Loaded /Users/ricard/MOFA/MOFA/test/data/500_0.txt with dim (100,500)...
-
 Loaded /Users/ricard/MOFA/MOFA/test/data/500_1.txt with dim (100,500)...
-
 Loaded /Users/ricard/MOFA/MOFA/test/data/500_2.txt with dim (100,500)...
  
 
@@ -87,13 +84,9 @@ Loaded /Users/ricard/MOFA/MOFA/test/data/500_2.txt with dim (100,500)...
 #############################################
 
 Trial 1, Iteration 1: time=0.08 ELBO=-345954.96, Factors=10, Covariates=1
-
 Trial 1, Iteration 2: time=0.10 ELBO=-283729.31, deltaELBO=62225.6421, Factors=10, Covariates=1
-
 Trial 1, Iteration 3: time=0.10 ELBO=-257427.42, deltaELBO=26301.8893, Factors=10, Covariates=1
-
 ...
-
 Trial 1, Iteration 100: time=0.07 ELBO=-221171.01, deltaELBO=0.0998, Factors=10, Covariates=1
 
 Converged!

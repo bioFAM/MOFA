@@ -165,7 +165,7 @@ class Simulate(object):
                 F[m] = s.dot(Z,W[m].T)
 
                 # Without noise
-                Y[m] = s.special.round(s.log(1+s.exp(F[m])))
+                Y[m] = s.special.round(s.log(1.+s.exp(F[m])))
 
                 # With noise, sample from the Poisson distribution
                 # Y[m] = poisson.rvs(rate).astype(float)

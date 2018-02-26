@@ -122,8 +122,6 @@ class BayesNet(object):
                         # Res = ((Ypred_m - Ypred_mk)**2.).sum()
                         all_r2[m,k] = 1. - Res/SS
 
-            print all_r2
-
             if by_r2 is not None:
                 drop_dic["by_r2"] = s.where( (all_r2>by_r2).sum(axis=0) == 0)[0] 
                 if len(drop_dic["by_r2"]) > 0: # drop one factor at a time

@@ -74,7 +74,7 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
 #' This function plots all loadings for a given latent factor and view, labeling the top ones. \cr
 #' In contrast, the function \code{\link{plotTopWeights}} displays only the top features with highest loading.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param view character vector with the voiew name, or numeric vector with the index of the view to use.
+#' @param view character vector with the view name, or numeric vector with the index of the view to use.
 #' @param factor character vector with the factor name, or numeric vector with the index of the factor to use.
 #' @param nfeatures number of top features to label.
 #' @param abs logical indicating whether to use the absolute value of the weights.

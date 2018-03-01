@@ -212,4 +212,5 @@ class Simulate(object):
         for m in range(self.M):
             Y[m] = pd.DataFrame(data=Y[m])
 
-        return F,Y
+        # return F,Y
+        return Y

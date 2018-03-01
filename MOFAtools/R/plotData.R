@@ -144,7 +144,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
   # Collect relevant data
   N <- getDimensions(object)[["N"]]
   Z <- getFactors(object)[,factor]
-  W <- getWeights(object, views=view, factors=factor)[,1]
+  W <- getWeights(object, views=view, factors=factor)[[1]][,1]
   Y <- object@TrainData[[view]]
   
   # Get features

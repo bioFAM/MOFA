@@ -20,7 +20,7 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", i
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   
   # check whether the intercept was learned
-  if(!object@ModelOpts$learnIntercept & include_intercept) {
+  if(!object@ModelOpts$learnIntercept==TRUE & include_intercept==TRUE) {
     include_intercept <- FALSE
     # warning("No intercept was learned in MOFA.\n Intercept is not included in the model prediction.")
   }

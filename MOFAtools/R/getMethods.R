@@ -36,20 +36,22 @@ getFactors <- function(object, factors = "all", as.data.frame = FALSE, include_i
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   
   # Get factors
-  if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } 
-    else if(is.numeric(factors)) {
+  if (paste0(factors,collapse="") == "all") { 
+    factors <- factorNames(object) 
+  } else if (is.numeric(factors)) {
       if (object@ModelOpts$learnIntercept == T) factors <- factorNames(object)[factors+1]
       else factors <- factorNames(object)[factors]
-    }
-      else{ stopifnot(all(factors %in% factorNames(object))) }
+  } else { 
+    stopifnot(all(factors %in% factorNames(object))) 
+  }
 
   # Collect factors
   Z <- getExpectations(object,"Z",as.data.frame)
-    if (as.data.frame==FALSE) {
-      Z <- Z[,factors, drop=FALSE]
-    } else {
-      Z <- Z[Z$factor %in% factors,]
-    }
+  if (as.data.frame==FALSE) {
+    Z <- Z[,factors, drop=FALSE]
+  } else {
+    Z <- Z[Z$factor %in% factors,]
+  }
 
   # Remove intercept
   if (include_intercept == FALSE) {

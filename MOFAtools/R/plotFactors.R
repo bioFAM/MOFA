@@ -71,7 +71,7 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
   Z$group_by <- group_by[Z$sample]
 
   # Remove missing samples
-  if(!showMissing) Z <- Z[!is.na(Z$group_by),]
+  if(!showMissing) Z <- Z[!is.na(group_by) & !is.nan(group_by),]
   Z$group_by <- as.factor(Z$group_by)
   
   # Generate plot
@@ -161,8 +161,9 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = ""
   Z$color_by <- color_by[Z$sample]
   
   # Remove samples with missing values
-  if (!showMissing) {
-    Z <- Z[complete.cases(Z),]
+  if (showMissing==F) {
+    Z <- Z[!(is.na(color_by) | is.nan(color_by) | color_by=="NaN"),]
+    # Z <- Z[complete.cases(Z),]
     # Z <- Z[!is.na(Z$value),]
   }
   
@@ -295,7 +296,7 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
   df = data.frame(x = Z[, factors[1]], y = Z[, factors[2]], shape_by = shape_by, color_by = color_by)
   
   # remove values missing color or shape annotation
-  if (!showMissing) df <- df[!is.na(df$shape_by) & !is.na(df$color_by),]
+  if (!showMissing) df <- df[!(is.na(df$shape_by) | is.na(df$color_by)),]
 
    #turn into factors
    df$shape_by[is.na(df$shape_by)] <- "NA"
@@ -441,7 +442,7 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
 
   # Remove missing values
   if(!showMissing) {
-    Z <- Z[!is.na(color_by),]
+    Z <- Z[!(is.na(color_by) | is.nan(color_by)),]
     color_by <- color_by[!is.na(color_by)]
     shape_by <- shape_by[!is.na(shape_by)]
   }
@@ -532,6 +533,8 @@ plotFactorCor <- function(object, method = "pearson", ...) {
   if(object@ModelOpts$learnIntercept==TRUE) Z <- Z[,-1]
   
   # Compute and plot correlation
+  rownames(Z) <- paste0("LF_",1:nrow(Z))
+  colnames(Z) <- paste0("LF_",1:ncol(Z))
   r <- abs(cor(x=Z, y=Z, method=method, use = "complete.obs"))
   p <- corrplot(r, tl.col="black", ...)
   

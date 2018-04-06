@@ -141,11 +141,11 @@ def loadData(data_opts, verbose=True):
             print("Warning: %d features(s) on view %d have missing values in all samples, removing them..." % ( (nas==1.).sum(), m) )
             Y[m].drop(Y[m].columns[np.where(nas==1.)], axis=1, inplace=True)
 
-        # Removing features with no variance
+        # Warning if there are features with no variance
         var = Y[m].std(axis=0) 
         if np.any(var==0.):
-            print("Warning: %d features(s) on view %d have zero variance, removing them..." % ( (var==0.).sum(),m) )
-            Y[m].drop(Y[m].columns[np.where(var==0.)], axis=1, inplace=True)
+            print("Warning: %d features(s) on view %d have zero variance, consider removing them..." % ( (var==0.).sum(),m) )
+            # Y[m].drop(Y[m].columns[np.where(var==0.)], axis=1, inplace=True)
 
         # Center the features
         if data_opts['center_features'][m]:

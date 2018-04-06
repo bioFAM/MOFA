@@ -28,7 +28,8 @@ subsetFactors <- function(object, factors) {
   object@Dimensions[["K"]] <- length(factors)
   
   # Modify factor names
-  factorNames(object) <- as.character(1:object@Dimensions[["K"]])
+  factorNames(object) <- as.character(factors)
+  # factorNames(object) <- as.character(1:object@Dimensions[["K"]])
   
   return(object)
 }

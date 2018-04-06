@@ -54,7 +54,7 @@ def entry_point():
   p.add_argument( '--elbofreq',          type=int, default=1,                                 help='Frequency of computation of ELBO' )
   p.add_argument( '--iter',              type=int, default=5000,                              help='Maximum number of iterations' )
   p.add_argument( '--ntrials',           type=int, default=1,                                 help='Number of trials' )
-  p.add_argument( '--startSparsity',     type=int, default=100,                               help='Iteration to activate the spike-and-slab')
+  p.add_argument( '--startSparsity',     type=int, default=100,                               help='Iteration to activate the spike-and-slab sparsity')
   p.add_argument( '--tolerance',         type=float, default=0.01 ,                           help='Tolerance for convergence (based on the change in ELBO)')
   p.add_argument( '--startDrop',         type=int, default=1 ,                                help='First iteration to start dropping factors')
   p.add_argument( '--freqDrop',          type=int, default=1 ,                                help='Frequency for dropping factors')

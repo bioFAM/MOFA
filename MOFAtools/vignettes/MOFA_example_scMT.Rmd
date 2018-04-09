@@ -146,7 +146,7 @@ plotVarianceExplained(MOFAobject)
 ## Characterisation of individual factors
 
 ### Inspection of loadings for Factor 1
-Plotting the gene loadings for Factor 1, we can see that it is enriched for naive pluripotency marker genes such as Rex1/Zpf42, Tbx3, Fbxo15 and Essrb. Hence, based on previous studies (Mohammed et al, 2016) we can hypothetise that Factor 1 captures a transition from a naive pluripotent state to a primed pluripotent states.
+Plotting the RNA expression gene loadings for Factor 1, we can see that it is enriched for naive pluripotency marker genes such as Rex1/Zpf42, Tbx3, Fbxo15 and Essrb. Hence, based on previous studies (Mohammed et al, 2016) we can hypothetise that Factor 1 captures a transition from a naive pluripotent state to a primed pluripotent states.
 ```{r}
 # Plot all weights and highlight specific gene markers
 plotWeights(
@@ -154,7 +154,7 @@ plotWeights(
   view = "RNA expression", 
   factor = 1, 
   nfeatures = 0, 
-  abs = T, 
+  abs = F, 
   manual = list(c("Zfp42","Esrrb","Morc1","Fbxo15","Jam2","Klf4","Tcl1","Tbx3","Tex19.1"))
 )
 
@@ -179,21 +179,41 @@ df <- data.frame(
 )
 
 plotDataHeatmap(
-  MOFAobject, 
+  object = MOFAobject, 
   view = "RNA expression", 
   factor = 1, 
   features = 20, 
-  show_colnames=F, show_rownames=T, 
   transpose = T, 
-  sortSamples = T, 
-  cluster_cols=F, 
-  annotation_col=df
+  show_colnames=F, show_rownames=T, cluster_cols = F, annotation_col=df # pheatmap options
 )
 ```
 
+We can now connect these transcriptomic changes to coordinated changes on the DNA methylation. As Factor 1 is active in all genomic contexts, it suggests that there is a massive genome-wide DNA methylation remodelling. This can confirmed by inspecting the weights in the DNA methylation views: notice that most features (CpG sites) have a negative weight, which suggests that  their DNA methylation decrease in a manner that is inversely proportional to the direction of Factor 1.
+```{r}
+plotWeights(
+  MOFAobject,
+  view = "Met Enhancers", 
+  factor = 1, 
+  nfeatures = 0,
+  abs = F,
+  scale = F
+)
+```
+
+As done before, let's observe the heterogeneity captured by Factor 1 in the original data space. This clearly confirms that most of the CpG sites are getting methylated as cells progress in Factor 1 from naive to primed pluripotent stem cells
+```{r}
+plotDataHeatmap(
+  object = MOFAobject, 
+  view = "Met Enhancers", 
+  factor = 1, 
+  features = 500,
+  transpose = T,
+  cluster_rows=F, cluster_cols=F, show_rownames=F, show_colnames=F, annotation_col=df  # pheatmap options
+)
+```
 
 ### Inspection of loadings for Factor 2
-A similar analysis for Factor 2 reveals that it captures a second axis of differentiation from the primed pluripotency state to a differentiated state, with highest RNA loadings for known differentiation markers such as keratins and annexins
+A similar analysis for Factor 2 reveals that it captures a second axis of differentiation from the primed pluripotency state to a differentiated state, with highest RNA loadings for known differentiation markers such as keratins and annexins.
 ```{r}
 # Plot all weights and highlight specific gene markers
 plotWeights(
@@ -201,8 +221,9 @@ plotWeights(
   view="RNA expression", 
   factor = 2, 
   nfeatures = 0, 
-  manual=list(c("Krt8","Cald1","Anxa5","Tagln","Ahnak","Dsp","Anxa3","Krt19")), 
-  abs=T
+  manual = list(c("Krt8","Cald1","Anxa5","Tagln","Ahnak","Dsp","Anxa3","Krt19")), 
+  scale = F,
+  abs = F
 )
 
 # Plot top 10 genes
@@ -214,6 +235,35 @@ plotTopWeights(
 )
 ```
 
+Interestingly, the $R^2$ plot suggests that this second axis of variability is not associated with DNA methylation. We can confirm this by plotting the weights (they are all zero) and the heatmaps (no coherent pattern) as we have done before:
+```{r}
+plotWeights(
+  MOFAobject, 
+  view = "Met Enhancers", 
+  factor = 2, 
+  nfeatures = 0, 
+  abs = F,
+  scale = F
+)
+```
+
+```{r, message=FALSE}
+factor2 <- sort(getFactors(MOFAobject,"2")[,1])
+order_samples <- names(factor2)
+df <- data.frame(
+  row.names = order_samples,
+  culture = MOFAobject@InputData[,order_samples]$culture,
+  factor = factor2
+)
+plotDataHeatmap(
+  object = MOFAobject, 
+  view = "Met Enhancers", 
+  factor = 2, 
+  features = 500,
+  transpose = T,
+  cluster_rows=F, cluster_cols=F, show_rownames=F, show_colnames=F, annotation_col=df  # pheatmap options
+)
+```
 
 ## Ordination of samples by factors
 Samples can be visualized along factors of interest using the `plotFactorScatter` and `plotFactorBeeswarm` functions.  

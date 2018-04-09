@@ -19,8 +19,6 @@
 #' Default corresponds to features as rows and samples as columns.
 #' @param imputed logical indicating whether to plot the imputed data instead of the original data. 
 #' Default is FALSE.
-#' @param sortSamples logical indicating whether to sort samples using the corresponding values in the latent factor, rather than clustering. 
-#' Default is FALSE.
 #' @param ... further arguments that can be passed to \code{\link[pheatmap]{pheatmap}}
 #' @details One of the first steps for the annotation of a given factor is to visualise the corresponding loadings, 
 #' using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}, which show you which are the top features that are driving the heterogeneity. \cr
@@ -38,7 +36,7 @@
 #' # Plot top 50 features for factor 1 in the mRNA view, do not show feature or row names
 #' plotDataHeatmap(model, "mRNA", 1, 50, show_colnames = FALSE, show_rownames = FALSE) 
 #' @export
-plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights = FALSE, transpose = FALSE, imputed = FALSE, sortSamples = TRUE, ...) {
+plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights = FALSE, transpose = FALSE, imputed = FALSE, ...) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
@@ -74,12 +72,10 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
   }
   data <- data[features,]
   
-  # Sort samples according to latent factors
-  if (sortSamples==T) {
-    order_samples <- names(sort(Z, decreasing=T))
-    order_samples <- order_samples[order_samples %in% colnames(data)]
-    data <- data[,order_samples]
-  }
+  # Sort samples according to the latent factor
+  order_samples <- names(sort(Z, decreasing=T))
+  order_samples <- order_samples[order_samples %in% colnames(data)]
+  data <- data[,order_samples]
   
   # Transpose the data
   if (transpose==T) { data <- t(data) }
@@ -89,12 +85,12 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
   if (includeWeights) { 
     anno <- data.frame(row.names=names(W[features]), weight=W[features]) 
     if (transpose==T) {
-      pheatmap::pheatmap(t(data), annotation_col=anno, ...)
+      pheatmap(t(data), annotation_col=anno, ...)
     } else {
-      pheatmap::pheatmap(t(data), annotation_row=anno, ...)
+      pheatmap(t(data), annotation_row=anno, ...)
     }
   } else {
-    pheatmap::pheatmap(t(data), ...)
+    pheatmap(t(data), ...)
   }
   
 }

@@ -4,7 +4,7 @@ author: "Ricard Argelaguet and Britta Velten"
 date: "`r Sys.Date()`"
 output:
   BiocStyle::html_document:
-    toc: true
+    toc: false
 vignette: >
   %\VignetteIndexEntry{Example_CLL}
   %\VignetteEngine{knitr::rmarkdown}
@@ -14,13 +14,13 @@ vignette: >
 This vignette show how to MOFA can be used to disentangle the heterogeneity in single-cell DNA methylation and RNA expression (scMT) data:  
 
 <p align="center"> 
-<img src="https://github.com/bioFAM/MOFA/blob/master/images/scmt.png" style="width: 30%; height: 30%"/>
+<img src="../../images/scmt.png" style="width: 100%; height: 100%"/>
 </p>
 
 Briefly, the data set consists of 87 mouse embryonic stem cells (mESCs), comprising of 16 cells cultured in ‘2i’ media, which induces a naive pluripotency state, and 71 serum-grown cells, which commits cells to a primed pluripotency state poised for cellular differentiation (Angermueller, 2016). 
 
 
-# Step 1: Load data and create MOFA object
+# Load data and create MOFA object
 The data is stored as a `MultiAssayExperiment` object.
 Notice that there are 4 views, one with normalized RNA expression assay and 3 views with DNA methylation information. Each DNA methylation view is a different genomic context (i.e. Enhancers, Promoters and CpG Islands) and each feature is an individual CpG site.
 ```{r, message=FALSE}
@@ -31,16 +31,18 @@ library(ggplot2)
 data("scMT_data")
 scMT_data
 ```
+
 First, we create the MOFA object:
 ```{r}
 MOFAobject <- createMOFAobject(scMT_data)
 ```
+
 The function `plotTilesData` can be used to obtain an overview of the structure of the data:
 ```{r}
 plotTilesData(MOFAobject, colors=c("#31A354","#377EB8","#377EB8","#377EB8"))
 ```
 
-# Step 2: Fit the MOFA model
+# Fit the MOFA model
 The next step is to train the model. Internally, this is done using Python, so make sure you have the corresponding package installed (see installation instructions in the README file).
 
 ## Define options
@@ -83,10 +85,11 @@ TrainOptions
 ## Prepare MOFA
 `prepareMOFA` internally performs a set of sanity checks, fills the `TrainOpts` and `ModelOpts` slots of the `MOFAobject` and it also creates a set of temporary files that will be loaded by the Python framework.
 ```{r}
-MOFAobject <- prepareMOFA(MOFAobject, 
-                      DirOptions = DirOptions,
-                      ModelOptions = ModelOptions,
-                      TrainOptions = TrainOptions
+MOFAobject <- prepareMOFA(
+  MOFAobject, 
+  DirOptions = DirOptions,
+  ModelOptions = ModelOptions,
+  TrainOptions = TrainOptions
 )
 ```
 
@@ -103,11 +106,11 @@ MOFAobject
 ```
 
 
-# Step 3: Analyse a trained MOFA model
+# Analyse a trained MOFA model
 After training, we can explore the results from MOFA. Here we provide a semi-automated pipeline to disentangle and characterize all the identified sources of variation (the factors):  
 
 <p align="center"> 
-<img src="https://github.com/bioFAM/MOFA/blob/master/images/workflow.png" style="width: 30%; height: 30%"/>
+<img src="../../images/workflow.png" style="width: 100%; height: 100%"/>
 </p>
 
 In a nutshell, first you need to calculate the variance explained $R^2$ by each factor in each view. This is probably the most important result that MOFA produces, it summarises the entire heterogeneity of the dataset in a single figure: 
@@ -120,7 +123,7 @@ Next, one has to characterise the individual factors as either technical or biol
 
 For details, please read the Methods section of the Manuscript.
 
-## Part 1: Disentangling the heterogeneity, calculation of variance explained by each factor in each view
+## Disentangling the heterogeneity, calculation of variance explained by each factor in each view
 This is done by `calculateVarianceExplained` and `plotVarianceExplained` function. The resulting plot allows to get an overview of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of different views.
 
 In this data set MOFA identified 3 Factors with a minimum variance of 2%. While Factor 1 is shared across all data modalities (7% variance explained in the RNA data and between 53% and 72% in the methylation data sets), Factors 2 and 3 are active primarily in the RNA data
@@ -140,17 +143,28 @@ plotVarianceExplained(MOFAobject)
 ```
 
 
-## Part 2: Characterisation of individual factors
+## Characterisation of individual factors
 
-
-### Part 2.1: Inspection of loadings for Factor 1
+### Inspection of loadings for Factor 1
 Plotting the gene loadings for Factor 1, we can see that it is enriched for naive pluripotency marker genes such as Rex1/Zpf42, Tbx3, Fbxo15 and Essrb. Hence, based on previous studies (Mohammed et al, 2016) we can hypothetise that Factor 1 captures a transition from a naive pluripotent state to a primed pluripotent states.
 ```{r}
 # Plot all weights and highlight specific gene markers
-plotWeights(MOFAobject, view="RNA expression", factor=1, nfeatures = 0, abs = T, manual=list(c("Zfp42","Esrrb","Morc1","Fbxo15","Jam2","Klf4","Tcl1","Tbx3","Tex19.1")))
+plotWeights(
+  MOFAobject, 
+  view = "RNA expression", 
+  factor = 1, 
+  nfeatures = 0, 
+  abs = T, 
+  manual = list(c("Zfp42","Esrrb","Morc1","Fbxo15","Jam2","Klf4","Tcl1","Tbx3","Tex19.1"))
+)
 
 # Plot top 10 genes
-plotTopWeights(MOFAobject, view="RNA expression", factor=1, nfeatures = 10)
+plotTopWeights(
+  MOFAobject,
+  view = "RNA expression", 
+  factor = 1, 
+  nfeatures = 10
+)
 ```
 
 Also, instead of looking at the "abstract" weights, it is useful to observe, in the original data, the heterogeneity captured by a Factor. This can be done using the `plotDataHeatmap` function.
@@ -164,40 +178,64 @@ df <- data.frame(
   factor = factor1
 )
 
-plotDataHeatmap(MOFAobject, view = "RNA expression", factor = 1, features = 20, 
-                show_colnames=F, show_rownames=T, transpose = T, sortSamples = T, cluster_cols=F, annotation_col=df)
+plotDataHeatmap(
+  MOFAobject, 
+  view = "RNA expression", 
+  factor = 1, 
+  features = 20, 
+  show_colnames=F, show_rownames=T, 
+  transpose = T, 
+  sortSamples = T, 
+  cluster_cols=F, 
+  annotation_col=df
+)
 ```
 
 
-### Part 2.2: Inspection of loadings for Factor 2
+### Inspection of loadings for Factor 2
 A similar analysis for Factor 2 reveals that it captures a second axis of differentiation from the primed pluripotency state to a differentiated state, with highest RNA loadings for known differentiation markers such as keratins and annexins
 ```{r}
 # Plot all weights and highlight specific gene markers
-plotWeights(MOFAobject, view="RNA expression", factor=2, nfeatures = 0, manual=list(c("Krt8","Cald1","Anxa5","Tagln","Ahnak","Dsp","Anxa3","Krt19")), abs=T)
+plotWeights(
+  MOFAobject, 
+  view="RNA expression", 
+  factor = 2, 
+  nfeatures = 0, 
+  manual=list(c("Krt8","Cald1","Anxa5","Tagln","Ahnak","Dsp","Anxa3","Krt19")), 
+  abs=T
+)
 
 # Plot top 10 genes
-plotTopWeights(MOFAobject, view="RNA expression", factor=2, nfeatures = 10)
+plotTopWeights(
+  MOFAobject, 
+  view="RNA expression", 
+  factor = 2, 
+  nfeatures = 10
+)
 ```
 
 
-## Part 2.3: Ordination of samples by factors
+## Ordination of samples by factors
 Samples can be visualized along factors of interest using the `plotFactorScatter` and `plotFactorBeeswarm` functions.  
 
 In this data set, the **combination of Factor 1 and Factor 2 captured the entire differentiation trajectory from naive pluripotent cells via primed pluripotent cells to differentiated cells**. This illustrates the importance of learning continuous latent factors rather than discrete sample assignments.
-```{r}
-plotFactorScatter(MOFAobject, factors=c("1","2"), color_by = "culture") +
-  scale_color_manual(values=c("lightsalmon","orangered3"))
+```{r, message=FALSE}
+p <- plotFactorScatter(MOFAobject, 
+                  factors=c("1","2"), 
+                  color_by = "culture"
+                  )
+p + scale_color_manual(values=c("lightsalmon","orangered3"))
 ```
 
 Finally, *Factor 3* captured the cellular detection rate, a known technical covariate that represents the number of expressed genes.
-```{r}
+```{r, message=FALSE}
 plotFactorBeeswarm(MOFAobject, factors = 3, color_by = "cellular_detection_rate")
 ```
 
 
-## Part 3: Customized analysis
+## Customized analysis
 For customized exploration of weights and factors, you can directly fetch the variables from the `MOFAobject using 'get' functions: `getWeights`, `getFactors` and `getTrainData`. As an example, here we do a scatterplot between Factor 3 and the true Cellular Detection Rate values
-```{r}
+```{r, message=FALSE}
 cdr <- colMeans(MOFAobject@TrainData$`RNA expression`>0,na.rm=T)
 factor3 <- getFactors(MOFAobject, factors=3, include_intercept = F)[,1]
 
@@ -209,9 +247,9 @@ ggplot(foo, aes_string(x = "factor", y = "cdr")) +
 ```
 
 
-# Part 4: Further functionalities 
+# Further functionalities 
 
-## Part 4.1: Imputation of missing observations
+## Imputation of missing observations
 The factors can be used to impute missing data (see Methods of the publication). This is done using the `imputeMissing` function, which stores the imputed data in the `ImputedData` slot of the `MOFAobject`. It can be accessed via the `getImputedData` function:
 ```{r}
 MOFAobject <- imputeMissing(MOFAobject)
@@ -222,14 +260,19 @@ nonImputedMethylation[1:5,1:5]
 imputedMethylation[1:5,1:5]
 ```
 
-## Part 4.2: Clustering of samples based on latent factors
+## Clustering of samples based on latent factors
 Samples can be clustered according to their values on the latent factors using the `clusterSamples` function.
-```{r}
+```{r, message=FALSE}
 # Hierarchical clustering with K=2 using Factor 1
 h <- clusterSamples(MOFAobject, k=2, factors=1)
 
 # Scatterplot colored by the predicted cluster labels and shaped by the true culture conditions
-plotFactorScatter(MOFAobject, factors=1:2, color_by=h$cluster, shape_by="culture")
+plotFactorScatter(
+  MOFAobject,
+  factors = 1:2,
+  color_by = h$cluster,
+  shape_by = "culture"
+)
 ```
 
 

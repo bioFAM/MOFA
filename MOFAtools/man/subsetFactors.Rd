@@ -4,12 +4,14 @@
 \alias{subsetFactors}
 \title{Subset factors}
 \usage{
-subsetFactors(object, factors)
+subsetFactors(object, factors, keep_intercept = T)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
 \item{factors}{character vector with the factor names, or numeric vector with the index of the factors.}
+
+\item{keep_intercept}{bool whether intercept is kept when subsetting (default TRUE).}
 }
 \description{
 Method to subset (or sort) factors

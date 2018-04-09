@@ -7,17 +7,17 @@
 plotFactorCor(object, method = "pearson", ...)
 }
 \arguments{
-\item{object}{a \code{\link{MOFAmodel}} object.}
+\item{object}{a trained \code{\link{MOFAmodel}} object.}
 
 \item{method}{a character indicating the type of correlation coefficient to be computed: pearson (default), kendall, or spearman.}
 
 \item{...}{arguments passed to \code{\link[corrplot]{corrplot}}}
 }
 \value{
-symmetric matrix with the correlation coefficient between every pair of factors.
+Returns a symmetric matrix with the correlation coefficient between every pair of factors.
 }
 \description{
-Function to plot the correlation coefficient between the latent factors.
+Function to plot the correlation matrix between the latent factors.
 }
 \details{
 This method plots the correlation matrix between the latent factors. \cr 

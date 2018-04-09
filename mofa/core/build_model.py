@@ -66,6 +66,8 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     print ("\n")
     sleep(1)
 
+    print("Setting random seed %i...\n" % seed)
+
     # Define dimensionalities
     M = len(data)
     N = data[0].shape[0]

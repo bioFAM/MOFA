@@ -30,7 +30,7 @@
 #' @import pheatmap
 #' @examples
 #' # Load example of MOFA model
-#' model <- loadModel(system.file("extdata", "model15.hdf5", package = "MOFAtools"))
+#' model <- loadModel(system.file("extdata", "CLL_model.hdf5", package = "MOFAtools"))
 #' 
 #' # Plot top 50 features for factor 1 in the mRNA view
 #' plotDataHeatmap(model, "mRNA", 1, 50)
@@ -118,6 +118,8 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
 #' a character giving the name of a feature present in the training data, 
 #' a character giving the same of a covariate (only if using MultiAssayExperiment as input), 
 #' or a vector of the same length as the number of samples specifying discrete groups.
+#' @param name_color name for the color legend
+#' @param name_shape name for the shape legend
 #' @details One of the first steps for the annotation of factors is to visualise the loadings using \code{\link{plotWeights}} or \code{\link{plotTopWeights}}, 
 #' which show you which features drive the heterogeneity of each factor. 
 #' However, one might also be interested in visualising the direct relationship between features and factors, rather than looking at "abstract" weights. \cr

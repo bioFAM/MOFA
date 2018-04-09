@@ -4,14 +4,14 @@
 \alias{getCovariates}
 \title{getCovariates}
 \usage{
-getCovariates(object, names)
+getCovariates(object, covariate)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{names}{names of the covariates}
+\item{covariate}{names of the covariate}
 }
 \description{
-(NOT PROPERLY IMPLEMENTED YET) this function extracts the covariates from the model.
-Note that (for now) the model can be run with known covariates only if they are stored in the colData of the MultiAssayExperiment input object. See \code{\link{createMOFAobject}}.
+This function extracts covariates from the \code{colData} in the input \code{MultiAssayExperiment} object. \cr
+Note that if you did not use \code{MultiAssayExperiment} to create your \code{\link{createMOFAobject}}, this function will not work.
 }

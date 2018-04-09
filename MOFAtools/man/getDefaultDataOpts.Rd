@@ -7,7 +7,7 @@
 getDefaultDataOpts()
 }
 \value{
-List with the default data options.
+Returns a list with the default data options.
 }
 \description{
 Function to obtain the default data options.
@@ -15,13 +15,14 @@ Function to obtain the default data options.
 \details{
 The data options are the following: \cr
 \itemize{
- \item{\strong{delimiter}:}{ character indicating the delimiter in the input matrices stored as text files. 
-  The matrices are stored internally by MOFA, so unless you are modifying this, use the default value.}
- \item{\strong{centerFeatures}:}{ logical indicating whether to scale the views to unit variance.
-  This is optional and recommended, but not required. Default is FALSE.}
- \item{\strong{scaleViews}:}{ logical indicating whether to learn the intercept (the means) in a per feature basis.
+ \item{\strong{scaleViews}:}{ logical indicating whether to scale views to have the same unit variance. 
+ As long as the scale differences between the data sets is not massive, this is not required.
+ Default is FALSE.}
+ \item{\strong{centerFeatures}:}{ logical indicating whether to learn the intercept (the means) in a per feature basis.
   This prevents you from having to center the data, so this option is always recommended. Default is TRUE.}
  \item{\strong{removeIncompleteSamples}:}{ logical indicating whether to remove samples that are not profiled in all omics. 
   We recommend this for testing. Default is FALSE.}
+ \item{\strong{delimiter}:}{ character indicating the delimiter in the input matrices stored as text files. 
+  The matrices are stored internally by MOFA, so unless you are modifying this, use the default value.}
 }
 }

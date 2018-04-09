@@ -8,21 +8,21 @@ plotFactorScatter(object, factors, color_by = NULL, shape_by = NULL,
   name_color = "", name_shape = "", showMissing = TRUE)
 }
 \arguments{
-\item{object}{a \code{\link{MOFAmodel}} object.}
+\item{object}{a trained \code{\link{MOFAmodel}} object.}
 
-\item{factors}{a vector of length two with the two factor to plot. Factors can be specified either as a characters
-with the factor name(s), or as numeric with the index of the factor(s) to use.}
+\item{factors}{a vector of length two with the factors to plot. Factors can be specified either as a characters
+using the factor names, or as numeric with the index of the factors}
 
 \item{color_by}{specifies groups or values used to color the samples. 
-This can be either: 
+This can be either 
 a character giving the name of a feature present in the training data, 
 a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
 or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.}
 
 \item{shape_by}{specifies groups or values used to shape the samples. 
-This can be either: 
+This can be either
 a character giving the name of a feature present in the training data, 
-a character giving the same of a covariate (only if using MultiAssayExperiment as input), 
+a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
 or a vector of the same length as the number of samples specifying discrete groups.}
 
 \item{name_color}{name for color legend (usually only used if color_by is not a character itself)}
@@ -32,10 +32,10 @@ or a vector of the same length as the number of samples specifying discrete grou
 \item{showMissing}{logical indicating whether to include samples for which \code{shape_by} or \code{color_by} is missing}
 }
 \value{
-\code{ggplot2} object
+Returns a \code{ggplot2} object
 }
 \description{
-Scatterplot of the sample values for two latent factors
+Scatterplot of the values of two latent factors.
 }
 \details{
 One of the first steps for the annotation of factors is to visualise and group/color them using known covariates such as phenotypic or clinical data.

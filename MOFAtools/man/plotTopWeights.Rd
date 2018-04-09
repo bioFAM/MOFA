@@ -8,26 +8,33 @@ plotTopWeights(object, view, factor, nfeatures = 10, abs = TRUE,
   scale = TRUE, sign = "both")
 }
 \arguments{
-\item{object}{a \code{\link{MOFAmodel}} object.}
+\item{object}{a trained \code{\link{MOFAmodel}} object.}
 
-\item{view}{character vector with the voiew name, or numeric vector with the index of the view to use.}
+\item{view}{character vector with the view name, or numeric vector with the index of the view to use.}
 
 \item{factor}{character vector with the factor name, or numeric vector with the index of the factor to use.}
 
-\item{nfeatures}{number of top features to display.}
+\item{nfeatures}{number of top features to display.
+Default is 10}
 
-\item{abs}{logical indicating whether to use the absolute value of the weights.}
+\item{abs}{logical indicating whether to use the absolute value of the weights.
+Default is TRUE}
 
-\item{scale}{logical indicating whether to scale all loadings from 0 to 1.}
+\item{scale}{logical indicating whether to scale all loadings from 0 to 1.
+Default is TRUE.}
 
-\item{sign}{can be 'positive', 'negative' or 'both' to show only positive, negative or all weigths, respectively.}
+\item{sign}{can be 'positive', 'negative' or 'both' to show only positive, negative or all weigths, respectively.
+Default is 'both'.}
+}
+\value{
+Returns a \code{ggplot2} object
 }
 \description{
-An important step to annotate factors is to visualise the corresponding feature loadings. \cr
-This function displays the top features with highest loading. 
-In contrast, the function \code{\link{plotTopWeights}} plots all loadings for a given latent factor and view.
+Plot top weights for a given latent in a given view.
 }
 \details{
-The weights of the features within a view are relative andthey should not be interpreted in an absolute scale.
+An important step to annotate factors is to visualise the corresponding feature loadings. \cr
+This function displays the top features with highest loading whereas the function \code{\link{plotTopWeights}} plots all loadings for a given latent factor and view. \cr
+Importantly, the weights of the features within a view have relative values and they should not be interpreted in an absolute scale.
 Therefore, for interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
 }

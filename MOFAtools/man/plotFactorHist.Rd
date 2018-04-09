@@ -5,35 +5,37 @@
 \title{Plot histogram of latent factor values}
 \usage{
 plotFactorHist(object, factor, group_by = NULL, group_names = "",
-  alpha = 0.6, binwidth = NULL, showMissing = FALSE)
+  alpha = 0.5, binwidth = NULL, showMissing = FALSE)
 }
 \arguments{
-\item{object}{a \code{\link{MOFAmodel}} object.}
+\item{object}{a trained \code{\link{MOFAmodel}} object.}
 
 \item{factor}{character vector with the factor name or numeric vector with the index of the factor.}
 
 \item{group_by}{specifies groups used to color the samples of the histogram. 
 This can be either: 
 a character giving the name of a feature,
-the name of a covariate (only if using a MultiAssayExperiment as input), 
+the name of a covariate (only if using a \code{\link{MultiAssayExperiment}} as input), 
 or a vector of the same length as the number of samples.}
 
 \item{group_names}{names for the groups.}
 
-\item{alpha}{transparency parameter}
+\item{alpha}{transparency parameter. 
+Default is 0.5}
 
-\item{binwidth}{binwidth for histogram (default is NULL, which uses ggplot's default calculation)}
+\item{binwidth}{binwidth for histogram. Default is \code{NULL}, which uses \code{ggplot2} default calculation.}
 
-\item{showMissing}{boolean indicating whether to remove sample for which 'group_by' is missing (default is FALSE)}
+\item{showMissing}{boolean indicating whether to remove sample for which \code{group_by} is missing (default is FALSE)}
 }
 \value{
-ggpplot object
+Returns a \code{ggplot2} object
 }
 \description{
-plot a histogram of the sample values in a given latent factor.
+Plot a histogram of latent factor values.
 }
 \details{
-One of the first steps for the annotation of factors is to visualise and color them using known covariates such as phenotypic or clinical data.
-This method generates a histogram of the sample values in a given latent factor. Note that, similar to Principal Component Analysis, the factor values should be interpreted in a relative manner.
-Similar functions are \code{\link{plotFactorScatters}} for doing scatter plots and \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots
+One of the first steps for the annotation of factors is to visualise and color them using known covariates such as phenotypic or clinical data. \cr
+This method generates a histogram of the sample values in a given latent factor. \cr
+Similar functions are \code{\link{plotFactorScatter}} for doing scatter plots between pairs of factors 
+and \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots of single factors.
 }

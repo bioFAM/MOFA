@@ -26,7 +26,7 @@ Default is "inRange".}
 Default is TRUE.}
 }
 \value{
-List with data predictions, each element corresponding to a view.
+Returns a list with data predictions, each element corresponding to a view.
 }
 \description{
 This function uses the latent factors and the weights to do data predictions.

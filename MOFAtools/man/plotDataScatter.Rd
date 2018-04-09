@@ -22,11 +22,15 @@ a character giving the name of a feature,
 a character giving the same of a covariate (only if using MultiAssayExperiment as input), 
 or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.}
 
+\item{name_color}{name for the color legend}
+
 \item{shape_by}{specifies groups or values used to shape the samples. 
 This can be either: 
 a character giving the name of a feature present in the training data, 
 a character giving the same of a covariate (only if using MultiAssayExperiment as input), 
 or a vector of the same length as the number of samples specifying discrete groups.}
+
+\item{name_shape}{name for the shape legend}
 }
 \description{
 Function to do a scatterplot of the feature(s) values against the latent factor values.

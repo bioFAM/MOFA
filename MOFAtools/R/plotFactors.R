@@ -115,9 +115,7 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
 #' This function generates a Beeswarm plot of the sample values in a given latent factor. \cr
 #' Similar functions are \code{\link{plotFactorScatter}} for doing scatter plots and \code{\link{plotFactorHist}} for doing histogram plots
 #' @return Returns a \code{ggplot2} object
-#' @import ggplot2
-#' @import ggbeeswarm
-#' @import grDevices
+#' @import ggplot2 ggbeeswarm RColorBrewer grDevices
 #' @export
 plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = "", showMissing = FALSE) {
   
@@ -140,14 +138,14 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = ""
       if(color_by %in% Reduce(union,featureNames)) {
         viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
         color_by <- TrainData[[viewidx]][color_by,]
-      } else if(class(object@InputData) == "MultiAssayExperiment"){
+      } else if(class(object@InputData) == "MultiAssayExperiment") {
         color_by <- getCovariates(object, color_by)
+    } else {
+      stop("'color_by' was specified but it was not recognised, please read the documentation") 
     }
-    else stop("'color_by' was specified but it was not recognised, please read the documentation")
     # It is a vector of length N
     } else if (length(color_by) > 1) {
       stopifnot(length(color_by) == N)
-      # color_by <- as.factor(color_by)
     } else {
       stop("'color_by' was specified but it was not recognised, please read the documentation")
     }
@@ -155,16 +153,13 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = ""
     color_by <- rep(TRUE,N)
     colorLegend <- F
   }
-  names(color_by) <- sampleNames(object)
+  
   if(length(unique(color_by)) < 5) color_by <- as.factor(color_by)
-
   Z$color_by <- color_by[Z$sample]
   
   # Remove samples with missing values
   if (showMissing==F) {
     Z <- Z[!(is.na(color_by) | is.nan(color_by) | color_by=="NaN"),]
-    # Z <- Z[complete.cases(Z),]
-    # Z <- Z[!is.na(Z$value),]
   }
   
   # Generate plot
@@ -172,6 +167,7 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = ""
     ggbeeswarm::geom_quasirandom(aes(color=color_by)) +
     ylab("Factor value") + xlab("") +
     scale_x_continuous(breaks=NULL) +
+    facet_wrap(~factor, scales="free") +
     theme(
       axis.text.y = element_text(size = rel(1.5), color = "black"),
       axis.title.y = element_text(size = rel(1.5), color = "black"),
@@ -187,14 +183,20 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = ""
       legend.position = "right", 
       legend.direction = "vertical",
       legend.key = element_blank()
-      ) + facet_wrap(~factor, scales="free")
+      )
   
   # If color_by is numeric, define the default gradient
   # if (is.numeric(color_by)) { p <- p + scale_color_gradientn(colors=terrain.colors(10)) }
-  if (is.numeric(color_by)) { p <- p + scale_color_gradientn(colors=colorRampPalette(rev(brewer.pal(n = 5, name = "RdYlBu")))(10)) }
+  if (is.numeric(color_by)) { 
+    p <- p + scale_color_gradientn(colors = colorRampPalette(rev(brewer.pal(n=5, name="RdYlBu")))(10)) 
+  }
   
   # Add legend
-  if (colorLegend) { p <- p + labs(color=name_color) } else { p <- p + guides(color = FALSE) }
+  if (colorLegend) { 
+    p <- p + labs(color=name_color) 
+  } else { 
+    p <- p + guides(color = FALSE) 
+  }
   
   return(p)
 }
@@ -235,8 +237,9 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
   
   # Collect relevant data  
   N <- object@Dimensions[["N"]]
-  Z <- getExpectations(object, "Z", "E")
+  Z <- getFactors(object, factors = factors)
   factors <- as.character(factors)
+  samples <- sampleNames(object)
   
   # Set color
   colorLegend <- T
@@ -249,10 +252,12 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
       if(color_by %in% Reduce(union,featureNames)) {
         viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
         color_by <- TrainData[[viewidx]][color_by,]
-      } else if(class(object@InputData) == "MultiAssayExperiment"){
+      } else if(class(object@InputData) == "MultiAssayExperiment") {
         color_by <- getCovariates(object, color_by)
-    }
-    else stop("'color_by' was specified but it was not recognised, please read the documentation")
+      } else { 
+        stop("'color_by' was specified but it was not recognised, please read the documentation") 
+      }
+      
     # It is a vector of length N
     } else if (length(color_by) > 1) {
       stopifnot(length(color_by) == N)
@@ -280,7 +285,6 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
         shape_by <- getCovariates(object, shape_by)
     }
     else stop("'shape_by' was specified but it was not recognised, please read the documentation")
-    # It is a vector of length N
     # It is a vector of length N
     } else if (length(shape_by) > 1) {
       stopifnot(length(shape_by) == N)

@@ -10,7 +10,7 @@ plotWeights(object, view, factor, nfeatures = 10, abs = FALSE,
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{view}{character vector with the voiew name, or numeric vector with the index of the view to use.}
+\item{view}{character vector with the view name, or numeric vector with the index of the view to use.}
 
 \item{factor}{character vector with the factor name, or numeric vector with the index of the factor to use.}
 

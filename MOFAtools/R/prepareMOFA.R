@@ -15,7 +15,9 @@
 #' @export
 #' @examples
 #' # Generate a random data set
-#' data <- list("gaussian_view"=matrix(rnorm(100,mean=0,sd=1),10,10), "poisson_view"=matrix(rpois(100, lambda=1),10,10))
+#' gaussian_data <- matrix(rnorm(100,mean=0,sd=1),10,10)
+#' poisson_data <- matrix(rpois(100, lambda=1),10,10)
+#' data <- list("gaussian_view"=gaussian_data, "poisson_view"=poisson_data)
 #' # Create a MOFA object
 #' MOFAobject <- createMOFA(data)
 #' # Define I/O options
@@ -24,7 +26,7 @@
 #' DataOptions <- getDefaultDataOpts()
 #' # Define Model Options
 #' ModelOptions <- getDefaultModelOpts(MOFAobject)
-#' ModelOptions$likelihood <- ("gaussian","poisson")
+#' ModelOptions$likelihood <- c("gaussian","poisson")
 #' ModelOptions <- getDefaultModelOpts(MOFAobject)
 #' # Define Training Options
 #' TrainOptions <- getDefaultTrainOpts()
@@ -112,16 +114,18 @@ prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = N
 #'  \item{\strong{DropFactorThreshold}:}{ numeric indicating the threshold on fraction of variance explained to consider a factor inactive and drop it from the model.
 #'  For example, a value of 0.01 implies that factors explaining less than 1\% of variance (in each view) will be dropped.}
 #'  \item{\strong{verbose}:}{ logical indicating whether to generate a verbose output.}
+#'  \item{\strong{seed}:}{ random seed for reproducibility (default is NULL).}
 #' }
 #' @return Returns a list with default training options
 #' @export
 getDefaultTrainOpts <- function() {
   TrainOpts <- list(
-    maxiter = 1000,               # Maximum number of iterations
+    maxiter = 5000,               # Maximum number of iterations
     tolerance = 0.1,              # Convergence threshold based on change in the evidence lower bound
     learnFactors = TRUE,          # (bool) learn the number of factors?
-    DropFactorThreshold = 0.03,   # Threshold on fraction of variance explained to drop a factor
-    verbose = F                   # verbosity?
+    DropFactorThreshold = 0.01,   # Threshold on fraction of variance explained to drop a factor
+    verbose = FALSE,              # verbosity?
+    seed = NULL                   # randoom seed
   )
   return(TrainOpts)
 }
@@ -147,10 +151,10 @@ getDefaultTrainOpts <- function() {
 #' @export
 getDefaultDataOpts <- function() {
   DataOpts <- list(
-    delimiter = "\t",            # Delimiter for the data
-    centerFeatures = F,          # Center features to zero mean (does not apply to binary or count views)
-    scaleViews = F,              # Scale views to unit variance (does not apply to binary or count views)
-    removeIncompleteSamples = F  # Remove incomplete samples that are not profiled in all omics?
+    delimiter = "\t",                # Delimiter for the data
+    centerFeatures = FALSE,          # Center features to zero mean (does not apply to binary or count views)
+    scaleViews = FALSE,              # Scale views to unit variance (does not apply to binary or count views)
+    removeIncompleteSamples = FALSE  # Remove incomplete samples that are not profiled in all omics?
   )
   return(DataOpts)
 }

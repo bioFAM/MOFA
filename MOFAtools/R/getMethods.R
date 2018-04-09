@@ -179,9 +179,16 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
+  if (length(object@ImputedData)==0) {
+    stop("No imputed data found. Please run imputeMissing(MOFAobject) first")
+  }
   
   # Get views
-  if (paste0(views,collapse="") == "all") { views <- viewNames(object) } else { stopifnot(all(views %in% viewNames(object))) }
+  if (paste0(views,collapse="") == "all") { 
+    views <- viewNames(object) 
+  } else { 
+    stopifnot(all(views %in% viewNames(object))) 
+  }
   
   # Get features
   if (class(features)=="list") {
@@ -194,7 +201,7 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
     }
   }
   
-  # Fetch data
+  # Fetch imputed data
   ImputedData <- object@ImputedData[views]
   ImputedData <- lapply(1:length(ImputedData), function(m) ImputedData[[m]][features[[m]],,drop=F]); names(ImputedData) <- views
   
@@ -203,9 +210,10 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
     tmp <- lapply(views, function(m) { tmp <- reshape2::melt(ImputedData[[m]]); colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
     ImputedData <- do.call(rbind,tmp)
     ImputedData[,c("view","feature","sample")] <- sapply(ImputedData[,c("view","feature","sample")], as.character)
-  } else if ((length(views)==1) && (as.data.frame==F)) {
-    ImputedData <- ImputedData[[views]]
-  }
+  } 
+  # else if ((length(views)==1) && (as.data.frame==F)) {
+  #   ImputedData <- ImputedData[[views]]
+  # }
   
   return(ImputedData)
 }
@@ -215,20 +223,51 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
 #' @description This function extracts covariates from the \code{colData} in the input \code{MultiAssayExperiment} object. \cr
 #' Note that if you did not use \code{MultiAssayExperiment} to create your \code{\link{createMOFAobject}}, this function will not work.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param covariates names of the covariates
+#' @param covariate names of the covariate
+#' @import MultiAssayExperiment
+#' @importFrom Biobase phenoData
 #' @export
-#' 
-getCovariates <- function(object, covariates) {
+getCovariates <- function(object, covariate) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
-  if(class(object@InputData) != "MultiAssayExperiment") stop("To work with covariates, InputData has to be specified in form of a MultiAssayExperiment")  
-  stopifnot(all(covariates %in% colnames(colData(object@InputData))))
+  if(class(object@InputData) != "MultiAssayExperiment") {
+    stop("To work with covariates, InputData has to be specified in form of a MultiAssayExperiment")
+  }
   
-  # Get covariates
-  covariates <- colData(object@InputData)[,covariates]
+  # Check that samples from MOFAobject and MultiAssayExperiment are consistent.
+  samples <- sampleNames(object)
+  if (!all(samples %in% rownames(colData(object@InputData)))) {
+    stop("There are samples in the model which are not detected in the MultiAssayExperiment object")
+  } else {
+    mae <- object@InputData[,samples]
+  }
   
-  return(covariates)
+  # Extract the covariate from colData or in the phenoData of specific assays
+  out <- list()
+  if (covariate %in% colnames(colData(mae))) { 
+    covariate_in_coldata <- TRUE
+    out[[covariate]] <- colData(mae)[,covariate]
+    names(out[[covariate]]) <- sampleNames(object)
+  } else {
+    for (view in viewNames(object)) {
+      phenodata <- phenoData(mae@ExperimentList[[view]])
+      if (covariate %in% colnames(phenodata)) {
+        out[[paste(view,covariate,sep="_")]] <- phenodata[[covariate]]
+        names(out[[paste(view,covariate,sep="_")]]) <- rownames(phenodata)
+      }
+    }
+  }
+  
+  # Final sanity check
+  if (length(out) == 0) {
+      stop("Covariate not found in the MultiAssayExperiment object")    
+  } else if (length(out)>1) {
+      stop("Covariate ambiguously found in the phenoData of multiple assays. Please, extract it manually.")    
+  } else {
+    return(out[[1]])
+  }
+  
 }
 
 #' @title getExpectations

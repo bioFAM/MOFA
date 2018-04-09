@@ -36,7 +36,8 @@ runMOFA <- function(object, DirOptions, ..., mofaPath="mofa") {
     factors = object@ModelOpts$numFactors,
     iter = object@TrainOpts$maxiter,
     dropR2 =  object@TrainOpts$DropFactorThreshold,
-    tolerance = object@TrainOpts$tolerance
+    tolerance = object@TrainOpts$tolerance,
+    seed = object@TrainOpts$seed
   )
   
   # Decide whether to learn factors

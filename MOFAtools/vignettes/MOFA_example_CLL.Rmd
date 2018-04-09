@@ -112,7 +112,7 @@ This step can take some time (around 20 min with default parameters), for illust
 
 ```{r}
 # Loading an existing trained model
-filepath <- system.file("extdata", "model15.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 MOFAobject <- loadModel(filepath, MOFAobject)
 MOFAobject
 ```

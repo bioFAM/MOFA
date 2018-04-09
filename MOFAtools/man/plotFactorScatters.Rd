@@ -26,7 +26,7 @@ or a vector of the same length as the number of samples specifying discrete grou
 \item{shape_by}{specifies groups or values used to shape the samples. 
 This can be either: 
 a character giving the name of a feature present in the training data, 
-a character giving the same of a covariate (only if using MultiAssayExperiment as input), 
+a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
 or a vector of the same length as the number of samples specifying discrete groups.}
 
 \item{name_shape}{name for shape legend (usually only used if shape_by is not a character itself)}

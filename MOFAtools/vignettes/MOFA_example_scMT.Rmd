@@ -12,7 +12,7 @@ vignette: >
 ---
 
 This vignette show how to MOFA can be used to disentangle the heterogeneity in single-cell DNA methylation and RNA expression (scMT) data:
-![](https://github.com/bioFAM/MOFA/blob/master/images/scMT.png)
+![](https://github.com/bioFAM/MOFA/blob/master/images/scmt.png)
 Briefly, the data set consists of 87 mouse embryonic stem cells (mESCs), comprising of 16 cells cultured in ‘2i’ media, which induces a naive pluripotency state, and 71 serum-grown cells, which commits cells to a primed pluripotency state poised for cellular differentiation (Angermueller, 2016). 
 
 
@@ -102,10 +102,6 @@ MOFAobject
 # Step 3: Analyse a trained MOFA model
 After training, we can explore the results from MOFA. Here we provide a semi-automated pipeline to disentangle and characterize all the identified sources of variation (the factors):
 ![asd](https://github.com/bioFAM/MOFA/blob/master/images/workflow.png)
-
-<p align="center"> 
-<img src="https://github.com/bioFAM/MOFA/blob/master/images/logo.png" style="width: 50%; height: 50%"/>
-</p>
 
 In a nutshell, first you need to calculate the variance explained ($R^2$) by each factor in each view. This is probably the most important result that MOFA produces, it summarises the entire heterogeneity of the dataset in a single figure: 
 

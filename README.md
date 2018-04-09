@@ -126,7 +126,10 @@ The latent factors can be used for several purposes, such as:
 Please refer to the paper for details on the different analysis. 
 
 ## Tutorial
-An example workflow is provided in [the vignette](http://htmlpreview.github.com/?https://github.com/PMBio/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_CLL.html).
+We currently provide two example workflows:
+
+* [Integration of clinical multi-omics cancer data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_CLL.html).
+* [Integration of single-cell multi-omics data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_scMT.html).
 
 ## Frequently asked questions
 

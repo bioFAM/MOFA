@@ -44,6 +44,12 @@ R CMD build MOFAtools
 R CMD install MOFAtools
 ```
 
+## Tutorials/Vignettes
+We currently provide two example workflows:
+
+* [Integration of clinical multi-omics cancer data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_CLL.html).
+* [Integration of single-cell multi-omics data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_scMT.html).
+
 
 ## MOFA workflow
 
@@ -124,12 +130,6 @@ The latent factors can be used for several purposes, such as:
 (4) **Regressing out technical effects**: if a factor is capturing an undesired technical effect, its effect can be regressed out from your original data matrix.  
 
 Please refer to the paper for details on the different analysis. 
-
-## Tutorial
-We currently provide two example workflows:
-
-* [Integration of clinical multi-omics cancer data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_CLL.html).
-* [Integration of single-cell multi-omics data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_scMT.html).
 
 ## Frequently asked questions
 

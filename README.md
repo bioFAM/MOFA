@@ -50,7 +50,6 @@ We currently provide two example workflows:
 * [Integration of clinical multi-omics cancer data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_CLL.html).
 * [Integration of single-cell multi-omics data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_scMT.html).
 
-
 ## MOFA workflow
 
 The workflow of MOFA consists of two steps:  

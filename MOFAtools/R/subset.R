@@ -19,12 +19,12 @@ subsetFactors <- function(object, factors, keep_intercept=T) {
 
     # Get factors
    if(is.numeric(factors)) {
-      if (object@ModelOpts$learnIntercept == T) factors <- factorNames(object)[factors+1]
+      if (object@ModelOptions$learnIntercept == T) factors <- factorNames(object)[factors+1]
       else factors <- factorNames(object)[factors]
     }
       else{ stopifnot(all(factors %in% factorNames(object))) }
 
-  if (keep_intercept & object@ModelOpts$learnIntercept == T & !"intercept" %in% factors) {
+  if (keep_intercept & object@ModelOptions$learnIntercept == T & !"intercept" %in% factors) {
     factors <- c("intercept", factors)
   }
   

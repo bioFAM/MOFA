@@ -534,7 +534,7 @@ plotFactorCor <- function(object, method = "pearson", ...) {
   Z <- getFactors(object)
   
   # Remove intercept
-  if(object@ModelOpts$learnIntercept==TRUE) Z <- Z[,-1]
+  if(object@ModelOptions$learnIntercept==TRUE) Z <- Z[,-1]
   
   # Compute and plot correlation
   rownames(Z) <- paste0("LF_",1:nrow(Z))

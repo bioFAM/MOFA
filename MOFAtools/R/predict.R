@@ -45,14 +45,14 @@ predict <- function(object, views = "all", factors = "all",
   if (paste0(factors,collapse="") == "all") { 
     factors <- factorNames(object) 
   } else if(is.numeric(factors)) {
-      if (object@ModelOpts$learnIntercept == T) factors <- factorNames(object)[factors+1]
+      if (object@ModelOptions$learnIntercept == T) factors <- factorNames(object)[factors+1]
       else factors <- factorNames(object)[factors]
   } else { 
     stopifnot(all(factors %in% factorNames(object))) 
   }
 
   # add intercept factor for prediction
-  if(!"intercept" %in% factors & object@ModelOpts$learnIntercept & include_intercept) factors <- c("intercept", factors)  
+  if(!"intercept" %in% factors & object@ModelOptions$learnIntercept & include_intercept) factors <- c("intercept", factors)  
   if(!include_intercept & "intercept" %in% factors) factors <- factors[factors!="intercept"]
   
   # Get type of predictions wanted 
@@ -73,7 +73,7 @@ predict <- function(object, views = "all", factors = "all",
     predictedView <- t(Z%*% t(W[[i]])) 
     
     # make predicitons based on underlying likelihood
-    lks <- object@ModelOpts$likelihood
+    lks <- object@ModelOptions$likelihood
     names(lks) <- viewNames(object)
     if (type!="link") {
       lk <- lks[i]

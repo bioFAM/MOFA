@@ -27,6 +27,7 @@ Notice that there are 4 views, one with normalized RNA expression assay and 3 vi
 library(MOFAtools)
 library(ggplot2)
 ```
+
 ```{r}
 data("scMT_data")
 scMT_data
@@ -96,7 +97,7 @@ MOFAobject <- prepareMOFA(
 ## Run MOFA
 Now we are ready to train the `MOFAobject`, which is done with the function `runMOFA`. This step can take some time (around 20 min with default parameters). For illustration we provide an existing trained `MOFAobject`
 ```{r, eval=FALSE}
-# MOFAobject <- runMOFA(MOFAobject, DirOptions, mofaPath = "/Users/ricard/anaconda2/bin/mofa")
+MOFAobject <- runMOFA(MOFAobject, DirOptions, mofaPath = "/Users/ricard/anaconda2/bin/mofa")
 ```
 
 ```{r}
@@ -150,7 +151,7 @@ Plotting the RNA expression gene loadings for Factor 1, we can see that it is en
 ```{r}
 # Plot all weights and highlight specific gene markers
 plotWeights(
-  MOFAobject, 
+  object = MOFAobject, 
   view = "RNA expression", 
   factor = 1, 
   nfeatures = 0, 
@@ -270,16 +271,21 @@ Samples can be visualized along factors of interest using the `plotFactorScatter
 
 In this data set, the **combination of Factor 1 and Factor 2 captured the entire differentiation trajectory from naive pluripotent cells via primed pluripotent cells to differentiated cells**. This illustrates the importance of learning continuous latent factors rather than discrete sample assignments.
 ```{r, message=FALSE}
-p <- plotFactorScatter(MOFAobject, 
-                  factors=c("1","2"), 
-                  color_by = "culture"
-                  )
+p <- plotFactorScatter(
+  object = MOFAobject, 
+  factors=c("1","2"), 
+  color_by = "culture"
+)
 p + scale_color_manual(values=c("lightsalmon","orangered3"))
 ```
 
 Finally, *Factor 3* captured the cellular detection rate, a known technical covariate that represents the number of expressed genes.
 ```{r, message=FALSE}
-plotFactorBeeswarm(MOFAobject, factors = 3, color_by = "cellular_detection_rate")
+plotFactorBeeswarm(
+  object = MOFAobject,
+  factors = 3, 
+  color_by = "cellular_detection_rate"
+)
 ```
 
 

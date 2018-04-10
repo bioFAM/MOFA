@@ -39,7 +39,7 @@ getFactors <- function(object, factors = "all", as.data.frame = FALSE, include_i
   if (paste0(factors,collapse="") == "all") { 
     factors <- factorNames(object) 
   } else if (is.numeric(factors)) {
-      if (object@ModelOpts$learnIntercept == T) factors <- factorNames(object)[factors+1]
+      if (object@ModelOptions$learnIntercept == T) factors <- factorNames(object)[factors+1]
       else factors <- factorNames(object)[factors]
   } else { 
     stopifnot(all(factors %in% factorNames(object))) 
@@ -92,7 +92,7 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
   if (paste0(factors,collapse="") == "all") { 
     factors <- factorNames(object) 
   } else if (is.numeric(factors)) {
-      if (object@ModelOpts$learnIntercept == T) {
+      if (object@ModelOptions$learnIntercept == T) {
         factors <- factorNames(object)[factors+1]
       } else {
         factors <- factorNames(object)[factors]

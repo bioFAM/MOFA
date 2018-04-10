@@ -29,19 +29,19 @@ runMOFA <- function(object, DirOptions, ..., mofaPath="mofa") {
     inFiles = paste0(DirOptions$dataDir, "/", viewNames(object), ".txt"),
     header_cols = TRUE,
     header_rows = TRUE,
-    delimiter = object@DataOpts$delimiter,
+    delimiter = object@DataOptions$delimiter,
     outFile = DirOptions$outFile,
     views = viewNames(object),
-    likelihoods = object@ModelOpts$likelihood,
-    factors = object@ModelOpts$numFactors,
-    iter = object@TrainOpts$maxiter,
-    dropR2 =  object@TrainOpts$DropFactorThreshold,
-    tolerance = object@TrainOpts$tolerance,
-    seed = object@TrainOpts$seed
+    likelihoods = object@ModelOptions$likelihood,
+    factors = object@ModelOptions$numFactors,
+    iter = object@TrainOptions$maxiter,
+    dropR2 =  object@TrainOptions$DropFactorThreshold,
+    tolerance = object@TrainOptions$tolerance,
+    seed = object@TrainOptions$seed
   )
   
   # Decide whether to learn factors
-  if (object@TrainOpts$learnFactors == F) {
+  if (object@TrainOptions$learnFactors == F) {
     arglist$dropR2 <- 0.00
   } else {
     if (arglist$dropR2==0) { 
@@ -49,28 +49,29 @@ runMOFA <- function(object, DirOptions, ..., mofaPath="mofa") {
       print("Please read the documentation in prepareMOFA about how to learn the number of factors.")
     }
   }
+  
 
   # Setting the below arguments to NULL doesn't actually add them to
   # the argument list, but reserves that argument name to prevent
   # extra.arglist from using it.
-  if (!is.null(object@ModelOpts$covariates)) {
+  if (!is.null(object@ModelOptions$covariates)) {
     arglist$covariatesFile <- file.path(DirOptions$dataDir, "covariates.txt")
-    arglist$scale_covariates <- rep(1,ncol(object@ModelOpts$covariates))
+    arglist$scale_covariates <- rep(1,ncol(object@ModelOptions$covariates))
   } else {
     arglist$covariatesFile <- NULL
     arglist$scale_covariates <- NULL
   }
-  arglist$learnIntercept <- as.logical(object@ModelOpts$learnIntercept)
-  if (! object@ModelOpts$sparsity) {
+  arglist$learnIntercept <- as.logical(object@ModelOptions$learnIntercept)
+  if (! object@ModelOptions$sparsity) {
     arglist$learnTheta <- rep(0, object@Dimensions$M) 
   } else {
     arglist$learnTheta <- NULL
   }
 
-  arglist$center_features <- as.logical(object@DataOpts$centerFeatures)
-  arglist$scale_views <- as.logical(object@DataOpts$scaleViews)
-  if (object@DataOpts$removeIncompleteSamples == T) { command <- paste(command, "--RemoveIncompleteSamples", sep=" ") }
-  arglist$verbose <- as.logical(object@TrainOpts$verbose)
+  arglist$center_features <- as.logical(object@DataOptions$centerFeatures)
+  arglist$scale_views <- as.logical(object@DataOptions$scaleViews)
+  if (object@DataOptions$removeIncompleteSamples == T) { command <- paste(command, "--RemoveIncompleteSamples", sep=" ") }
+  arglist$verbose <- as.logical(object@TrainOptions$verbose)
 
   extra.arglist <- list(...)
   

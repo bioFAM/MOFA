@@ -73,9 +73,9 @@ ModelOptions
 Next, we define training options. The most important are:  
 
 * **maxiter**: Maximum number of iterations. Ideally set it large enough and use the convergence criteria `TrainOptions$tolerance`.
-* **learnFactors**: Maximum number of iterations, ideally set it large enough and use the convergence criteria
+* **learnFactors**: Logical indicating whether to learn the number of factors. If you want the model to automatically learn the number of factors based on a minimum variance explained criterion, set `ModelOptions$numFactors` to a large value and make sure you define the `TrainOptions$dropFactorThreshold` parameter. If `TrainOptions$learnFactors==FALSE` then set `TrainOptions$dropFactorThreshold` to zero. 
 * **tolerance**: Convergence threshold based on change in the evidence lower bound. For an exploratory run you can use a value between 1.0 and 0.1, but for a "final" model we recommend a value of 0.01.
-* **DropFactorThreshold**: Threshold of fraction of variance explained to define a factor as inactive. This is the key parameter to determine the number of factors that the model will learn. Factors explaining less than 'DropFactorThreshold' percentage of variation in all views will be removed.
+* **DropFactorThreshold**: Threshold of fraction of variance explained to define a factor as inactive. This is the key parameter to determine the number of factors that the model will learn. Factors explaining less than 'DropFactorThreshold' percentage of variation in all views will be removed.For example, a value of 0.01 (default) means that factors that explain less than 1\% of variance in all views will be discarded.
 
 ```{r}
 TrainOptions <- getDefaultTrainOpts()
@@ -161,7 +161,7 @@ plotWeights(
 
 # Plot top 10 genes
 plotTopWeights(
-  MOFAobject,
+  object = MOFAobject,
   view = "RNA expression", 
   factor = 1, 
   nfeatures = 10
@@ -192,7 +192,7 @@ plotDataHeatmap(
 We can now connect these transcriptomic changes to coordinated changes on the DNA methylation. As Factor 1 is active in all genomic contexts, it suggests that there is a massive genome-wide DNA methylation remodelling. This can confirmed by inspecting the weights in the DNA methylation views: notice that most features (CpG sites) have a negative weight, which suggests that  their DNA methylation decrease in a manner that is inversely proportional to the direction of Factor 1.
 ```{r}
 plotWeights(
-  MOFAobject,
+  object = MOFAobject,
   view = "Met Enhancers", 
   factor = 1, 
   nfeatures = 0,
@@ -218,7 +218,7 @@ A similar analysis for Factor 2 reveals that it captures a second axis of differ
 ```{r}
 # Plot all weights and highlight specific gene markers
 plotWeights(
-  MOFAobject, 
+  object = MOFAobject, 
   view="RNA expression", 
   factor = 2, 
   nfeatures = 0, 
@@ -229,7 +229,7 @@ plotWeights(
 
 # Plot top 10 genes
 plotTopWeights(
-  MOFAobject, 
+  object = MOFAobject, 
   view="RNA expression", 
   factor = 2, 
   nfeatures = 10
@@ -239,7 +239,7 @@ plotTopWeights(
 Interestingly, the $R^2$ plot suggests that this second axis of variability is not associated with DNA methylation. We can confirm this by plotting the weights (they are all zero) and the heatmaps (no coherent pattern) as we have done before:
 ```{r}
 plotWeights(
-  MOFAobject, 
+  object = MOFAobject, 
   view = "Met Enhancers", 
   factor = 2, 
   nfeatures = 0, 
@@ -324,7 +324,7 @@ h <- clusterSamples(MOFAobject, k=2, factors=1)
 
 # Scatterplot colored by the predicted cluster labels and shaped by the true culture conditions
 plotFactorScatter(
-  MOFAobject,
+  object = MOFAobject,
   factors = 1:2,
   color_by = h$cluster,
   shape_by = "culture"

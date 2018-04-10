@@ -13,13 +13,13 @@ prepareMOFA(object, DirOptions, DataOptions = NULL, ModelOptions = NULL,
 \item{DirOptions}{list with Input/Output options, which must contain a 'dataDir' element where temporary text files will be stored 
 and an 'outFile' with hdf5 extension where the final model will be stored.}
 
-\item{DataOptions}{list of DataOptions (see \code{\link{getDefaultDataOpts}} details). 
+\item{DataOptions}{list of DataOptions (see \code{\link{getDefaultDataOptions}} details). 
 If NULL, default data options are used.}
 
-\item{ModelOptions}{list of ModelOptions (see \code{\link{getDefaultModelOpts}} for details). 
+\item{ModelOptions}{list of ModelOptions (see \code{\link{getDefaultModelOptions}} for details). 
 If NULL, default model options are used.}
 
-\item{TrainOptions}{list of TrainOptions (see \code{\link{getDefaultTrainOpts}} for details). 
+\item{TrainOptions}{list of TrainOptions (see \code{\link{getDefaultTrainOptions}} for details). 
 If NULL, default training options are used.}
 }
 \value{
@@ -38,13 +38,13 @@ MOFAobject <- createMOFA(data)
 # Define I/O options
 DirOptions <- list("dataDir" = tempdir(), "outFile" = tempfile())
 # Define Data Options
-DataOptions <- getDefaultDataOpts()
+DataOptions <- getDefaultDataOptions()
 # Define Model Options
-ModelOptions <- getDefaultModelOpts(MOFAobject)
+ModelOptions <- getDefaultModelOptions(MOFAobject)
 ModelOptions$likelihood <- c("gaussian","poisson")
-ModelOptions <- getDefaultModelOpts(MOFAobject)
+ModelOptions <- getDefaultModelOptions(MOFAobject)
 # Define Training Options
-TrainOptions <- getDefaultTrainOpts()
+TrainOptions <- getDefaultTrainOptions()
 TrainOptions$maxiter <- 100
 # Prepare MOFA object for training
 MOFAobject <- prepareMOFA(MOFAobject, DirOptions, DataOptions, ModelOptions, TrainOptions)

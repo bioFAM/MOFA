@@ -79,7 +79,7 @@ The most important options the user needs to define are:
 * numFactors: initial number of factors
 * likelihoods: likelihood for each view, gaussian for continuous data, bernoulli for binary data and poisson for count data. If not provided, the model tries to guess it from the data.
 ```{r}
-ModelOptions <- getDefaultModelOpts(MOFAobject)
+ModelOptions <- getDefaultModelOptions(MOFAobject)
 ModelOptions
 ```
 
@@ -89,13 +89,13 @@ The most important options the user needs to define are:
 * tolerance: Convergence threshold based on change in the evidence lower bound. We recommend you stick to the default value.
 * DropFactorThreshold: Threshold on fraction of variance explained to define inactive factors. That is, factors explaining less than 'DropFactorThreshold' percentage of variation in all views will be dropped during training.
 ```{r}
-TrainOptions <- getDefaultTrainOpts()
+TrainOptions <- getDefaultTrainOptions()
 TrainOptions$maxiter <- 5
 TrainOptions
 ```
 
 ## Prepare MOFA
-prepareMOFA internally performs a set of sanity checks, fills the TrainOpts and ModelOpts slots of the MOFAmodel object and it also creates a set of temporary files with the input matrices that will be loaded by the Python core implementation
+prepareMOFA internally performs a set of sanity checks, fills the TrainOptions and ModelOptions slots of the MOFAmodel object and it also creates a set of temporary files with the input matrices that will be loaded by the Python core implementation
 ```{r}
 MOFAobject <- prepareMOFA(MOFAobject, 
                       DirOptions = DirOptions,

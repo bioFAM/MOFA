@@ -270,15 +270,15 @@ setMethod(".ImputedData<-", signature(object="MOFAmodel", value="list"),
 ## Set and retrieve training options ##
 #######################################
 
-#' @rdname TrainOpts
+#' @rdname TrainOptions
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @rdname TrainOpts
+#' @rdname TrainOptions
 #' @return list of training options
 #' @export
-setMethod("TrainOpts", "MOFAmodel", function(object) { object@TrainOpts } )
-setMethod(".TrainOpts<-", signature(object="MOFAmodel", value="list"),
+setMethod("TrainOptions", "MOFAmodel", function(object) { object@TrainOptions } )
+setMethod(".TrainOptions<-", signature(object="MOFAmodel", value="list"),
           function(object,value) {
-            object@TrainOpts <- value
+            object@TrainOptions <- value
             object
           })
 
@@ -286,15 +286,15 @@ setMethod(".TrainOpts<-", signature(object="MOFAmodel", value="list"),
 ## Set and retrieve model options ##
 #######################################
 
-#' @rdname ModelOpts
+#' @rdname ModelOptions
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @rdname ModelOpts
+#' @rdname ModelOptions
 #' @return list of model options
 #' @export
-setMethod("ModelOpts", "MOFAmodel", function(object) { object@ModelOpts } )
-setMethod(".ModelOpts<-", signature(object="MOFAmodel", value="list"),
+setMethod("ModelOptions", "MOFAmodel", function(object) { object@ModelOptions } )
+setMethod(".ModelOptions<-", signature(object="MOFAmodel", value="list"),
           function(object,value) {
-            object@ModelOpts <- value
+            object@ModelOptions <- value
             object
           })
 

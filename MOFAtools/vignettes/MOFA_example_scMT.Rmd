@@ -65,7 +65,7 @@ Next, we define model options. The most important are:
 * **sparsity**: do you want to use sparsity? This makes the interpretation easier so it is recommended (Default is TRUE).
 
 ```{r}
-ModelOptions <- getDefaultModelOpts(MOFAobject)
+ModelOptions <- getDefaultModelOptions(MOFAobject)
 ModelOptions
 ```
 
@@ -78,13 +78,13 @@ Next, we define training options. The most important are:
 * **DropFactorThreshold**: Threshold of fraction of variance explained to define a factor as inactive. This is the key parameter to determine the number of factors that the model will learn. Factors explaining less than 'DropFactorThreshold' percentage of variation in all views will be removed.For example, a value of 0.01 (default) means that factors that explain less than 1\% of variance in all views will be discarded.
 
 ```{r}
-TrainOptions <- getDefaultTrainOpts()
+TrainOptions <- getDefaultTrainOptions()
 TrainOptions$seed <- 2017
 TrainOptions
 ```
 
 ## Prepare MOFA
-`prepareMOFA` internally performs a set of sanity checks, fills the `TrainOpts` and `ModelOpts` slots of the `MOFAobject` and it also creates a set of temporary files that will be loaded by the Python framework.
+`prepareMOFA` internally performs a set of sanity checks, fills the `TrainOptions` and `ModelOptions` slots of the `MOFAobject` and it also creates a set of temporary files that will be loaded by the Python framework.
 ```{r}
 MOFAobject <- prepareMOFA(
   MOFAobject, 

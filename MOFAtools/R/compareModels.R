@@ -40,7 +40,7 @@ compareModels <- function(models, comparison = "all", ...) {
   LFs <- lapply(seq_along(models), function(modelidx){
     model <- models[[modelidx]]
     Z <- getFactors(model)
-    if (model@ModelOpts$learnIntercept==TRUE) 
+    if (model@ModelOptions$learnIntercept==TRUE) 
       Z <- Z[,-1, drop=FALSE]
     Z
     })

@@ -5,7 +5,7 @@
 \title{Plot heatmap of relevant features}
 \usage{
 plotDataHeatmap(object, view, factor, features = 50, includeWeights = FALSE,
-  transpose = FALSE, imputed = FALSE, sortSamples = TRUE, ...)
+  transpose = FALSE, imputed = FALSE, ...)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
@@ -25,9 +25,6 @@ Default is FALSE.}
 Default corresponds to features as rows and samples as columns.}
 
 \item{imputed}{logical indicating whether to plot the imputed data instead of the original data. 
-Default is FALSE.}
-
-\item{sortSamples}{logical indicating whether to sort samples using the corresponding values in the latent factor, rather than clustering. 
 Default is FALSE.}
 
 \item{...}{further arguments that can be passed to \code{\link[pheatmap]{pheatmap}}}

@@ -36,8 +36,7 @@ runMOFA <- function(object, DirOptions, ..., mofaPath="mofa") {
     factors = object@ModelOptions$numFactors,
     iter = object@TrainOptions$maxiter,
     dropR2 =  object@TrainOptions$DropFactorThreshold,
-    tolerance = object@TrainOptions$tolerance,
-    seed = object@TrainOptions$seed
+    tolerance = object@TrainOptions$tolerance
   )
   
   # Decide whether to learn factors
@@ -49,7 +48,9 @@ runMOFA <- function(object, DirOptions, ..., mofaPath="mofa") {
       print("Please read the documentation in prepareMOFA about how to learn the number of factors.")
     }
   }
-  
+  if (!is.null(object@TrainOptions$seed)) {
+    arglist$seed <- object@TrainOptions$seed
+  }
 
   # Setting the below arguments to NULL doesn't actually add them to
   # the argument list, but reserves that argument name to prevent

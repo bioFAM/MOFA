@@ -109,7 +109,6 @@ def loadData(data_opts, verbose=True):
 
         # Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"])
         print("Loaded %s with %d samples and %d features..." % (file, Y[m].shape[0], Y[m].shape[1]))
-
         # Checking missing values on features
         # print max(np.isnan(Y[m]).mean(axis=1))
         # exit()

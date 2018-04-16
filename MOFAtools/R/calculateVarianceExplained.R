@@ -98,6 +98,10 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", i
   colnames(fvar_mk) <- views
   rownames(fvar_mk) <- factors
 
+  # Replace negative values by zero
+  fvar_m[fvar_m<0] <- 0
+  fvar_mk[fvar_mk<0] <- 0
+  
   # Store results
   R2_list <- list(R2Total = fvar_m, R2PerFactor = fvar_mk)
 

@@ -58,7 +58,7 @@ def entry_point():
   p.add_argument( '--tolerance',         type=float, default=0.01 ,                           help='Tolerance for convergence (based on the change in ELBO)')
   p.add_argument( '--startDrop',         type=int, default=1 ,                                help='First iteration to start dropping factors')
   p.add_argument( '--freqDrop',          type=int, default=1 ,                                help='Frequency for dropping factors')
-  p.add_argument( '--dropR2',            type=float, default=None ,                           help='Threshold to drop latent variables based on coefficient of determination' )
+  p.add_argument( '--dropR2',            type=float, default=0.00 ,                           help='Threshold to drop latent variables based on coefficient of determination' )
   p.add_argument( '--nostop',            action='store_true',                                 help='Do not stop when convergence criterion is met' )
   p.add_argument( '--verbose',           action='store_true',                                 help='Use more detailed log messages?')
   p.add_argument( '--seed',              type=int, default=0 ,                                help='Random seed' )
@@ -341,7 +341,8 @@ def entry_point():
   train_opts['drop'] = { "by_norm":None, "by_pvar":None, "by_cor":None, "by_r2":args.dropR2 }
   train_opts['startdrop'] = args.startDrop
   train_opts['freqdrop'] = args.freqDrop
-  if (args.dropR2>0): print("Dropping factors with minimum threshold of %0.2f variance explained",args.dropR2)
+  if (args.dropR2>0): print("\nDropping factors with minimum threshold of {0} \% variance explained".format(args.dropR2))
+
 
   # Tolerance level for convergence
   train_opts['tolerance'] = args.tolerance

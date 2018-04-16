@@ -99,21 +99,21 @@ runMOFA <- function(object, DirOptions, ..., mofaPath="mofa") {
 
     if (is.null(argval)) {
       # Placeholder option; don't add it
-    }
-    if (is.logical(argval)) {
-      # Flag option
-      if (length(argval) != 1) {
-        stop(paste("Invalid argument value:", deprase(argval)))
-      } else if (argval == FALSE || is.na(argval)) {
-        # Unset flag: don't add it
-      } else if (argval == TRUE) {
-        # Set flag: add it
-        argv <- c(argv, argname)
-      }
     } else {
-      # Option with arguments: add the option followed by it args
-      argv <- c(argv, argname, argval)
-    }
+          if (is.logical(argval)) {
+            # Flag option
+            if (length(argval) != 1) {
+              stop(paste("Invalid argument value:", deprase(argval)))
+            } else if (argval == FALSE || is.na(argval)) {
+              # Unset flag: don't add it
+            } else if (argval == TRUE) {
+              # Set flag: add it
+              argv <- c(argv, argname)
+            }
+          } else {
+            # Option with arguments: add the option followed by it args
+            argv <- c(argv, argname, argval)
+          }}
   }
   argv <- unlist(argv)
 

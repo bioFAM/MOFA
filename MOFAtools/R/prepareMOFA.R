@@ -123,7 +123,7 @@ getDefaultTrainOptions <- function() {
     maxiter = 5000,               # Maximum number of iterations
     tolerance = 0.1,              # Convergence threshold based on change in the evidence lower bound
     learnFactors = TRUE,          # (bool) learn the number of factors?
-    DropFactorThreshold = 0.01,   # Threshold on fraction of variance explained to drop a factor
+    DropFactorThreshold = 0.02,   # Threshold on fraction of variance explained to drop a factor
     verbose = FALSE,              # verbosity?
     seed = NULL                   # random seed
   )

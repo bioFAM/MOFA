@@ -5,7 +5,7 @@
 
 
 #' @title Plot the robustness of the latent factors across diferent trials
-#' @name compareModels
+#' @name compare_factors
 #' @description Different objects of \code{\link{MOFAmodel}} are compared in terms of correlation between 
 #' their latent factors. The correlation is calculated only on those samples which are present in all models.
 #' Ideally, the output should look like a block diagonal matrix, suggesting that all detected factors are robust under different initialisations.
@@ -23,7 +23,7 @@
 #' @importFrom grDevices colorRampPalette
 #' @export
 
-compareModels <- function(models, comparison = "all", ...) {
+compare_factors <- function(models, comparison = "all", show_rownames=FALSE, show_colnames=FALSE,...) {
   
   # Sanity checks
   if(!is.list(models))
@@ -67,13 +67,13 @@ compareModels <- function(models, comparison = "all", ...) {
     #plot heatmap
     # if(is.null(main)) main <- "Absolute correlation between latent factors"
     if(length(unique(as.numeric(abs(corLFs))))>1){
-    pheatmap(abs(corLFs), show_rownames = F,
+    pheatmap(abs(corLFs), show_rownames = show_rownames,show_colnames = show_colnames,
              color = colorRampPalette(c("white",RColorBrewer::brewer.pal(9,name="YlOrRd")))(100),
              # color=colorRampPalette(c("white", "orange" ,"red"))(100), 
              # annotation_col = modelAnnot, main= main , ...)
              ...)
     } else warning("No plot produced as correlations consist of only one value")
-    return(corLFs)
+    # return(corLFs)
   }
   
   if(comparison=="pairwise"){
@@ -98,7 +98,58 @@ compareModels <- function(models, comparison = "all", ...) {
         names(sublist) <- names(models)[(i+1):length(LFs)]
         sublist
     })
+    
     names(PairWiseCor) <- names(models[-length(models)])
-    return(PairWiseCor)
+    return(NULL)
+    #return(PairWiseCor)
   }
+}
+
+
+#' @title Compare different trained MOFA object in terms of the final value of the ELBO statistics and number of inferred factors
+#' @name compare_models
+#' @description Different objects of \code{\link{MOFAmodel}} are compared in terms of the final value of the ELBO statistics. 
+#' For model selection the model with the highest ELBO value is selected.
+#' @param models a list containing \code{\link{MOFAmodel}} objects.
+#' @export
+
+compare_models <- function(models, show_modelnames = FALSE) {
+  # Sanity checks
+  if(!is.list(models))
+    stop("'models' has to be a list")
+  if (!all(sapply(models, function (l) class(l)=="MOFAmodel")))
+    stop("Each element of the the list 'models' has to be an instance of MOFAmodel")
+
+  elbo_vals <- sapply(models, getELBO)
+  n_factors <- sapply(models, function(m) {
+    n_fac <- getDimensions(m)$K
+    if(m@ModelOptions$learnIntercept) n_fac <- n_fac - 1
+    n_fac
+    })
+  if(is.null(names(models))) names(models) <- paste0("model_", seq_along(models))
+  df <- data.frame(ELBO=elbo_vals, model = names(models))
+  gg <- ggplot(df, aes(x=model,y=n_factors, fill=ELBO)) + geom_bar(stat="identity")+
+    ylab("Number of inferred factors")
+  if(show_modelnames) gg <- gg + theme(axis.text.x=element_text(angle=60, vjust=1, hjust=1))
+  else gg <- gg + theme(axis.text.x=element_blank())
+  return(gg)
+}
+
+#' @title Select a model from a list of trained MOFAobjects based on the best ELBO value
+#' @name select_model
+#' @description Different objects of \code{\link{MOFAmodel}} are compared in terms of the final value of the ELBO statistics 
+#' and the model with the highest ELBO value is selected.
+#' @param models a list containing \code{\link{MOFAmodel}} objects.
+#' @export
+
+select_model <- function(models, plotit =TRUE) {
+  # Sanity checks
+  if(!is.list(models))
+    stop("'models' has to be a list")
+  if (!all(sapply(models, function (l) class(l)=="MOFAmodel")))
+    stop("Each element of the the list 'models' has to be an instance of MOFAmodel")
+
+  elbo_vals <- sapply(models, getELBO)
+  if(plotit) compare_models(models)
+  models[[which.max(elbo_vals)]]
 }

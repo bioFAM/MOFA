@@ -15,7 +15,7 @@
 #' @importFrom rhdf5 h5read
 #' @export
 
-loadModel <- function(file, object = NULL, sortFactors = T) {
+loadModel <- function(file, object = NULL, sortFactors = T, r2_threshold = NULL) {
   
   # message(paste0("Loading the following MOFA model: ", file))
   
@@ -121,7 +121,8 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   # }
   
   # Parse factors: Mask passenger samples
-  object <- detectPassengers(object)
+  if(is.null(r2_threshold)) r2_threshold <- object@TrainOptions$drop_by_r2
+  object <- detectPassengers(object, r2_threshold=r2_threshold)
 
   # Parse factors: order factors in order of variance explained
   if (sortFactors == T) {

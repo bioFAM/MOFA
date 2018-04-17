@@ -78,7 +78,7 @@ subset_augment <- function(mat, pats) {
 }
 
 
-detectPassengers <- function(object, views = "all", factors = "all", r2_threshold = 0.03) {
+detectPassengers <- function(object, views = "all", factors = "all", r2_threshold = 0.02) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")

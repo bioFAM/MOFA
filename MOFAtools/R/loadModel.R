@@ -121,7 +121,7 @@ loadModel <- function(file, object = NULL, sortFactors = T, r2_threshold = NULL)
   # }
   
   # Parse factors: Mask passenger samples
-  if(is.null(r2_threshold)) r2_threshold <- object@TrainOptions$drop_by_r2
+  if(is.null(r2_threshold)) r2_threshold <- object@TrainOptions$DropFactorThreshold
   object <- detectPassengers(object, r2_threshold=r2_threshold)
 
   # Parse factors: order factors in order of variance explained

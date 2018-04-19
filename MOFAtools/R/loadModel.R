@@ -40,6 +40,11 @@ loadModel <- function(file, object = NULL, sortFactors = T, r2_threshold = NULL)
   if (length(object@TrainOptions) == 0) {
     tryCatch(object@TrainOptions <- as.list(h5read(file, 'training_opts',read.attributes=T)), error = function(x) { print("Training opts not found, not loading it...") })
   }
+  # different names in R and python package (drop_by_r2 in python corresponds to DropFactorThreshold in R) - needs to be adapted
+  if("drop_by_r2" %in% names(object@TrainOptions)) {
+    object@TrainOptions$DropFactorThreshold <- object@TrainOptions$drop_by_r2
+    object@TrainOptions$drop_by_r2 <- NULL
+  }
     
   # Load model options
   # COMMENTED BECAUSE We always need to load the model options, as h5py sort the views alphabetically

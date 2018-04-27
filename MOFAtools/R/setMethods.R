@@ -80,9 +80,9 @@ setReplaceMethod("factorNames", signature(object="MOFAmodel", value="vector"),
    if (!methods::.hasSlot(object,"Expectations")  | length(object@Expectations) == 0)
      stop("Before assigning factor names you have to assign expectations")
    if (methods::.hasSlot(object,"Dimensions") | length(object@Dimensions) == 0)
-     if (!length(value)==object@Dimensions["K"])
+     if (length(value)!=object@Dimensions["K"])
        stop("Length of factor names does not match the dimensionality of the latent variable matrix")
-   if(!length(value)==ncol(object@Expectations$Z)) 
+   if (length(value)!=ncol(object@Expectations$Z)) 
      stop("factor names do not match the number of columns in the latent variable matrix")
     
    object <- .setNames(object, value, object@Dimensions[["K"]])
@@ -115,7 +115,7 @@ setReplaceMethod("sampleNames", signature(object="MOFAmodel", value="vector"),
    if (methods::.hasSlot(object,"Dimensions") | length(object@Dimensions) == 0)
      if (!length(value)==object@Dimensions["N"])
        stop("Length of sample names does not match the dimensionality of the model")
-   if(!length(value)==ncol(object@TrainData[[1]])) 
+   if(length(value)!=ncol(object@TrainData[[1]])) 
      stop("sample names do not match the dimensionality of the data (cols) ")
    
     object <- .setNames(object, value, object@Dimensions[["N"]])
@@ -175,10 +175,10 @@ setMethod("viewNames<-", signature(object="MOFAmodel", value="character"),
   function(object,value) {
     if (!methods::.hasSlot(object,"TrainData") | length(object@TrainData) == 0)
       stop("Before assigning view names you have to assign the training data")
-    if (methods::.hasSlot(object,"Dimensions")| length(object@Dimensions) == 0)
+    if (methods::.hasSlot(object,"Dimensions") | length(object@Dimensions) == 0)
       if (!length(value) == object@Dimensions["M"])
         stop("Length of view names does not match the dimensionality of the model")
-    if (!length(value)==length(object@TrainData))
+    if (length(value)!=length(object@TrainData))
       stop("view names do not match the number of views in the training data")
     
     # We have to modify this

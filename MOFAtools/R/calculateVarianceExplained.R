@@ -163,7 +163,7 @@ plotVarianceExplained <- function(object, cluster = T, ...) {
   ## Plot variance explained per view ##
   
   # Create data.frame for ggplot
-  fvar_m_df <- data.frame(view=names(fvar_m), R2=fvar_m)
+  fvar_m_df <- data.frame(view=factor(names(fvar_m), levels=names(fvar_m)), R2=fvar_m)
   
   # If multiple views, sort factors according to hierarchical clustering
   if (cluster==TRUE & ncol(fvar_mk)>1) {
@@ -171,7 +171,7 @@ plotVarianceExplained <- function(object, cluster = T, ...) {
   }
   
   # Barplot with variance explained per view
-  bplt <- ggplot( fvar_m_df, aes(x=view, y=R2)) + 
+  bplt <- ggplot(fvar_m_df, aes(x=view, y=R2)) + 
     ggtitle("Total variance explained per view") +
     geom_bar(stat="identity", fill="deepskyblue4", width=0.9) +
     xlab("") + ylab("R2") +

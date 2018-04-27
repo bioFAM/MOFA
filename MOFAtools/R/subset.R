@@ -10,7 +10,6 @@
 #' @param factors character vector with the factor names, or numeric vector with the index of the factors.
 #' @param keep_intercept bool whether intercept is kept when subsetting (default TRUE).
 #' @export
-
 subsetFactors <- function(object, factors, keep_intercept=T) {
   
   # Sanity checks
@@ -56,7 +55,7 @@ subsetSamples <- function(object, samples) {
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(samples) <= object@Dimensions[["N"]])
-  warning("Removing samples a posteriori is fine for an exploratory analysis, but we recommend removing them before training!")
+  warning("Removing samples is fine for an exploratory analysis, but we recommend removing them before training!\n")
   
   # Get samples
   if (is.character(samples)) {
@@ -81,3 +80,38 @@ subsetSamples <- function(object, samples) {
   return(object)
 }
 
+
+#' @title Subset views
+#' @name subsetViews
+#' @description Method to subset (or sort) views
+#' @param object a \code{\link{MOFAmodel}} object.
+#' @param views character vector with the view names, numeric vector with the view indices or logical vector with the view to be kept as TRUE.
+#' @export
+subsetViews <- function(object, views) {
+  
+  # Sanity checks
+  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  stopifnot(length(views) <= object@Dimensions[["N"]])
+  warning("Removing views is fine for an exploratory analysis, but we recommend removing them before training!\n")
+  
+  # Get views
+  if (is.character(views)) {
+    stopifnot(all(views %in% viewNames(object)))
+  } else {
+    views <- viewNames(object)[views]
+  }
+  
+  # Subset relevant slots
+  object@Expectations$Y <- object@Expectations$Y[views]
+  object@Expectations$W <- object@Expectations$W[views]
+  object@TrainData <- object@TrainData[views]
+  if (length(object@ImputedData)==0) { object@ImputedData <- object@ImputedData[views] }
+  
+  # Modify dimensionality
+  object@Dimensions[["M"]] <- length(views)
+  
+  # Modify sample names in the MOFAobject
+  viewNames(object) <- views
+  
+  return(object)
+}

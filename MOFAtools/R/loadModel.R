@@ -15,7 +15,7 @@
 #' @importFrom rhdf5 h5read
 #' @export
 
-loadModel <- function(file, object = NULL, sortFactors = T) {
+loadModel <- function(file, object = NULL, sortFactors = T, r2_threshold = NULL) {
   
   # message(paste0("Loading the following MOFA model: ", file))
   
@@ -39,6 +39,11 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   # Load training options
   if (length(object@TrainOptions) == 0) {
     tryCatch(object@TrainOptions <- as.list(h5read(file, 'training_opts',read.attributes=T)), error = function(x) { print("Training opts not found, not loading it...") })
+  }
+  # different names in R and python package (drop_by_r2 in python corresponds to DropFactorThreshold in R) - needs to be adapted
+  if("drop_by_r2" %in% names(object@TrainOptions)) {
+    object@TrainOptions$DropFactorThreshold <- object@TrainOptions$drop_by_r2
+    object@TrainOptions$drop_by_r2 <- NULL
   }
     
   # Load model options
@@ -121,7 +126,8 @@ loadModel <- function(file, object = NULL, sortFactors = T) {
   # }
   
   # Parse factors: Mask passenger samples
-  object <- detectPassengers(object)
+  if(is.null(r2_threshold)) r2_threshold <- object@TrainOptions$DropFactorThreshold
+  object <- detectPassengers(object, r2_threshold=r2_threshold)
 
   # Parse factors: order factors in order of variance explained
   if (sortFactors == T) {

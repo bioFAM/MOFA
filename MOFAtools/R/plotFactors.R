@@ -30,12 +30,11 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
-  if(!factor %in% factorNames(object)) { stop("factor not recognised") }
   
   # Collect relevant data
   N <- object@Dimensions[["N"]]
   Z <- getFactors(object, factors = factor, as.data.frame = TRUE)
-  
+  factor <- unique(Z$factor)
   # get groups
   groupLegend <- T
   if (!is.null(group_by)) {
@@ -74,10 +73,12 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
   if(!showMissing) Z <- Z[!is.na(group_by) & !is.nan(group_by),]
   Z$group_by <- as.factor(Z$group_by)
   
+  xlabel <- factor
   # Generate plot
   p <- ggplot(Z, aes_string(x="value", group="group_by")) + 
     geom_histogram(aes(fill=group_by), alpha=alpha, binwidth=binwidth, position="identity") + 
     scale_y_continuous(expand=c(0,0)) +
+    xlab(xlabel) + 
     guides(fill=guide_legend(title=group_names)) +
     theme(plot.margin = margin(40,40,20,20), 
           axis.text = element_text(size=rel(1.3), color = "black"), 
@@ -271,12 +272,11 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(factors)==2)
-  stopifnot(all(factors %in% factorNames(object)))
   
   # Collect relevant data  
   N <- object@Dimensions[["N"]]
   Z <- getFactors(object, factors = factors)
-  factors <- as.character(factors)
+  factors <- colnames(Z)
   samples <- sampleNames(object)
   
   # Set color
@@ -346,8 +346,8 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
    if(length(unique(df$color_by)) < 5) df$color_by <- as.factor(df$color_by)
  
   
-  xlabel <- paste("Latent factor", factors[1])
-  ylabel <- paste("Latent factor", factors[2])
+  xlabel <- factors[1]
+  ylabel <- factors[2]
                                 
   p <- ggplot(df, aes_string(x = "x", y = "y")) + 
       geom_point(aes_string(color = "color_by", shape = "shape_by")) + xlab(xlabel) + ylab(ylabel) +
@@ -408,8 +408,8 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
 
   # Collect relevant data
   N <- object@Dimensions[["N"]]
-  Z <- getExpectations(object, "Z", "E")
-  factors <- as.character(factors)
+  Z <- getFactors(object, factors = factors)
+  factors <- colnames(Z)
   
   # Get factors
   if (paste0(factors,collapse="") == "all") { 
@@ -572,7 +572,7 @@ plotFactorCor <- function(object, method = "pearson", ...) {
   Z <- getFactors(object)
   
   # Remove intercept
-  if(object@ModelOptions$learnIntercept==TRUE) Z <- Z[,-1]
+  Z <- Z[,colnames(Z)!="intercept"]
   
   # Compute and plot correlation
   rownames(Z) <- paste0("LF_",1:nrow(Z))

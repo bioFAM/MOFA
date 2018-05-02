@@ -109,7 +109,9 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
 #' a character giving the name of a feature, 
 #' a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
 #' or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.
+#' @param shape_by specifies groups or values used for the shape of samples. See color_by for how this can be specified. A maximum of 6 different values can be specified.
 #' @param name_color name for color legend (usually only used if color_by is not a character itself)
+#' @param name_shape name for shape legend (usually only used if shape_by is not a character itself)
 #' @param showMissing logical indicating whether to remove samples for which \code{shape_by} or \code{color_by} is missing.
 #' @details One of the main steps for the annotation of factors is to visualise and color them using known covariates or phenotypic data. \cr
 #' This function generates a Beeswarm plot of the sample values in a given latent factor. \cr
@@ -117,7 +119,7 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
 #' @return Returns a \code{ggplot2} object
 #' @import ggplot2 ggbeeswarm RColorBrewer grDevices
 #' @export
-plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = "", showMissing = FALSE) {
+plotFactorBeeswarm <- function(object, factors, color_by = NULL, shape_by = NULL, name_color = "", name_shape = "", showMissing = FALSE) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
@@ -157,14 +159,45 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = ""
   if(length(unique(color_by)) < 5) color_by <- as.factor(color_by)
   Z$color_by <- color_by[Z$sample]
   
+  # Set shape
+  shapeLegend <- T
+  if (!is.null(shape_by)) {
+    # It is the name of a covariate or a feature in the TrainData
+    if (length(shape_by) == 1 & is.character(shape_by)) {
+      if(name_shape=="") name_shape <- shape_by
+      TrainData <- getTrainData(object)
+      featureNames <- lapply(TrainData(object), rownames)
+      if(shape_by %in% Reduce(union,featureNames)) {
+        viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
+        shape_by <- TrainData[[viewidx]][shape_by,]
+      } else if(class(object@InputData) == "MultiAssayExperiment") {
+        shape_by <- getCovariates(object, shape_by)
+    } else {
+      stop("'shape_by' was specified but it was not recognised, please read the documentation") 
+    }
+    # It is a vector of length N
+    } else if (length(shape_by) > 1) {
+      stopifnot(length(shape_by) == N)
+    } else {
+      stop("'color_by' was specified but it was not recognised, please read the documentation")
+    }
+  } else {
+    shape_by <- rep(TRUE,N)
+    shapeLegend <- F
+  }
+  if(length(unique(shape_by)) < 7) shape_by <- as.factor(shape_by)
+    else stop("'shape_by' was specified but has too many values. The shape argument can take a maximum of 6 values")
+  Z$shape_by <- shape_by[Z$sample]
+
+
   # Remove samples with missing values
   if (showMissing==F) {
-    Z <- Z[!(is.na(color_by) | is.nan(color_by) | color_by=="NaN"),]
+    Z <- Z[!(is.na(color_by) | is.nan(color_by) | color_by=="NaN" | is.na(shape_by) | is.nan(shape_by) | shape_by=="NaN"),]
   }
   
   # Generate plot
   p <- ggplot(Z, aes_string(x=0, y="value")) + 
-    ggbeeswarm::geom_quasirandom(aes(color=color_by)) +
+    ggbeeswarm::geom_quasirandom(aes(color=color_by, shape=shape_by)) +
     ylab("Factor value") + xlab("") +
     scale_x_continuous(breaks=NULL) +
     facet_wrap(~factor, scales="free") +
@@ -196,6 +229,11 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = ""
     p <- p + labs(color=name_color) 
   } else { 
     p <- p + guides(color = FALSE) 
+  }
+  if (shapeLegend) { 
+    p <- p + labs(shape=name_shape) 
+  } else { 
+    p <- p + guides(shape = FALSE) 
   }
   
   return(p)

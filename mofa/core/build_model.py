@@ -17,7 +17,7 @@ from .init_nodes import *
 from .BayesNet import BayesNet
 from .utils import *
 
-def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, verbose=False):
+def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1):
     """Method to run a single trial of a MOFA model
     data: 
     data_opts
@@ -25,7 +25,6 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     train_opts:
     seed:
     trial:
-    verbose:
 
     PARAMETERS
     ----------
@@ -72,13 +71,12 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
     M = len(data)
     N = data[0].shape[0]
     D = s.asarray([ data[m].shape[1] for m in range(M) ])
-    K = model_opts["k"]
-
+    K = model_opts["factors"]
     dim = {'M':M, 'N':N, 'D':D, 'K':K }
 
     ## Define and initialise the nodes ##
 
-    init = initModel(dim, data, model_opts["likelihood"], seed=seed)
+    init = initModel(dim, data, model_opts["likelihoods"], seed=seed)
 
     # Latent variables
     init.initZ(pmean=model_opts["priorZ"]["mean"], pvar=model_opts["priorZ"]["var"],
@@ -153,7 +151,7 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1, 
 
     return net
 
-def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, seed=None, verbose=True):
+def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, seed=None):
 
     """Method to run multiple trials of a MOFA model
 
@@ -165,7 +163,6 @@ def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, se
     train_opts:
     seed:
     trial:
-    verbose:
     """
     # trained_models = Parallel(n_jobs=train_opts['cores'], backend="threading")(
     # trained_models = Parallel(n_jobs=train_opts['cores'])(

@@ -122,7 +122,8 @@ class initModel(object):
                         pvar=s.ones((self.K,))*pvar,
                         qmean=s.ones((self.N,self.K))*qmean,
                         qvar=s.ones((self.N,self.K))*qvar,
-                        qE=qE, qE2=qE2,
+                        qE=qE, 
+                        qE2=qE2,
                         idx_covariates=idx_covariates)
         self.nodes["Z"] = self.Z
 

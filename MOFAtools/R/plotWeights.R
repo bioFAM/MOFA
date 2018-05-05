@@ -90,20 +90,15 @@ plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = 
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(all(view %in% viewNames(object))) 
-
-  # Get factor
-  if(is.numeric(factor)) {
-      if (object@ModelOptions$learnIntercept == T) factor <- factorNames(object)[factor+1]
-      else factor <- factorNames(object)[factor]
-    } else{ stopifnot(factor %in% factorNames(object)) }
+  stopifnot(length(factor)==1)
 
   if(!is.null(manual)) { stopifnot(class(manual)=="list"); stopifnot(all(Reduce(intersect,manual) %in% featureNames(object)[[view]]))  }
   
   # Collect expectations  
   # W <- getExpectations(object,"W", as.data.frame = T)
   W <- getWeights(object,views=view, factors=factor, as.data.frame = T)
-  W <- W[W$factor==factor & W$view==view,]
-  
+  factor <- unique(W$factor)
+
     # Scale values
   if(scale) W$value <- W$value/max(abs(W$value))
   
@@ -148,7 +143,7 @@ plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = 
   W$tmp <- as.character(W$group!="0")
   gg_W <- ggplot(W, aes(x=feature, y=value, col=group)) + 
     # scale_y_continuous(expand = c(0.01,0.01)) + scale_x_discrete(expand = c(0.01,0.01)) +
-    geom_point(aes(size=tmp)) + labs(x="Rank position", y="Loading") +
+    geom_point(aes(size=tmp)) + labs(x="Rank position", y=paste("Loading on factor", factor)) +
     scale_x_discrete(breaks = NULL, expand=c(0.05,0.05)) +
     ggrepel::geom_text_repel(data = W[W$group!="0",], aes(label = feature, col = group),
                              segment.alpha=0.1, segment.color="black", segment.size=0.3, box.padding = unit(0.5, "lines"), show.legend= F)
@@ -215,7 +210,7 @@ plotTopWeights <- function(object, view, factor, nfeatures = 10, abs = TRUE, sca
   
   # Collect expectations  
   W <- getWeights(object, factors=factor, views=view, as.data.frame=T)
-
+  factor <- unique(W$factor)
   # Scale values by loading with highest (absolute) value
   if(scale) W$value <- W$value/max(abs(W$value))
 

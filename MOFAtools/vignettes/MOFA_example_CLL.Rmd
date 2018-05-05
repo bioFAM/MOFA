@@ -70,7 +70,7 @@ This part of the pipeline is implemented in Python, so first of all make sure yo
 ```{r}
 DirOptions <- list(
   "dataDir" = tempdir(), # Folder to store the input matrices as .txt files, it can be a simple temporary folder
-  "outFile" = "/Users/ricard/test/test.hdf5" # Output file of the model (use hdf5 extension)
+  "outFile" = 'test.hdf5' # Output file of the model (use hdf5 extension)
 )
 ```
 
@@ -192,7 +192,7 @@ Barplot_FeatureSetEnrichmentAnalysis(fsea.out, alpha=0.01)
 ```{r}
 interestingFactors <- 4:5
 for (factor in interestingFactors) {
-  lineplot <- LinePlot_FeatureSetEnrichmentAnalysis(fsea.out, factor, threshold=0.01, max.pathways=10)
+  lineplot <- LinePlot_FeatureSetEnrichmentAnalysis(MOFAobject, fsea.out, factor, threshold=0.01, max.pathways=10)
   print(lineplot)
 }
 ```

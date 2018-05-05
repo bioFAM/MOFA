@@ -4,8 +4,8 @@
 \alias{plotFactorBeeswarm}
 \title{Beeswarm plot of latent factors}
 \usage{
-plotFactorBeeswarm(object, factors, color_by = NULL, name_color = "",
-  showMissing = FALSE)
+plotFactorBeeswarm(object, factors, color_by = NULL, shape_by = NULL,
+  name_color = "", name_shape = "", showMissing = FALSE)
 }
 \arguments{
 \item{object}{a trained \code{\link{MOFAmodel}} object.}
@@ -19,7 +19,11 @@ a character giving the name of a feature,
 a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
 or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.}
 
+\item{shape_by}{specifies groups or values used for the shape of samples. See color_by for how this can be specified. A maximum of 6 different values can be specified.}
+
 \item{name_color}{name for color legend (usually only used if color_by is not a character itself)}
+
+\item{name_shape}{name for shape legend (usually only used if shape_by is not a character itself)}
 
 \item{showMissing}{logical indicating whether to remove samples for which \code{shape_by} or \code{color_by} is missing.}
 }

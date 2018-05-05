@@ -30,12 +30,11 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
-  if(!factor %in% factorNames(object)) { stop("factor not recognised") }
   
   # Collect relevant data
   N <- object@Dimensions[["N"]]
   Z <- getFactors(object, factors = factor, as.data.frame = TRUE)
-  
+  factor <- unique(Z$factor)
   # get groups
   groupLegend <- T
   if (!is.null(group_by)) {
@@ -74,10 +73,12 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
   if(!showMissing) Z <- Z[!is.na(group_by) & !is.nan(group_by),]
   Z$group_by <- as.factor(Z$group_by)
   
+  xlabel <- factor
   # Generate plot
   p <- ggplot(Z, aes_string(x="value", group="group_by")) + 
     geom_histogram(aes(fill=group_by), alpha=alpha, binwidth=binwidth, position="identity") + 
     scale_y_continuous(expand=c(0,0)) +
+    xlab(xlabel) + 
     guides(fill=guide_legend(title=group_names)) +
     theme(plot.margin = margin(40,40,20,20), 
           axis.text = element_text(size=rel(1.3), color = "black"), 
@@ -109,7 +110,9 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
 #' a character giving the name of a feature, 
 #' a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
 #' or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.
+#' @param shape_by specifies groups or values used for the shape of samples. See color_by for how this can be specified. A maximum of 6 different values can be specified.
 #' @param name_color name for color legend (usually only used if color_by is not a character itself)
+#' @param name_shape name for shape legend (usually only used if shape_by is not a character itself)
 #' @param showMissing logical indicating whether to remove samples for which \code{shape_by} or \code{color_by} is missing.
 #' @details One of the main steps for the annotation of factors is to visualise and color them using known covariates or phenotypic data. \cr
 #' This function generates a Beeswarm plot of the sample values in a given latent factor. \cr
@@ -117,7 +120,7 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
 #' @return Returns a \code{ggplot2} object
 #' @import ggplot2 ggbeeswarm RColorBrewer grDevices
 #' @export
-plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = "", showMissing = FALSE) {
+plotFactorBeeswarm <- function(object, factors, color_by = NULL, shape_by = NULL, name_color = "", name_shape = "", showMissing = FALSE) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
@@ -157,14 +160,45 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = ""
   if(length(unique(color_by)) < 5) color_by <- as.factor(color_by)
   Z$color_by <- color_by[Z$sample]
   
+  # Set shape
+  shapeLegend <- T
+  if (!is.null(shape_by)) {
+    # It is the name of a covariate or a feature in the TrainData
+    if (length(shape_by) == 1 & is.character(shape_by)) {
+      if(name_shape=="") name_shape <- shape_by
+      TrainData <- getTrainData(object)
+      featureNames <- lapply(TrainData(object), rownames)
+      if(shape_by %in% Reduce(union,featureNames)) {
+        viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
+        shape_by <- TrainData[[viewidx]][shape_by,]
+      } else if(class(object@InputData) == "MultiAssayExperiment") {
+        shape_by <- getCovariates(object, shape_by)
+    } else {
+      stop("'shape_by' was specified but it was not recognised, please read the documentation") 
+    }
+    # It is a vector of length N
+    } else if (length(shape_by) > 1) {
+      stopifnot(length(shape_by) == N)
+    } else {
+      stop("'color_by' was specified but it was not recognised, please read the documentation")
+    }
+  } else {
+    shape_by <- rep(TRUE,N)
+    shapeLegend <- F
+  }
+  if(length(unique(shape_by)) < 7) shape_by <- as.factor(shape_by)
+    else stop("'shape_by' was specified but has too many values. The shape argument can take a maximum of 6 values")
+  Z$shape_by <- shape_by[Z$sample]
+
+
   # Remove samples with missing values
   if (showMissing==F) {
-    Z <- Z[!(is.na(color_by) | is.nan(color_by) | color_by=="NaN"),]
+    Z <- Z[!(is.na(color_by) | is.nan(color_by) | color_by=="NaN" | is.na(shape_by) | is.nan(shape_by) | shape_by=="NaN"),]
   }
   
   # Generate plot
   p <- ggplot(Z, aes_string(x=0, y="value")) + 
-    ggbeeswarm::geom_quasirandom(aes(color=color_by)) +
+    ggbeeswarm::geom_quasirandom(aes(color=color_by, shape=shape_by)) +
     ylab("Factor value") + xlab("") +
     scale_x_continuous(breaks=NULL) +
     facet_wrap(~factor, scales="free") +
@@ -196,6 +230,11 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = ""
     p <- p + labs(color=name_color) 
   } else { 
     p <- p + guides(color = FALSE) 
+  }
+  if (shapeLegend) { 
+    p <- p + labs(shape=name_shape) 
+  } else { 
+    p <- p + guides(shape = FALSE) 
   }
   
   return(p)
@@ -233,12 +272,11 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(factors)==2)
-  stopifnot(all(factors %in% factorNames(object)))
   
   # Collect relevant data  
   N <- object@Dimensions[["N"]]
   Z <- getFactors(object, factors = factors)
-  factors <- as.character(factors)
+  factors <- colnames(Z)
   samples <- sampleNames(object)
   
   # Set color
@@ -308,8 +346,8 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
    if(length(unique(df$color_by)) < 5) df$color_by <- as.factor(df$color_by)
  
   
-  xlabel <- paste("Latent factor", factors[1])
-  ylabel <- paste("Latent factor", factors[2])
+  xlabel <- factors[1]
+  ylabel <- factors[2]
                                 
   p <- ggplot(df, aes_string(x = "x", y = "y")) + 
       geom_point(aes_string(color = "color_by", shape = "shape_by")) + xlab(xlabel) + ylab(ylabel) +
@@ -370,8 +408,8 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
 
   # Collect relevant data
   N <- object@Dimensions[["N"]]
-  Z <- getExpectations(object, "Z", "E")
-  factors <- as.character(factors)
+  Z <- getFactors(object, factors = factors)
+  factors <- colnames(Z)
   
   # Get factors
   if (paste0(factors,collapse="") == "all") { 
@@ -534,7 +572,7 @@ plotFactorCor <- function(object, method = "pearson", ...) {
   Z <- getFactors(object)
   
   # Remove intercept
-  if(object@ModelOptions$learnIntercept==TRUE) Z <- Z[,-1]
+  Z <- Z[,colnames(Z)!="intercept"]
   
   # Compute and plot correlation
   rownames(Z) <- paste0("LF_",1:nrow(Z))

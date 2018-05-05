@@ -4,8 +4,8 @@
 \alias{LinePlot_FeatureSetEnrichmentAnalysis}
 \title{Line plot of Feature Set Enrichment Analysis results}
 \usage{
-LinePlot_FeatureSetEnrichmentAnalysis(fsea.out, factor, threshold = 0.1,
-  max.pathways = 25, adjust = T)
+LinePlot_FeatureSetEnrichmentAnalysis(object, fsea.out, factor,
+  threshold = 0.1, max.pathways = 25, adjust = T)
 }
 \arguments{
 \item{fsea.out}{output of \link{FeatureSetEnrichmentAnalysis} function}

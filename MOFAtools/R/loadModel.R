@@ -98,7 +98,7 @@ loadModel <- function(file, object = NULL, sortFactors = T, minR2 = 0.01) {
   viewNames(object) <- names(object@TrainData)
   sampleNames(object) <- colnames(object@TrainData[[1]])
   featureNames(object) <- lapply(object@TrainData,rownames)
-  factorNames(object) <- as.character(1:object@Dimensions[["K"]])
+  factorNames(object) <- paste0("LF",as.character(1:object@Dimensions[["K"]]))
   
   # Add names to likelihood vector
   names(object@ModelOptions$likelihood) <- viewNames(object)
@@ -116,9 +116,11 @@ loadModel <- function(file, object = NULL, sortFactors = T, minR2 = 0.01) {
   
   # Rename factors if intercept is included
   if (object@ModelOptions$learnIntercept == TRUE) {
-    intercept_idx <- names(which(sapply(apply(object@Expectations$Z,2,unique),length)==1))
-    factornames <- as.character(1:(object@Dimensions[["K"]]))
-    factornames[factornames==intercept_idx] <- "intercept"
+    intercept_idx <- which(sapply(apply(object@Expectations$Z,2,unique),length)==1)
+    nonconst_idx <- which(!sapply(apply(object@Expectations$Z,2,unique),length)==1)
+    factornames <- factorNames(object)
+    factornames[intercept_idx] <- "intercept"
+    factornames[nonconst_idx] <- paste0("LF",as.character(1:length(nonconst_idx)))
     factorNames(object) <- factornames
     # object@Dimensions[["K"]] <- object@Dimensions[["K"]] - 1
   }
@@ -133,14 +135,9 @@ loadModel <- function(file, object = NULL, sortFactors = T, minR2 = 0.01) {
   # Parse factors: order factors in order of variance explained
   if (sortFactors == T) {
     r2 <- rowSums(calculateVarianceExplained(object)$R2PerFactor)
-    order_factors <- c(names(r2)[order(r2, decreasing = T)])
-    if (object@ModelOptions$learnIntercept==T) { order_factors <- c("intercept",order_factors) }
+    order_factors <- order(r2, decreasing = T)
     object <- subsetFactors(object,order_factors)
-    if (object@ModelOptions$learnIntercept==T) { 
-      factorNames(object) <- c("intercept",1:(object@Dimensions$K-1))
-    } else {
-      factorNames(object) <- c(1:object@Dimensions$K) 
-    }
+    factorNames(object)[!factorNames(object)=="intercept"] <-names(r2)
   }
   
   

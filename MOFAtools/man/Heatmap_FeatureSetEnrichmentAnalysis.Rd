@@ -5,7 +5,7 @@
 \title{Heatmap of Feature Set Enrichment Analysis results}
 \usage{
 Heatmap_FeatureSetEnrichmentAnalysis(fsea.out, threshold = 0.05, log = TRUE,
-  ...)
+  cluster_cols = TRUE, ...)
 }
 \arguments{
 \item{fsea.out}{output of \link{FeatureSetEnrichmentAnalysis} function}

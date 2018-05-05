@@ -75,7 +75,7 @@ FeatureSetEnrichmentAnalysis <- function(object, view, feature.sets, factors = "
   features <- intersect(colnames(data),colnames(feature.sets))
   if(length(features) == 0 ) stop("Feautre names in feature.sets do not match feature names in model.")
   data <- data[,features]
-  W <- W[features,]
+  W <- W[features,, drop=F]
   feature.sets <- feature.sets[,features]
   
   # Filter feature sets with small number of features
@@ -165,11 +165,13 @@ FeatureSetEnrichmentAnalysis <- function(object, view, feature.sets, factors = "
 #' @return nothing
 #' @import ggplot2
 #' @export
-LinePlot_FeatureSetEnrichmentAnalysis <- function(fsea.out, factor, threshold=0.1, max.pathways=25, adjust=T) {
+LinePlot_FeatureSetEnrichmentAnalysis <- function(object, fsea.out, factor, threshold=0.1, max.pathways=25, adjust=T) {
   
   # Sanity checks
-  # (...)
-  
+  stopifnot(length(factor)==1) 
+  if(is.numeric(factor)) factor <- factorNames(object)[factorNames(object)!="intercept"][factor]
+  if(!factor %in% colnames(fsea.out$pval)) stop(paste0("No feature set enrichment calculated for factor ", factor, ". Run FeatureSetEnrichmentAnalysis first."))
+
   # get p-values
   if(adjust) p.values <- fsea.out$pval.adj else p.values <- fsea.out$pval
 
@@ -229,11 +231,11 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(fsea.out, factor, threshold=0.
 #' @import pheatmap
 #' @importFrom grDevices colorRampPalette
 #' @export
-Heatmap_FeatureSetEnrichmentAnalysis <- function(fsea.out, threshold = 0.05, log = TRUE, ...) {
+Heatmap_FeatureSetEnrichmentAnalysis <- function(fsea.out, threshold = 0.05, log = TRUE, cluster_cols=TRUE, ...) {
 
   # get p-values
   p.values <- fsea.out$pval.adj
-  p.values <- p.values[!apply(p.values, 1, function(x) sum(x>=threshold)) == ncol(p.values),]
+  p.values <- p.values[!apply(p.values, 1, function(x) sum(x>=threshold)) == ncol(p.values),, drop=FALSE]
   
   # Apply Log transform
   if (log==T) {
@@ -245,7 +247,8 @@ Heatmap_FeatureSetEnrichmentAnalysis <- function(fsea.out, threshold = 0.05, log
   }
   
   # Generate heatmap
-  pheatmap::pheatmap(p.values, color = col, ...)
+  if(ncol(p.values)==1) cluster_cols <-FALSE
+  pheatmap::pheatmap(p.values, color = col, cluster_cols=cluster_cols)
 }
 
 
@@ -261,19 +264,25 @@ Heatmap_FeatureSetEnrichmentAnalysis <- function(fsea.out, threshold = 0.05, log
 #' @export
 Barplot_FeatureSetEnrichmentAnalysis <- function(fsea.out, alpha = 0.05) {
 
+  if(all(fsea.out$pval.adj > alpha)) stop(paste0("No enriched gene sets found on the considered factors at the FDR threshold of ", alpha,"."))
   # Get enriched pathways at FDR of alpha
-  pathwayList <- apply(fsea.out$pval.adj, 2, function(f) names(f)[f<=alpha])
+  pathwayList <- lapply(colnames(fsea.out$pval.adj), function(f) {
+    f <- fsea.out$pval.adj[,f]
+    names(f)[f<=alpha]
+  })
+  names(pathwayList) <- colnames(fsea.out$pval.adj)
   pathwaysDF <- reshape2::melt(pathwayList, value.name="pathway")
   colnames(pathwaysDF) <- c("pathway", "factor")
   
   # Count enriched gene sets per pathway
-  # ERROR. no visible binding for global variable ‘n_enriched’
   pathwaysSummary <- dplyr::group_by(pathwaysDF,factor)
   pathwaysSummary <- dplyr::summarise(pathwaysSummary, n_enriched=length(pathway)) 
+  if(!all(colnames(fsea.out$pval) %in% pathwaysSummary$factor))
   pathwaysSummary <- rbind(pathwaysSummary, data.frame(factor = colnames(fsea.out$pval)[!colnames(fsea.out$pval) %in% pathwaysSummary$factor],
                                                      n_enriched=0))
+  pathwaysSummary$factor <- factor(pathwaysSummary$factor, levels=colnames(fsea.out$pval))
   
-  # Generate plot (TO-DO: IT NEEDS A BIT MORE THEME)
+  # Generate plot
   ggplot(pathwaysSummary, aes(x=factor, y=n_enriched)) +
     geom_bar(stat="identity") + coord_flip() + 
     ylab(paste0("Enriched gene sets at FDR", alpha*100,"%")) +

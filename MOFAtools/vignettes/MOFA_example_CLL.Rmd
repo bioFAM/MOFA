@@ -74,6 +74,16 @@ DirOptions <- list(
 )
 ```
 
+### Define data options
+The most important options the user needs to define are:
+* centerFeatures: logical indicating whether to center the features to zero mean. This is optional, the model can learn the feature-wise means by setting ModelOptions$learnIntercept to TRUE. This option only applies to continuous data that is modelled with a gaussian likelihood. Binary or count data are not centered.
+* scaleViews: logical indicating whether to scale views to have unit variance. As long as the scale differences between the data sets is not too high, this is not required. Default is FALSE.
+* removeIncompleteSamples: logical indicating whether to remove samples that are not profiled in all omics. The model can cope with missing assays, so this option is not required. Default is FALSE.
+```{r}
+DataOptions <- getDefaultDataOptions()
+DataOptions 
+```
+
 ### Define model options
 The most important options the user needs to define are:
 * numFactors: initial number of factors
@@ -97,17 +107,19 @@ TrainOptions
 ## Prepare MOFA
 prepareMOFA internally performs a set of sanity checks, fills the TrainOptions and ModelOptions slots of the MOFAmodel object and it also creates a set of temporary files with the input matrices that will be loaded by the Python core implementation
 ```{r}
-MOFAobject <- prepareMOFA(MOFAobject, 
-                      DirOptions = DirOptions,
-                      ModelOptions = ModelOptions,
-                      TrainOptions = TrainOptions
+MOFAobject <- prepareMOFA(
+  MOFAobject, 
+  DirOptions = DirOptions,
+  DataOptions = DataOptions,
+  ModelOptions = ModelOptions,
+  TrainOptions = TrainOptions
 )
 ```
 
 ## Run MOFA
 This step can take some time (around 20 min with default parameters), for illustration we provide an existing trained model
 ```{r, eval=FALSE}
-# MOFAobject <- runMOFA(MOFAobject, DirOptions)
+MOFAobject <- runMOFA(MOFAobject, DirOptions)
 ```
 
 ```{r}
@@ -134,7 +146,8 @@ For details, please read the Methods section of the Manuscript.
 This is done by the 'plotVarianceExplained' function. The resulting plot allows to get an overivew of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of the different views.
 
 ```{r}
-r2 <- plotVarianceExplained(MOFAobject)
+r2 <- calculateVarianceExplained(MOFAobject)
+plotVarianceExplained(MOFAobject)
 ```
 
 ## Part 2: Characterisation of individual factors

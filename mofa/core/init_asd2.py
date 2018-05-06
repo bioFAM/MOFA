@@ -127,11 +127,10 @@ class entry_point():
       seed = 0
     self.train_opts['seed'] = int(seed)
 
-  def set_model_options(self, factors, likelihoods, schedule=None, learnTheta=True, learnIntercept=False):
+  def set_model_options(self, factors, likelihoods, schedule=None, sparsity=True, learnIntercept=False):
     """ Parse model options """
 
-    # TO-DO: SANITY CHECKS AND:
-    # - learnTheta should be replaced by sparsity=True
+    # TO-DO: SANITY CHECKS 
 
     self.model_opts = {}
 
@@ -155,15 +154,15 @@ class entry_point():
       K += 1
 
     # Define for which factors and views should we learn 'theta', the sparsity of the factor
-    if type(learnTheta) is bool:
+    if type(sparsity) is bool:
       self.model_opts['sparsity'] = True
-      self.model_opts['learnTheta'] = [s.ones(K) for m in range(M)]
-    # elif type(learnTheta) is list:
+      self.model_opts['sparsity'] = [s.ones(K) for m in range(M)]
+    # elif type(sparsity) is list:
     #   self.model_opts['sparsity'] = True
-    #   assert len(learnTheta)==M, "--learnTheta has to be a binary vector with length number of views"
-    #   self.model_opts['learnTheta'] = [ learnTheta[m]*s.ones(K) for m in range(M) ]
+    #   assert len(sparsity)==M, "--sparsity has to be a binary vector with length number of views"
+    #   self.model_opts['sparsity'] = [ sparsity[m]*s.ones(K) for m in range(M) ]
     else:
-       print("--learnTheta has to be either 1 or 0 or a binary vector with length number of views")
+       print("--sparsity has to be either 1 or 0 or a binary vector with length number of views")
        exit()
 
     # Define schedule of updates
@@ -286,14 +285,14 @@ class entry_point():
     self.model_opts["priorTheta"] = { 'a':[s.ones(K,) for m in range(M)], 'b':[s.ones(K,) for m in range(M)] }
     for m in range(M):
       for k in range(K):
-        if self.model_opts['learnTheta'][m][k]==0:
+        if self.model_opts['sparsity'][m][k]==0:
           self.model_opts["priorTheta"]["a"][m][k] = s.nan
           self.model_opts["priorTheta"]["b"][m][k] = s.nan
 
     # Tau
     self.model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-14 for m in range(M)], 'b':[s.ones(D[m])*1e-14 for m in range(M)] }
 
-  def initialise_variational(self, initTheta=1.):
+  def initialise_variational(self, initTheta=0.5):
     """ Initialise variational distributions of the model"""
 
     N = self.dimensionalities["N"]
@@ -323,7 +322,7 @@ class entry_point():
 
     for m in range(M):
       for k in range(K):
-        if self.model_opts['learnTheta'][m][k]==0.:
+        if self.model_opts['sparsity'][m][k]==0.:
           self.model_opts["initTheta"]["a"][m][k] = s.nan
           self.model_opts["initTheta"]["b"][m][k] = s.nan
 
@@ -388,7 +387,7 @@ class entry_point():
           self.model_opts["initSW"]["var_S1"][m][:,0] = 1e-5
 
         # Theta
-        self.model_opts['learnTheta'][m][0] = 0.
+        self.model_opts['sparsity'][m][0] = 0.
         self.model_opts["initSW"]["Theta"][m][:,0] = 1.
         self.model_opts["priorTheta"]['a'][m][0] = s.nan
         self.model_opts["priorTheta"]['b'][m][0] = s.nan

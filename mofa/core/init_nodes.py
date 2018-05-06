@@ -1,21 +1,6 @@
 
 """
 Module to initalise the nodes
-
-Z: the latent variables can be initialised either randomly, orthogonal or with the PCA solution
-    MuZ:
-
-SW:
-    Alpha:
-
-Tau:
-
-Y:
-
-Theta:
-    ThetaConst
-    ThetaLearn
-    ThetaMixed
 """
 
 import scipy as s
@@ -242,20 +227,20 @@ class initModel(object):
         self.Y = Multiview_Mixed_Node(self.M, *Y_list)
         self.nodes["Y"] = self.Y
 
-    def initThetaMixed(self, pa, pb, qa, qb, qE, learnTheta):
+    def initThetaMixed(self, pa, pb, qa, qb, qE, sparsity):
         # Method to initialie a general theta node
         # Inputs:
         #  pa (float): 'a' parameter of the prior distribution
         #  pb (float): 'b' parameter of the prior distribution
         #  qb (float): initialisation of the 'b' parameter of the variational distribution
         #  qE (float): initial expectation of the variational distribution
-        #  learnTheta (binary): list with binary matrices with dim (D[m],K)
+        #  sparsity (binary): list with binary matrices with dim (D[m],K)
 
         Theta_list = [None] * self.M
         for m in range(self.M):
             
             # Initialise constant node
-            Kconst = learnTheta[m]==0
+            Kconst = sparsity[m]==0
             if Kconst.sum() == 0:
                 ConstThetaNode = None
             else:
@@ -264,7 +249,7 @@ class initModel(object):
                 Theta_list[m] = ConstThetaNode
 
             # Initialise non-constant node
-            Klearn = learnTheta[m]==1
+            Klearn = sparsity[m]==1
             if Klearn.sum() == 0:
                 LearnThetaNode = None
             else:
@@ -274,7 +259,7 @@ class initModel(object):
 
             # Initialise mixed node
             if (ConstThetaNode is not None) and (LearnThetaNode is not None):
-                Theta_list[m] = Mixed_Theta_Nodes(LearnTheta=LearnThetaNode, ConstTheta=ConstThetaNode, idx=learnTheta[m])
+                Theta_list[m] = Mixed_Theta_Nodes(LearnTheta=LearnThetaNode, ConstTheta=ConstThetaNode, idx=sparsity[m])
 
         self.Theta = Multiview_Mixed_Node(self.M, *Theta_list)
         self.nodes["Theta"] = self.Theta

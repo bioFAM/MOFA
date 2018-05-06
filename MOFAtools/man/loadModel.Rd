@@ -4,7 +4,7 @@
 \alias{loadModel}
 \title{loading a trained MOFA model}
 \usage{
-loadModel(file, object = NULL, sortFactors = T)
+loadModel(file, object = NULL, sortFactors = T, r2_threshold = NULL)
 }
 \arguments{
 \item{file}{an hdf5 file saved by the MOFA python framework.}

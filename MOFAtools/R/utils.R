@@ -50,19 +50,23 @@
   return(object)
 }
 
-# Function to find factors that act like an intercept term for the sample, 
-# which means that they capture global mean effects
-findInterceptFactors <- function(object, cor_threshold = 0.8) {
+# Function to find factors that act as an intercept term for the samples,
+.detectInterceptFactors <- function(object, cor_threshold = 0.75) {
+  
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
   
+  # Fetch data
   data <- getTrainData(object)
   factors <- getFactors(object, include_intercept = F)
   
+  # Correlate the factors with global means per sample
   r <- lapply(data, function(x) abs(cor(apply(x,2,mean),factors, use="complete.obs")))
   for (i in names(r)) {
-    if (any(r[[i]]>cor_threshold))
-      cat(paste0("Warning: factor ",which(r[[i]]>cor_threshold)," is capturing a size factor effect in ", i, " view, which indicates that input data might not be properly normalised...\n"))
+    if (any(r[[i]]>cor_threshold)) {
+      cat(paste0("Factor ",which(r[[i]]>cor_threshold)," is capturing an intercept effect in ",i,"\n"))
+      cat("Intercept factors arise from global differences between the samples, which could be different library size, mean methylation rates, etc.")
+    }
   }
 }
 
@@ -78,7 +82,7 @@ subset_augment <- function(mat, pats) {
 }
 
 
-detectPassengers <- function(object, views = "all", factors = "all", r2_threshold = 0.02) {
+.detectPassengers <- function(object, views = "all", factors = "all", r2_threshold = 0.02) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")

@@ -97,25 +97,25 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1):
                  qa=model_opts["initTau"]['a'], qb=model_opts["initTau"]['b'], qE=model_opts["initTau"]['E'])
 
     # Sparsity on the weights
-    if len(s.unique(model_opts['learnTheta'])) == 1:
+    if len(s.unique(model_opts['sparsity'])) == 1:
 
         # All are infered
-        if s.unique(model_opts['learnTheta'])==1.:
+        if s.unique(model_opts['sparsity'])==1.:
             # init.initThetaLearn(pa=model_opts["priorTheta"]['a'], pb=model_opts["priorTheta"]['b'],
             #     qa=model_opts["initTheta"]['a'],  qb=model_opts["initTheta"]['b'], qE=model_opts["initTheta"]['E'])
             init.initThetaMixed(pa=model_opts["priorTheta"]['a'], pb=model_opts["priorTheta"]['b'],
                 qa=model_opts["initTheta"]['a'],  qb=model_opts["initTheta"]['b'], qE=model_opts["initTheta"]['E'],
-                learnTheta=model_opts['learnTheta'])
+                sparsity=model_opts['sparsity'])
 
         # None are infered
-        elif s.unique(model_opts['learnTheta'])==0.:
+        elif s.unique(model_opts['sparsity'])==0.:
             init.initThetaConst(value=model_opts["initTheta"]['E'])
 
     # Some are infered
     else:
         init.initThetaMixed(pa=model_opts["priorTheta"]['a'], pb=model_opts["priorTheta"]['b'],
             qa=model_opts["initTheta"]['a'],  qb=model_opts["initTheta"]['b'], qE=model_opts["initTheta"]['E'],
-            learnTheta=model_opts['learnTheta'])
+            sparsity=model_opts['sparsity'])
 
     # Observed data
     init.initY()

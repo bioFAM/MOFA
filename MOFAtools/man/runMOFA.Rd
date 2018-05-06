@@ -2,20 +2,18 @@
 % Please edit documentation in R/runMOFA.R
 \name{runMOFA}
 \alias{runMOFA}
-\title{train an untrained MOFA model}
+\title{train a MOFA model}
 \usage{
-runMOFA(object, DirOptions, ..., mofaPath = "mofa")
+runMOFA(object, DirOptions)
 }
 \arguments{
 \item{object}{an untrained \code{\link{MOFAmodel}} object}
 
 \item{DirOptions}{list with I/O options, it should contain at least two entries: \cr
-'dataDir' where the input matrices as stored as text files. \cr
-'outFile' where the model is going to be stored as an hdf5 file.}
-
-\item{...}{Extra options to add to the mofa command}
-
-\item{mofaPath}{Path the the mofa executable. To be modified if the \code{mofa} Python package is not recognised by Rstudio.}
+\itemize{
+ \item{\strong{dataDir}:}{ input directory where the matrices as stored as text files with row and column names and tab delimiter. }
+ \item{\strong{outFile}:}{ output file where the model is going to be stored as an hdf5 file.}
+}}
 }
 \value{
 a trained \code{\link{MOFAmodel}} object
@@ -25,7 +23,8 @@ Function to train an untrained \code{\link{MOFAmodel}} object.
 }
 \details{
 In this step the R package is calling the \code{mofa} Python package, where the the training is performed. \cr
-The interface with Python is not great for now. Sometimes the training might freeze, but it is running from the background, just be patient! \cr
-It is important the \code{mofa} executable is on your $PATH so that R can detect it. This will generally be the case, 
-but if it is not, then you need to specify it manually in the \code{mofaPath} argument. Please, read our FAQ for troubleshooting. \cr
+The interface with Python is done with the \code{\link{reticulate}} package. 
+If you have several versions of Python installed and Rstudio is not detecting the correct one, you can change it using
+\code{reticulate::use_python}. \cr
+This module is in beta testing so please, read our FAQ for troubleshooting and report any problems.
 }

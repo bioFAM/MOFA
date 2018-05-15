@@ -11,11 +11,11 @@
 #' @param file an hdf5 file saved by the MOFA python framework.
 #' @param object either NULL (default) or an an existing untrained MOFA object. If NULL, the \code{\link{MOFAmodel}} object is created from the scratch.
 #' @param sortFactors boolean indicating whether factors should be sorted by variance explained (default is TRUE)
-#' @param minR2 minimum R2 threshold to call 'active' factors (default is 0.01).
+#' @param minR2 minimum R2 threshold to call 'active' factors (default is the threshold used for training).
 #' @return a \code{\link{MOFAmodel}} model.
 #' @importFrom rhdf5 h5read
 #' @export
-loadModel <- function(file, object = NULL, sortFactors = T, minR2 = 0.01) {
+loadModel <- function(file, object = NULL, sortFactors = T, minR2 = NULL) {
   
   # message(paste0("Loading the following MOFA model: ", file))
   

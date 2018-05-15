@@ -70,7 +70,7 @@ This part of the pipeline is implemented in Python, so first of all make sure yo
 ```{r}
 DirOptions <- list(
   "dataDir" = tempdir(), # Folder to store the input matrices as .txt files, it can be a simple temporary folder
-  "outFile" = "/Users/ricard/test/test.hdf5" # Output file of the model (use hdf5 extension)
+  "outFile" = tempfile() # Output file of the model (use hdf5 extension)
 )
 ```
 

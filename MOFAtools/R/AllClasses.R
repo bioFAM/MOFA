@@ -37,6 +37,7 @@ setClass("MOFAmodel",
                  TrainOptions = "list",
                  DataOptions = "list",
                  ModelOptions = "list",
+                 DirOptions = "list",
                  Dimensions = "list",
                  Status = "character")
 )

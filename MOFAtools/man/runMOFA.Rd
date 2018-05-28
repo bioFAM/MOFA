@@ -4,16 +4,10 @@
 \alias{runMOFA}
 \title{train a MOFA model}
 \usage{
-runMOFA(object, DirOptions)
+runMOFA(object)
 }
 \arguments{
 \item{object}{an untrained \code{\link{MOFAmodel}} object}
-
-\item{DirOptions}{list with I/O options, it should contain at least two entries: \cr
-\itemize{
- \item{\strong{dataDir}:}{ input directory where the matrices as stored as text files with row and column names and tab delimiter. }
- \item{\strong{outFile}:}{ output file where the model is going to be stored as an hdf5 file.}
-}}
 }
 \value{
 a trained \code{\link{MOFAmodel}} object
@@ -27,4 +21,13 @@ The interface with Python is done with the \code{\link{reticulate}} package.
 If you have several versions of Python installed and Rstudio is not detecting the correct one, you can change it using
 \code{reticulate::use_python}. \cr
 This module is in beta testing so please, read our FAQ for troubleshooting and report any problems.
+}
+\examples{
+data("CLL_data")
+#create and prepare the MOFaobject before using runMOFA
+MOFAobject <- createMOFAobject(CLL_data)
+MOFAobject <- prepareMOFA(MOFAobject)
+# runMOFA takes some time for model fitting
+\dontrun{
+# MOFAobject <- runMOFA(MOFAobject)}
 }

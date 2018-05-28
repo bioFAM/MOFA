@@ -5,10 +5,14 @@
 
 #' @title prepare a MOFAobject for training
 #' @name prepareMOFA
-#' @description Function to prepare a \code{\link{MOFAmodel}} object for training. It requires defining data, model and training options.
+#' @description Function to prepare a \code{\link{MOFAmodel}} object for training. Here, data, input/output option are specified and data, model and training options can be set.
 #' @param object an untrained \code{\link{MOFAmodel}}
-#' @param DirOptions list with Input/Output options. It must contain a 'dataDir' element where temporary text files will be stored 
-#' and an 'outFile' with hdf5 extension where the final model will be stored.
+#' @param DirOptions list with Input/Output options. If specified it should contain: \cr
+#' \itemize{
+#'  \item{\strong{dataDir}:}{ input directory where the matrices as stored as text files with row and column names and tab delimiter.}
+#'  \item{\strong{outFile}:}{ output file where the trained model is going to be stored as an hdf5 file.}
+#' } 
+#' If NULL temporary directories and files will be used.
 #' @param DataOptions list of DataOptions (see \code{\link{getDefaultDataOptions}} details). 
 #' If NULL, default data options are used.
 #' @param ModelOptions list of ModelOptions (see \code{\link{getDefaultModelOptions}} for details). 
@@ -39,14 +43,22 @@
 #' MOFAobject <- prepareMOFA(MOFAobject, DirOptions, DataOptions, ModelOptions, TrainOptions)
 #' # Train the model
 #' MOFAobject <- runMOFA(MOFAobject, DirOptions)
-prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = NULL, TrainOptions = NULL) {
+prepareMOFA <- function(object, DirOptions = NULL, DataOptions = NULL, ModelOptions = NULL, TrainOptions = NULL) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) 
     stop("'object' has to be an instance of MOFAmodel")
   
-  # Create temporary folder to store data
-  dir.create(DirOptions$dataDir, showWarnings = F)
+  if(is.null(DirOptions)){
+    message("No DirOptions specified, using temporary paths")
+    DirOptions <- list("dataDir" = tempdir(), "outFile" = tempfile())
+    } else {
+      if (!is(DirOptions,"list") & all(c("dataDir","outFile") %in% names(DirOptions)))
+      stop("DirOptions are incorrectly specified, needs to be a list with elements dataDir and outFile.")
+    }
+  # Create folder to store data
+  if(!dir.exists(DirOptions$dataDir)) dir.create(DirOptions$dataDir, showWarnings = F)
+  object@DirOptions <- DirOptions
   
   # Get data options
   message("Checking data options...")

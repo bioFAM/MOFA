@@ -26,12 +26,25 @@
 #' @return Returns a \code{ggplot2} object
 #' @import ggplot2
 #' @export
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotFactorHist(MOFA_CLL, factor=1)
+#' plotFactorHist(MOFA_CLL, factor=1, group_by= "IGHV")
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotFactorHist(MOFA_scMT, factor=2)
+
 plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", alpha = 0.5, binwidth = NULL, showMissing = FALSE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if(length(factor)>1)  stop("Please specify a single factor!")
   if(!factor %in% factorNames(object)) { stop("factor not recognised") }
-  
+
   # Collect relevant data
   N <- object@Dimensions[["N"]]
   Z <- getFactors(object, factors = factor, as.data.frame = TRUE)
@@ -117,7 +130,19 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
 #' @return Returns a \code{ggplot2} object
 #' @import ggplot2 ggbeeswarm RColorBrewer grDevices
 #' @export
-plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = "", showMissing = FALSE) {
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotFactorBeeswarm(MOFA_CLL, factor=1:3)
+#' plotFactorBeeswarm(MOFA_CLL, factor=1:2, color_by= "IGHV")
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotFactorBeeswarm(MOFA_scMT)
+
+plotFactorBeeswarm <- function(object, factors="all", color_by = NULL, name_color = "", showMissing = FALSE) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
@@ -227,6 +252,18 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, name_color = ""
 #' @return Returns a \code{ggplot2} object
 #' @import ggplot2
 #' @export
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotFactorScatter(MOFA_CLL, factors=1:2)
+#' plotFactorScatter(MOFA_CLL, factors=1:2, color_by= "IGHV", shape_by="trisomy12", showMissing=FALSE)
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotFactorScatter(MOFA_scMT, factors=c(1,3))
+
 plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL, name_color="",
                          name_shape="", showMissing = TRUE) {
   
@@ -361,6 +398,18 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
 #' @return \code{ggplot2} object
 #' @import ggplot2
 #' @export
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotFactorScatters(MOFA_CLL, factors=1:3)
+#' plotFactorScatters(MOFA_CLL, factors=1:3, color_by= "IGHV")
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotFactorScatters(MOFA_scMT)
+
 plotFactorScatters <- function(object, factors = "all", showMissing=TRUE, 
                          color_by=NULL, name_color="",  
                          shape_by=NULL, name_shape="") {
@@ -525,6 +574,17 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
 #' @return Returns a symmetric matrix with the correlation coefficient between every pair of factors.
 #' @importFrom corrplot corrplot
 #' @export
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotFactorCor(MOFA_CLL)
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotFactorCor(MOFA_scMT)
+
 plotFactorCor <- function(object, method = "pearson", ...) {
   
   # Sanity checks

@@ -39,3 +39,15 @@ This method generates a histogram of the sample values in a given latent factor.
 Similar functions are \code{\link{plotFactorScatter}} for doing scatter plots between pairs of factors 
 and \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots of single factors.
 }
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+plotFactorHist(MOFA_CLL, factor=1)
+plotFactorHist(MOFA_CLL, factor=1, group_by= "IGHV")
+
+# Example on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+plotFactorHist(MOFA_scMT, factor=2)
+}

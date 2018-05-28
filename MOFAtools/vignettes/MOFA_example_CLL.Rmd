@@ -119,7 +119,7 @@ MOFAobject <- prepareMOFA(
 ## Run MOFA
 This step can take some time (around 20 min with default parameters), for illustration we provide an existing trained model
 ```{r, eval=FALSE}
-MOFAobject <- runMOFA(MOFAobject, DirOptions)
+MOFAobject <- runMOFA(MOFAobject)
 ```
 
 ```{r}

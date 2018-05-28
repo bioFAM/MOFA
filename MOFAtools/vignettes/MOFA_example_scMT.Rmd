@@ -53,7 +53,7 @@ First, we define input and output options:
 ```{r}
 DirOptions <- list(
   "dataDir" = tempdir(), # Directory to store the input matrices as .txt files, it can be a temporary folder
-  "outFile" = "/Users/ricard/scMT_model.hdf5" # Output file of the model (use hdf5 extension)
+  "outFile" = tempfile() # Output file of the model (use hdf5 extension)
 )
 ```
 

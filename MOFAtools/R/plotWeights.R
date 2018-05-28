@@ -19,6 +19,18 @@
 #' @param ... extra arguments passed to \code{\link[pheatmap]{pheatmap}}.
 #' @importFrom pheatmap pheatmap
 #' @export
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotWeightsHeatmap(MOFA_CLL, view="Mutations")
+#' plotWeightsHeatmap(MOFA_CLL, view="Mutations", factors=1:3)
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotWeightsHeatmap(MOFA_scMT, view="RNA expression")
+
 plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", threshold = 0, ...) {
   
   # Sanity checks
@@ -85,6 +97,21 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
 #' Therefore, for interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
 #' @import ggplot2 ggrepel
 #' @export
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotWeights(MOFA_CLL, view="Mutations", factor=1)
+#'plotWeights(MOFA_CLL, view="Mutations", factor=1,
+#'   manual=list("IGHV", c("TP53", "del17p13")), color_manual=c("blue", "red"))
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotWeights(MOFA_scMT, view="RNA expression", factor=1)
+#' plotWeights(MOFA_scMT, view="RNA expression", factor=1, nfeatures=15)
+
+
 plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = NULL, color_manual = NULL, scale = TRUE) {
   
   # Sanity checks
@@ -187,14 +214,14 @@ plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = 
 
 #' @title Plot top weights
 #' @name plotTopWeights
-#' @description Plot top weights for a given latent in a given view.
+#' @description Plot top weights for a given latent factor in a given view.
 #' @param object a trained \code{\link{MOFAmodel}} object.
 #' @param view character vector with the view name, or numeric vector with the index of the view to use.
 #' @param factor character vector with the factor name, or numeric vector with the index of the factor to use.
 #' @param nfeatures number of top features to display.
-#' Default is 10
+#' Default is 10.
 #' @param abs logical indicating whether to use the absolute value of the weights.
-#' Default is TRUE
+#' Default is TRUE.
 #' @param sign can be 'positive', 'negative' or 'both' to show only positive, negative or all weigths, respectively.
 #' Default is 'both'.
 #' @param scale logical indicating whether to scale all loadings from 0 to 1.
@@ -206,6 +233,20 @@ plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = 
 #' @import ggplot2
 #' @return Returns a \code{ggplot2} object
 #' @export
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3)
+#' plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3, sign = "positive")
+#' plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3, sign = "negative")
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotTopWeights(MOFA_scMT, view="RNA expression", factor=1)
+
+
 plotTopWeights <- function(object, view, factor, nfeatures = 10, abs = TRUE, scale = TRUE, sign = "both") {
   
   # Sanity checks

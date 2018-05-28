@@ -15,10 +15,10 @@ plotTopWeights(object, view, factor, nfeatures = 10, abs = TRUE,
 \item{factor}{character vector with the factor name, or numeric vector with the index of the factor to use.}
 
 \item{nfeatures}{number of top features to display.
-Default is 10}
+Default is 10.}
 
 \item{abs}{logical indicating whether to use the absolute value of the weights.
-Default is TRUE}
+Default is TRUE.}
 
 \item{scale}{logical indicating whether to scale all loadings from 0 to 1.
 Default is TRUE.}
@@ -30,11 +30,24 @@ Default is 'both'.}
 Returns a \code{ggplot2} object
 }
 \description{
-Plot top weights for a given latent in a given view.
+Plot top weights for a given latent factor in a given view.
 }
 \details{
 An important step to annotate factors is to visualise the corresponding feature loadings. \cr
 This function displays the top features with highest loading whereas the function \code{\link{plotTopWeights}} plots all loadings for a given latent factor and view. \cr
 Importantly, the weights of the features within a view have relative values and they should not be interpreted in an absolute scale.
 Therefore, for interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
+}
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3)
+plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3, sign = "positive")
+plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3, sign = "negative")
+
+# Example on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+plotTopWeights(MOFA_scMT, view="RNA expression", factor=1)
 }

@@ -31,7 +31,7 @@
 #' MOFA_scMT <- loadModel(filepath)
 #' plotWeightsHeatmap(MOFA_scMT, view="RNA expression")
 
-plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", threshold = 0, ...) {
+plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", threshold = 0, breaks=NA, color=NULL, ...) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
@@ -58,24 +58,25 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
   
 
   # Set title
-  # if (is.null(main)) { main <- paste("Loadings of Latent Factors on", view) }
-  
-  # set colors and breaks if not specified
-  # if (is.null(color) & is.null(breaks)) {
-  #   palLength <- 100
-  #   minV <- min(W)
-  #   maxV <- max(W)
-  #   color <- colorRampPalette(colors=c("black", "blue", "white", "orange","red"))(palLength)
-  #   breaks <- c(seq(minV, 0, length.out=ceiling(palLength/2) + 1), 
-  #               seq(maxV/palLength,maxV, length.out=floor(palLength/2)))
-  # }
+  if (is.null(main)) { main <- paste("Loadings of Latent Factors on", view) }
   
   # apply thresholding of loadings
   W <- W[!apply(W,1,function(r) all(abs(r)<threshold)),]
   W <- W[,!apply(W,2,function(r) all(abs(r)<threshold))]
 
+  #if no breaks specified center colorscale to white at zero
+  if(is.na(breaks) & is.null(color)){
+      minW <- min(W)
+      maxW <- max(W)
+      paletteLength <- 100
+      colors <- c("black", "blue", "white", "orange","red")
+      color <- colorRampPalette(colors)(paletteLength)
+      breaks <- c(seq(minW, 0, length.out=ceiling(paletteLength/2) + 1), 
+                  seq(maxW/paletteLength,maxW, length.out=floor(paletteLength/2)))
+  }
+
   # Plot heatmap
-  pheatmap::pheatmap(t(W), ...)
+  pheatmap(t(W), color=color, breaks=breaks, ...)
 }
 
 

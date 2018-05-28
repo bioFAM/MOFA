@@ -5,7 +5,7 @@
 \title{Scatterplots of feature values against latent factors}
 \usage{
 plotDataScatter(object, view, factor, features = 10, color_by = NULL,
-  name_color = "", shape_by = NULL, name_shape = "")
+  name_color = "", shape_by = NULL, name_shape = "", showMissing = TRUE)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
@@ -41,4 +41,19 @@ which show you which features drive the heterogeneity of each factor.
 However, one might also be interested in visualising the direct relationship between features and factors, rather than looking at "abstract" weights. \cr
 This function generates scatterplots of features against factors, so that you can observe the association between them. \cr
 A similar function for doing heatmaps rather than scatterplots is \code{\link{plotDataHeatmap}}.
+}
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+# plot scatter for top 5 features on factor 1 in the view mRNA:
+plotDataScatter(MOFA_CLL, view="mRNA", factor=1, features=5)
+# coloring by the IGHV status (features in Mutations view), not showing samples with missing IGHV:
+plotDataScatter(MOFA_CLL, view="mRNA", factor=1, features=5, color_by="IGHV", showMissing=FALSE)
+
+# Example on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+# plot scatter for top 10 features on factor 2 in the view RNA expression:
+plotDataScatter(MOFA_scMT, view="RNA expression", factor=2)
 }

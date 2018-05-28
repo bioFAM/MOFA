@@ -4,7 +4,7 @@
 \alias{trainCurveELBO}
 \title{Training curve for Evidence Lower Bound (ELBO)}
 \usage{
-trainCurveELBO(object, log = F)
+trainCurveELBO(object, log = FALSE)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
@@ -17,4 +17,16 @@ The ELBO is supposed to increase monotonically up to convergence, but it can dec
 For more details read the supplementary methods
 The frequency of ELBO computation as well as the convergence criteria are defined as hyperparameters in \code{\link{prepareMOFA}}. \cr
 All Training statistics, including the ELBO, can be fetch from the TrainStats slot of \code{\link{MOFAmodel}} .
+}
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+trainCurveELBO(MOFA_CLL)
+trainCurveELBO(MOFA_CLL, log= TRUE)
+
+# Example on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+trainCurveELBO(MOFA_scMT)
 }

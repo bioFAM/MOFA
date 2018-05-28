@@ -183,7 +183,7 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL, name_colo
   Z$color_by <- color_by[Z$sample]
   
   # Remove samples with missing values
-  if (showMissing==F) {
+  if (!showMissing) {
     Z <- Z[!(is.na(color_by) | is.nan(color_by) | color_by=="NaN"),]
   }
   

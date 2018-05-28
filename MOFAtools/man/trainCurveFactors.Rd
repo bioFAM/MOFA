@@ -15,3 +15,13 @@ This allows the model to automatically infer the dimensionality of the latent sp
 The corresponding hyperparameters are defined in \code{\link{prepareMOFA}}. \cr
 All training statistics, including the number of active factors, can be fetch from the TrainStats slot of \code{\link{MOFAmodel}} .
 }
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+trainCurveFactors(MOFA_CLL)
+# Example on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+trainCurveFactors(MOFA_scMT)
+}

@@ -27,20 +27,28 @@
 #' A similar function for doing scatterplots rather than heatmaps is \code{\link{plotDataScatter}}.
 #' @import pheatmap
 #' @examples
-#' # Load example of MOFA model
-#' model <- loadModel(system.file("extdata", "CLL_model.hdf5", package = "MOFAtools"))
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' # plot top 30 features on factor 1 in the view mRNA:
+#' plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30)
+#' # without column- and rownames:
+#' plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30, show_colnames = FALSE, show_rownames = FALSE)
 #' 
-#' # Plot top 50 features for factor 1 in the mRNA view
-#' plotDataHeatmap(model, "mRNA", 1, 50)
-#' 
-#' # Plot top 50 features for factor 1 in the mRNA view, do not show feature or row names
-#' plotDataHeatmap(model, "mRNA", 1, 50, show_colnames = FALSE, show_rownames = FALSE) 
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' # plot top 50 features on factor 2 in the view RNA expression:
+#' plotDataHeatmap(MOFA_scMT, view="RNA expression", factor=2)
+
 #' @export
+
 plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights = FALSE, transpose = FALSE, imputed = FALSE, ...) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(view %in% viewNames(object))
+  stopifnot(length(factor)==1)
 
   if(is.numeric(factor)) {
       if (object@ModelOptions$learnIntercept == T) factor <- factorNames(object)[factor+1]
@@ -124,9 +132,24 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
 #' @import ggplot2
 #' @import dplyr
 #' @export
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' # plot scatter for top 5 features on factor 1 in the view mRNA:
+#' plotDataScatter(MOFA_CLL, view="mRNA", factor=1, features=5)
+#' # coloring by the IGHV status (features in Mutations view), not showing samples with missing IGHV:
+#' plotDataScatter(MOFA_CLL, view="mRNA", factor=1, features=5, color_by="IGHV", showMissing=FALSE)
+#' 
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' # plot scatter for top 10 features on factor 2 in the view RNA expression:
+#' plotDataScatter(MOFA_scMT, view="RNA expression", factor=2)
+
 plotDataScatter <- function(object, view, factor, features = 10,
                             color_by=NULL, name_color="",  
-                            shape_by=NULL, name_shape="") {
+                            shape_by=NULL, name_shape="", showMissing = TRUE) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
@@ -184,7 +207,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
     color_by <- rep(TRUE,N)
     colorLegend <- F
   }
-  
+
   # Set shape
   shapeLegend <- T
   if (!is.null(shape_by)) {
@@ -217,13 +240,16 @@ plotDataScatter <- function(object, view, factor, features = 10,
   df1 <- data.frame(sample=names(Z), x = Z, shape_by = shape_by, color_by = color_by, stringsAsFactors=F)
   df2 <- getTrainData(object, views=view, features = list(features), as.data.frame=T)
   df <- dplyr::left_join(df1,df2, by="sample")
-  
-  #remove values missing color or shape annotation
-  # if(!showMissing) df <- df[!(is.nan(df$shape_by) & !(is.nan(df$color_by))]
-  
+    # Remove samples with missing values
+  if (!showMissing) {
+    df <- df[!(is.na(df$shape_by) | is.na(df$color_by)),]  
+  }
+  if(length(unique(df$color_by)) < 5) df$color_by <- as.factor(df$color_by)
+
   # Generate plot
   p <- ggplot(df, aes_string(x = "x", y = "value", color = "color_by", shape = "shape_by")) + 
     geom_point() +
+    xlab(paste0("Latent factor ", factor)) + ylab("Feature value") +
     # ggbeeswarm::geom_quasirandom() +
     stat_smooth(method="lm", color="blue", alpha=0.5) +
     facet_wrap(~feature, scales="free_y") +
@@ -263,6 +289,19 @@ plotDataScatter <- function(object, view, factor, features = 10,
 #' @import dplyr
 #' @import reshape2
 #' @export
+
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotTilesData(MOFA_CLL)
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' # using customized colors:
+#' plotTilesData(MOFA_scMT, colors= c("blue", "red", "red", "red"))
+
 plotTilesData <- function(object, colors = NULL) {
   
   # Sanity checks
@@ -302,7 +341,7 @@ plotTilesData <- function(object, colors = NULL) {
   molten_ovw$ptotal <- paste("d=", sapply(TrainData, nrow)[as.character(molten_ovw$view) ], sep="")
     
   # Define y-axis label
-  molten_ovw <-  mutate(molten_ovw,view_label = paste(view, ptotal, sep="\n"))
+  molten_ovw <-  mutate(molten_ovw, view_label = paste(view, ptotal, sep="\n"))
   
   # Plot
   p <- ggplot(molten_ovw, aes(x=sample, y=view_label, fill=combi)) +

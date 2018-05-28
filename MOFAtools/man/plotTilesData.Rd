@@ -19,3 +19,15 @@ This function is helpful to get an overview of the missing value structure of th
 It shows the number of samples, the number of views, the number of features, and the structure of missing values.
 In particular, it is useful to visualise incomplete data sets, where some samples are missing subsets of assays.
 }
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+plotTilesData(MOFA_CLL)
+
+# Example on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+# using customized colors:
+plotTilesData(MOFA_scMT, colors= c("blue", "red", "red", "red"))
+}

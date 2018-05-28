@@ -21,3 +21,14 @@ Method to plot variance explained (R-squared) by the MOFA model for each view an
 As a measure of variance explained for gaussian data we adopt the coefficient of determination (R2). \cr
 For details on the computation see the help of the \code{\link{calculateVarianceExplained}} function
 }
+\examples{
+# Using an existing trained model on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFAobject <- loadModel(filepath)
+plotVarianceExplained(MOFAobject)
+
+# Using an existing trained model on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFAobject <- loadModel(filepath)
+plotVarianceExplained(MOFAobject)
+}

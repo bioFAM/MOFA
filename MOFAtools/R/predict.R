@@ -22,6 +22,25 @@
 #' These representation can be used to do predictions using the equation Y = WX. This is the key step underlying imputation, see \code{\link{imputeMissing}} and Methods section of the article.
 #' @return Returns a list with data predictions, each element corresponding to a view.
 #' @export
+#' @examples 
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' # predict drug response data based on all factors
+#' predict(MOFA_CLL, view="Drugs")
+#' # predict all views based on all factors
+#' predict(MOFA_CLL)
+#' # predict mutation data based on all factors returning Bernoulli probabilities
+#' predict(MOFA_CLL, view="Mutations", type="response")
+#' # predict mutation data based on all factors returning binary classes
+#' predict(MOFA_CLL, view="Mutations", type="inRange")
+#' 
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' # predict all views based on all factors
+#' predict(MOFA_scMT)
+#' 
 predict <- function(object, views = "all", factors = "all", 
                     type = c("inRange","response", "link"), 
                     include_intercept = TRUE) {

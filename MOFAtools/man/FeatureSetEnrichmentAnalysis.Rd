@@ -48,3 +48,18 @@ Method to perform feature set enrichment analysis. Here we use a slightly modifi
 \details{
 TO-DO
 }
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+# do FeatureSetEnrichmentAnalysis on mRNA data for all factors using the Reactome gene sets
+data("reactomeGS")
+fsea.out <- FeatureSetEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
+# results can be visualized using one of the following plotting functions:
+# overview of enriched pathways per factor at an FDR of 1\%
+Heatmap_FeatureSetEnrichmentAnalysis(fsea.out, alpha=0.01)
+# overview of number of enriched pathways per factor at an FDR of 1\%
+Barplot_FeatureSetEnrichmentAnalysis(fsea.out, alpha=0.01)
+# e.g. top 10 enriched pathwyas on factor 5:
+LinePlot_FeatureSetEnrichmentAnalysis(fsea.out, factor=5,  max.pathways=10)
+}

@@ -28,7 +28,7 @@
 #' # Example on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 #' MOFA_CLL <- loadModel(filepath)
-#' # do FeatureSetEnrichmentAnalysis on mRNA data for all factors using the Reactome gene sets
+#' # perform FeatureSetEnrichmentAnalysis on mRNA data for all factors using the Reactome gene sets
 #' data("reactomeGS")
 #' fsea.out <- FeatureSetEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
 #' # results can be visualized using one of the following plotting functions:
@@ -175,7 +175,6 @@ FeatureSetEnrichmentAnalysis <- function(object, view, feature.sets, factors = "
 #' @param threshold p.value threshold to filter out feature sets
 #' @param max.pathways maximum number of enriched pathways to display
 #' @param adjust use multiple testing correction
-#' @details fill this
 #' @return nothing
 #' @import ggplot2
 #' @export
@@ -183,7 +182,7 @@ FeatureSetEnrichmentAnalysis <- function(object, view, feature.sets, factors = "
 #' # Example on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 #' MOFA_CLL <- loadModel(filepath)
-#' # do FeatureSetEnrichmentAnalysis on mRNA data for all factors using the Reactome gene sets
+#' # perform FeatureSetEnrichmentAnalysis on mRNA data for all factors using the Reactome gene sets
 #' data("reactomeGS")
 #' fsea.out <- FeatureSetEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
 #' # top 10 enriched pathwyas on factor 5:
@@ -244,12 +243,11 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(fsea.out, factor, threshold=0.
 
 #' @title Heatmap of Feature Set Enrichment Analysis results
 #' @name Heatmap_FeatureSetEnrichmentAnalysis
-#' @description this method generates a heatmap with the adjusted p.values that result from the the feature set enrichment analysis. Rows are feature sets and columns are factors.
+#' @description This method generates a heatmap with the adjusted p.values that result from the the feature set enrichment analysis. Rows are feature sets and columns are factors.
 #' @param fsea.out output of \link{FeatureSetEnrichmentAnalysis} function
 #' @param alpha FDR threshold to filter out unsignificant feature sets which are not represented in the heatmap. Default is 0.05.
 #' @param log boolean indicating whether to plot the log of the p.values.
 #' @param ... extra arguments to be passed to \link{pheatmap} function
-#' @details fill this
 #' @import pheatmap
 #' @importFrom grDevices colorRampPalette
 #' @export
@@ -257,7 +255,7 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(fsea.out, factor, threshold=0.
 #' # Example on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 #' MOFA_CLL <- loadModel(filepath)
-#' # do FeatureSetEnrichmentAnalysis on mRNA data for all factors using the Reactome gene sets
+#' # perform FeatureSetEnrichmentAnalysis on mRNA data for all factors using the Reactome gene sets
 #' data("reactomeGS")
 #' fsea.out <- FeatureSetEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
 #' # overview of enriched pathways per factor at an FDR of 1%
@@ -288,7 +286,6 @@ Heatmap_FeatureSetEnrichmentAnalysis <- function(fsea.out, alpha = 0.05, log = T
 #' @description this method generates a barplot with the number of enriched feature sets per factor
 #' @param fsea.out output of \link{FeatureSetEnrichmentAnalysis} function
 #' @param alpha FDR threshold for calling enriched feature sets. Default is 0.05
-#' @details TO-DO: IT NEEDS A BIT MORE WORK ON THE THEME
 #' @return \link{ggplot} object
 #' @import ggplot2
 #' @importFrom grDevices colorRampPalette
@@ -297,7 +294,7 @@ Heatmap_FeatureSetEnrichmentAnalysis <- function(fsea.out, alpha = 0.05, log = T
 #' # Example on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 #' MOFA_CLL <- loadModel(filepath)
-#' # do FeatureSetEnrichmentAnalysis on mRNA data for all factors using the Reactome gene sets
+#' # perform FeatureSetEnrichmentAnalysis on mRNA data for all factors using the Reactome gene sets
 #' data("reactomeGS")
 #' fsea.out <- FeatureSetEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
 #' # overview of number of enriched pathways per factor at an FDR of 1%
@@ -309,22 +306,24 @@ Barplot_FeatureSetEnrichmentAnalysis <- function(fsea.out, alpha = 0.05) {
   pathwayList <- apply(fsea.out$pval.adj, 2, function(f) names(f)[f<=alpha])
   pathwaysDF <- reshape2::melt(pathwayList, value.name="pathway")
   colnames(pathwaysDF) <- c("pathway", "factor")
+  pathwaysDF <- dplyr::mutate(pathwaysDF, factor= factor(factor, levels = colnames(fsea.out$pval)))
   
   # Count enriched gene sets per pathway
-  # ERROR. no visible binding for global variable ‘n_enriched’
-  pathwaysSummary <- dplyr::group_by(pathwaysDF,factor)
-  pathwaysSummary <- dplyr::summarise(pathwaysSummary, n_enriched=length(pathway)) 
-  pathwaysSummary <- rbind(pathwaysSummary, data.frame(factor = colnames(fsea.out$pval)[!colnames(fsea.out$pval) %in% pathwaysSummary$factor],
-                                                     n_enriched=0))
+  n_enriched <- table(pathwaysDF$factor)
+  pathwaysSummary <- data.frame(n_enriched = as.numeric(n_enriched),
+                                factor = factor(names(n_enriched), levels = colnames(fsea.out$pval)))
   
-  # Generate plot (TO-DO: IT NEEDS A BIT MORE THEME)
+  # Generate plot
   ggplot(pathwaysSummary, aes(x=factor, y=n_enriched)) +
     geom_bar(stat="identity") + coord_flip() + 
-    ylab(paste0("Enriched gene sets at FDR", alpha*100,"%")) +
+    ylab(paste0("Enriched gene sets at FDR ", alpha*100,"%")) +
     xlab("Factor") + 
     theme(
-      legend.position = "bottom"
-    )
+      legend.position = "bottom",
+      axis.text.y = element_text(size=rel(1.2), hjust=1, color='black'),
+      axis.text.x = element_text(size=rel(1.2), vjust=0.5, color='black'),
+      panel.background = element_blank()
+      )
 }
 
 

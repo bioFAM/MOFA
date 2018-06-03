@@ -53,7 +53,7 @@ First, we define input and output options:
 ```{r}
 DirOptions <- list(
   "dataDir" = tempdir(), # Directory to store the input matrices as .txt files, it can be a temporary folder
-  "outFile" = "/Users/ricard/scMT_model.hdf5" # Output file of the model (use hdf5 extension)
+  "outFile" = tempfile() # Output file of the model (use hdf5 extension)
 )
 ```
 
@@ -97,7 +97,7 @@ MOFAobject <- prepareMOFA(
 ## Run MOFA
 Now we are ready to train the `MOFAobject`, which is done with the function `runMOFA`. This step can take some time (around 20 min with default parameters). For illustration we provide an existing trained `MOFAobject`
 ```{r, eval=FALSE}
-MOFAobject <- runMOFA(MOFAobject, DirOptions, mofaPath = "/Users/ricard/anaconda2/bin/mofa")
+MOFAobject <- runMOFA(MOFAobject)
 ```
 
 ```{r}
@@ -320,13 +320,13 @@ imputedMethylation[1:5,1:5]
 Samples can be clustered according to their values on the latent factors using the `clusterSamples` function.
 ```{r, message=FALSE}
 # Hierarchical clustering with K=2 using Factor 1
-h <- clusterSamples(MOFAobject, k=2, factors=1)
+clusters <- clusterSamples(MOFAobject, k=2, factors=1)
 
 # Scatterplot colored by the predicted cluster labels and shaped by the true culture conditions
 plotFactorScatter(
   object = MOFAobject,
   factors = 1:2,
-  color_by = h$cluster,
+  color_by = clusters,
   shape_by = "culture"
 )
 ```

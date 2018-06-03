@@ -12,22 +12,25 @@
 #' \code{reticulate::use_python}. \cr
 #' This module is in beta testing so please, read our FAQ for troubleshooting and report any problems.
 #' @param object an untrained \code{\link{MOFAmodel}} object
-#' @param DirOptions list with I/O options, it should contain at least two entries: \cr
-#' \itemize{
-#'  \item{\strong{dataDir}:}{ input directory where the matrices as stored as text files with row and column names and tab delimiter. }
-#'  \item{\strong{outFile}:}{ output file where the model is going to be stored as an hdf5 file.}
-#' }
 #' @return a trained \code{\link{MOFAmodel}} object
 #' @import reticulate
 #' @export
-runMOFA <- function(object, DirOptions) {
+
+#' @examples
+#' data("CLL_data")
+#' #create and prepare the MOFaobject before using runMOFA
+#' MOFAobject <- createMOFAobject(CLL_data)
+#' MOFAobject <- prepareMOFA(MOFAobject)
+#' # runMOFA takes some time for model fitting
+#' \dontrun{
+#' # MOFAobject <- runMOFA(MOFAobject)}
+
+runMOFA <- function(object) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) 
     stop("'object' has to be an instance of MOFAmodel")
-  
-  stopifnot(all(c("dataDir","outFile") %in% names(DirOptions)))
-  
+    
   if (object@Status=="trained") 
     stop("The model is already trained! If you want to retrain, create a new untrained MOFAmodel")
   
@@ -40,7 +43,7 @@ runMOFA <- function(object, DirOptions) {
     }
   }
   
-  if (file.exists(DirOptions$outFile))
+  if (file.exists(object@DirOptions$outFile))
     message("Warning: Output file already exists, it will be replaced")
   
   # Initiate reticulate
@@ -49,8 +52,8 @@ runMOFA <- function(object, DirOptions) {
   
   # Pass data options
   mofa_entrypoint$set_data_options(
-    inFiles     = paste0(DirOptions$dataDir, "/", viewNames(object), ".txt"), 
-    outFile     = DirOptions$outFile, 
+    inFiles     = paste0(object@DirOptions$dataDir, "/", viewNames(object), ".txt"), 
+    outFile     = object@DirOptions$outFile, 
     views       = viewNames(object), 
     delimiter   = "\t", 
     header_cols = TRUE, 
@@ -98,7 +101,7 @@ runMOFA <- function(object, DirOptions) {
   mofa_entrypoint$train_model()
   
   # Load the trained model
-  object <- loadModel(DirOptions$outFile, object)
+  object <- loadModel(object@DirOptions$outFile, object)
   
   return(object)
 }

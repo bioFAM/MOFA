@@ -27,6 +27,26 @@ or using multiple factors, where multiple sources of variation are aggregated. \
 Importantly, this type of clustering is not weighted and does not take into account the different importance of the latent factors.
 }
 \details{
-In some cases, due to model technicalities, samples can have missing values in the latent factor space. 
-In such a case, these samples are currently ignored in the clustering procedure.
+In some cases, samples can have missing values in the latent factor space. 
+This happens if a factors is active only in views where these samples have no data.
+In such a case, these samples are currently ignored in the clustering procedure and NAs are returned.
+}
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+# cluster samples based into 3 groups based on all factors
+clusterSamples(MOFA_CLL, k=3, factors="all")
+# cluster samples based into 2 groups based on factor 1
+clusters <- clusterSamples(MOFA_CLL, k=2, factors=1)
+# cluster can be visualized for example on the factors values:
+plotFactorBeeswarm(MOFA_CLL, factor=1, color_by=clusters)
+
+# Example on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+# cluster samples based into 2 groups based on all factor 1 and 2
+clusters <- clusterSamples(MOFA_CLL, k=2, factors=1:2)
+# cluster can be visualized for example on the factors values:
+plotFactorScatter(MOFA_CLL, factors=1:2, color_by=clusters)
 }

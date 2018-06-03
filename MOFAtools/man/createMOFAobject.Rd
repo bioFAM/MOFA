@@ -10,7 +10,7 @@ createMOFAobject(data)
 \item{data}{either a \code{MultiAssayExperiment} or a list of matrices with features as rows and samples as columns.}
 }
 \value{
-Returns an untrained \code{\link{MOFAmodel}} object
+Returns an untrained \code{\link{MOFAmodel}} object. This object can then be passed to \code{\link{prepareMOFA}} and \code{\link{runMOFA}} for training.
 }
 \description{
 Method to initialize a \code{\link{MOFAmodel}} object with a multi-omics data set.
@@ -20,4 +20,23 @@ If the multi-omics data is provided as a list of matrices, please make sure that
 are stored as rows and samples are stored as columns. \cr 
 If the matrices have sample names, we will use them to match the different matrices, filling the corresponding missing values. \cr
 If matrices have no column names, all matrices must have the same number of columns, and you are responsible for filling any missing values.
+}
+\examples{
+# Option 1: Create a MOFAobject from a list of matrices
+with features in rows and samples in columns
+data("CLL_data")
+MOFAobject <- createMOFAobject(CLL_data)
+
+# Option 2: Create a MOFAobject from a MultiAssayExperiment
+library(MultiAssayExperiment)
+data("CLL_data")
+data("CLL_covariates")
+mae_CLL <- MultiAssayExperiment(experiments = CLL_data, colData = CLL_covariates)
+MOFAobject <- createMOFAobject(mae_CLL)
+
+# next, this object can be passer to prepareMOFA and runMOFA
+# (training in runMOFA can take some time):
+\dontrun{
+# MOFAobject <- prepareMOFA(MOFAobject)
+# MOFAobject <- runMOFA(MOFAobject)}
 }

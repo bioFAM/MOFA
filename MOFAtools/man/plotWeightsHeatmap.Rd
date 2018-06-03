@@ -28,3 +28,15 @@ Function to visualize the loadings for a given set of factors in a given view. \
 This is useful to visualize the overall pattern of the weights but not to individually characterise the factors. \cr
 To inspect the loadings of individual factors, use the functions \code{\link{plotWeights}} and \code{\link{plotTopWeights}}
 }
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+plotWeightsHeatmap(MOFA_CLL, view="Mutations")
+plotWeightsHeatmap(MOFA_CLL, view="Mutations", factors=1:3)
+
+# Example on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+plotWeightsHeatmap(MOFA_scMT, view="RNA expression")
+}

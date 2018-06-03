@@ -13,6 +13,16 @@
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @import ggplot2 scales
 #' @export
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' trainCurveFactors(MOFA_CLL)
+
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' trainCurveFactors(MOFA_scMT)
 
 trainCurveFactors <- function(object) {
   
@@ -61,8 +71,19 @@ trainCurveFactors <- function(object) {
 #' All Training statistics, including the ELBO, can be fetch from the TrainStats slot of \code{\link{MOFAmodel}} .
 #' @import ggplot2 scales
 #' @export
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' trainCurveELBO(MOFA_CLL)
+#' trainCurveELBO(MOFA_CLL, log= TRUE)
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' trainCurveELBO(MOFA_scMT)
 
-trainCurveELBO <- function(object, log = F) {
+trainCurveELBO <- function(object, log = FALSE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") { stop("'object' has to be an instance of MOFAmodel") }

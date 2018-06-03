@@ -19,7 +19,19 @@
 #' @param ... extra arguments passed to \code{\link[pheatmap]{pheatmap}}.
 #' @importFrom pheatmap pheatmap
 #' @export
-plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", threshold = 0, ...) {
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotWeightsHeatmap(MOFA_CLL, view="Mutations")
+#' plotWeightsHeatmap(MOFA_CLL, view="Mutations", factors=1:3)
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotWeightsHeatmap(MOFA_scMT, view="RNA expression")
+
+plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", threshold = 0, breaks=NA, color=NULL, ...) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
@@ -50,24 +62,25 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
   
 
   # Set title
-  # if (is.null(main)) { main <- paste("Loadings of Latent Factors on", view) }
-  
-  # set colors and breaks if not specified
-  # if (is.null(color) & is.null(breaks)) {
-  #   palLength <- 100
-  #   minV <- min(W)
-  #   maxV <- max(W)
-  #   color <- colorRampPalette(colors=c("black", "blue", "white", "orange","red"))(palLength)
-  #   breaks <- c(seq(minV, 0, length.out=ceiling(palLength/2) + 1), 
-  #               seq(maxV/palLength,maxV, length.out=floor(palLength/2)))
-  # }
+  if (is.null(main)) { main <- paste("Loadings of Latent Factors on", view) }
   
   # apply thresholding of loadings
   W <- W[!apply(W,1,function(r) all(abs(r)<threshold)),]
   W <- W[,!apply(W,2,function(r) all(abs(r)<threshold))]
 
+  #if no breaks specified center colorscale to white at zero
+  if(is.na(breaks) & is.null(color)){
+      minW <- min(W)
+      maxW <- max(W)
+      paletteLength <- 100
+      colors <- c("black", "blue", "white", "orange","red")
+      color <- colorRampPalette(colors)(paletteLength)
+      breaks <- c(seq(minW, 0, length.out=ceiling(paletteLength/2) + 1), 
+                  seq(maxW/paletteLength,maxW, length.out=floor(paletteLength/2)))
+  }
+
   # Plot heatmap
-  pheatmap::pheatmap(t(W), ...)
+  pheatmap(t(W), color=color, breaks=breaks, ...)
 }
 
 
@@ -89,6 +102,21 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
 #' For interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
 #' @import ggplot2 ggrepel
 #' @export
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotWeights(MOFA_CLL, view="Mutations", factor=1)
+#'plotWeights(MOFA_CLL, view="Mutations", factor=1,
+#'   manual=list("IGHV", c("TP53", "del17p13")), color_manual=c("blue", "red"))
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotWeights(MOFA_scMT, view="RNA expression", factor=1)
+#' plotWeights(MOFA_scMT, view="RNA expression", factor=1, nfeatures=15)
+
+
 plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = NULL, color_manual = NULL, scale = TRUE) {
   
   # Sanity checks
@@ -200,7 +228,7 @@ plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = 
 
 #' @title Plot top weights
 #' @name plotTopWeights
-#' @description Plot top weights for a given latent in a given view.
+#' @description Plot top weights for a given latent factor in a given view.
 #' @param object a trained \code{\link{MOFAmodel}} object.
 #' @param view character vector with the view name, or numeric vector with the index of the view to use.
 #' @param factor character vector with the factor name, or numeric vector with the index of the factor to use.
@@ -219,6 +247,20 @@ plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = 
 #' @import ggplot2
 #' @return Returns a \code{ggplot2} object
 #' @export
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3)
+#' plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3, sign = "positive")
+#' plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3, sign = "negative")
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotTopWeights(MOFA_scMT, view="RNA expression", factor=1)
+
+
 plotTopWeights <- function(object, view, factor, nfeatures = 10, abs = TRUE, scale = TRUE, sign = "both") {
   
   # Sanity checks

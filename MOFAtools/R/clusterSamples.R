@@ -15,11 +15,31 @@
 #' @param factors character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. 
 #' Default is 'all'
 #' @param ... extra arguments  passed to \code{\link{kmeans}}
-#' @details In some cases, due to model technicalities, samples can have missing values in the latent factor space. 
-#' In such a case, these samples are currently ignored in the clustering procedure.
+#' @details In some cases, samples can have missing values in the latent factor space. 
+#' This happens if a factors is active only in views where these samples have no data.
+#' In such a case, these samples are currently ignored in the clustering procedure and NAs are returned.
 #' @return output from \code{\link{kmeans}} function
 #' @export
-#' 
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' # cluster samples based into 3 groups based on all factors
+#' clusterSamples(MOFA_CLL, k=3, factors="all")
+#' # cluster samples based into 2 groups based on factor 1
+#' clusters <- clusterSamples(MOFA_CLL, k=2, factors=1)
+#' # cluster can be visualized for example on the factors values:
+#' plotFactorBeeswarm(MOFA_CLL, factor=1, color_by=clusters)
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' # cluster samples based into 2 groups based on all factor 1 and 2
+#' clusters <- clusterSamples(MOFA_CLL, k=2, factors=1:2)
+#' # cluster can be visualized for example on the factors values:
+#' plotFactorScatter(MOFA_CLL, factors=1:2, color_by=clusters)
+
+
 clusterSamples <- function(object, k, factors = "all", ...) {
   
   # Sanity checks
@@ -42,11 +62,14 @@ clusterSamples <- function(object, k, factors = "all", ...) {
   # (TO-DO) incorporate a clustering function that is able to cope with missing values
   haveAllZ <- apply(Z,1, function(x) all(!is.na(x)))
   if(!all(haveAllZ)) warning(paste("Removing", sum(!haveAllZ), "samples with missing values on at least one factor"))
-  Z <- Z[haveAllZ,]
+  Z_sub <- Z[haveAllZ,]
 
   # Perform k-means clustering
-  kmeans.out <- kmeans(Z, centers=k,  ...)
-
-  return(kmeans.out)  
+  kmeans.out <- kmeans(Z_sub, centers=k,  ...)
+  clusters <- rep(NA, length(sampleNames(object)))
+  names(clusters) <- sampleNames(object)
+  clusters[haveAllZ] <- kmeans.out$cluster
+  
+  return(clusters)  
 
 }

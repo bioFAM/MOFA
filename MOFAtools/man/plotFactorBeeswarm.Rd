@@ -4,8 +4,8 @@
 \alias{plotFactorBeeswarm}
 \title{Beeswarm plot of latent factors}
 \usage{
-plotFactorBeeswarm(object, factors, color_by = NULL, name_color = "",
-  showMissing = FALSE)
+plotFactorBeeswarm(object, factors = "all", color_by = NULL,
+  name_color = "", showMissing = FALSE)
 }
 \arguments{
 \item{object}{a trained \code{\link{MOFAmodel}} object.}
@@ -33,4 +33,16 @@ Beeswarm plot of the latent factor values.
 One of the main steps for the annotation of factors is to visualise and color them using known covariates or phenotypic data. \cr
 This function generates a Beeswarm plot of the sample values in a given latent factor. \cr
 Similar functions are \code{\link{plotFactorScatter}} for doing scatter plots and \code{\link{plotFactorHist}} for doing histogram plots
+}
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+plotFactorBeeswarm(MOFA_CLL, factor=1:3)
+plotFactorBeeswarm(MOFA_CLL, factor=1:2, color_by= "IGHV")
+
+# Example on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+plotFactorBeeswarm(MOFA_scMT)
 }

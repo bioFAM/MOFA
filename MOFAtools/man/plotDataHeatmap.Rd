@@ -41,12 +41,17 @@ This function generates a heatmap for selected features, which should reveal, im
 A similar function for doing scatterplots rather than heatmaps is \code{\link{plotDataScatter}}.
 }
 \examples{
-# Load example of MOFA model
-model <- loadModel(system.file("extdata", "CLL_model.hdf5", package = "MOFAtools"))
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+# plot top 30 features on factor 1 in the view mRNA:
+plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30)
+# without column- and rownames:
+plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30, show_colnames = FALSE, show_rownames = FALSE)
 
-# Plot top 50 features for factor 1 in the mRNA view
-plotDataHeatmap(model, "mRNA", 1, 50)
-
-# Plot top 50 features for factor 1 in the mRNA view, do not show feature or row names
-plotDataHeatmap(model, "mRNA", 1, 50, show_colnames = FALSE, show_rownames = FALSE) 
+# Example on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+# plot top 50 features on factor 2 in the view RNA expression:
+plotDataHeatmap(MOFA_scMT, view="RNA expression", factor=2)
 }

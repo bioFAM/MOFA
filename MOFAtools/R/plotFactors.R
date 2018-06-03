@@ -42,16 +42,17 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
     
     # It is the name of a covariate or a feature in the TrainData
     if (length(group_by) == 1 & is.character(group_by)) {
-      if(group_names=="") group_names <- group_by
+      if (group_names=="") group_names <- group_by
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData(object), rownames)
-      if(group_by %in% Reduce(union,featureNames)) {
+      if (group_by %in% Reduce(union,featureNames)) {
         viewidx <- which(sapply(featureNames, function(vnm) group_by %in% vnm))
         group_by <- TrainData[[viewidx]][group_by,]
-      } else if(class(object@InputData) == "MultiAssayExperiment"){
+      } else if (class(object@InputData) == "MultiAssayExperiment") {
         group_by <- getCovariates(object, group_by)
+      } else {
+        stop("'group_by' was specified but it was not recognised, please read the documentation")
       }
-      else stop("'group_by' was specified but it was not recognised, please read the documentation")
       
     # It is a vector of length N
     } else if (length(group_by) > 1) {

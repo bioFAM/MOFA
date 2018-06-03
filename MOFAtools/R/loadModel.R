@@ -10,7 +10,7 @@
 #' The training of MOFA is done using a Python framework, and the model output is saved as an .hdf5 file, which has to be loaded in the R package.
 #' @param file an hdf5 file saved by the MOFA python framework.
 #' @param object either NULL (default) or an an existing untrained MOFA object. If NULL, the \code{\link{MOFAmodel}} object is created from the scratch.
-#' @param sortFactors boolean indicating whether factors should be sorted by variance explained (default is TRUE)
+#' @param sortFactors logical indicating whether factors should be sorted by variance explained (default is TRUE)
 #' @param minR2 minimum R2 threshold to call 'active' factors (default is 0.01).
 #' @return a \code{\link{MOFAmodel}} model.
 #' @importFrom rhdf5 h5read

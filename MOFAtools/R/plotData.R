@@ -40,19 +40,28 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
+  
+  # Get views
+  if (is.numeric(view)) view <- viewNames(object)[view]
   stopifnot(view %in% viewNames(object))
 
-  if(is.numeric(factor)) {
-      if (object@ModelOptions$learnIntercept == T) factor <- factorNames(object)[factor+1]
-      else factor <- factorNames(object)[factor]
-    } else{ stopifnot(factor %in% factorNames(object)) }
+  # Get factors
+  if (is.numeric(factor)) {
+    if (object@ModelOptions$LearnIntercept == T) {
+      factor <- factorNames(object)[factor+1]
+    } else {
+      factor <- factorNames(object)[factor]
+    }
+  } else { 
+    stopifnot(factor %in% factorNames(object)) 
+  }
 
   # Collect relevant data
   W <- getWeights(object)[[view]][,factor]
   Z <- getFactors(object)[,factor]
   Z <- Z[!is.na(Z)]
   
-  if (imputed) {
+  if (imputed==TRUE) {
     data <- getImputedData(object, view)[[1]][,names(Z)]
   } else {
     data <- getTrainData(object, view)[[1]][,names(Z)]
@@ -82,7 +91,7 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
   
   # Plot heatmap
   # if(is.null(main)) main <- paste(view, "observations for the top weighted features of factor", factor)
-  if (includeWeights) { 
+  if (includeWeights==TRUE) { 
     anno <- data.frame(row.names=names(W[features]), weight=W[features]) 
     if (transpose==T) {
       pheatmap(t(data), annotation_col=anno, ...)
@@ -253,12 +262,12 @@ plotDataScatter <- function(object, view, factor, features = 10,
 
 #' @title Tile plot of the multi-omics data
 #' @name plotTilesData
-#' @description Function to do a tile plot showing the missing value structure of the multi-omics input data
+#' @description Function to do a tile plot showing the dimensionality and the missing value structure of the multi-omics data.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param colors a vector specifying the colors per view.
-#' @details This function is helpful to get an overview of the missing value structure of the training data used for MOFA. 
-#' It shows the number of samples, the number of views, the number of features, and the structure of missing values.
-#' In particular, it is useful to visualise incomplete data sets, where some samples are missing subsets of assays.
+#' @param colors a character vector specifying the colors per view. NULL (default) uses an internal palette.
+#' @details This function is helpful to get an overview of the dimensionality and the missing value structure of the training data. \cr 
+#' It shows the number of samples, the number of views, the number of features, and the structure of missing values. \cr
+#' It is particularly useful to visualise incomplete data sets, where some samples are missing subsets of assays.
 #' @import ggplot2
 #' @import dplyr
 #' @import reshape2
@@ -281,7 +290,6 @@ plotTilesData <- function(object, colors = NULL) {
   }
   if (length(colors)!=M) stop("Length of 'colors' does not match the number of views")
   names(colors) <- viewNames(object)
-  
   
   # Define availability binary matrix to indicate whether assay j is profiled in sample i
   ovw <- sapply(TrainData, function(dat) apply(dat,2,function(s) !all(is.na(s))))

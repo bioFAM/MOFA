@@ -401,3 +401,4 @@ class entry_point():
     sys.stdout.flush()
     runMultipleTrials(self.data, self.data_opts, self.model_opts, self.train_opts, self.train_opts['seed'])
     sys.stdout.flush()
+

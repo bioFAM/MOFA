@@ -32,22 +32,19 @@ imputeMissing <- function(object, views = "all", factors = "all", type = c("inRa
   # Do predictions
   predData <- predict(object, views=views, factors = factors, type = type)
 
-  # WHY IS THIS COMMENTED? CHECK
-  #replace NAs with predicted values
-  # imputedData <- getTrainData(object, views = views)
-  # imputedData <- lapply(names(imputedData), function(viewnm) {
-  #     view <- imputedData[[viewnm]]
-  #     non_observed <- which(is.na(view), arr.ind = T)
-  #     if(viewnm %in% names(predData)) view[non_observed] <- predData[[viewnm]][non_observed]
-  #     view
-  # })
+  # replace NAs with predicted values
+  imputedData <- getTrainData(object, views = views)
+  imputedData <- lapply(names(imputedData), function(viewnm) {
+      view <- imputedData[[viewnm]]
+      non_observed <- which(is.na(view), arr.ind = T)
+      if(viewnm %in% names(predData)) view[non_observed] <- predData[[viewnm]][non_observed]
+      view
+  })
 
   # re- arrange list in accordance with other data slots in the model
-  # names(imputedData) <- views
-  # imputedData <- imputedData[viewNames(object)]
-  # names(imputedData) <- viewNames(object)
-
-  imputedData <- predData
+  names(imputedData) <- views
+  imputedData <- imputedData[viewNames(object)]
+  names(imputedData) <- viewNames(object)
 
   # Save imputed data in the corresponding slot  
   object@ImputedData <- imputedData

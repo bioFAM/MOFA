@@ -46,7 +46,7 @@ prepareMOFA <- function(object, DirOptions, DataOptions = NULL, ModelOptions = N
     stop("'object' has to be an instance of MOFAmodel")
   
   # Create temporary folder to store data
-  dir.create(DirOptions$dataDir, showWarnings = F)
+  dir.create(DirOptions$dataDir, showWarnings = FALSE)
   
   # Get data options
   message("Checking data options...")
@@ -187,7 +187,7 @@ getDefaultModelOptions <- function(object) {
     likelihood = likelihood,    # (character vector) likelihood per view [gaussian/bernoulli/poisson]
     learnIntercept = TRUE,      # (bool) include a constant factor of 1s to learn the mean of features (intercept)? If not, you need to center the data
     numFactors = 25,            # (numeric) initial number of latent factors
-    sparsity = TRUE            # (logical) use feature-wise sparsity?
+    sparsity = TRUE             # (logical) use feature-wise sparsity?
   )
   
   return(ModelOptions)

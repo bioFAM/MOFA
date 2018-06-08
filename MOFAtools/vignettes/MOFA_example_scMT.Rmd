@@ -53,7 +53,7 @@ First, we define input and output options:
 ```{r}
 DirOptions <- list(
   "dataDir" = tempdir(), # Directory to store the input matrices as .txt files, it can be a temporary folder
-  "outFile" = "/Users/ricard/scMT_model.hdf5" # Output file of the model (use hdf5 extension)
+  "outFile" = "scMT_model.hdf5" # Output file of the model (use hdf5 extension)
 )
 ```
 
@@ -97,7 +97,7 @@ MOFAobject <- prepareMOFA(
 ## Run MOFA
 Now we are ready to train the `MOFAobject`, which is done with the function `runMOFA`. This step can take some time (around 20 min with default parameters). For illustration we provide an existing trained `MOFAobject`
 ```{r, eval=FALSE}
-MOFAobject <- runMOFA(MOFAobject, DirOptions, mofaPath = "/Users/ricard/anaconda2/bin/mofa")
+MOFAobject <- runMOFA(MOFAobject, DirOptions)
 ```
 
 ```{r}

@@ -1,9 +1,5 @@
 """
-Module with functions to initialise the model 
-
-runSingleTrial: run a single trial
-runMultipleTrial: run multiple trials, optionally in Parallel (not implemented)
-
+Module with functions to build the model
 """
 
 import scipy as s
@@ -17,14 +13,13 @@ from .init_nodes import *
 from .BayesNet import BayesNet
 from .utils import *
 
-def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1):
-    """Method to run a single trial of a MOFA model
+def runMOFA(data, data_opts, model_opts, train_opts, seed=None):
+    """Method to run a MOFA model
     data: 
     data_opts
     model_opts:
     train_opts:
     seed:
-    trial:
 
     PARAMETERS
     ----------
@@ -134,7 +129,7 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1):
     ##################################
 
     # Initialise Bayesian Network
-    net = BayesNet(dim=dim, trial=trial, schedule=model_opts["schedule"], nodes=init.getNodes(), options=train_opts)
+    net = BayesNet(dim=dim, schedule=model_opts["schedule"], nodes=init.getNodes(), options=train_opts)
 
     ####################
     ## Start training ##
@@ -142,32 +137,16 @@ def runSingleTrial(data, data_opts, model_opts, train_opts, seed=None, trial=1):
 
     print ("\n")
     print ("#"*45)
-    print ("## Running trial number %d with seed %d ##" % (trial,seed))
+    print ("## Running MOFA with seed %d ##" % seed)
     print ("#"*45)
     print ("\n")
     sleep(1)
     
     net.iterate()
 
-    return net
-
-def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, seed=None):
-
-    """Method to run multiple trials of a MOFA model
-
-    PARAMETERS
-    -----
-    data: 
-    data_opts
-    model_opts:
-    train_opts:
-    seed:
-    trial:
-    """
-    # trained_models = Parallel(n_jobs=train_opts['cores'], backend="threading")(
-    # trained_models = Parallel(n_jobs=train_opts['cores'])(
-    #     delayed(runSingleTrial)(data,data_opts,model_opts,train_opts,seed,i) for i in range(1,train_opts['trials']+1))
-    trained_models = [ runSingleTrial(data,data_opts,model_opts,train_opts,seed,i) for i in range(1,train_opts['trials']+1) ]
+    ####################
+    ## Save model ##
+    ####################
 
     print("\n")
     print("#"*43)
@@ -175,23 +154,6 @@ def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, se
     print("#"*43)
     print("\n")
 
-    #####################
-    ## Process results ##
-    #####################
-
-    # Select the trial with the best lower bound or keep all models
-    if train_opts['trials'] > 1:
-        if keep_best_run:
-            lb = map(lambda x: x.getTrainingStats()["elbo"][-1], trained_models)
-            save_models = [ trials[s.argmax(lb)] ]
-            outfiles = [ data_opts['outfile'] ]
-        else:
-            save_models = trained_models
-            tmp = os.path.splitext(data_opts['outfile'])
-            outfiles = [ tmp[0]+"_"+str(t)+tmp[1]for t in range(train_opts['trials']) ]
-    else:
-        save_models = trained_models
-        outfiles = [ data_opts['outfile'] ]
 
     ##################
     ## Save results ##
@@ -199,7 +161,7 @@ def runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, se
     
     sample_names = data[0].index.tolist()
     feature_names = [  data[m].columns.values.tolist() for m in range(len(data)) ]
-    for t in range(len(save_models)):
-        print("Saving model %d in %s...\n" % (t,outfiles[t]))
-        saveModel(save_models[t], outfile=outfiles[t], view_names=data_opts['view_names'],
-            sample_names=sample_names, feature_names=feature_names, train_opts=train_opts, model_opts=model_opts)
+    print("Saving model in %s...\n" % data_opts['outfile'])
+    saveModel(net, outfile=data_opts['outfile'], 
+        view_names=data_opts['view_names'], sample_names=sample_names, feature_names=feature_names,
+        train_opts=train_opts, model_opts=model_opts)

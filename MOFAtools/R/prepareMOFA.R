@@ -49,10 +49,6 @@ prepareMOFA <- function(object, DirOptions = NULL, DataOptions = NULL, ModelOpti
   if (!is(object, "MOFAmodel")) 
     stop("'object' has to be an instance of MOFAmodel")
   
-<<<<<<< HEAD
-  # Create temporary folder to store data
-  dir.create(DirOptions$dataDir, showWarnings = FALSE)
-=======
   if(is.null(DirOptions)){
     message("No DirOptions specified, using temporary paths")
     DirOptions <- list("dataDir" = tempdir(), "outFile" = tempfile())
@@ -63,7 +59,6 @@ prepareMOFA <- function(object, DirOptions = NULL, DataOptions = NULL, ModelOpti
   # Create folder to store data
   if(!dir.exists(DirOptions$dataDir)) dir.create(DirOptions$dataDir, showWarnings = F)
   object@DirOptions <- DirOptions
->>>>>>> e4b9242c35550b00edc1d25ac0c2fac554b32e89
   
   # Get data options
   message("Checking data options...")

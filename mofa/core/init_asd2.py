@@ -85,7 +85,7 @@ class entry_point():
     self.dimensionalities["M"] = len(self.data_opts['input_files'])
 
   def set_train_options(self, 
-    iter=5000, elbofreq=1, ntrials=1, startSparsity=100, tolerance=0.01, 
+    iter=5000, elbofreq=1, startSparsity=100, tolerance=0.01, 
     startDrop=1, freqDrop=1, dropR2=0, nostop=False, verbose=False, seed=None
     ):
     """ Parse training options """
@@ -118,9 +118,6 @@ class entry_point():
 
     # Iteration to activate spike and slab sparsity
     self.train_opts['startSparsity'] = int(startSparsity)
-
-    # Number of trials
-    self.train_opts['trials'] = int(ntrials)
 
     # Seed
     if seed is None:
@@ -155,7 +152,7 @@ class entry_point():
 
     # Define for which factors and views should we learn 'theta', the sparsity of the factor
     if type(sparsity) is bool:
-      self.model_opts['sparsity'] = True
+      # self.model_opts['sparsity'] = True
       self.model_opts['sparsity'] = [s.ones(K) for m in range(M)]
     # elif type(sparsity) is list:
     #   self.model_opts['sparsity'] = True
@@ -292,7 +289,7 @@ class entry_point():
     # Tau
     self.model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-14 for m in range(M)], 'b':[s.ones(D[m])*1e-14 for m in range(M)] }
 
-  def initialise_variational(self, initTheta=0.5):
+  def initialise_variational(self, initTheta=1.):
     """ Initialise variational distributions of the model"""
 
     N = self.dimensionalities["N"]
@@ -399,6 +396,6 @@ class entry_point():
     """ Train the model """
 
     sys.stdout.flush()
-    runMultipleTrials(self.data, self.data_opts, self.model_opts, self.train_opts, self.train_opts['seed'])
+    runMOFA(self.data, self.data_opts, self.model_opts, self.train_opts, self.train_opts['seed'])
     sys.stdout.flush()
 

@@ -46,14 +46,13 @@ def entry_point():
   p.add_argument( '--likelihoods',       type=str, nargs='+', required=True,                  help='Likelihood per view, current options are bernoulli, gaussian, poisson')
   p.add_argument( '--views',             type=str, nargs='+', required=True,                  help='View names')
   p.add_argument( '--schedule',          type=str, nargs="+", default=None,                   help='Update schedule, default is ( Y SW Z AlphaW Theta Tau )' )
-  p.add_argument( '--learnTheta',        type=int, nargs="+", default=1,                      help='Learn the sparsity parameter from the spike-and-slab (theta)?' )
   p.add_argument( '--initTheta',         type=float, nargs="+", default=1. ,                  help='Initialisation for the sparsity parameter of the spike-and-slab (theta)')
+  p.add_argument( '--sparsity',          action='store_true',                                 help='Learn the sparsity parameter from the spike-and-slab (theta)?' )
   p.add_argument( '--learnIntercept',    action='store_true',                                 help='Learn the feature-wise mean?' )
 
   # Training options
   p.add_argument( '--elbofreq',          type=int, default=1,                                 help='Frequency of computation of ELBO' )
   p.add_argument( '--iter',              type=int, default=5000,                              help='Maximum number of iterations' )
-  p.add_argument( '--ntrials',           type=int, default=1,                                 help='Number of trials' )
   p.add_argument( '--startSparsity',     type=int, default=100,                               help='Iteration to activate the spike-and-slab sparsity')
   p.add_argument( '--tolerance',         type=float, default=0.01 ,                           help='Tolerance for convergence (based on the change in ELBO)')
   p.add_argument( '--startDrop',         type=int, default=1 ,                                help='First iteration to start dropping factors')
@@ -152,15 +151,17 @@ def entry_point():
 
   # Load covariates
   if args.covariatesFile is not None:
-    data_opts['covariates'] = pd.read_csv(args.covariatesFile, delimiter=" ", header=None).as_matrix()
-    print("Loaded covariates from " + args.covariatesFile + "with shape " + str(data_opts['covariates'].shape) + "...")
-    data_opts['scale_covariates'] = args.scale_covariates
-    if len(data_opts['scale_covariates']) == 1 and data_opts['covariates'].shape[1] > 1:
-      data_opts['scale_covariates'] = args.scale_covariates[0] * s.ones(data_opts['covariates'].shape[1])
-    elif type(data_opts['scale_covariates'])==list:
-      assert len(data_opts['scale_covariates']) == data_opts['covariates'].shape[1], "'scale_covariates' has to be the same length as the number of covariates"
-    data_opts['scale_covariates'] = [ bool(x) for x in data_opts['scale_covariates'] ]
-    args.factors += data_opts['covariates'].shape[1]
+    print("Covariates is not functional")
+    exit()
+    # data_opts['covariates'] = pd.read_csv(args.covariatesFile, delimiter=" ", header=None).as_matrix()
+    # print("Loaded covariates from " + args.covariatesFile + "with shape " + str(data_opts['covariates'].shape) + "...")
+    # data_opts['scale_covariates'] = args.scale_covariates
+    # if len(data_opts['scale_covariates']) == 1 and data_opts['covariates'].shape[1] > 1:
+    #   data_opts['scale_covariates'] = args.scale_covariates[0] * s.ones(data_opts['covariates'].shape[1])
+    # elif type(data_opts['scale_covariates'])==list:
+    #   assert len(data_opts['scale_covariates']) == data_opts['covariates'].shape[1], "'scale_covariates' has to be the same length as the number of covariates"
+    # data_opts['scale_covariates'] = [ bool(x) for x in data_opts['scale_covariates'] ]
+    # args.factors += data_opts['covariates'].shape[1]
   else:
     data_opts['scale_covariates'] = False
     data_opts['covariates'] = None
@@ -168,6 +169,8 @@ def entry_point():
   # If we want to learn the mean, we add a constant covariate of 1s
   if args.learnIntercept:
     if data_opts['covariates'] is not None:
+      print("Covariates is not functional")
+      exit()
       # data_opts['covariates'].insert(0, "mean", s.ones(N,))
       data_opts['covariates'] = s.insert(data_opts['covariates'], obj=0, values=1, axis=1)
       data_opts['scale_covariates'].insert(0,False)
@@ -183,27 +186,23 @@ def entry_point():
   model_opts = {}
 
   # Define initial number of latent factors
-  K = model_opts['k'] = args.factors
+  K = model_opts['factors'] = int(args.factors)
 
   # Define likelihoods
-  model_opts['likelihood'] = args.likelihoods
-  assert M==len(model_opts['likelihood']), "Please specify one likelihood for each view"
-  assert set(model_opts['likelihood']).issubset(set(["gaussian","bernoulli","poisson","warp"]))
+  model_opts['likelihoods'] = args.likelihoods
+  if type(model_opts['likelihoods']) is not list:
+    model_opts['likelihoods'] = [ model_opts['likelihoods'] ]
+  assert M==len(model_opts['likelihoods']), "Please specify one likelihood for each view"
+  assert set(model_opts['likelihoods']).issubset(set(["gaussian","bernoulli","poisson"]))
 
   # Define whether to learn the feature-wise means
   model_opts["learnIntercept"] = args.learnIntercept
 
   # Define for which factors and views should we learn 'theta', the sparsity of the factor
-  if type(args.learnTheta) == int:
-    model_opts['sparsity'] = True
-    model_opts['learnTheta'] = [s.ones(K)*args.learnTheta for m in range(M)]
-  elif type(args.learnTheta) == list:
-    model_opts['sparsity'] = True
-    assert len(args.learnTheta) == M, "--learnTheta has to be a binary vector with length number of views"
-    model_opts['learnTheta'] = [ args.learnTheta[m]*s.ones(K) for m in range(M) ]
+  if args.sparsity:
+    model_opts['sparsity'] = [s.ones(K) for m in range(M)]
   else:
-     print("--learnTheta has to be either 1 or 0 or a binary vector with length number of views")
-     exit()
+    model_opts['sparsity'] = [s.zeros(K) for m in range(M)]
 
   # Define schedule of updates
   if args.schedule is None:
@@ -228,7 +227,7 @@ def entry_point():
   model_opts["priorTheta"] = { 'a':[s.ones(K,) for m in range(M)], 'b':[s.ones(K,) for m in range(M)] }
   for m in range(M):
     for k in range(K):
-      if model_opts['learnTheta'][m][k]==0:
+      if model_opts['sparsity'][m][k]==0:
         model_opts["priorTheta"]["a"][m][k] = s.nan
         model_opts["priorTheta"]["b"][m][k] = s.nan
 
@@ -259,12 +258,12 @@ def entry_point():
     assert len(args.initTheta) == M, "--initTheta has to be a binary vector with length number of views"
     model_opts['initTheta']['E']= [ args.initTheta[m]*s.ones((D[m],K)) for m in range(M) ]
   else:
-     print("--learnTheta has to be either 1 or 0 or a binary vector with length number of views")
+     print("--sparsity has to be either 1 or 0 or a binary vector with length number of views")
      exit()
 
   for m in range(M):
     for k in range(K):
-      if model_opts['learnTheta'][m][k]==0.:
+      if model_opts['sparsity'][m][k]==0.:
         model_opts["initTheta"]["a"][m][k] = s.nan
         model_opts["initTheta"]["b"][m][k] = s.nan
 
@@ -313,7 +312,7 @@ def entry_point():
         model_opts["initSW"]["var_S1"][m][:,0] = 1e-5
 
       # Theta
-      model_opts['learnTheta'][m][0] = 0.
+      model_opts['sparsity'][m][0] = 0.
       model_opts["initSW"]["Theta"][m][:,0] = 1.
       model_opts["priorTheta"]['a'][m][0] = s.nan
       model_opts["priorTheta"]['b'][m][0] = s.nan
@@ -329,41 +328,34 @@ def entry_point():
   train_opts = {}
 
   # Maximum number of iterations
-  train_opts['maxiter'] = args.iter
+  train_opts['maxiter'] = int(args.iter)
 
   # Lower bound computation frequency
-  train_opts['elbofreq'] = args.elbofreq
+  train_opts['elbofreq'] = int(args.elbofreq)
 
   # Verbosity
   train_opts['verbose'] = args.verbose
 
   # Criteria to drop latent variables while training
-  train_opts['drop'] = { "by_norm":None, "by_pvar":None, "by_cor":None, "by_r2":args.dropR2 }
-  train_opts['startdrop'] = args.startDrop
-  train_opts['freqdrop'] = args.freqDrop
-  if (args.dropR2>0): print("\nDropping factors with minimum threshold of {0} \% variance explained".format(args.dropR2))
+  train_opts['drop'] = {"by_r2":float(args.dropR2) }
+  train_opts['startdrop'] = int(args.startDrop)
+  train_opts['freqdrop'] = int(args.freqDrop)
+  if (args.dropR2>0): print("\nDropping factors with minimum threshold of {0}% variance explained".format(args.dropR2))
 
 
   # Tolerance level for convergence
-  train_opts['tolerance'] = args.tolerance
+  train_opts['tolerance'] = float(args.tolerance)
 
   # Do no stop even when convergence criteria is met
   train_opts['forceiter'] = args.nostop
 
   # Iteration to activate spike and slab sparsity
-  train_opts['startSparsity'] = args.startSparsity
-
-  # Number of trials
-  train_opts['trials'] = args.ntrials
+  train_opts['startSparsity'] = int(args.startSparsity)
 
 
   #####################
   ## Train the model ##
   #####################
 
-  # Keep the trial with the highest lower bound?
-  keep_best_run = False
-
   # Go!
-  # runSingleTrial(data, data_opts, model_opts, train_opts, seed=None)
-  runMultipleTrials(data, data_opts, model_opts, train_opts, keep_best_run, args.seed)
+  runMOFA(data, data_opts, model_opts, train_opts, args.seed)

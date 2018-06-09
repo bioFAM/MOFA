@@ -20,7 +20,7 @@ from .utils import corr, nans
 
 
 class BayesNet(object):
-    def __init__(self, dim, nodes, schedule, options, trial=1):
+    def __init__(self, dim, nodes, schedule, options):
         """ Initialisation of a Bayesian network
 
         PARAMETERS
@@ -33,15 +33,12 @@ class BayesNet(object):
             list or tuple with the names of the nodes to be updated in the given order. Nodes not present in schedule will not be updated
         options: dict
             training options, such as maximum number of iterations, training options, etc.
-        trial: int
-            this is an auxiliary variable for parallelised running of multiple trials
         """
 
         self.dim = dim
         self.nodes = nodes
         self.schedule = schedule
         self.options = options
-        self.trial = trial
 
         # Training flag
         self.trained = False

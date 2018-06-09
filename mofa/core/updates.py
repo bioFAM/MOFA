@@ -97,7 +97,13 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
     def updateParameters(self):
 
         # Collect expectations from other nodes
-        Y = self.markov_blanket["Y"].getExpectation().copy()
+        Y = self.markov_blanket["Y"].getExpectation().copy() # REMOVE THIS
+        
+        # import pdb
+        # pdb.set_trace()
+        # print(sum(np.isnan(Y)))
+        # exit()
+
         tmp = self.markov_blanket["SW"].getExpectations()
         SW,SWW = tmp["E"], tmp["ESWW"]
         Ztmp = self.markov_blanket["Z"].getExpectations()
@@ -109,6 +115,7 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
         Pa, Pb = P['a'], P['b']
 
         # Mask matrices
+        # DO THIS ONCE OUTSIDE UPDATES
         Y = Y.data
         Y[mask] = 0.
 
@@ -123,12 +130,13 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
 
         SWZ = ma.array(SW.dot(Z.T), mask=mask.T)
 
+        # UPDATE DOTD
         term4 = dotd(SWZ, SWZ.T) - ma.array(s.dot(s.square(Z),s.square(SW).T), mask=mask).sum(axis=0)
 
         tmp = term1 - term2 + term3 + term4
 
         # Perform updates of the Q distribution
-        Qa = Pa + (Y.shape[0] - mask.sum(axis=0))/2.
+        Qa = Pa + (Y.shape[0] - mask.sum(axis=0))/2. # IN PRECOMPUTE
         Qb = Pb + tmp/2.
 
         # Save updated parameters of the Q distribution

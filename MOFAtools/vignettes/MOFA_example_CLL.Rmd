@@ -134,27 +134,27 @@ For details, please read the Methods section of the Manuscript.
 This is done by the 'plotVarianceExplained' function. The resulting plot allows to get an overivew of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of the different views.
 
 ```{r}
-r2 <- plotVarianceExplained(MOFAobject)
+plotVarianceExplained(MOFAobject)
 ```
 
 ## Part 2: Characterisation of individual factors
 ### Inspection of top weighted features in the active views
 To get an overview of the weights across all factors in a given view you can use the 'plotWeightsHeatmap' function.
-For example, here we plot all weights from all factors in the Mutation data:
+For example, here we plot all weights for factors 1 to 5 in the Mutation data:
 ```{r}
 plotWeightsHeatmap(MOFAobject, "Mutations", factors=1:5, show_colnames=F)
 ```
-Similarly, we can also plot all weights for a single factor using the 'plotWeights' function.
-For example, here we plot all weights from Factor 1 in the Mutation data:
+We observe that factors 1 and 2 have non-zero weights. To explore a single factor in more detail we can  plot all weights for a single factor using the 'plotWeights' function.
+For example, here we plot all weights from Factor 1 in the Mutation data. With 'nfeatures' we can set how many features should be labelled ('manual' let's you specify feautres manually to be labelled in the plot.)
 ```{r}
-plotWeights(MOFAobject, view = "Mutations", factor = 1)
+plotWeights(MOFAobject, view = "Mutations", factor = 1, nfeatures = 5)
 ```
 If you are only interested in looking at the top features you can use the 'plotTopWeights' function.
-For example, here we plot the mutations with largest loadings on Factor 1:
+For example, here we plot the mutations with largest loadings on Factor 1. The sign on the right indicates the direction of the loading (positive/negative).
 ```{r}
 plotTopWeights(MOFAobject, "Mutations", 1)
 ```
-Features with large weight in a given factor means that they follow the pattern of covariation associated with the factor. For example, if a factor is capturing sex differences, then the largest weights will be associated with features that show sex-specific effects.
+Features with large weight in a given factor means that they follow the pattern of covariation associated with the factor. For example, if a factor is capturing sex differences, then the largest weights will be associated with features that show sex-specific effects. Here, the factor is associated with the B-cell of tumour's origin, consistent with a large weight on the IGHV status (see our manuscript for more details).
 
 From the previous plots, we can clearly see that Factor 1 is associated to IGHV status. Now if we look at the mRNA view, the top features will also be associated to IGHV status:
 ```{r}

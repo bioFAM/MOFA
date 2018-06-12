@@ -48,7 +48,7 @@ runMOFA <- function(object) {
   
   # Initiate reticulate
   mofa <- import("mofa")
-  mofa_entrypoint <- mofa$core.init_asd2$entry_point()
+  mofa_entrypoint <- mofa$core.entry_point$entry_point()
   
   # Pass data options
   mofa_entrypoint$set_data_options(
@@ -88,11 +88,11 @@ runMOFA <- function(object) {
   # Load data
   mofa_entrypoint$load_data()
   
-  # Define Priors
+  # Define priors
   mofa_entrypoint$define_priors()
   
-  # Initialise variational distributions
-  mofa_entrypoint$initialise_variational()
+  # Define initialisations
+  mofa_entrypoint$define_init()
   
   # Parse the intercept factor
   mofa_entrypoint$parse_intercept()

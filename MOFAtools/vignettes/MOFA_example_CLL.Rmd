@@ -100,7 +100,7 @@ The most important options the user needs to define are:
 * DropFactorThreshold: Threshold on fraction of variance explained to define inactive factors. That is, factors explaining less than 'DropFactorThreshold' percentage of variation in all views will be dropped during training.
 ```{r}
 TrainOptions <- getDefaultTrainOptions()
-TrainOptions$maxiter <- 5
+TrainOptions$maxiter <- 1000
 TrainOptions
 ```
 

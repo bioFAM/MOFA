@@ -15,25 +15,31 @@ from .utils import *
 
 def runMOFA(data, data_opts, model_opts, train_opts, seed=None):
     """Method to run a MOFA model
-    data: 
-    data_opts
-    model_opts:
-    train_opts:
-    seed:
+
 
     PARAMETERS
     ----------
+    data: list of numpy arrays 
+    data_opts: dictionary
+        data options
+    model_opts: dictionary 
+        model options
+    train_opts: dictionary
+        train options
+    seed: numeric 
+        seed for the random number generator. 
+        If None (default), it is generated randomly
     """
-
-    # set the seed
-    if seed is None or seed==0:
-        seed = int(round(time()*1000)%1e6)
-    s.random.seed(seed)
 
 
     ###########################
     ## Perform sanity checks ##
     ###########################
+
+    # set the seed
+    if seed is None or seed==0:
+        seed = int(round(time()*1000)%1e6)
+    s.random.seed(seed)
 
     # Create output directory
     if not os.path.isdir(os.path.dirname(data_opts["outfile"])):
@@ -124,9 +130,9 @@ def runMOFA(data, data_opts, model_opts, train_opts, seed=None):
     nodes["Y"].addMarkovBlanket(Z=nodes["Z"], SW=nodes["SW"], Tau=nodes["Tau"])
     nodes["Tau"].addMarkovBlanket(Z=nodes["Z"], SW=nodes["SW"], Y=nodes["Y"])
 
-    ##################################
-    ## Add the nodes to the network ##
-    ##################################
+    #################################
+    ## Create the Bayesian Network ##
+    #################################
 
     # Initialise Bayesian Network
     net = BayesNet(dim=dim, schedule=model_opts["schedule"], nodes=init.getNodes(), options=train_opts)
@@ -143,10 +149,6 @@ def runMOFA(data, data_opts, model_opts, train_opts, seed=None):
     sleep(1)
     
     net.iterate()
-
-    ####################
-    ## Save model ##
-    ####################
 
     print("\n")
     print("#"*43)

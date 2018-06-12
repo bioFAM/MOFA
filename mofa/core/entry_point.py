@@ -7,15 +7,12 @@ from time import sleep
 from .build_model import *
 
 """
-TO-DO: 
-- ADD DETAILED EXPLANATION OF ARGUMENTS
-- ADd sanity checks
-- Add print messages
-- Within each method, check that the pipeline order is met
+Entry point for the MOFA model
 
-Pipeline
-(1) Parse data options
-(2) Parse train options or parse model options
+The order should be:
+(1) Set data options
+(2) Set train options and model options
+(3) 
 (3) Parse data processing options
 (4) Load the data or define priors or define variational
 (5) Train
@@ -88,9 +85,8 @@ class entry_point():
     iter=5000, elbofreq=1, startSparsity=100, tolerance=0.01, 
     startDrop=1, freqDrop=1, dropR2=0, nostop=False, verbose=False, seed=None
     ):
-    """ Parse training options """
+    """ Set training options """
 
-    # TO-DO: verbosity, print more messages
 
     self.train_opts = {}
 
@@ -127,8 +123,6 @@ class entry_point():
   def set_model_options(self, factors, likelihoods, schedule=None, sparsity=True, learnIntercept=False):
     """ Parse model options """
 
-    # TO-DO: SANITY CHECKS 
-
     self.model_opts = {}
 
     # Define initial number of latent factors
@@ -139,7 +133,6 @@ class entry_point():
     self.model_opts['likelihoods'] = likelihoods
     if type(self.model_opts['likelihoods']) is not list:
       self.model_opts['likelihoods'] = [self.model_opts['likelihoods']]
-
     assert len(self.model_opts['likelihoods'])==M, "Please specify one likelihood for each view"
     assert set(self.model_opts['likelihoods']).issubset(set(["gaussian","bernoulli","poisson"]))
 
@@ -150,17 +143,12 @@ class entry_point():
       self.dimensionalities["K"] += 1
       K += 1
 
-    # Define for which factors and views should we learn 'theta', the sparsity of the factor
-    if type(sparsity) is bool:
-      # self.model_opts['sparsity'] = True
+    # Define whether to use spike and slab sparsity or not
+    if sparsity:
       self.model_opts['sparsity'] = [s.ones(K) for m in range(M)]
-    # elif type(sparsity) is list:
-    #   self.model_opts['sparsity'] = True
-    #   assert len(sparsity)==M, "--sparsity has to be a binary vector with length number of views"
-    #   self.model_opts['sparsity'] = [ sparsity[m]*s.ones(K) for m in range(M) ]
     else:
-       print("--sparsity has to be either 1 or 0 or a binary vector with length number of views")
-       exit()
+      print("\nWarning... sparsity is desactivated, we recommend using it\n")
+      self.model_opts['sparsity'] = [s.zeros(K) for m in range(M)]
 
     # Define schedule of updates
     if schedule is not None:
@@ -174,10 +162,28 @@ class entry_point():
     maskAtRandom=None, maskNSamples=None, RemoveIncompleteSamples=False
     ):
 
-    """ Parse data processing options """
+    """ Set data processing options
+
+        PARAMETERS
+        ----------
+        center_features: bool
+          center the features to zero mean?
+        scale_features: bool
+          scale the features to zero mean?
+        scale_views: bool
+          scale the features to unit variance?
+        maskAtRandom: numeric
+          Fraction of values to mask at random
+        maskNSamples: bool
+          Number of samples to mask at random
+        RemoveIncompleteSamples: bool
+          Remove samples that are not profiled for all omics
+    """
 
     # TO-DO: more verbose messages
 
+    # Sanity checks
+    assert hasattr(self, 'model_opts'), "Model options have to defined before data processing options"
 
     # Sanity checks
     M = self.dimensionalities["M"]
@@ -187,17 +193,19 @@ class entry_point():
     if center_features is True:
       self.data_opts['center_features'] = [ True if l=="gaussian" else False for l in self.model_opts["likelihoods"] ]
     else:
-      if not self.model_opts["learnIntercept"]: print("\nWarning... you are not centering the data and not learning the mean...\n")
+      if not self.model_opts["learnIntercept"]: print("\nWarning... you are not centering the data and not learning the intercept. The model is not going to work...\n")
       self.data_opts['center_features'] = [ False for l in self.model_opts["likelihoods"] ]
 
     # Data processing: scale views
     if scale_views is True:
+      print("Warning: you are scaling the Gaussian views to unit variance. As long as the scale of the different views is not massively different, the model does not require this")
       self.data_opts['scale_views'] = [ True if l=="gaussian" else False for l in self.model_opts["likelihoods"] ]
     else:
       self.data_opts['scale_views'] = [ False for l in self.model_opts["likelihoods"] ]
 
     # Data processing: scale features
     if scale_features:
+      print("Warning: you are scaling Gaussian the features to unit variance. This is only recommended if the difference in variances between features are driven by technical and not biological reasons")
       assert data_opts['scale_views'] is False, "Scale either entire views or features, not both"
       self.data_opts['scale_features'] = [ True if l=="gaussian" else False for l in self.model_opts["likelihoods"] ]
     else:
@@ -289,8 +297,8 @@ class entry_point():
     # Tau
     self.model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-14 for m in range(M)], 'b':[s.ones(D[m])*1e-14 for m in range(M)] }
 
-  def initialise_variational(self, initTheta=1.):
-    """ Initialise variational distributions of the model"""
+  def define_init(self, initTheta=1.):
+    """ Define Initialisations of the model"""
 
     N = self.dimensionalities["N"]
     K = self.dimensionalities["K"]

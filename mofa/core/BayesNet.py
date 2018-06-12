@@ -43,19 +43,13 @@ class BayesNet(object):
         # Training flag
         self.trained = False
 
-    def removeInactiveFactors(self, by_norm=None, by_pvar=None, by_cor=None, by_r2=None):
+    def removeInactiveFactors(self, by_norm=None, by_r2=None):
         """Method to remove inactive factors
 
         PARAMETERS
         ----------
         by_norm: float
             threshold to shut down factors based on the norm of the latent variable
-            CURRENTLY NOT IMPLEMENTED
-        by_pvar: float
-            threshold to shut down factors based on the proportion of variance explained
-            CURRENTLY NOT IMPLEMENTED
-        by_cor: float
-            threshold to shut down factors based on the correlation between latent variables
             CURRENTLY NOT IMPLEMENTED
         by_r2: float
             threshold to shut down factors based on the coefficient of determination
@@ -124,36 +118,6 @@ class BayesNet(object):
                 if len(drop_dic["by_r2"]) > 0: # drop one factor at a time
                     drop_dic["by_r2"] = [ s.random.choice(drop_dic["by_r2"]) ]
 
-        # Shut down based on the proportion of residual variance explained by each factor
-        # IT DOESNT WORK, THERE IS SOME ERROR TO BE FIXED
-        #   Good: it is the proper way of doing it,
-        #   Bad: slow, does it work with non-gaussian data?
-        # if by_pvar is not None:
-        #     Z = self.nodes["Z"].getExpectation()
-        #     Y = self.nodes["Y"].getExpectation()
-        #     tau = self.nodes["Tau"].getExpectation()
-        #     alpha = self.nodes["Alpha"].getExpectation()
-
-        #     factor_pvar = s.zeros((self.dim['M'],self.dim['K']))
-        #     for m in range(self.dim['M']):
-        #         residual_var = (s.var(Y[m],axis=0) - 1/tau[m]).sum()
-        #         for k in range(self.dim["K"]):
-        #             factor_var = (self.dim["D"][m]/alpha[m][k])# * s.var(Z[:,k])
-        #             factor_pvar[m,k] = factor_var / residual_var
-        #     drop_dic['by_pvar'] = s.where( (factor_pvar>by_pvar).sum(axis=0) == 0)[0]
-
-        # Shut down factors that are highly correlated
-        # (Q) Which of the two factors should we remove? Maybe the one that explains less variation
-        # if by_cor is not None:
-        #     Z = self.nodes["Z"].getExpectation()
-        #     r = s.absolute(corr(Z.T,Z.T))
-        #     s.fill_diagonal(r,0)
-        #     r *= s.tri(*r.shape)
-        #     drop_dic["by_cor"] = s.where(r>by_cor)[0]
-        #     if len(drop_dic["by_cor"]) > 0:
-        #         # Drop just one latent variable, chosen randomly
-        #         drop_dic["by_cor"] = [ s.random.choice(drop_dic["by_cor"]) ]
-
         # Drop the factors
         drop = s.unique(s.concatenate(list(drop_dic.values())))
         if len(drop) > 0:
@@ -187,12 +151,9 @@ class BayesNet(object):
 
             # Update node by node, with E and M step merged
             for node in self.schedule:
-                # print("Node: " + str(node))
-                # t = time()
                 if node=="Theta" and i<self.options['startSparsity']:
                     continue
                 self.nodes[node].update()
-                # print("time: " + str(time()-t))
 
             # Calculate Evidence Lower Bound
             if (i+1) % self.options['elbofreq'] == 0:
@@ -290,7 +251,13 @@ class BayesNet(object):
         return self.nodes["Y"].getValues()
 
     def calculateELBO(self, *nodes):
-        """Method to calculate the Evidence Lower Bound of the model"""
+        """Method to calculate the Evidence Lower Bound of the model
+
+        PARAMETERS
+        ----------
+        nodes: iterable
+            list/tuple with the name of the nodes
+        """
         if len(nodes) == 0: nodes = self.getVariationalNodes().keys()
         elbo = pd.Series(s.zeros(len(nodes)+1), index=list(nodes)+["total"])
         for node in nodes:

@@ -7,10 +7,6 @@ A 'Distribution' class has two main types of attributes: parameters and expectat
 Note that in some distributions (Gaussian mainly) a parameter is equal to an expectation. However, they are stored as separate
 attributes and are not always necessarily equal due to E and M steps in the VB algorithm.
 
-TO-DO:
-- we should pass parametrs and expectations to Distribution() and perform sanity checks there
-- Improve initialisation of Multivariate Gaussian
-- Sanity checks on setter and getter functions
 """
 
 import scipy as s

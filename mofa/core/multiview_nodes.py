@@ -94,6 +94,10 @@ class Multiview_Node(Node):
         M = self.activeM if m is None else m
         for m in M: self.nodes[m].updateDim(axis,new_dim)
 
+    def precompute(self):
+        for m in self.activeM:
+            self.nodes[m].precompute()
+
 class Multiview_Variational_Node(Multiview_Node, Variational_Node):
     """General class for multiview variational nodes."""
     def __init__(self, M, *nodes):

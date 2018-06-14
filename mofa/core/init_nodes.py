@@ -159,8 +159,7 @@ class initModel(object):
         self.SW = Multiview_Variational_Node(self.M, *SW_list)
         self.nodes["SW"] = self.SW
 
-    def initAlphaW_mk(self, pa, pb, qa, qb, qE):
-
+    def initAlpha(self, pa, pb, qa, qb, qE):
         """Method to initialise the precision of the group-wise ARD prior
 
         PARAMETERS
@@ -177,12 +176,9 @@ class initModel(object):
         
         alpha_list = [None]*self.M
         for m in range(self.M):
-            alpha_list[m] = AlphaW_Node_mk(dim=(self.K,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
-            # alpha_list[m] = Constant_Node(dim=(self.K,), value=qE[m])
-            # alpha_list[m].factors_axis = 0
-        self.AlphaW = Multiview_Variational_Node(self.M, *alpha_list)
-        # self.AlphaW = Multiview_Constant_Node(self.M, *alpha_list)
-        self.nodes["AlphaW"] = self.AlphaW
+            alpha_list[m] = Alpha_Node(dim=(self.K,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
+        self.Alpha = Multiview_Variational_Node(self.M, *alpha_list)
+        self.nodes["Alpha"] = self.Alpha
 
     def initTau(self, pa, pb, qa, qb, qE):
         # Method to initialise the precision of the noise

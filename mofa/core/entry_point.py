@@ -5,26 +5,35 @@ import sys
 from time import sleep
 
 from .build_model import *
+from .utils import *
 
 """
 Entry point for the MOFA model
 
 The order should be:
-(1) Set data options
-(2) Set train options and model options
-(3) 
-(3) Parse data processing options
-(4) Load the data or define priors or define variational
-(5) Train
-
-CHANGE PARSE TO SET
-SET PRIORS AND VARIATIONAL DIST IN BUILD_MODEL, ONLY BIOFAM BRANCH
+(1) Set the data (set_data)
+(1) Set model options (set_model_options)
+(2) Set data options (set_data_options)
+(3) Parse the data (parse_data)
+(4) Set train options (set_train_options)
+(5) define priors and intiialisations (define_priors and define_init)
+(6) parse_intercept
+(7) Train the model (train_model)
+(8) Save the model (save_model)
 """
 
 class entry_point():
   def __init__(self):
     self.print_banner()
     self.dimensionalities = {}
+
+    self.data_opts = {}
+    self.model_opts = {}
+    self.train_opts = {}
+
+    # Covariates are depreciated
+    self.data_opts['covariates'] = None
+    self.data_opts['scale_covariates'] = False
 
   def print_banner(self):
     """ Method to print the MOFA banner """
@@ -37,58 +46,45 @@ class entry_point():
     ###                | |  | | |_| |  _/ ___ \             ### 
     ###                |_|  |_|\___/|_|/_/   \_\            ### 
     ###                                                     ###
-    ########################################################### """
+    ########################################################### 
+   \n 
+    """
 
     print(banner)
     sleep(2)
 
-  def set_data_options(self, 
-    inFiles, outFile, views, 
-    delimiter=" ", header_cols=False, header_rows=False
-    ):
-    """ Parse I/O data options """
+  def set_data(self, data):
+    """ Method to set the data """
 
-    # TO-DO: sanity checks 
-    # - Check that input file exists
-    # - Check that output directory exists: warning if not
-    # TO-DO: Verbosity, print messages 
+    for m in range(len(data)):
+      print("Loaded view %d with %d samples and %d features..." % (m, data[m].shape[0], data[m].shape[1]))
 
-    self.data_opts = {}
-
-    # I/O
-    if type(inFiles) is not list:
-      inFiles = [inFiles]
-    self.data_opts['input_files'] = inFiles
-    self.data_opts['outfile'] = outFile
-    self.data_opts['delimiter'] = delimiter
-
-    # View names
-    if type(views) is not list:
-      views = [views]
-    self.data_opts['view_names'] = views
-
-    # Headers
-    if header_rows is True:
-      self.data_opts['rownames'] = 0
-    else:
-      self.data_opts['rownames'] = None
-
-    if header_cols is True:
-      self.data_opts['colnames'] = 0
-    else:
-      self.data_opts['colnames'] = None
+    # Doing QC on the data
+    data = qcData(data)
 
 
-    self.dimensionalities["M"] = len(self.data_opts['input_files'])
+    # Save dimensionalities
+    self.dimensionalities["M"] = len(data)
+    self.dimensionalities["N"] = data[0].shape[0]
+    self.dimensionalities["D"] = [data[m].shape[1] for m in range(len(data))]
 
-  def set_train_options(self, 
-    iter=5000, elbofreq=1, startSparsity=100, tolerance=0.01, 
+    self.data = data
+
+  def parse_data(self):
+    """ Method to parse the data """
+
+    # Parsing the data: centering, scaling, etc.
+    self.data = parseData(self.data, self.data_opts)
+
+    # Remove samples with missing views
+    if self.data_opts['RemoveIncompleteSamples']:
+      self.data = removeIncompleteSamples(self.data)
+
+  def set_train_options(self, iter=5000, elbofreq=1, startSparsity=100, tolerance=0.01, 
     startDrop=1, freqDrop=1, dropR2=0, nostop=False, verbose=False, seed=None
     ):
     """ Set training options """
 
-
-    self.train_opts = {}
 
     # Maximum number of iterations
     self.train_opts['maxiter'] = int(iter)
@@ -115,15 +111,28 @@ class entry_point():
     # Iteration to activate spike and slab sparsity
     self.train_opts['startSparsity'] = int(startSparsity)
 
+    # Define schedule of updates
+    self.train_opts['schedule'] = ( "Y", "SW", "Z", "Alpha", "Theta", "Tau" )
+
     # Seed
     if seed is None:
       seed = 0
     self.train_opts['seed'] = int(seed)
 
-  def set_model_options(self, factors, likelihoods, schedule=None, sparsity=True, learnIntercept=False):
-    """ Parse model options """
+  def set_model_options(self, factors, likelihoods, sparsity=True, learnIntercept=False):
+    """ Set model options 
 
-    self.model_opts = {}
+        PARAMETERS
+        ----------
+        factors: int
+          initial number of factors
+        likelihoods: character or list of characters
+          likelihood per view. Choose from 'gaussian', 'poisson' and 'bernoulli'
+        sparsity: bool
+          Fraction of values to mask at random
+        learnIntercept: bool
+          Number of samples to mask at random
+    """
 
     # Define initial number of latent factors
     K = self.dimensionalities["K"] = self.model_opts['factors'] = int(factors)
@@ -150,15 +159,8 @@ class entry_point():
       print("\nWarning... sparsity is desactivated, we recommend using it\n")
       self.model_opts['sparsity'] = [s.zeros(K) for m in range(M)]
 
-    # Define schedule of updates
-    if schedule is not None:
-      print("\nWarning... we recommend using the default training schedule\n")
-      self.model_opts['schedule'] = schedule
-    else:
-      self.model_opts['schedule'] = ( "Y", "SW", "Z", "AlphaW", "Theta", "Tau" )
 
-  def set_dataprocessing_options(self, 
-    center_features=False, scale_features=False, scale_views=False, 
+  def set_data_options(self, view_names=None, center_features=False, scale_features=False, scale_views=False, 
     maskAtRandom=None, maskNSamples=None, RemoveIncompleteSamples=False
     ):
 
@@ -180,14 +182,16 @@ class entry_point():
           Remove samples that are not profiled for all omics
     """
 
-    # TO-DO: more verbose messages
-
     # Sanity checks
-    assert hasattr(self, 'model_opts'), "Model options have to defined before data processing options"
+    assert "likelihoods" in self.model_opts, "Likelihoods not found in model options"
 
     # Sanity checks
     M = self.dimensionalities["M"]
-    assert len(self.data_opts['view_names'])==M, "Length of view names and input files does not match"
+    if view_names is None:
+      self.data_opts['view_names'] = ["view_%d" % m for m in range(M)] 
+    else:
+      assert len(view_names)==M, "Length of view names and number of views do not match"
+      self.data_opts['view_names'] = view_names
 
     # Data processing: center features
     if center_features is True:
@@ -228,48 +232,6 @@ class entry_point():
     # Remove incomplete samples?
     self.data_opts['RemoveIncompleteSamples'] = RemoveIncompleteSamples
 
-  def load_data(self):
-    """ Load the data """
-
-    # Load observations
-    self.data = loadData(self.data_opts)
-
-    # Remove samples with missing views
-    if self.data_opts['RemoveIncompleteSamples']:
-      self.data = removeIncompleteSamples(self.data)
-
-    # Calculate dimensionalities
-    M = self.dimensionalities["M"]
-    N = self.dimensionalities["N"] = self.data[0].shape[0]
-    D = self.dimensionalities["D"] = [self.data[m].shape[1] for m in range(M)]
-    
-    # Load covariates (NOT IMPLEMENTED)
-    # if self.data_opts['covariatesFile'] is not None:
-
-    #   self.data_opts['covariates'] = pd.read_csv(self.data_opts['covariatesFile'], delimiter=" ", header=None).as_matrix()
-    #   print("Loaded covariates from " + self.data_opts['covariatesFile'] + "with shape " + str(self.data_opts['covariates'].shape) + "...")
-
-    #   # Scale covariates
-    #   self.data_opts['scale_covariates'] = self.data_opts['scale_covariates']
-    #   if len(self.data_opts['scale_covariates']) == 1 and self.data_opts['covariates'].shape[1] > 1:
-    #     self.data_opts['scale_covariates'] = self.data_opts['scalecovariates'][0] * s.ones(self.data_opts['covariates'].shape[1])
-    #   elif type(self.data_opts['scale_covariates'])==list:
-    #     assert len(self.data_opts['scale_covariates']) == self.data_opts['covariates'].shape[1], "'scale_covariates' has to be the same length as the number of covariates"
-    #   self.data_opts['scale_covariates'] = [ bool(x) for x in self.data_opts['scale_covariates'] ]
-
-    #   # Add the number of covariates to the total number of factors
-    #   self.model_opts['factors'] += self.data_opts['covariates'].shape[1]
-
-    #   # Parse covariates
-    #   self.parse_covariates()
-
-    # else:
-    #   self.data_opts['scale_covariates'] = False
-    #   self.data_opts['covariates'] = None
-
-    self.data_opts['covariates'] = None
-    self.data_opts['scale_covariates'] = False
-
   def define_priors(self):
     """ Define priors of the model"""
 
@@ -284,7 +246,7 @@ class entry_point():
 
     # Weights
     self.model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M } # Not required
-    self.model_opts["priorAlphaW"] = { 'a':[s.ones(K)*1e-14]*M, 'b':[s.ones(K)*1e-14]*M }
+    self.model_opts["priorAlpha"] = { 'a':[s.ones(K)*1e-14]*M, 'b':[s.ones(K)*1e-14]*M }
 
     # Theta
     self.model_opts["priorTheta"] = { 'a':[s.ones(K,) for m in range(M)], 'b':[s.ones(K,) for m in range(M)] }
@@ -298,7 +260,13 @@ class entry_point():
     self.model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-14 for m in range(M)], 'b':[s.ones(D[m])*1e-14 for m in range(M)] }
 
   def define_init(self, initTheta=1.):
-    """ Define Initialisations of the model"""
+    """ Define Initialisations of the model
+
+        PARAMETERS
+        ----------
+        initTheta flaot
+          initialisation for theta. Default is 1. (no sparsity)
+    """
 
     N = self.dimensionalities["N"]
     K = self.dimensionalities["K"]
@@ -312,15 +280,12 @@ class entry_point():
     self.model_opts["initTau"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(D[m])*100 for m in range(M)] }
 
     # ARD of weights
-    self.model_opts["initAlphaW"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*1. for m in range(M)] }
+    self.model_opts["initAlpha"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*1. for m in range(M)] }
 
     # Theta
     self.model_opts["initTheta"] = { 'a':[s.ones(K,) for m in range(M)], 'b':[s.ones(K,) for m in range(M)], 'E':[s.nan*s.zeros((D[m],K)) for m in range(M)] }
     if type(initTheta) is float:
       self.model_opts['initTheta']['E'] = [s.ones((D[m],K))*initTheta for m in range(M)]
-    # elif type(self.model_opts["initTheta"]) == list:
-    #   assert len(self.model_opts["initTheta"]) == M, "--initTheta has to be a binary vector with length number of views"
-    #   self.model_opts['initTheta']['E']= [ self.model_opts["initTheta"][m]*s.ones((D[m],K)) for m in range(M) ]
     else:
        print("Error: 'initTheta' must be a float")
        exit()
@@ -345,6 +310,9 @@ class entry_point():
   def parse_covariates(self):
     """ Parse covariates """
 
+    print("Covariates are not functional")
+    exit()
+
     K = self.dimensionalities["K"]
     M = self.dimensionalities["M"]
 
@@ -361,6 +329,9 @@ class entry_point():
 
   def parse_intercept(self):
     """ Parse intercept factor """
+
+    # Sanity checks
+    # TO-DO: CHECK THAT MODEL_OPTS AND DATA_OPTS ARE PROPERLY DEFINED
 
     K = self.dimensionalities["K"]
     M = self.dimensionalities["M"]
@@ -403,7 +374,35 @@ class entry_point():
   def train_model(self):
     """ Train the model """
 
+    # Sanity checks
+    # TO-DO: CHECK THAT DATA_OPTS, TRAIN_OPTS AND MODEL_OPTS ARE PROPERLY DEFINED
+    assert hasattr(self, 'data'), "Data has to be defined before training the model"
+
     sys.stdout.flush()
-    runMOFA(self.data, self.data_opts, self.model_opts, self.train_opts, self.train_opts['seed'])
+    self.model = runMOFA(self.data, self.data_opts, self.model_opts, self.train_opts, self.train_opts['seed'])
     sys.stdout.flush()
 
+  def save(self, outfile):
+    """ Save the model """
+
+    # Sanity checks
+    assert hasattr(self, 'data'), "Data has to be defined before training the model"
+    assert hasattr(self, 'model'), "No trained model found"
+
+    # Create output directory
+    if not os.path.isdir(os.path.dirname(outfile)):
+        print("Output directory does not exist, creating it...")
+        os.makedirs(os.path.dirname(outfile))
+
+    sample_names = self.data[0].index.tolist()
+    feature_names = [  self.data[m].columns.values.tolist() for m in range(len(self.data)) ]
+
+    if self.train_opts["verbose"]: print("Saving model in %s...\n" % outfile)
+    saveModel(self.model, 
+      outfile=self.data_opts['outfile'], 
+      view_names=self.data_opts['view_names'],
+      sample_names=sample_names, 
+      feature_names=feature_names, 
+      train_opts=self.train_opts, 
+      model_opts=self.model_opts
+    )

@@ -43,7 +43,7 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", i
     stopifnot(all(views %in% viewNames(object)))  
   }
   M <- length(views)
-
+  
   # Define factors
   if (paste0(factors,collapse="") == "all") { 
     factors <- factorNames(object) 
@@ -58,66 +58,53 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", i
   }
   factors <- factors[factors!="intercept"]
   K <- length(factors)
-
+  
   # Collect relevant expectations
   W <- getWeights(object,views,factors)
   Z <- getFactors(object,factors)
   Y <- getExpectations(object,"Y") # for non-Gaussian likelihoods the pseudodata is considered
   
-  # Calulcate feature-wise means as null model
-  FeatureMean <- lapply(views, function(m)  { apply(Y[[m]],2,mean,na.rm=T) })
-  names(FeatureMean) <- views
-
   # Sweep out the feature-wise mean to calculate null model residuals
-  resNullModel <- lapply(views, function(m) sweep(Y[[m]],2,FeatureMean[[m]],"-"))
+  resNullModel <- lapply(views, function(m) sweep(Y[[m]],2,colMeans(Y[[m]],na.rm=T),"-"))
   names(resNullModel) <- views
-
+  
   # replace masked values on Z by 0 (so that they do not contribute to predictions)
   Z[is.na(Z)] <- 0 
-    
+  
   # Calculate predictions under the MOFA model using all (non-intercept) factors
   Ypred_m <- lapply(views, function(m) Z%*%t(W[[m]])); names(Ypred_m) <- views
-
-  # Calculate predictions under the MOFA model using each (non-intercept) factors on its own
-  Ypred_mk <- lapply(views, function(m) {
-                      ltmp <- lapply(factors, function(k) Z[,k]%*%t(W[[m]][,k]) )
-                      names(ltmp) <- factors
-                      ltmp
-                    })
-  names(Ypred_mk) <- views
   
   # If an intercept is included, regress out the intercept from the data
   if (include_intercept==T) {
-      intercept <- getWeights(object,views,"intercept")
-      Y <- lapply(views, function(m) sweep(Y[[m]],2,intercept[[m]],"-"))
-      names(Y) <- views
+    intercept <- getWeights(object,views,"intercept")
+    Y <- lapply(views, function(m) sweep(Y[[m]],2,intercept[[m]],"-"))
+    names(Y) <- views
   }
-
-  # Calculate coefficient of determination per view
-  fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T))
-   
-  # Calculate coefficient of determination per factor and view
-  tmp <- sapply(views, function(m) {
-    sapply(factors, function(k) {
-      1 - sum((Y[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) 
-    })
-  }) 
-  fvar_mk <- matrix(tmp, ncol=length(views), nrow=length(factors))
   
-  # Set names
+  # Calculate coefficient of determination per view
+  tmp <- sapply(views, function(m) sum(resNullModel[[m]]**2, na.rm=T))
+  fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2, na.rm=T) / tmp[m])
   names(fvar_m) <- views
+  
+  # Calculate coefficient of determination per factor and view
+  fvar_mk <- matrix(99, ncol=length(views), nrow=length(factors))
   colnames(fvar_mk) <- views
   rownames(fvar_mk) <- factors
-
+  for (m in views) {
+    for (k in factors) {
+      fvar_mk[k,m] <- 1 - sum( (Y[[m]]-(Z[,k]%*%t(W[[m]][,k])) )**2, na.rm=T) / tmp[m]
+    }
+  }
+  
   # Replace negative values by zero
   fvar_m[fvar_m<0] <- 0
   fvar_mk[fvar_mk<0] <- 0
   
   # Store results
   R2_list <- list(R2Total = fvar_m, R2PerFactor = fvar_mk)
-
+  
   return(R2_list)
- 
+  
 }
 
 #' @title Plot variance explained by the model

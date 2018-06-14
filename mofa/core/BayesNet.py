@@ -20,7 +20,7 @@ from .utils import corr, nans
 
 
 class BayesNet(object):
-    def __init__(self, dim, nodes, schedule, options):
+    def __init__(self, dim, nodes, options):
         """ Initialisation of a Bayesian network
 
         PARAMETERS
@@ -29,15 +29,12 @@ class BayesNet(object):
             keyworded dimensionalities, ex. {'N'=10, 'M'=3, ...}
         nodes: dict
             dictionary with all nodes where the keys are the name of the node and the values are instances the 'Node' class
-        schedule: iterable
-            list or tuple with the names of the nodes to be updated in the given order. Nodes not present in schedule will not be updated
         options: dict
-            training options, such as maximum number of iterations, training options, etc.
+            training options, such as schedule of updates, maximum number of iterations, training options, etc.
         """
 
         self.dim = dim
         self.nodes = nodes
-        self.schedule = schedule
         self.options = options
 
         # Training flag
@@ -139,6 +136,10 @@ class BayesNet(object):
         elbo = pd.DataFrame(data = nans((self.options['maxiter'], len(nodes)+1 )), columns = nodes+["total"] )
         activeK = nans((self.options['maxiter']))
         
+        # Precompute updates
+        for n in self.nodes:
+            self.nodes[n].precompute()
+        
         # Start training
         for i in range(self.options['maxiter']):
             t = time();
@@ -150,10 +151,13 @@ class BayesNet(object):
                 activeK[i] = self.dim["K"]
 
             # Update node by node, with E and M step merged
-            for node in self.schedule:
+            for node in self.options["schedule"]:
                 if node=="Theta" and i<self.options['startSparsity']:
                     continue
+                # t = time();
                 self.nodes[node].update()
+                # print(node)
+                # print(t - time())
 
             # Calculate Evidence Lower Bound
             if (i+1) % self.options['elbofreq'] == 0:
@@ -173,7 +177,7 @@ class BayesNet(object):
                     print("Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, Factors=%d, Covariates=%d" % (i+1, time()-t, elbo.iloc[i]["total"], delta_elbo, (~self.nodes["Z"].covariates).sum(), self.nodes["Z"].covariates.sum() ))
                     if self.options['verbose']:
                         print("".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n")
-                    if delta_elbo<0 and self.options['verbose']: print("Warning, lower bound is decreasing..."); print('\a')
+                    if delta_elbo<0 and i!=self.options['startSparsity'] and self.options['verbose']: print("Warning, lower bound is decreasing..."); print('\a')
 
                     # Assess convergence
                     if (0 <= delta_elbo < self.options['tolerance']) and (not self.options['forceiter']):

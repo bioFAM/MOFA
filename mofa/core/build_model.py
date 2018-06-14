@@ -32,19 +32,12 @@ def runMOFA(data, data_opts, model_opts, train_opts, seed=None):
     """
 
 
-    ###########################
-    ## Perform sanity checks ##
-    ###########################
-
     # set the seed
     if seed is None or seed==0:
         seed = int(round(time()*1000)%1e6)
     s.random.seed(seed)
 
-    # Create output directory
-    if not os.path.isdir(os.path.dirname(data_opts["outfile"])):
-        print("Output directory does not exist, creating it...")
-        os.makedirs(os.path.dirname(data_opts["outfile"]))
+
 
     ####################
     ## Parse the data ##
@@ -79,6 +72,9 @@ def runMOFA(data, data_opts, model_opts, train_opts, seed=None):
 
     init = initModel(dim, data, model_opts["likelihoods"], seed=seed)
 
+    # Observed data
+    init.initY()
+    
     # Latent variables
     init.initZ(pmean=model_opts["priorZ"]["mean"], pvar=model_opts["priorZ"]["var"],
                qmean=model_opts["initZ"]["mean"], qvar=model_opts["initZ"]["var"], qE=model_opts["initZ"]["E"], qE2=model_opts["initZ"]["E2"],
@@ -90,8 +86,8 @@ def runMOFA(data, data_opts, model_opts, train_opts, seed=None):
                 qEW_S0=model_opts["initSW"]["EW_S0"], qEW_S1=model_opts["initSW"]["EW_S1"], qES=model_opts["initSW"]["ES"])
 
     # ARD on weights
-    init.initAlphaW_mk(pa=model_opts["priorAlphaW"]['a'], pb=model_opts["priorAlphaW"]['b'],
-                       qa=model_opts["initAlphaW"]['a'], qb=model_opts["initAlphaW"]['b'], qE=model_opts["initAlphaW"]['E'])
+    init.initAlpha(pa=model_opts["priorAlpha"]['a'], pb=model_opts["priorAlpha"]['b'],
+                       qa=model_opts["initAlpha"]['a'], qb=model_opts["initAlpha"]['b'], qE=model_opts["initAlpha"]['E'])
 
     # Precision of noise
     init.initTau(pa=model_opts["priorTau"]['a'], pb=model_opts["priorTau"]['b'],
@@ -118,15 +114,13 @@ def runMOFA(data, data_opts, model_opts, train_opts, seed=None):
             qa=model_opts["initTheta"]['a'],  qb=model_opts["initTheta"]['b'], qE=model_opts["initTheta"]['E'],
             sparsity=model_opts['sparsity'])
 
-    # Observed data
-    init.initY()
 
     # Define the markov blanket of each node
     nodes = init.getNodes()
     nodes["Z"].addMarkovBlanket(SW=nodes["SW"], Tau=nodes["Tau"], Y=nodes["Y"])
     nodes["Theta"].addMarkovBlanket(SW=nodes["SW"])
-    nodes["AlphaW"].addMarkovBlanket(SW=nodes["SW"])
-    nodes["SW"].addMarkovBlanket(Z=nodes["Z"], Tau=nodes["Tau"], Alpha=nodes["AlphaW"], Y=nodes["Y"], Theta=nodes["Theta"])
+    nodes["Alpha"].addMarkovBlanket(SW=nodes["SW"])
+    nodes["SW"].addMarkovBlanket(Z=nodes["Z"], Tau=nodes["Tau"], Alpha=nodes["Alpha"], Y=nodes["Y"], Theta=nodes["Theta"])
     nodes["Y"].addMarkovBlanket(Z=nodes["Z"], SW=nodes["SW"], Tau=nodes["Tau"])
     nodes["Tau"].addMarkovBlanket(Z=nodes["Z"], SW=nodes["SW"], Y=nodes["Y"])
 
@@ -135,18 +129,17 @@ def runMOFA(data, data_opts, model_opts, train_opts, seed=None):
     #################################
 
     # Initialise Bayesian Network
-    net = BayesNet(dim=dim, schedule=model_opts["schedule"], nodes=init.getNodes(), options=train_opts)
+    net = BayesNet(dim=dim, nodes=init.getNodes(), options=train_opts)
 
     ####################
     ## Start training ##
     ####################
 
     print ("\n")
-    print ("#"*45)
+    print ("#"*34)
     print ("## Running MOFA with seed %d ##" % seed)
-    print ("#"*45)
+    print ("#"*34)
     print ("\n")
-    sleep(1)
     
     net.iterate()
 
@@ -156,14 +149,4 @@ def runMOFA(data, data_opts, model_opts, train_opts, seed=None):
     print("#"*43)
     print("\n")
 
-
-    ##################
-    ## Save results ##
-    ##################
-    
-    sample_names = data[0].index.tolist()
-    feature_names = [  data[m].columns.values.tolist() for m in range(len(data)) ]
-    print("Saving model in %s...\n" % data_opts['outfile'])
-    saveModel(net, outfile=data_opts['outfile'], 
-        view_names=data_opts['view_names'], sample_names=sample_names, feature_names=feature_names,
-        train_opts=train_opts, model_opts=model_opts)
+    return net

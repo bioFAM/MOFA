@@ -35,12 +35,12 @@ scMT_data
 
 First, we create the MOFA object:
 ```{r}
-MOFAobject <- createMOFAobject(scMT_data)
+MOFAobject <- createMOFAobject(list(MultiAssayExperiment::assays(scMT_data)[["RNA expression"]]))
 ```
 
 The function `plotTilesData` can be used to obtain an overview of the structure of the data:
 ```{r}
-plotTilesData(MOFAobject, colors=c("#31A354","#377EB8","#377EB8","#377EB8"))
+# plotTilesData(MOFAobject, colors=c("#31A354","#377EB8","#377EB8","#377EB8"))
 ```
 
 # Fit the MOFA model
@@ -53,25 +53,33 @@ First, we define input and output options:
 ```{r}
 DirOptions <- list(
   "dataDir" = tempdir(), # Directory to store the input matrices as .txt files, it can be a temporary folder
-  "outFile" = tempfile() # Output file of the model (use hdf5 extension)
+  "outFile" = "/Users/ricard/scMT_model.hdf5" # Output file of the model (use hdf5 extension)
 )
 ```
 
+### Define data options
+Next, we define data options. The most important are:  
+* **centerFeatures**:  logical indicating whether to learn the intercept (the means) in a per feature basis. This prevents you from having to center the data, so this option is always recommended (Default is TRUE). Only works for Gaussian views.
+* **removeIncompleteSamples**: logical indicating whether to remove samples that are not profiled in all omics (Default is FALSE)
+```{r}
+DataOptions <- getDefaultDataOptions()
+DataOptions$centerFeatures <- TRUE
+```
+
+
 ### Define model options
 Next, we define model options. The most important are:  
-
 * **numFactors**: initial number of factors (default is 25). If you want the model to automatically learn the number of factors based on minimum variance explained, set `modelOptions$numFactors` to a large value and make sure you define the `TrainOptions$dropFactorThreshold` parameter. Alternatively, if you want to learn a fixed number of factors, set `TrainOptions$dropFactorThreshold` to zero.
 * **likelihoods**: likelihood for each view. Usually we recommend gaussian for continuous data, bernoulli for binary data and poisson for count data. If not provided, the model tries to guess it from the data.
 * **sparsity**: do you want to use sparsity? This makes the interpretation easier so it is recommended (Default is TRUE).
 
 ```{r}
 ModelOptions <- getDefaultModelOptions(MOFAobject)
-ModelOptions
+ModelOptions$learnIntercept <- F
 ```
 
 ### Define training options
 Next, we define training options. The most important are:  
-
 * **maxiter**: Maximum number of iterations. Ideally set it large enough and use the convergence criteria `TrainOptions$tolerance`.
 * **learnFactors**: Logical indicating whether to learn the number of factors. If you want the model to automatically learn the number of factors based on a minimum variance explained criterion, set `ModelOptions$numFactors` to a large value and make sure you define the `TrainOptions$dropFactorThreshold` parameter. If `TrainOptions$learnFactors==FALSE` then set `TrainOptions$dropFactorThreshold` to zero. 
 * **tolerance**: Convergence threshold based on change in the evidence lower bound. For an exploratory run you can use a value between 1.0 and 0.1, but for a "final" model we recommend a value of 0.01.
@@ -80,7 +88,8 @@ Next, we define training options. The most important are:
 ```{r}
 TrainOptions <- getDefaultTrainOptions()
 TrainOptions$seed <- 2017
-TrainOptions
+TrainOptions$learnFactors <- FALSE
+TrainOptions$maxiter <- 1000
 ```
 
 ## Prepare MOFA
@@ -89,6 +98,7 @@ TrainOptions
 MOFAobject <- prepareMOFA(
   MOFAobject, 
   DirOptions = DirOptions,
+  DataOptions = DataOptions,
   ModelOptions = ModelOptions,
   TrainOptions = TrainOptions
 )
@@ -97,7 +107,7 @@ MOFAobject <- prepareMOFA(
 ## Run MOFA
 Now we are ready to train the `MOFAobject`, which is done with the function `runMOFA`. This step can take some time (around 20 min with default parameters). For illustration we provide an existing trained `MOFAobject`
 ```{r, eval=FALSE}
-MOFAobject <- runMOFA(MOFAobject)
+MOFAobject <- runMOFA(MOFAobject, DirOptions)
 ```
 
 ```{r}
@@ -171,7 +181,7 @@ plotTopWeights(
 Also, instead of looking at the "abstract" weights, it is useful to observe, in the original data, the heterogeneity captured by a Factor. This can be done using the `plotDataHeatmap` function.
 ```{r}
 # Add metadata to the plot
-factor1 <- sort(getFactors(MOFAobject,"1")[,1])
+factor1 <- sort(getFactors(MOFAobject,"LF1")[,1])
 order_samples <- names(factor1)
 df <- data.frame(
   row.names = order_samples,
@@ -249,7 +259,7 @@ plotWeights(
 ```
 
 ```{r, message=FALSE}
-factor2 <- sort(getFactors(MOFAobject,"2")[,1])
+factor2 <- sort(getFactors(MOFAobject,"LF2")[,1])
 order_samples <- names(factor2)
 df <- data.frame(
   row.names = order_samples,
@@ -273,7 +283,7 @@ In this data set, the **combination of Factor 1 and Factor 2 captured the entire
 ```{r, message=FALSE}
 p <- plotFactorScatter(
   object = MOFAobject, 
-  factors=c("1","2"), 
+  factors=1:2, 
   color_by = "culture"
 )
 p + scale_color_manual(values=c("lightsalmon","orangered3"))
@@ -320,15 +330,13 @@ imputedMethylation[1:5,1:5]
 Samples can be clustered according to their values on the latent factors using the `clusterSamples` function.
 ```{r, message=FALSE}
 # Hierarchical clustering with K=2 using Factor 1
-clusters <- clusterSamples(MOFAobject, k=2, factors=1)
+h <- clusterSamples(MOFAobject, k=2, factors=1)
 
 # Scatterplot colored by the predicted cluster labels and shaped by the true culture conditions
 plotFactorScatter(
   object = MOFAobject,
   factors = 1:2,
-  color_by = clusters,
+  color_by = h$cluster,
   shape_by = "culture"
 )
 ```
-
-

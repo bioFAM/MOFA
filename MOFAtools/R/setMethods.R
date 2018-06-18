@@ -183,7 +183,7 @@ setMethod("viewNames<-", signature(object="MOFAmodel", value="character"),
     
     # We have to modify this
     if (object@Status == "trained"){
-      multiview_nodes <- c("AlphaW","W","Tau","Theta","Y")
+      multiview_nodes <- c("Alpha","W","Tau","Theta","Y")
       for (node in multiview_nodes) { 
         names(object@Expectations[[node]]) <- value 
       }

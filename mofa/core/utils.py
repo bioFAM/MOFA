@@ -1,5 +1,6 @@
 from __future__ import division
 from time import sleep
+from copy import deepcopy
 
 import numpy as np
 import pandas as pd
@@ -94,27 +95,32 @@ def parseData(data, data_opts):
     data: list of numpy arrays or pandas dataframes
     """
     M = len(data)
+    parsed_data = deepcopy(data)
     for m in range(M):
+        # Convert to float32
+        parsed_data[m] = parsed_data[m].astype(pd.np.float32)
 
+        # For some reason, reticulate stores missing values in integer matrices as -2147483648
+        parsed_data[m][parsed_data[m] == -2147483648] = np.nan
         # Center the features
         if data_opts['center_features'][m]:
             print("Centering features for view " + str(m) + "...")
-            data[m] = (data[m] - data[m].mean(axis=0))
+            parsed_data[m] = parsed_data[m] - np.nanmean(parsed_data[m],axis=0)
 
         # Scale the views to unit variance
         if data_opts['scale_views'][m]:
             print("Scaling view " + str(m) + " to unit variance...")
-            data[m] = data[m] / np.nanstd(data[m].as_matrix())
+            parsed_data[m] = parsed_data[m] / np.nanstd(parsed_data[m].as_matrix())
 
         # Scale the features to unit variance
         if data_opts['scale_features'][m]:
             print("Scaling features for view " + str(m) + " to unit variance...")
-            data[m] = data[m] / np.std(data[m], axis=0, )
+            parsed_data[m] = parsed_data[m] / np.nanstd(parsed_data[m], axis=0, )
 
     print("\nAfter parsing the data:")
-    for m in range(M): print("view %d has %d samples and %d features..." % (m, data[m].shape[0], data[m].shape[1]))
+    for m in range(M): print("view %d has %d samples and %d features..." % (m, parsed_data[m].shape[0], parsed_data[m].shape[1]))
 
-    return data
+    return parsed_data
 
 def qcData(data):
     """ Method to do quality control on the data
@@ -147,7 +153,7 @@ def qcData(data):
         # Detect features with complete missing values
         nas = np.isnan(data[m]).mean(axis=0)
         if np.any(nas==1.):
-            print("Error: %d features(s) on view %d have missing values in all samples, remove them before running the model." % ( (nas==1.).sum(), m) )
+            print("Error: %d features(s) on view %d have missing values in all samples, please remove them before running the model." % ( (nas==1.).sum(), m) )
             exit()
             # data[m].drop(data[m].columns[np.where(nas==1.)], axis=1, inplace=True)
 
@@ -432,7 +438,9 @@ def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_na
     data = model.getTrainingData()
     data_grp = hdf5.create_group("data")
     featuredata_grp = hdf5.create_group("features")
-    hdf5.create_dataset("samples", data=np.array(sample_names, dtype='S50'))
+
+    if sample_names is not None:
+        hdf5.create_dataset("samples", data=np.array(sample_names, dtype='S50'))
 
     # if likelihoods is not None:
     #     data_grp.attrs['likelihood'] = np.array(likelihoods, dtype='S50')
@@ -441,7 +449,6 @@ def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_na
         view = view_names[m] if view_names is not None else str(m)
         data_grp.create_dataset(view, data=data[m].data.T)
         if feature_names is not None:
-            # data_grp.attrs['features'] = np.array(feature_names[m], dtype='S')
             featuredata_grp.create_dataset(view, data=np.array(feature_names[m], dtype='S50'))
         
 
@@ -455,8 +462,12 @@ def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_na
 
     # QC checks
     assert model.trained == True, "Model is not trained yet"
-    assert len(np.unique(view_names)) == len(view_names), 'View names must be unique'
-    assert len(np.unique(sample_names)) == len(sample_names), 'Sample names must be unique'
+    if view_names is not None:
+        assert len(np.unique(view_names)) == len(view_names), 'View names must be unique'
+    if sample_names is not None:
+        assert len(np.unique(sample_names)) == len(sample_names), 'Sample names must be unique'
+    if feature_names is not None:
+        for x in feature_names: assert len(np.unique(x)) == len(x), 'Feature names must be unique'
 
     # Create output directory
     if not os.path.isdir(os.path.dirname(outfile)):

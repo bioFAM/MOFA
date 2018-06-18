@@ -240,8 +240,8 @@ class initModel(object):
             if Kconst.sum() == 0:
                 ConstThetaNode = None
             else:
-                # ConstThetaNode = Theta_Constant_Node(dim=(self.D[m],s.sum(Kconst),), value=s.repeat(qE[m][:,Kconst][None,:], self.D[m], 0), N_cells=1.)
-                ConstThetaNode = Theta_Constant_Node(dim=(self.D[m],s.sum(Kconst),), value=qE[m][:,Kconst], N_cells=1)
+                # ConstThetaNode = Theta_Constant_Node(dim=(self.D[m],s.sum(Kconst),), value=qE[m][:,Kconst])
+                ConstThetaNode = Theta_Constant_Node(dim=(s.sum(Kconst),), value=qE[m][Kconst])
                 Theta_list[m] = ConstThetaNode
 
             # Initialise non-constant node
@@ -250,7 +250,7 @@ class initModel(object):
                 LearnThetaNode = None
             else:
                 # FOR NOW WE JUST TAKE THE FIRST ROW BECAUSE IT IS EXPANDED. IT IS UGLY AS HELL
-                LearnThetaNode = Theta_Node(dim=(s.sum(Klearn),), pa=pa[m][Klearn], pb=pb[m][Klearn], qa=qa[m][Klearn], qb=qb[m][Klearn], qE=qE[m][0,Klearn])
+                LearnThetaNode = Theta_Node(dim=(s.sum(Klearn),), pa=pa[m][Klearn], pb=pb[m][Klearn], qa=qa[m][Klearn], qb=qb[m][Klearn], qE=qE[m][Klearn])
                 Theta_list[m] = LearnThetaNode
 
             # Initialise mixed node

@@ -48,7 +48,7 @@ runMOFA <- function(object, outfile) {
   mofa_entrypoint <- mofa$core.entry_point$entry_point()
   
   # Pass data
-  mofa_entrypoint$set_data(data=object@TrainData)
+  mofa_entrypoint$set_data(data=lapply(object@TrainData, function(x) r_to_py(x)))
   
   # Pass model options 
   mofa_entrypoint$set_model_options(
@@ -92,7 +92,9 @@ runMOFA <- function(object, outfile) {
   mofa_entrypoint$train_model()
   
   # Save the model
-  mofa_entrypoint$save_model(outfile)
+  sample_names <- colnames(object@TrainData[[1]])
+  feature_names <- unname(lapply(object@TrainData,rownames))
+  mofa_entrypoint$save_model(outfile, sample_names=sample_names, feature_names=feature_names)
   
   # Load the model back into R
   object <- loadModel(outfile, object)

@@ -85,10 +85,6 @@ class PseudoY(Unobserved_Variational_Node):
     def getMask(self):
         return ma.getmask(self.obs)
 
-    def precompute(self):
-        # Precompute some terms to speed up the calculations
-        pass
-
     def updateExpectations(self):
         print("Error: expectation updates for pseudodata node depend on the type of likelihood. They have to be specified in a new class.")
         exit()
@@ -227,7 +223,7 @@ class Bernoulli_PseudoY(PseudoY_Seeger):
         PseudoY_Seeger.__init__(self, dim=dim, obs=obs, params=params, E=E)
 
         # Initialise the observed data
-        assert s.all( (self.obs==0) | (self.obs==1) ), "Data must be binary, encoded as zeroes and ones"
+        assert s.all( (self.obs==0) | (self.obs==1) ), "Data modelled using bernoulli likelihood must be binary, encoded as 0s or 1s"
 
     def updateExpectations(self):
         # Update the pseudodata
@@ -353,9 +349,9 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY):
     """
     def __init__(self, dim, obs, params=None, E=None):
         PseudoY.__init__(self, dim=dim, obs=obs, params=params, E=E)
-
+        
         # Initialise the observed data
-        assert s.all( (self.obs==0) | (self.obs==1) ), "Data must be binary"
+        assert s.all( (self.obs==0) | (self.obs==1) ), "Data modelled using bernoulli likelihood must be binary, encoded as 0s or 1s"
 
     def updateExpectations(self):
         self.E = (2.*self.obs - 1.)/(4.*lambdafn(self.params["zeta"]))

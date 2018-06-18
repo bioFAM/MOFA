@@ -136,9 +136,11 @@ class Multiview_Mixed_Node(Multiview_Constant_Node, Multiview_Variational_Node):
         # nodes: list of M 'Node' instances
         Multiview_Node.__init__(self, M, *nodes)
 
+
     def update(self):
         """Method to update values of the nodes"""
-        for m in self.activeM: self.nodes[m].update()
+        for m in self.activeM: 
+            self.nodes[m].update()
 
     def calculateELBO(self):
         """Method to calculate variational evidence lower bound

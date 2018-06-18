@@ -8,7 +8,7 @@
     # if (all(data %in% c(0,1,NA))) {
     if (length(unique(data[!is.na(data)]))==2) {
       likelihood[view] <- "bernoulli"
-    } else if (all(data[!is.na(data)]%%1==0)) {
+    } else if (all(data[!is.na(data)]%%1==0 & data[!is.na(data)]>=0)) {
       likelihood[view] <- "poisson"
     }
   }

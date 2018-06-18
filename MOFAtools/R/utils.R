@@ -1,4 +1,5 @@
 
+# Function to automatically infer the likelihoods from the data
 .inferLikelihoods <- function(object) {
   likelihood <- rep(x="gaussian", times=object@Dimensions$M)
   names(likelihood) <- viewNames(object)
@@ -16,6 +17,7 @@
   return(likelihood)
 }
 
+# Function to update old models
 .updateOldModel <- function(object) {
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
   
@@ -82,6 +84,9 @@ subset_augment <- function(mat, pats) {
 }
 
 
+# Function to mask passenger samples.
+# Passenger samples n occur when factor k is unique to view m, but sample n is missing view m.
+# In such a case, the model has no information on the value of sample n on factor k, and the value should be masked.
 .detectPassengers <- function(object, views = "all", factors = "all", r2_threshold = 0.02) {
   
   # Sanity checks

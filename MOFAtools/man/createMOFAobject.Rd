@@ -10,7 +10,8 @@ createMOFAobject(data)
 \item{data}{either a \code{MultiAssayExperiment} or a list of matrices with features as rows and samples as columns.}
 }
 \value{
-Returns an untrained \code{\link{MOFAmodel}} object. This object can then be passed to \code{\link{prepareMOFA}} and \code{\link{runMOFA}} for training.
+Returns an untrained \code{\link{MOFAmodel}} object. \cr
+Next step is to define the training, model and data processing options (see  \code{\link{prepareMOFA}})
 }
 \description{
 Method to initialize a \code{\link{MOFAmodel}} object with a multi-omics data set.
@@ -38,5 +39,6 @@ MOFAobject <- createMOFAobject(mae_CLL)
 # (training in runMOFA can take some time):
 \dontrun{
 # MOFAobject <- prepareMOFA(MOFAobject)
-# MOFAobject <- runMOFA(MOFAobject)}
+# MOFAobject <- runMOFA(MOFAobject)
+}
 }

@@ -1,7 +1,7 @@
 
-##########################################################
-## Functions to cluster samples based on latent factors ##
-##########################################################
+###############################################################################
+## Functions to cluster samples in the low-dimensional factor representation ##
+###############################################################################
 
 #' @title clusterSamples: K-means clustering on samples based on latent factors
 #' @name clusterSamples
@@ -15,9 +15,17 @@
 #' @param factors character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. 
 #' Default is 'all'
 #' @param ... extra arguments  passed to \code{\link{kmeans}}
-#' @details In some cases, samples can have missing values in the latent factor space. 
-#' This happens if a factors is active only in views where these samples have no data.
-#' In such a case, these samples are currently ignored in the clustering procedure and NAs are returned.
+#' @details In some cases, samples can have missing values in the factor space. 
+#' This occurs when a factor is active in a single view and some samples are missing this data. \cr
+#' In such a case, there are several strategies to follow: \cr
+#' \itemize{
+#'  \item{}{ Use clustering approaches that deal with NAs (not implemented in MOFAtools)}
+#'  \item{}{ If the factor in question is not important, you can remove it with \code{\link{subsetFactors}}}
+#'  \item{}{ If the factor in question is important and just a small number of samples are conflictive, 
+#'  you can manually set them to 0 using \code{object@Expectations$Z[is.na(object@Expectations$Z)] <- 0}}
+#' }
+#' By default, the conflictive samples are ignored in the clustering procedure and NAs are returned.
+#' 
 #' @return output from \code{\link{kmeans}} function
 #' @export
 #' @examples

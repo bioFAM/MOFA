@@ -66,38 +66,32 @@ This part of the pipeline is implemented in Python, so first of all make sure yo
 
 ## Define options
 
-### Define I/O options
-```{r}
-DirOptions <- list(
-  "dataDir" = tempdir(), # Folder to store the input matrices as .txt files, it can be a simple temporary folder
-  "outFile" = tempfile() # Output file of the model (use hdf5 extension)
-)
-```
-
 ### Define data options
 The most important options the user needs to define are:
-* centerFeatures: logical indicating whether to center the features to zero mean. This is optional, the model can learn the feature-wise means by setting ModelOptions$learnIntercept to TRUE. This option only applies to continuous data that is modelled with a gaussian likelihood. Binary or count data are not centered.
-* scaleViews: logical indicating whether to scale views to have unit variance. As long as the scale differences between the data sets is not too high, this is not required. Default is FALSE.
-* removeIncompleteSamples: logical indicating whether to remove samples that are not profiled in all omics. The model can cope with missing assays, so this option is not required. Default is FALSE.
+* **centerFeatures**: logical indicating whether to center the features to zero mean. This is optional, as the model can learn the feature-wise intercepts by setting ModelOptions$learnIntercept to TRUE. However, centered data is always recommended, so default is TRUE. Note that this only applies to continuous data that is modelled with a gaussian likelihood. Binary or count data are not centered.
+* **scaleViews**: logical indicating whether to scale views to have unit variance. As long as the scale of the different data sets is not too high, this is not required. Default is FALSE.
+* **removeIncompleteSamples*+: logical indicating whether to remove samples that are not profiled in all omics. The model can cope with missing assays, so this option is not required. Default is FALSE.
 ```{r}
 DataOptions <- getDefaultDataOptions()
 DataOptions 
 ```
 
 ### Define model options
-The most important options the user needs to define are:
-* numFactors: initial number of factors
-* likelihoods: likelihood for each view, gaussian for continuous data, bernoulli for binary data and poisson for count data. If not provided, the model tries to guess it from the data.
+Next, we define model options. The most important are:  
+* **numFactors**: number of factors (default is 25). By default, the model does not automatically learn the number of factors. If you want the model to do this (based on a minimum variance explained criteria), set `TrainOptions$learnFactors` to `TRUE` and set `TrainOptions$dropFactorThreshold` to a non-zero value.
+* **likelihoods**: likelihood for each view. Usually we recommend gaussian for continuous data, bernoulli for binary data and poisson for count data. By default, the model tries to guess it from the data.
+* **sparsity**: do you want to use sparsity? This makes the interpretation easier so it is recommended (Default is TRUE).
 ```{r}
 ModelOptions <- getDefaultModelOptions(MOFAobject)
 ModelOptions
 ```
 
 ### Define training options
-The most important options the user needs to define are:
-* maxiter: Maximum number of iterations, ideally set it large enough and use the convergence criteria
-* tolerance: Convergence threshold based on change in the evidence lower bound. We recommend you stick to the default value.
-* DropFactorThreshold: Threshold on fraction of variance explained to define inactive factors. That is, factors explaining less than 'DropFactorThreshold' percentage of variation in all views will be dropped during training.
+Next, we define training options. The most important are:  
+* **maxiter**: maximum number of iterations. Ideally set it large enough and use the convergence criteria `TrainOptions$tolerance`.
+* **learnFactors**: logical indicating whether to automatically learn the number of factors based on a minimum variance explained criterion. If you want to use this, set `ModelOptions$numFactors` to a large value and make sure you define the `TrainOptions$DropFactorThreshold` to a non-zero value.
+* **tolerance**: convergence threshold based on change in the evidence lower bound. For an exploratory run you can use a value between 1.0 and 0.1, but for a "final" model we recommend a value of 0.01.
+* **DropFactorThreshold**: threshold of fraction of variance explained to define a factor as inactive. This is the key parameter to let the model learn the number of factors. Factors explaining less than 'DropFactorThreshold' fraction of variation in all views will be removed. For example, a value of 0.01 (default) means that factors that explain less than 1\% of variance in all views will be discarded.
 ```{r}
 TrainOptions <- getDefaultTrainOptions()
 TrainOptions$maxiter <- 1000
@@ -105,11 +99,10 @@ TrainOptions
 ```
 
 ## Prepare MOFA
-prepareMOFA internally performs a set of sanity checks, fills the TrainOptions and ModelOptions slots of the MOFAmodel object and it also creates a set of temporary files with the input matrices that will be loaded by the Python core implementation
+`prepareMOFA` internally performs a set of sanity checks and fills the `DataOptions`, `TrainOptions` and `ModelOptions` slots of the `MOFAobject`
 ```{r}
 MOFAobject <- prepareMOFA(
   MOFAobject, 
-  DirOptions = DirOptions,
   DataOptions = DataOptions,
   ModelOptions = ModelOptions,
   TrainOptions = TrainOptions
@@ -117,9 +110,9 @@ MOFAobject <- prepareMOFA(
 ```
 
 ## Run MOFA
-This step can take some time (around 20 min with default parameters), for illustration we provide an existing trained model
+Now we are ready to train the `MOFAobject`, which is done with the function `runMOFA`. This step can take some time (around 15 min with default parameters). For illustration we provide an existing trained `MOFAobject`
 ```{r, eval=FALSE}
-MOFAobject <- runMOFA(MOFAobject)
+MOFAobject <- runMOFA(MOFAobject, outfile=tempfile())
 ```
 
 ```{r}
@@ -155,7 +148,7 @@ plotVarianceExplained(MOFAobject)
 To get an overview of the weights across all factors in a given view you can use the `plotWeightsHeatmap` function.
 For example, here we plot all weights from all factors in the Mutation data:
 ```{r}
-plotWeightsHeatmap(MOFAobject, "Mutations", factors=1:5, show_colnames=F)
+plotWeightsHeatmap(MOFAobject, view = "Mutations", factors=1:5, show_colnames=F)
 ```
 Similarly, we can also plot all weights for a single factor using the 'plotWeights' function.
 For example, here we plot all weights from Factor 1 in the Mutation data:

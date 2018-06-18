@@ -8,7 +8,8 @@
 #' are stored as rows and samples are stored as columns. \cr 
 #' If the matrices have sample names, we will use them to match the different matrices, filling the corresponding missing values. \cr
 #' If matrices have no column names, all matrices must have the same number of columns, and you are responsible for filling any missing values.
-#' @return Returns an untrained \code{\link{MOFAmodel}} object. This object can then be passed to \code{\link{prepareMOFA}} and \code{\link{runMOFA}} for training.
+#' @return Returns an untrained \code{\link{MOFAmodel}} object. \cr
+#' Next step is to define the training, model and data processing options (see  \code{\link{prepareMOFA}})
 #' @export
 #' 
 #' @examples
@@ -28,7 +29,8 @@
 #' # (training in runMOFA can take some time):
 #' \dontrun{
 #' # MOFAobject <- prepareMOFA(MOFAobject)
-#' # MOFAobject <- runMOFA(MOFAobject)}
+#' # MOFAobject <- runMOFA(MOFAobject)
+#' }
 
 createMOFAobject <- function(data) {
   

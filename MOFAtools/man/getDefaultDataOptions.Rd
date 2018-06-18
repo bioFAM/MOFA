@@ -15,10 +15,11 @@ Function to obtain the default data options.
 \details{
 The data options are the following: \cr
 \itemize{
+ \item{\strong{centerFeatures}:}{ logical indicating whether to center the features to zero mean. 
+ This only works for gaussian data. Default is TRUE.}
  \item{\strong{scaleViews}:}{ logical indicating whether to scale views to have the same unit variance. 
  As long as the scale differences between the data sets is not too high, this is not required. Default is FALSE.}
- \item{\strong{centerFeatures}:}{ logical indicating whether to center the features to zero mean. This only works for gaussian data. Default is TRUE.}
  \item{\strong{removeIncompleteSamples}:}{ logical indicating whether to remove samples that are not profiled in all omics. 
-  We recommend this only for testing, as the model can cope with missing assays. Default is FALSE.}
+  We recommend this only for testing, as the model can cope with samples having missing assays. Default is FALSE.}
 }
 }

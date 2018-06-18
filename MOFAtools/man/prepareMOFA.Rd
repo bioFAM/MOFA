@@ -4,18 +4,11 @@
 \alias{prepareMOFA}
 \title{prepare a MOFAobject for training}
 \usage{
-prepareMOFA(object, DirOptions = NULL, DataOptions = NULL,
-  ModelOptions = NULL, TrainOptions = NULL)
+prepareMOFA(object, DataOptions = NULL, ModelOptions = NULL,
+  TrainOptions = NULL)
 }
 \arguments{
 \item{object}{an untrained \code{\link{MOFAmodel}}}
-
-\item{DirOptions}{list with Input/Output options. If specified it should contain: \cr
-\itemize{
- \item{\strong{dataDir}:}{ input directory where the matrices as stored as text files with row and column names and tab delimiter.}
- \item{\strong{outFile}:}{ output file where the trained model is going to be stored as an hdf5 file.}
-} 
-If NULL temporary directories and files will be used.}
 
 \item{DataOptions}{list of DataOptions (see \code{\link{getDefaultDataOptions}} details). 
 If NULL, default data options are used.}
@@ -27,7 +20,8 @@ If NULL, default model options are used.}
 If NULL, default training options are used.}
 }
 \value{
-Returns an untrained \code{\link{MOFAmodel}} with specified data, model and training options. Next step is to train the model with \code{\link{runMOFA}}
+Returns an untrained \code{\link{MOFAmodel}} with specified data, model and training options.
+Next step is to train the model with \code{\link{runMOFA}}
 }
 \description{
 Function to prepare a \code{\link{MOFAmodel}} object for training. Here, data, input/output option are specified and data, model and training options can be set.
@@ -39,19 +33,19 @@ poisson_data <- matrix(rpois(100, lambda=1),10,10)
 data <- list("gaussian_view"=gaussian_data, "poisson_view"=poisson_data)
 # Create a MOFA object
 MOFAobject <- createMOFA(data)
-# Define I/O options
-DirOptions <- list("dataDir" = tempdir(), "outFile" = tempfile())
 # Define Data Options
 DataOptions <- getDefaultDataOptions()
 # Define Model Options
 ModelOptions <- getDefaultModelOptions(MOFAobject)
+# Manually set the likelihoods 
 ModelOptions$likelihood <- c("gaussian","poisson")
 ModelOptions <- getDefaultModelOptions(MOFAobject)
 # Define Training Options
 TrainOptions <- getDefaultTrainOptions()
+# Manually set the maximum number of iterations
 TrainOptions$maxiter <- 100
 # Prepare MOFA object for training
-MOFAobject <- prepareMOFA(MOFAobject, DirOptions, DataOptions, ModelOptions, TrainOptions)
+MOFAobject <- prepareMOFA(MOFAobject, DataOptions, ModelOptions, TrainOptions)
 # Train the model
-MOFAobject <- runMOFA(MOFAobject, DirOptions)
+MOFAobject <- runMOFA(MOFAobject, outfile=tempfile())
 }

@@ -9,26 +9,32 @@
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param views character vector with the view names, or numeric vector with view indexes.
 #' @param factors character vector with the factor names, or numeric vector with the factor indexes.
-#' @param type type of imputation. 
-#' "response" gives mean for gaussian and poisson and probabilities for bernoulli,
-#' "link" gives the linear predictions,
-#' "inRange" (default) rounds the fitted values from "response" for integer-valued distributions to the next integer.
-#' @details Matrix factorization models generate a denoised and condensed low-dimensional representation of the data which capture the main sources of heterogeneity of the data. 
-#' These representation can be used to do predictions using the equation \code{Y = WZ}. For more details read the supplementary methods of the manuscript. \cr
-#' This method fills the \code{ImputedData} slot by replacing the missing values in the input data with the model predictions.
+#' @param type type of prediction returned, either: 
+#' \itemize{
+#'  \item{\strong{response}:}{ gives the response vector, the mean for Gaussian and Poisson, and success probabilities for Bernoulli.}
+#'  \item{\strong{link}:}{ gives the linear predictions.}
+#'  \item{\strong{inRange}:}{ rounds the fitted values of integer-valued distributions (Poisson and Bernoulli) to the next integer.
+#'  This is the default option.}
+#' }
+#' @details Matrix factorization models generate a denoised and condensed low-dimensional representation 
+#' of the data which capture the main sources of heterogeneity of the data. 
+#' These representation can be used to do predictions via the equation \code{Y = WZ}. 
+#' For more details read the supplementary methods of the manuscript. \cr
+#' This method fills the \code{ImputedData} slot by replacing the missing values 
+#' in the training data with the model predictions.
 #' @export
 #' @examples 
-#' # Example on the CLL data
+#' # Load CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 #' MOFA_CLL <- loadModel(filepath)
 #' # impute missing data in all views using all factors
 #' MOFA_CLL <- imputeMissing(MOFA_CLL)
 #' 
-#' # Example on the scMT data
+#' # Load scMT data
 #' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
 #' MOFA_scMT <- loadModel(filepath)
-#' # impute missing data in all views using all factors
-#' MOFA_scMT <- imputeMissing(MOFA_scMT)
+#' # impute missing data in the RNA view using Factor 1
+#' MOFA_scMT <- imputeMissing(MOFA_scMT, views="RNA expression", factors="LF1")
 
 imputeMissing <- function(object, views = "all", factors = "all", type = c("inRange","response", "link")) {
   

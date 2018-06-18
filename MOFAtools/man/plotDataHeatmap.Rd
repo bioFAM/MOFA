@@ -14,7 +14,7 @@ plotDataHeatmap(object, view, factor, features = 50, includeWeights = FALSE,
 
 \item{factor}{character vector with the factor name, or numeric vector with the index of the factor.}
 
-\item{features}{if an integer, the total number of features to plot, based on the absolute value of the loading.
+\item{features}{if an integer, the total number of top features to plot, based on the absolute value of the loading.
 If a character vector, a set of manually-defined features. 
 Default is 50.}
 
@@ -35,23 +35,25 @@ usually the ones with highest loadings in a given factor.
 }
 \details{
 One of the first steps for the annotation of a given factor is to visualise the corresponding loadings, 
-using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}, which show you which are the top features that are driving the heterogeneity. \cr
-However, one might also be interested in visualising the direct relationship between features and factors, rather than looking at "abstract" weights. \cr
-This function generates a heatmap for selected features, which should reveal, im the original data space, the underlying pattern that is captured by the latent factor. \cr
+using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}.
+These functions display the top features that are driving the heterogeneity captured by a factor. \cr
+However, one might also be interested in visualising the coordinated heterogeneity in the input data, 
+rather than looking at "abstract" weights. \cr
+This function extracts the top features for a given factor and view, 
+and generates a heatmap with dimensions (samples,features). This should reveal
+the underlying heterogeneity that is captured by the latent factor. \cr
 A similar function for doing scatterplots rather than heatmaps is \code{\link{plotDataScatter}}.
 }
 \examples{
-# Example on the CLL data
+# Load CLL data
 filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 MOFA_CLL <- loadModel(filepath)
-# plot top 30 features on factor 1 in the view mRNA:
+# plot top 30 features on Factor 1 in the mRNA view
 plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30)
-# without column- and rownames:
+# without column- and rownames (extra arguments passed to pheatmap)
 plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30, show_colnames = FALSE, show_rownames = FALSE)
-
-# Example on the scMT data
-filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
-MOFA_scMT <- loadModel(filepath)
-# plot top 50 features on factor 2 in the view RNA expression:
-plotDataHeatmap(MOFA_scMT, view="RNA expression", factor=2)
+# transpose the heatmap
+plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30, transpose=TRUE)
+# do not cluster rows or columns (extra arguments passed to pheatmap)
+plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30, cluster_rows=FALSE, cluster_cols=FALSE)
 }

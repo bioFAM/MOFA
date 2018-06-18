@@ -10,7 +10,7 @@
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param view character vector with the view name, or numeric vector with the index of the view.
 #' @param factor character vector with the factor name, or numeric vector with the index of the factor.
-#' @param features if an integer, the total number of features to plot, based on the absolute value of the loading.
+#' @param features if an integer, the total number of top features to plot, based on the absolute value of the loading.
 #' If a character vector, a set of manually-defined features. 
 #' Default is 50.
 #' @param includeWeights logical indicating whether to include the weight of each feature as an extra annotation in the heatmap. 
@@ -21,28 +21,28 @@
 #' Default is FALSE.
 #' @param ... further arguments that can be passed to \code{\link[pheatmap]{pheatmap}}
 #' @details One of the first steps for the annotation of a given factor is to visualise the corresponding loadings, 
-#' using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}, which show you which are the top features that are driving the heterogeneity. \cr
-#' However, one might also be interested in visualising the direct relationship between features and factors, rather than looking at "abstract" weights. \cr
-#' This function generates a heatmap for selected features, which should reveal, im the original data space, the underlying pattern that is captured by the latent factor. \cr
+#' using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}.
+#' These functions display the top features that are driving the heterogeneity captured by a factor. \cr
+#' However, one might also be interested in visualising the coordinated heterogeneity in the input data, 
+#' rather than looking at "abstract" weights. \cr
+#' This function extracts the top features for a given factor and view, 
+#' and generates a heatmap with dimensions (samples,features). This should reveal
+#' the underlying heterogeneity that is captured by the latent factor. \cr
 #' A similar function for doing scatterplots rather than heatmaps is \code{\link{plotDataScatter}}.
 #' @import pheatmap
 #' @examples
-#' # Example on the CLL data
+#' # Load CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 #' MOFA_CLL <- loadModel(filepath)
-#' # plot top 30 features on factor 1 in the view mRNA:
+#' # plot top 30 features on Factor 1 in the mRNA view
 #' plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30)
-#' # without column- and rownames:
+#' # without column- and rownames (extra arguments passed to pheatmap)
 #' plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30, show_colnames = FALSE, show_rownames = FALSE)
-#' 
-#' # Example on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
-#' MOFA_scMT <- loadModel(filepath)
-#' # plot top 50 features on factor 2 in the view RNA expression:
-#' plotDataHeatmap(MOFA_scMT, view="RNA expression", factor=2)
-
+#' # transpose the heatmap
+#' plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30, transpose=TRUE)
+#' # do not cluster rows or columns (extra arguments passed to pheatmap)
+#' plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30, cluster_rows=FALSE, cluster_cols=FALSE)
 #' @export
-
 plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights = FALSE, transpose = FALSE, imputed = FALSE, ...) {
   
   # Sanity checks
@@ -98,7 +98,6 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
   if (transpose==T) { data <- t(data) }
   
   # Plot heatmap
-  # if(is.null(main)) main <- paste(view, "observations for the top weighted features of factor", factor)
   if (includeWeights==TRUE) { 
     anno <- data.frame(row.names=names(W[features]), weight=W[features]) 
     if (transpose==T) {
@@ -123,39 +122,35 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
 #' @param features if an integer, the total number of features to plot (10 by default). If a character vector, a set of manually-defined features.
 #' @param color_by specifies groups or values used to color the samples. 
 #' This can be either: 
-#' a character giving the name of a feature, 
-#' a character giving the same of a covariate (only if using MultiAssayExperiment as input), 
-#' or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.
+#' (a) a character giving the name of a feature, 
+#' (b) a character giving the same of a covariate (only if using MultiAssayExperiment as input), or
+#' (c) a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.
 #' @param shape_by specifies groups or values used to shape the samples. 
 #' This can be either: 
-#' a character giving the name of a feature present in the training data, 
-#' a character giving the same of a covariate (only if using MultiAssayExperiment as input), 
-#' or a vector of the same length as the number of samples specifying discrete groups.
+#' (a) a character giving the name of a feature present in the training data, 
+#' (b) a character giving the same of a covariate (only if using MultiAssayExperiment as input), or 
+#' (c) a vector of the same length as the number of samples specifying discrete groups.
 #' @param name_color name for the color legend
 #' @param name_shape name for the shape legend
-#' @details One of the first steps for the annotation of factors is to visualise the loadings using \code{\link{plotWeights}} or \code{\link{plotTopWeights}}, 
-#' which show you which features drive the heterogeneity of each factor. 
-#' However, one might also be interested in visualising the direct relationship between features and factors, rather than looking at "abstract" weights. \cr
-#' This function generates scatterplots of features against factors, so that you can observe the association between them. \cr
+#' @details One of the first steps for the annotation of a given factor is to visualise the corresponding loadings, 
+#' using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}.
+#' These functions display the top features that are driving the heterogeneity captured by a factor. \cr
+#' However, one might also be interested in visualising the coordinated heterogeneity in the input data, 
+#' rather than looking at "abstract" weights. \cr
+#' This function generates scatterplots of features against factors (each dot is a sample), 
+#' so that you can observe the association between them. \cr
 #' A similar function for doing heatmaps rather than scatterplots is \code{\link{plotDataHeatmap}}.
 #' @import ggplot2
 #' @import dplyr
 #' @export
 #' @examples
-#' # Example on the CLL data
+#' # Load CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 #' MOFA_CLL <- loadModel(filepath)
 #' # plot scatter for top 5 features on factor 1 in the view mRNA:
 #' plotDataScatter(MOFA_CLL, view="mRNA", factor=1, features=5)
 #' # coloring by the IGHV status (features in Mutations view), not showing samples with missing IGHV:
 #' plotDataScatter(MOFA_CLL, view="mRNA", factor=1, features=5, color_by="IGHV", showMissing=FALSE)
-#' 
-#' # Example on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
-#' MOFA_scMT <- loadModel(filepath)
-#' # plot scatter for top 10 features on factor 2 in the view RNA expression:
-#' plotDataScatter(MOFA_scMT, view="RNA expression", factor=2)
-
 plotDataScatter <- function(object, view, factor, features = 10,
                             color_by=NULL, name_color="",  
                             shape_by=NULL, name_shape="", showMissing = TRUE) {
@@ -288,7 +283,8 @@ plotDataScatter <- function(object, view, factor, features = 10,
 
 #' @title Tile plot of the multi-omics data
 #' @name plotTilesData
-#' @description Function to do a tile plot showing the dimensionality and the missing value structure of the multi-omics data.
+#' @description Function to do a tile plot showing the dimensionality and 
+#' the missing value structure of the multi-omics data.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param colors a character vector specifying the colors per view. NULL (default) uses an internal palette.
 #' @details This function is helpful to get an overview of the dimensionality and the missing value structure of the training data. \cr 
@@ -298,7 +294,6 @@ plotDataScatter <- function(object, view, factor, features = 10,
 #' @import dplyr
 #' @import reshape2
 #' @export
-
 #' @examples
 #' # Example on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
@@ -308,7 +303,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
 #' # Example on the scMT data
 #' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
 #' MOFA_scMT <- loadModel(filepath)
-#' # using customized colors:
+#' # using customized colors
 #' plotTilesData(MOFA_scMT, colors= c("blue", "red", "red", "red"))
 
 plotTilesData <- function(object, colors = NULL) {

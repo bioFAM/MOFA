@@ -30,8 +30,8 @@ This function plots all loadings for a given latent factor and view, labeling th
 In contrast, the function \code{\link{plotTopWeights}} displays only the top features with highest loading.
 }
 \details{
-The weights of the features within a view are relative andthey should not be interpreted in an absolute scale.
-Therefore, for interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
+The weights of the features within a view are relative and they should not be interpreted in an absolute scale.
+For interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
 }
 \examples{
 # Example on the CLL data

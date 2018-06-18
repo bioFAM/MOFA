@@ -4,10 +4,12 @@
 \alias{runMOFA}
 \title{train a MOFA model}
 \usage{
-runMOFA(object)
+runMOFA(object, outfile)
 }
 \arguments{
 \item{object}{an untrained \code{\link{MOFAmodel}} object}
+
+\item{outfile}{output .hdf5 file}
 }
 \value{
 a trained \code{\link{MOFAmodel}} object
@@ -19,15 +21,15 @@ Function to train an untrained \code{\link{MOFAmodel}} object.
 In this step the R package is calling the \code{mofa} Python package, where the the training is performed. \cr
 The interface with Python is done with the \code{\link{reticulate}} package. 
 If you have several versions of Python installed and Rstudio is not detecting the correct one, you can change it using
-\code{reticulate::use_python}. \cr
-This module is in beta testing so please, read our FAQ for troubleshooting and report any problems.
+\code{reticulate::use_python}.
 }
 \examples{
 data("CLL_data")
-#create and prepare the MOFaobject before using runMOFA
+# create and prepare the MOFAmodel
 MOFAobject <- createMOFAobject(CLL_data)
 MOFAobject <- prepareMOFA(MOFAobject)
-# runMOFA takes some time for model fitting
+# fit the model (takes some time)
 \dontrun{
-# MOFAobject <- runMOFA(MOFAobject)}
+# MOFAobject <- runMOFA(MOFAobject)
+}
 }

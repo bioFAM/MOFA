@@ -12,5 +12,5 @@ qualityControl(object, verbose = F)
 \item{verbose}{logical indicating whether to generate a verbose output.}
 }
 \description{
-Function to do quality control on a \code{\link{MOFAmodel}} object. \cr
+Function to do quality control on a \code{\link{MOFAmodel}} object.
 }

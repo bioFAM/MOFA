@@ -52,7 +52,7 @@ TO-DO
 # Example on the CLL data
 filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 MOFA_CLL <- loadModel(filepath)
-# do FeatureSetEnrichmentAnalysis on mRNA data for all factors using the Reactome gene sets
+# perform FeatureSetEnrichmentAnalysis on mRNA data for all factors using the Reactome gene sets
 data("reactomeGS")
 fsea.out <- FeatureSetEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
 # results can be visualized using one of the following plotting functions:

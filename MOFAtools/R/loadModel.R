@@ -47,10 +47,6 @@ loadModel <- function(file, object = NULL, sortFactors = T, minR2 = NULL) {
   }
     
   # Load model options
-  # COMMENTED BECAUSE We always need to load the model options, as h5py sort the views alphabetically
-  # if (length(object@ModelOptions) == 0) {
-  #   tryCatch(object@ModelOptions <- as.list(h5read(file, 'model_opts',read.attributes=T)), error = function(x) { print("Model opts not found, not loading it...") })
-  # }
   tryCatch(object@ModelOptions <- as.list(h5read(file, 'model_opts',read.attributes=T)), error = function(x) { print("Model opts not found, not loading it...") })
   object@ModelOptions$sparsity <- as.logical(object@ModelOptions$sparsity)
   
@@ -68,9 +64,8 @@ loadModel <- function(file, object = NULL, sortFactors = T, minR2 = NULL) {
     object@TrainData <- TrainData
     }, error = function(x) { print("Error loading the training data...") })
   
-  # Replace NaN by NA
+  # Replace NaN by NA in the training data
   for (m in names(TrainData)) {
-    # object@Expectations[[m]][is.nan(object@Expectations[[m]])] <- NA
     TrainData[[m]][is.nan(TrainData[[m]])] <- NA
   }
   
@@ -90,7 +85,6 @@ loadModel <- function(file, object = NULL, sortFactors = T, minR2 = NULL) {
   object@Dimensions[["M"]] <- length(object@TrainData)
   object@Dimensions[["N"]] <- ncol(object@TrainData[[1]])
   object@Dimensions[["D"]] <- sapply(object@TrainData,nrow)
-  # K=tail(training_stats$activeK[!is.nan(training_stats$activeK)],n=1)
   object@Dimensions[["K"]] <- ncol(object@Expectations$Z)
   
   # Set view, sample, feature and factor names
@@ -114,16 +108,14 @@ loadModel <- function(file, object = NULL, sortFactors = T, minR2 = NULL) {
   
   
   # Rename factors if intercept is included
-  if (object@ModelOptions$learnIntercept == TRUE) {
-    intercept_idx <- names(which(sapply(apply(object@Expectations$Z,2,unique),length)==1))
-    factornames <- as.character(1:(object@Dimensions[["K"]]))
-    factornames[factornames==intercept_idx] <- "intercept"
+  if (object@ModelOptions$learnIntercept) {
+    intercept_idx <- apply(object@Expectations$Z==1,2,all)
+    nonconst_idx <- which(!intercept_idx)
+    factornames <- factorNames(object)
+    factornames[intercept_idx] <- "intercept"
+    factornames[nonconst_idx] <- paste0("LF",as.character(1:length(nonconst_idx)))
     factorNames(object) <- factornames
-    # object@Dimensions[["K"]] <- object@Dimensions[["K"]] - 1
   }
-  # if (!is.null(object@ModelOptions$covariates)) {
-  #   stop("Covariates not working")
-  # }
   
   # Parse factors: Mask passenger samples
   if(is.null(minR2)) minR2 <- object@TrainOptions$DropFactorThreshold
@@ -141,10 +133,6 @@ loadModel <- function(file, object = NULL, sortFactors = T, minR2 = NULL) {
       factorNames(object) <- c(1:object@Dimensions$K) 
     }
   }
-  
-  
-  # Check for intercept factors
-  # .detectInterceptFactors(object)
   
   # Do quality control on the model
   qualityControl(object)

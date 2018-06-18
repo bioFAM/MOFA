@@ -27,9 +27,16 @@ or using multiple factors, where multiple sources of variation are aggregated. \
 Importantly, this type of clustering is not weighted and does not take into account the different importance of the latent factors.
 }
 \details{
-In some cases, samples can have missing values in the latent factor space. 
-This happens if a factors is active only in views where these samples have no data.
-In such a case, these samples are currently ignored in the clustering procedure and NAs are returned.
+In some cases, samples can have missing values in the factor space. 
+This occurs when a factor is active in a single view and some samples are missing this data. \cr
+In such a case, there are several strategies to follow: \cr
+\itemize{
+ \item{}{ Use clustering approaches that deal with NAs (not implemented in MOFAtools)}
+ \item{}{ If the factor in question is not important, you can remove it with \code{\link{subsetFactors}}}
+ \item{}{ If the factor in question is important and just a small number of samples are conflictive, 
+ you can manually set them to 0 using \code{object@Expectations$Z[is.na(object@Expectations$Z)] <- 0}}
+}
+By default, the conflictive samples are ignored in the clustering procedure and NAs are returned.
 }
 \examples{
 # Example on the CLL data

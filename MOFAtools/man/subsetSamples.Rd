@@ -9,8 +9,24 @@ subsetSamples(object, samples)
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{samples}{character vector with the sample names, numeric vector with the sample indices or logical vector with the samples to be kept as TRUE.}
+\item{samples}{character vector with the sample names, numeric vector with the sample indices or 
+logical vector with the samples to be kept as TRUE.}
 }
 \description{
-Method to subset (or sort) samples
+Method to subset (or sort) samples. \cr
+This function can remove samples from the model. For example, you might want to observe the effect of Factor 1
+on a subset of samples. You can create a new \code{\link{MOFAmodel}} excluding some samples
+and then visualise the effect of Factor 1 on the remaining ones, for instance via 
+\code{\link{plotDataHeatmap}} or \code{\link{plotFactorScatter}}. \cr
+This functionality is only for exploratory purposes. 
+In the case of outliers, we strongly recommend removing them before training the model.
+}
+\examples{
+# Using an existing trained model on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+# Subset samples via character vector
+MOFA_CLL_small <- subsetSamples(MOFA_CLL, samples=c("A02","A03","A04","A05"))
+# Subset samples via numeric vector
+MOFA_CLL_small <- subsetSamples(MOFA_CLL, samples=1:10)
 }

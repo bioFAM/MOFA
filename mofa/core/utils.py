@@ -396,6 +396,9 @@ def saveTrainingOpts(opts, hdf5):
                 opts[str(k)+"_"+str(k1)] = v1
             opts.pop(k)
 
+    if 'schedule' in opts.keys():
+        del opts['schedule']
+
     # Create HDF5 data set
     hdf5.create_dataset("training_opts", data=np.array(list(opts.values()), dtype=np.float))
     hdf5['training_opts'].attrs['names'] = np.asarray(list(opts.keys())).astype('S')
@@ -405,10 +408,10 @@ def saveModelOpts(opts, hdf5):
     
     PARAMETERS
     ----------
-    opts:
-    hdf5: 
+    opts: model options
+    hdf5: h5py.File instance
     """
-    opts_interest = ["learnIntercept","schedule","likelihood","sparsity"]
+    opts_interest = ["learnIntercept","likelihoods","sparsity"]
     opts = dict((k, opts[k]) for k in opts_interest)
     grp = hdf5.create_group('model_opts')
     for k,v in opts.items():
@@ -421,18 +424,18 @@ def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_na
     PARAMETERS
     ----------
     model: a BayesNet instance
-    hdf5: 
-    view_names
-    sample_names
-    feature_names
+    hdf5: h5py.File instance
+    view_names: list with view names as characters. If None, no view names will be saved
+    sample_names: list with sample names as characters. If None, no sample names will be saved
+    feature_names: list with feature names as characters. If None, no feature names will be saved
     """
     data = model.getTrainingData()
     data_grp = hdf5.create_group("data")
     featuredata_grp = hdf5.create_group("features")
     hdf5.create_dataset("samples", data=np.array(sample_names, dtype='S50'))
 
-    if likelihoods is not None:
-        data_grp.attrs['likelihood'] = np.array(likelihoods, dtype='S50')
+    # if likelihoods is not None:
+    #     data_grp.attrs['likelihood'] = np.array(likelihoods, dtype='S50')
 
     for m in range(len(data)):
         view = view_names[m] if view_names is not None else str(m)
@@ -462,8 +465,8 @@ def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_na
 
     # For some reason h5py orders the datasets alphabetically, so we have to sort the likelihoods accordingly
     idx = sorted(range(len(view_names)), key=lambda k: view_names[k])
-    tmp = [model_opts["likelihood"][idx[m]] for m in range(len(model_opts["likelihood"]))]
-    model_opts["likelihood"] = tmp
+    tmp = [model_opts["likelihoods"][idx[m]] for m in range(len(model_opts["likelihoods"]))]
+    model_opts["likelihoods"] = tmp
 
     # Open HDF5 handler
     hdf5 = h5py.File(outfile,'w')
@@ -484,7 +487,7 @@ def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_na
     saveModelOpts(model_opts,hdf5)
 
     # Save training data
-    saveTrainingData(model, hdf5, view_names, sample_names, feature_names, model_opts["likelihood"])
+    saveTrainingData(model, hdf5, view_names, sample_names, feature_names, model_opts["likelihoods"])
 
     # Close HDF5 file
     hdf5.close()

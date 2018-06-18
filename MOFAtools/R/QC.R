@@ -1,6 +1,6 @@
 #' @title qualityControl
 #' @name qualityControl
-#' @description Function to do quality control on a \code{\link{MOFAmodel}} object. \cr
+#' @description Function to do quality control on a \code{\link{MOFAmodel}} object.
 #' @param object a trained \code{\link{MOFAmodel}} object.
 #' @param verbose logical indicating whether to generate a verbose output.
 #' @export

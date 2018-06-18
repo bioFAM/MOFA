@@ -62,7 +62,6 @@ class entry_point():
     # Doing QC on the data
     data = qcData(data)
 
-
     # Save dimensionalities
     self.dimensionalities["M"] = len(data)
     self.dimensionalities["N"] = data[0].shape[0]
@@ -382,7 +381,7 @@ class entry_point():
     self.model = runMOFA(self.data, self.data_opts, self.model_opts, self.train_opts, self.train_opts['seed'])
     sys.stdout.flush()
 
-  def save(self, outfile):
+  def save_model(self, outfile):
     """ Save the model """
 
     # Sanity checks
@@ -397,9 +396,9 @@ class entry_point():
     sample_names = self.data[0].index.tolist()
     feature_names = [  self.data[m].columns.values.tolist() for m in range(len(self.data)) ]
 
-    if self.train_opts["verbose"]: print("Saving model in %s...\n" % outfile)
+    print("Saving model in %s...\n" % outfile)
     saveModel(self.model, 
-      outfile=self.data_opts['outfile'], 
+      outfile=outfile, 
       view_names=self.data_opts['view_names'],
       sample_names=sample_names, 
       feature_names=feature_names, 

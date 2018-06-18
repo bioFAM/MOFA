@@ -17,16 +17,13 @@ Heatmap_FeatureSetEnrichmentAnalysis(fsea.out, alpha = 0.05, log = TRUE,
 \item{...}{extra arguments to be passed to \link{pheatmap} function}
 }
 \description{
-this method generates a heatmap with the adjusted p.values that result from the the feature set enrichment analysis. Rows are feature sets and columns are factors.
-}
-\details{
-fill this
+This method generates a heatmap with the adjusted p.values that result from the the feature set enrichment analysis. Rows are feature sets and columns are factors.
 }
 \examples{
 # Example on the CLL data
 filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 MOFA_CLL <- loadModel(filepath)
-# do FeatureSetEnrichmentAnalysis on mRNA data for all factors using the Reactome gene sets
+# perform FeatureSetEnrichmentAnalysis on mRNA data for all factors using the Reactome gene sets
 data("reactomeGS")
 fsea.out <- FeatureSetEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
 # overview of enriched pathways per factor at an FDR of 1\%

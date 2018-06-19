@@ -43,13 +43,23 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   if(length(factor)>1)  stop("Please specify a single factor!")
-  if(!factor %in% factorNames(object)) { stop("factor not recognised") }
 
   # Collect relevant data
-  N <- object@Dimensions[["N"]]
   Z <- getFactors(object, factors = factor, as.data.frame = TRUE)
   
+  # Get factors
+  if (is.numeric(factor)) {
+    if (object@ModelOptions$learnIntercept) {
+      factor <- factorNames(object)[factor+1]
+    } else {
+      factor <- factorNames(object)[factor]
+    }
+  } else { 
+    stopifnot(factor %in% factorNames(object)) 
+  }
+  
   # get groups
+  N <- object@Dimensions[["N"]]
   groupLegend <- T
   if (!is.null(group_by)) {
     
@@ -148,12 +158,25 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL, name_colo
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
 
-  # Collect relevant data
-  N <- object@Dimensions[["N"]]
-  Z <- getFactors(object, factors=factors, include_intercept=FALSE, as.data.frame=T)
+  # Get factors
+  if (is.numeric(factors)) {
+    if (object@ModelOptions$learnIntercept) {
+      factors <- factorNames(object)[factors+1]
+    } else {
+      factors <- factorNames(object)[factors]
+    }
+  } else { 
+    if (paste0(factors,collapse="") == "all") { 
+      factors <- factorNames(object) 
+    } else {
+      stopifnot(all(factors %in% factorNames(object)))  
+    }
+  }
+  Z <- getFactors(object, factors=factors, include_intercept=F, as.data.frame=T)
   Z$factor <- as.factor(Z$factor)
   
   # Set color
+  N <- object@Dimensions[["N"]]
   colorLegend <- T
   if (!is.null(color_by)) {
     # It is the name of a covariate or a feature in the TrainData
@@ -271,13 +294,26 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(factors)==2)
-  stopifnot(all(factors %in% factorNames(object)))
   
-  # Collect relevant data  
-  N <- object@Dimensions[["N"]]
+  # Get factors
+  if (is.numeric(factors)) {
+    if (object@ModelOptions$learnIntercept) {
+      factors <- factorNames(object)[factors+1]
+    } else {
+      factors <- factorNames(object)[factors]
+    }
+  } else { 
+    if (paste0(factors,collapse="") == "all") { 
+      factors <- factorNames(object) 
+    } else {
+      stopifnot(all(factors %in% factorNames(object)))  
+    }
+  }
   Z <- getFactors(object, factors = factors)
-  factors <- as.character(factors)
+  
+  # Get samples
   samples <- sampleNames(object)
+  N <- object@Dimensions[["N"]]
   
   # Set color
   colorLegend <- T
@@ -421,17 +457,23 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
   # Collect relevant data
   N <- object@Dimensions[["N"]]
   Z <- getExpectations(object, "Z", "E")
-  factors <- as.character(factors)
   
   # Get factors
-  if (paste0(factors,collapse="") == "all") { 
-    factors <- factorNames(object) 
-    # if(is.null(factors)) factors <- 1:ncol(Z) # old object are not compatible with factro names
-  } else {
-    stopifnot(all(factors %in% factorNames(object)))  
+  if (is.numeric(factors)) {
+    if (object@ModelOptions$learnIntercept) {
+      factors <- factorNames(object)[factors+1]
+    } else {
+      factors <- factorNames(object)[factors]
+    }
+  } else { 
+    if (paste0(factors,collapse="") == "all") { 
+      factors <- factorNames(object) 
+    } else {
+      stopifnot(all(factors %in% factorNames(object)))  
+    }
   }
-  Z <- Z[,factors]
-
+  Z <- getFactors(object, factors = factors)
+  
   # Remove constant factors 
   tmp <- apply(Z,2,var,na.rm=T)
   if (any(tmp==0)) {

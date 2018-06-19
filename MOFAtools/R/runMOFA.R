@@ -48,7 +48,7 @@ runMOFA <- function(object, outfile) {
   mofa_entrypoint <- mofa$core.entry_point$entry_point()
   
   # Pass data
-  mofa_entrypoint$set_data(data=lapply(object@TrainData, function(x) r_to_py(x)))
+  mofa_entrypoint$set_data(data=lapply(object@TrainData, function(x) r_to_py(t(x))))
   
   # Pass model options 
   mofa_entrypoint$set_model_options(

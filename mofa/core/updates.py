@@ -72,7 +72,8 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
 
         # constant update of Qa
         Y = self.markov_blanket["Y"].getExpectation()
-        mask = ma.getmask(Y)
+        # mask = ma.getmask(Y)
+        mask = self.markov_blanket["Y"].getMask()
         # Y = Y.data
 
         Qa = self.P.getParameters()['a'] + (Y.shape[0] - mask.sum(axis=0))/2.
@@ -85,7 +86,8 @@ class Tau_Node(Gamma_Unobserved_Variational_Node):
 
         # Collect expectations from other nodes
         Y = self.markov_blanket["Y"].getExpectation()
-        mask = ma.getmask(Y)
+        # mask = ma.getmask(Y)
+        mask = self.markov_blanket["Y"].getMask()
         
         Wtmp = self.markov_blanket["SW"].getExpectations()
         Ztmp = self.markov_blanket["Z"].getExpectations()
@@ -225,7 +227,8 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         alpha = self.markov_blanket["Alpha"].getExpectation(expand=False)
         thetatmp = self.markov_blanket["Theta"].getExpectations()
         theta_lnE, theta_lnEInv  = thetatmp['lnE'], thetatmp['lnEInv']
-        mask = ma.getmask(Y)
+        mask = self.markov_blanket["Y"].getMask()
+        # mask = ma.getmask(Y)
 
         # Collect parameters and expectations from P and Q distributions of this node
         SW = self.Q.getExpectations()["E"]
@@ -407,10 +410,10 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
         # Collect expectations from the markov blanket
         Y = self.markov_blanket["Y"].getExpectation()
         SWtmp = self.markov_blanket["SW"].getExpectations()
-
         tau = self.markov_blanket["Tau"].getExpectation()
-        latent_variables = self.getLvIndex()
-        mask = [ ma.getmask(Y[m]) for m in range(len(Y)) ]
+        latent_variables = self.getLvIndex() # excluding covariates from the list of latent variables
+        # mask = [ ma.getmask(Y[m]) for m in range(len(Y)) ]
+        mask = self.markov_blanket["Y"].getMask()
 
         # Collect parameters from the prior or expectations from the markov blanket
         Alpha = 1./self.P.getParameters()["var"]

@@ -43,7 +43,7 @@ makeExampleData <- function(n_views=3, n_features=500, n_samples = 100, n_factor
   #weights 
   S <- lapply(1:n_views, function(vw) matrix(rbinom(n_features*n_factors, 1, theta),
                                              nrow= n_features, ncol = n_factors))
-  W <- lapply(1:n_views, function(vw) sapply(1:n_factors, function(fc) rnorm(n_features, 0, alpha[fc,vw])))
+  W <- lapply(1:n_views, function(vw) sapply(1:n_factors, function(fc) rnorm(n_features, 0, sqrt(1/alpha[fc,vw]))))
   
   #noise level (for gaussian likelihood)
   tau <- 10
@@ -54,7 +54,7 @@ makeExampleData <- function(n_views=3, n_features=500, n_samples = 100, n_factor
   data <- lapply(1:n_views, function(vw){
     lk <- likelihood[vw]
     if(lk=="gaussian"){
-      mu[[vw]] + rnorm(length(mu[[vw]]),0,1/tau)
+      mu[[vw]] + rnorm(length(mu[[vw]]),0,sqrt(1/tau))
     }
     else if(lk == "poisson"){
       term <- log(1+exp(mu[[vw]]))

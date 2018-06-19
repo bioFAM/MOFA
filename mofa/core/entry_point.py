@@ -51,7 +51,7 @@ class entry_point():
     """
 
     print(banner)
-    sleep(2)
+    # sleep(2)
 
   def set_data(self, data):
     """ Method to set the data 
@@ -70,6 +70,7 @@ class entry_point():
       pass
     else:
       print("Error: Data not recognised")
+      sys.stdout.flush()
       exit()
 
     assert s.all([ isinstance(data[m],s.ndarray) or isinstance(data[m],pd.DataFrame) for m in range(len(data)) ]), "Error, input data is not a numpy.ndarray"
@@ -207,6 +208,7 @@ class entry_point():
     if view_names is None:
       self.data_opts['view_names'] = ["view_%d" % m for m in range(M)] 
     else:
+      if isinstance(view_names,str): view_names = [ view_names ]
       assert len(view_names)==M, "Length of view names and number of views do not match"
       self.data_opts['view_names'] = view_names
 

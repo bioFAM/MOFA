@@ -131,7 +131,9 @@ setReplaceMethod("sampleNames", signature(object="MOFAmodel", value="vector"),
 #' @aliases featureNames,MOFAmodel-method
 #' @return list of character vectors with the feature names for each view
 #' @export
-setMethod("featureNames", signature(object="MOFAmodel"), function(object) { tmp <- lapply(object@TrainData,rownames); names(tmp) <- viewNames(object); return(tmp) } )
+setMethod("featureNames", signature(object="MOFAmodel"), function(object) { 
+  tmp <- lapply(object@TrainData,rownames); names(tmp) <- viewNames(object); return(tmp) } 
+)
 
 #' @rdname featureNames
 #' @param value list of character vectors with the feature names for each view

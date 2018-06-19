@@ -38,10 +38,10 @@ createMOFAobject <- function(data) {
     message("Creating MOFA object from a MultiAssayExperiment object...")
     object <- .createMOFAobjectFromMAE(data)
   } else if (is(data,"list")) {
-    message("Creating MOFA object from list of matrices, please make sure that samples are columns and features are rows...")
+    message("Creating MOFA object from list of matrices, please make sure that samples are columns and features are rows...\n")
     object <- .createMOFAobjectFromList(data)
   } else {
-    stop("Error: input data has to be provided either as a list of matrices or as a MultiAssayExperiment object")
+    stop("Error: input data has to be provided either as a list of matrices or as a MultiAssayExperiment objectºn")
   }
   
   # Set dimensionalities
@@ -55,10 +55,19 @@ createMOFAobject <- function(data) {
     viewNames(object) <- names(data) 
   } else { 
     viewNames(object) <- paste("view",1:length(object@TrainData), sep="_")
-    warning(paste0("View names are not specified in data, renaming them to: ",paste("view",1:length(object@TrainData), collapse=" "), "\n"))
+    warning(paste0("View names are not specified in the data, renaming them to: ",paste("view",1:length(object@TrainData), collapse=" "), "\n"))
   }
   
-  print(object)
+  # Set feature names
+  for (m in 1:object@Dimensions[["M"]]) {
+    if (is.null(rownames(object@TrainData[[m]]))) {
+      warning(sprintf("Feature names are not specified for view %d, using default: feature1_v%d,feature2_v%d...\n",m,m,m))
+      rownames(object@TrainData[[m]]) <- paste0("feature_",1:nrow(object@TrainData[[m]]))
+    }
+  }
+
+  # Set sample names
+  # TO-DO...
   
   return(object)
 }

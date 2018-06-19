@@ -194,7 +194,7 @@ class initModel(object):
                 tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
             elif self.lik[m] == "bernoulli":
                 # seeger
-                # tau_list[m] = Constant_Node(dim=(self.D[m],), value=0.25)
+                # tau_list[m] = Constant_Node(dim=((self.N,self.D[m])), value=0.25)
                 # Jaakkola
                 tau_list[m] = Tau_Jaakkola(dim=((self.N,self.D[m])), value=1.)
             elif self.lik[m] == "binomial":
@@ -214,10 +214,10 @@ class initModel(object):
                 Y_list[m] = Y_Node(dim=(self.N,self.D[m]), value=self.data[m])
             elif self.lik[m]=="poisson":
                 # tmp = stats.norm.rvs(loc=0, scale=1, size=(self.N,self.D[m]))
-                Y_list[m] = Poisson_PseudoY(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
+                Y_list[m] = Poisson_PseudoY_Seeger(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
             elif self.lik[m]=="bernoulli":
                 # Seeger
-                # Y_list[m] = Bernoulli_PseudoY(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
+                # Y_list[m] = Bernoulli_PseudoY_Seeger(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
                 # Jaakkola
                 Y_list[m] =  Bernoulli_PseudoY_Jaakkola(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
         self.Y = Multiview_Mixed_Node(self.M, *Y_list)

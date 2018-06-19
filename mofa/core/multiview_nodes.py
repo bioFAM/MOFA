@@ -68,6 +68,10 @@ class Multiview_Node(Node):
         """Method to get the nodes"""
         return self.nodes
         
+    def getMask(self):
+        """Method to get the masks"""
+        return [ self.nodes[m].getMask() for m in self.activeM ]
+
     def getExpectation(self):
         """Method to get the first moments (expectation)"""
         return [ self.nodes[m].getExpectation() for m in self.activeM ]

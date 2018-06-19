@@ -78,6 +78,7 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = NULL) {
     }
   }
   
+  
   # Update old models
   object <- .updateOldModel(object)
   
@@ -87,11 +88,12 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = NULL) {
   object@Dimensions[["D"]] <- sapply(object@TrainData,nrow)
   object@Dimensions[["K"]] <- ncol(object@Expectations$Z)
   
+  
   # Set view, sample, feature and factor names
   viewNames(object) <- names(object@TrainData)
   sampleNames(object) <- colnames(object@TrainData[[1]])
   featureNames(object) <- lapply(object@TrainData,rownames)
-  factorNames(object) <- as.character(1:object@Dimensions[["K"]])
+  factorNames(object) <- paste0("LF_",1:object@Dimensions[["K"]])
   
   # Add names to likelihood vector
   names(object@ModelOptions$likelihood) <- viewNames(object)
@@ -128,9 +130,9 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = NULL) {
     if (object@ModelOptions$learnIntercept==T) { order_factors <- c("intercept",order_factors) }
     object <- subsetFactors(object,order_factors)
     if (object@ModelOptions$learnIntercept==T) { 
-      factorNames(object) <- c("intercept",1:(object@Dimensions$K-1))
+      factorNames(object) <- c("intercept",paste0("LF_",1:(object@Dimensions$K-1)))
     } else {
-      factorNames(object) <- c(1:object@Dimensions$K) 
+      factorNames(object) <- paste0("LF_",c(1:object@Dimensions$K) )
     }
   }
   

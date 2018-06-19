@@ -7,6 +7,7 @@ import pandas as pd
 import numpy.ma as ma
 import os
 import h5py
+import sys
 
 """
 Module to define util functions
@@ -141,6 +142,7 @@ def qcData(data):
             for m in range(M): data[m] = data[m].T
         else:
             print("\nError: Dimensionalities do not match, aborting. Make sure that either columns or rows are shared!")
+            sys.stdout.flush()
             exit()
 
 
@@ -154,6 +156,7 @@ def qcData(data):
         nas = np.isnan(data[m]).mean(axis=0)
         if np.any(nas==1.):
             print("Error: %d features(s) on view %d have missing values in all samples, please remove them before running the model." % ( (nas==1.).sum(), m) )
+            sys.stdout.flush()
             exit()
             # data[m].drop(data[m].columns[np.where(nas==1.)], axis=1, inplace=True)
 
@@ -475,9 +478,12 @@ def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_na
         os.makedirs(os.path.dirname(outfile))
 
     # For some reason h5py orders the datasets alphabetically, so we have to sort the likelihoods accordingly
+    print(view_names)
+    print(model_opts["likelihoods"])
     idx = sorted(range(len(view_names)), key=lambda k: view_names[k])
     tmp = [model_opts["likelihoods"][idx[m]] for m in range(len(model_opts["likelihoods"]))]
     model_opts["likelihoods"] = tmp
+    print(model_opts["likelihoods"])
 
     # Open HDF5 handler
     hdf5 = h5py.File(outfile,'w')

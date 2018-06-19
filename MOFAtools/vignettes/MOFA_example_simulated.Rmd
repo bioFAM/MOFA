@@ -1,0 +1,60 @@
+---
+title: "Vignette illustrating the use of MOFA on simulated data"
+author: "Britta Velten and Ricard Argelaguet"
+date: "`r Sys.Date()`"
+output:
+  BiocStyle::html_document:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Example_CLL}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r}
+devtools::load_all("~/Documents/MOFA/MOFApackage/MOFAtools")
+```
+
+# Simulate an example data set
+```{r}
+MOFAobject <- makeExampleData()
+```
+
+# Prepare MOFA: Set the training and model options
+```{r}
+TrainOptions <- getDefaultTrainOptions()
+ModelOptions <- getDefaultModelOptions(MOFAobject)
+DataOptions <- getDefaultDataOptions()
+
+MOFAobject <- prepareMOFA(
+  MOFAobject, 
+  DataOptions = DataOptions,
+  ModelOptions = ModelOptions,
+  TrainOptions = TrainOptions
+)
+```
+
+# Run MOFA
+```{r}
+n_inits <- 10
+MOFA_list <- lapply(1:n_inits, function(it) {
+  runMOFA(MOFAobject, outfile=tempfile())
+})
+```
+
+
+# Compare different random inits and select the best model
+```{r}
+compareModels(MOFA_list)
+compareFactors(MOFA_list)
+MOFAobject <- selectModel(MOFA_list)
+```
+
+# Downstream analyses
+
+```{r}
+plotVarianceExplained(MOFAobject)
+```
+
+For details on down-stream analysis please have a look at the vignettes on the CLL data and scMT data.
+

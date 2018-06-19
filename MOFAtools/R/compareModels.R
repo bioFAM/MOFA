@@ -5,7 +5,7 @@
 
 
 #' @title Plot the robustness of the latent factors across diferent trials
-#' @name compare_factors
+#' @name compareFactors
 #' @description Different objects of \code{\link{MOFAmodel}} are compared in terms of correlation between 
 #' their latent factors. The correlation is calculated only on those samples which are present in all models.
 #' Ideally, the output should look like a block diagonal matrix, suggesting that all detected factors are robust under different initialisations.
@@ -23,7 +23,7 @@
 #' @importFrom grDevices colorRampPalette
 #' @export
 
-compare_factors <- function(models, comparison = "all", show_rownames=FALSE, show_colnames=FALSE,...) {
+compareFactors <- function(models, comparison = "all", show_rownames=FALSE, show_colnames=FALSE,...) {
   
   # Sanity checks
   if(!is.list(models))
@@ -107,13 +107,13 @@ compare_factors <- function(models, comparison = "all", show_rownames=FALSE, sho
 
 
 #' @title Compare different trained MOFA object in terms of the final value of the ELBO statistics and number of inferred factors
-#' @name compare_models
+#' @name compareModels
 #' @description Different objects of \code{\link{MOFAmodel}} are compared in terms of the final value of the ELBO statistics. 
 #' For model selection the model with the highest ELBO value is selected.
 #' @param models a list containing \code{\link{MOFAmodel}} objects.
 #' @export
 
-compare_models <- function(models, show_modelnames = FALSE) {
+compareModels <- function(models, show_modelnames = FALSE) {
   # Sanity checks
   if(!is.list(models))
     stop("'models' has to be a list")
@@ -136,13 +136,13 @@ compare_models <- function(models, show_modelnames = FALSE) {
 }
 
 #' @title Select a model from a list of trained MOFAobjects based on the best ELBO value
-#' @name select_model
+#' @name selectModel
 #' @description Different objects of \code{\link{MOFAmodel}} are compared in terms of the final value of the ELBO statistics 
 #' and the model with the highest ELBO value is selected.
 #' @param models a list containing \code{\link{MOFAmodel}} objects.
 #' @export
 
-select_model <- function(models, plotit =TRUE) {
+selectModel <- function(models, plotit =TRUE) {
   # Sanity checks
   if(!is.list(models))
     stop("'models' has to be a list")

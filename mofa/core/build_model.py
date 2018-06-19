@@ -59,7 +59,7 @@ def runMOFA(data, data_opts, model_opts, train_opts, seed=None):
     print ("\n")
     sleep(1)
 
-    print("Setting random seed %i...\n" % seed)
+    print("Setting random seed %i..." % seed)
 
     # Define dimensionalities
     M = len(data)
@@ -113,7 +113,6 @@ def runMOFA(data, data_opts, model_opts, train_opts, seed=None):
         init.initThetaMixed(pa=model_opts["priorTheta"]['a'], pb=model_opts["priorTheta"]['b'],
             qa=model_opts["initTheta"]['a'],  qb=model_opts["initTheta"]['b'], qE=model_opts["initTheta"]['E'],
             sparsity=model_opts['sparsity'])
-
 
     # Define the markov blanket of each node
     nodes = init.getNodes()

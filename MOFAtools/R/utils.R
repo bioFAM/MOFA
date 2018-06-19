@@ -28,6 +28,11 @@
     colnames(object@TrainStats$elbo_terms)[colnames(object@TrainStats$elbo_terms)=="SW"] <- "W"
   }
   
+  if ("AlphaW" %in% names(object@Expectations)) {
+    names(object@Expectations)[names(object@Expectations) == "AlphaW"] <- "Alpha"
+    colnames(object@TrainStats$elbo_terms)[colnames(object@TrainStats$elbo_terms)=="AlphaW"] <- "Alpha"
+  }
+  
   # Update expectations
   if (is.list(object@Expectations$Z)) {
     object@Expectations$Z <- object@Expectations$Z$E

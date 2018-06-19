@@ -62,7 +62,7 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
   
 
   # Set title
-  if (is.null(main)) { main <- paste("Loadings of Latent Factors on", view) }
+  # if (is.null(main)) { main <- paste("Loadings of Latent Factors on", view) }
   
   # apply thresholding of loadings
   W <- W[!apply(W,1,function(r) all(abs(r)<threshold)),]

@@ -54,8 +54,27 @@ class entry_point():
     sleep(2)
 
   def set_data(self, data):
-    """ Method to set the data """
+    """ Method to set the data 
 
+    PARAMETERS
+    ----------
+    data: several options:
+    - a dictionary where each key is the view names and the object is a numpy array or a pandas data frame
+    - a list where each element is a numpy array or a pandas data frame
+    """
+
+    # Sanity check
+    if isinstance(data, dict):
+      data = list(data.values())
+    elif isinstance(data, list):
+      pass
+    else:
+      print("Error: Data not recognised")
+      exit()
+
+    assert s.all([ isinstance(data[m],s.ndarray) or isinstance(data[m],pd.DataFrame) for m in range(len(data)) ]), "Error, input data is not a numpy.ndarray"
+
+    # Verbose message
     for m in range(len(data)):
       print("Loaded view %d with %d samples and %d features..." % (m, data[m].shape[0], data[m].shape[1]))
 
@@ -157,7 +176,6 @@ class entry_point():
     else:
       print("\nWarning... sparsity is desactivated, we recommend using it\n")
       self.model_opts['sparsity'] = [s.zeros(K) for m in range(M)]
-
 
   def set_data_options(self, view_names=None, center_features=False, scale_features=False, scale_views=False, 
     maskAtRandom=None, maskNSamples=None, RemoveIncompleteSamples=False
@@ -282,9 +300,9 @@ class entry_point():
     self.model_opts["initAlpha"] = { 'a':[s.nan]*M, 'b':[s.nan]*M, 'E':[s.ones(K)*1. for m in range(M)] }
 
     # Theta
-    self.model_opts["initTheta"] = { 'a':[s.ones(K,) for m in range(M)], 'b':[s.ones(K,) for m in range(M)], 'E':[s.nan*s.zeros((D[m],K)) for m in range(M)] }
+    self.model_opts["initTheta"] = { 'a':[s.ones(K,) for m in range(M)], 'b':[s.ones(K,) for m in range(M)], 'E':[s.nan*s.zeros(K,) for m in range(M)] }
     if type(initTheta) is float:
-      self.model_opts['initTheta']['E'] = [s.ones((D[m],K))*initTheta for m in range(M)]
+      self.model_opts['initTheta']['E'] = [s.ones(K,)*initTheta for m in range(M)]
     else:
        print("Error: 'initTheta' must be a float")
        exit()
@@ -297,7 +315,7 @@ class entry_point():
 
     # Weights
     self.model_opts["initSW"] = { 
-      'Theta':[ self.model_opts['initTheta']['E'][m] for m in range(M)],
+      'Theta':[ s.repeat(self.model_opts['initTheta']['E'][m][None,:],self.dimensionalities["D"][m],0) for m in range(M)],
       'mean_S0':[s.zeros((D[m],K)) for m in range(M)],
       'var_S0':[s.nan*s.ones((D[m],K)) for m in range(M)],
       'mean_S1':[s.zeros((D[m],K)) for m in range(M)],
@@ -368,7 +386,7 @@ class entry_point():
         self.model_opts["priorTheta"]['b'][m][0] = s.nan
         self.model_opts["initTheta"]["a"][m][0] = s.nan
         self.model_opts["initTheta"]["b"][m][0] = s.nan
-        self.model_opts["initTheta"]["E"][m][:,0] = 1.
+        self.model_opts["initTheta"]["E"][m][0] = 1.
 
   def train_model(self):
     """ Train the model """
@@ -381,7 +399,7 @@ class entry_point():
     self.model = runMOFA(self.data, self.data_opts, self.model_opts, self.train_opts, self.train_opts['seed'])
     sys.stdout.flush()
 
-  def save_model(self, outfile):
+  def save_model(self, outfile, sample_names=None, feature_names=None):
     """ Save the model """
 
     # Sanity checks
@@ -393,10 +411,14 @@ class entry_point():
         print("Output directory does not exist, creating it...")
         os.makedirs(os.path.dirname(outfile))
 
-    sample_names = self.data[0].index.tolist()
-    feature_names = [  self.data[m].columns.values.tolist() for m in range(len(self.data)) ]
-
+    # Verbose messages
     print("Saving model in %s...\n" % outfile)
+    if sample_names is None:
+      print("Sample names not provided...")
+    if feature_names is None:
+      print("Feature names not provided...")
+
+    # Save the model
     saveModel(self.model, 
       outfile=outfile, 
       view_names=self.data_opts['view_names'],
@@ -405,3 +427,5 @@ class entry_point():
       train_opts=self.train_opts, 
       model_opts=self.model_opts
     )
+
+    sys.stdout.flush()

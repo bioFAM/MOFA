@@ -38,7 +38,7 @@ subsetFactors <- function(object, factors, keep_intercept=TRUE) {
   
   # Subset relevant slots
   object@Expectations$Z <- object@Expectations$Z[,factors, drop=F]
-  object@Expectations$AlphaW <- sapply(object@Expectations$AlphaW, function(x) x[factors], simplify = F, USE.NAMES = T)
+  object@Expectations$Alpha <- sapply(object@Expectations$Alpha, function(x) x[factors], simplify = F, USE.NAMES = T)
   object@Expectations$W <- sapply(object@Expectations$W, function(x) x[,factors, drop=F], simplify = F, USE.NAMES = T)
   object@Expectations$Theta <- sapply(object@Expectations$Theta, function(x) x[factors], simplify = F, USE.NAMES = T)
 

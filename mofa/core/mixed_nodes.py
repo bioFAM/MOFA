@@ -24,35 +24,38 @@ class Mixed_Theta_Nodes(Variational_Node, Constant_Node):
         self.constTheta = ConstTheta
         self.learnTheta = LearnTheta
 
-        self.K = ConstTheta.dim[1] + LearnTheta.dim[0]
+        self.K = ConstTheta.dim[0] + LearnTheta.dim[0]
         self.D = ConstTheta.dim[0]
 
         self.idx = idx
         
+    def precompute(self):
+        self.constTheta.precompute()
+        self.learnTheta.precompute()
+
     def addMarkovBlanket(self, **kargs):
         # SHOULD WE ALSO ADD MARKOV BLANKET FOR CONSTHTETA???
         self.learnTheta.addMarkovBlanket(**kargs)
 
     def getExpectations(self):
-
+        
         # Get expectations from ConstTheta nodes (D,Kconst)
-        Econst = self.constTheta.getExpectations().copy()
+        Econst = self.constTheta.getExpectations()
 
-        # Get expectations from LearnTheta nodes and expand to (D,Kconst)
-        Elearn = self.learnTheta.getExpectations().copy()
-        Elearn["E"] = s.repeat(Elearn["E"][None,:], self.D, 0)
-        Elearn["lnE"] = s.repeat(Elearn["lnE"][None,:], self.D, 0)
-        Elearn["lnEInv"] = s.repeat(Elearn["lnEInv"][None,:], self.D, 0)
+        # Get expectations from LearnTheta nodes
+        Elearn = self.learnTheta.getExpectations()
 
+        # Concatenate
         # Concatenate expectations to (D,K)
-        E = s.concatenate((Econst["E"], Elearn["E"]), axis=1)
-        lnE = s.concatenate((Econst["lnE"], Elearn["lnE"]), axis=1)
-        lnEInv = s.concatenate((Econst["lnEInv"], Elearn["lnEInv"]), axis=1)
+        E = s.concatenate((Econst["E"], Elearn["E"]), axis=0)
+        lnE = s.concatenate((Econst["lnE"], Elearn["lnE"]), axis=0)
+        lnEInv = s.concatenate((Econst["lnEInv"], Elearn["lnEInv"]), axis=0)        
 
         # Permute to the right order given by self.idx
-        idx = s.concatenate((s.nonzero(1-self.idx)[0],s.where(self.idx)[0]), axis=0)
-        E, lnE, lnEinv = E[:,idx], lnE[:,idx], lnEInv[:,idx]
-        return dict({'E': E, 'lnE': lnE, 'lnEInv':lnEInv})
+        # idx = s.concatenate((s.nonzero(1-self.idx)[0],s.where(self.idx)[0]), axis=0)
+        # E, lnE, lnEinv = E[idx], lnE[idx], lnEInv[idx]
+
+        return dict({'E':E, 'lnE':lnE, 'lnEInv':lnEInv})
 
     def getExpectation(self):
         return self.getExpectations()['E']

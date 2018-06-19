@@ -126,7 +126,7 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", i
 #' MOFA_scMT <- loadModel(filepath)
 #' plotVarianceExplained(MOFA_scMT)
 
-plotVarianceExplained <- function(object, cluster = T, ...) {
+plotVarianceExplained <- function(object, cluster = TRUE, ...) {
   
   # Calculate Variance Explained
   R2_list <- calculateVarianceExplained(object, ...)
@@ -140,7 +140,7 @@ plotVarianceExplained <- function(object, cluster = T, ...) {
   fvar_mk_df$factor <- factor(fvar_mk_df$factor)
   
   # If multiple views, sort factors according to hierarchical clustering
-  if (cluster==TRUE & ncol(fvar_mk)>1) {
+  if (cluster & ncol(fvar_mk)>1) {
     hc <- hclust(dist(t(fvar_mk)))
     fvar_mk_df$view <- factor(fvar_mk_df$view, levels = colnames(fvar_mk)[hc$order])
   }

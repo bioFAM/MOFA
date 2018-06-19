@@ -15,7 +15,7 @@
 #' @return a \code{\link{MOFAmodel}} model.
 #' @importFrom rhdf5 h5read
 #' @export
-loadModel <- function(file, object = NULL, sortFactors = T, minR2 = NULL) {
+loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = NULL) {
   
   # message(paste0("Loading the following MOFA model: ", file))
   

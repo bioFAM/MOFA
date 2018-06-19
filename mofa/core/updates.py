@@ -2,7 +2,6 @@ from __future__ import division
 import numpy.ma as ma
 import numpy as np
 import warnings
-from copy import deepcopy
 from time import time
 import scipy.special as special
 
@@ -221,10 +220,10 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         # Collect expectations from other nodes
         Ztmp = self.markov_blanket["Z"].getExpectations()
         Z,ZZ = Ztmp["E"],Ztmp["E2"]
-        tau = self.markov_blanket["Tau"].getExpectation(expand=True)
+        tau = self.markov_blanket["Tau"].getExpectation()
         Y = self.markov_blanket["Y"].getExpectation()
         alpha = self.markov_blanket["Alpha"].getExpectation(expand=False)
-        thetatmp = self.markov_blanket["Theta"].getExpectations(expand=True)
+        thetatmp = self.markov_blanket["Theta"].getExpectations()
         theta_lnE, theta_lnEInv  = thetatmp['lnE'], thetatmp['lnEInv']
         mask = ma.getmask(Y)
 
@@ -245,7 +244,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         for k in range(self.dim[1]):
 
             # Calculate intermediate steps
-            term1 = (theta_lnE-theta_lnEInv)[:,k]
+            term1 = (theta_lnE-theta_lnEInv)[k]
             term2 = 0.5*s.log(alpha[k])
             term3 = 0.5*s.log(s.dot(ZZ[:,k], tau) + alpha[k])
 
@@ -291,6 +290,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         lb_w = lb_pw - lb_qw
 
         # Calculate ELBO for S
+        # TO-DO: CHECK THAT THE BROADCASTING IS CORRECT FOR THETA
         lb_ps = S*theta['lnE'] + (1.-S)*theta['lnEInv']
         lb_qs = S*s.log(S) + (1.-S)*s.log(1.-S)
         lb_ps[s.isnan(lb_ps)] = 0.
@@ -339,52 +339,34 @@ class Theta_Node(Beta_Unobserved_Variational_Node):
         self.Q.setParameters(a=Qa, b=Qb)
 
     def calculateELBO(self):
-
+        # TO-DO: IS THIS CORRECT? DO WE NEED TO SUM OVER D?
+        
         # Collect parameters and expectations
         Qpar,Qexp = self.getParameters(), self.getExpectations()
         Pa, Pb, Qa, Qb = self.Ppar['a'], self.Ppar['b'], Qpar['a'], Qpar['b']
         QE, QlnE, QlnEInv = Qexp['E'], Qexp['lnE'], Qexp['lnEInv']
 
         # minus cross entropy of Q and P
-        # lb_p = ma.masked_invalid( (Pa-1.)*QlnE + (Pb-1.)*QlnEInv - special.betaln(Pa,Pb) ).sum()
         lb_p = (Pa-1.)*QlnE + (Pb-1.)*QlnEInv - special.betaln(Pa,Pb)
         lb_p[np.isnan(lb_p)] = 0
 
         # minus entropy of Q
-        # lb_q = ma.masked_invalid( (Qa-1.)*QlnE + (Qb-1.)*QlnEInv - special.betaln(Qa,Qb) ).sum()
         lb_q = (Qa-1.)*QlnE + (Qb-1.)*QlnEInv - special.betaln(Qa,Qb)
         lb_q[np.isnan(lb_q)] = 0
 
         return lb_p.sum() - lb_q.sum()
 
-    def getExpectations(self, expand=False):
-        QExp = self.Q.getExpectations()
-        if expand:
-            D = self.markov_blanket['SW'].dim[0]
-            expanded_E = s.repeat(QExp['E'][None, :], D, axis=0)
-            expanded_lnE = s.repeat(QExp['lnE'][None, :], D, axis=0)
-            expanded_lnEInv = s.repeat(QExp['lnEInv'][None, :], D, axis=0)
-            return {'E': expanded_E, 'lnE': expanded_lnE, 'lnEInv': expanded_lnEInv}
-        else:
-            return QExp
-
-    def getExpectation(self, expand=False):
-        QExp = self.getExpectations(expand)
-        return QExp['E']
-
 class Theta_Constant_Node(Constant_Variational_Node):
     """
     Dimensions of Theta_Constant_Node should be (D[m], K)
     """
-    def __init__(self, dim, value, N_cells=1):
+    def __init__(self, dim, value):
         super(Theta_Constant_Node, self).__init__(dim, value)
-        self.N_cells = N_cells
 
     def precompute(self):
         self.E = self.value
-        # TODO this is wrong with missing values -> need to correct N_cells to account for the cells in which a given gene is missing
-        self.lnE = self.N_cells * s.log(self.value)
-        self.lnEInv = self.N_cells * s.log(1.-self.value)
+        self.lnE = s.log(self.value)
+        self.lnEInv = s.log(1.-self.value)
 
     def getExpectations(self):
         return { 'E':self.E, 'lnE':self.lnE, 'lnEInv':self.lnEInv }
@@ -401,6 +383,8 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
     def __init__(self, dim, pmean, pvar, qmean, qvar, qE=None, qE2=None, idx_covariates=None):
         super(Z_Node,self).__init__(dim=dim, pmean=pmean, pvar=pvar, qmean=qmean, qvar=qvar, qE=qE, qE2=qE2)
 
+        self.covariates = np.zeros(self.dim[1], dtype=bool)
+
         # Define indices for covariates
         if idx_covariates is not None:
             self.covariates[idx_covariates] = True
@@ -408,7 +392,6 @@ class Z_Node(UnivariateGaussian_Unobserved_Variational_Node):
     def precompute(self):
         # Precompute terms to speed up computation
         self.N = self.dim[0]
-        self.covariates = np.zeros(self.dim[1], dtype=bool)
         self.factors_axis = 1
 
     def getLvIndex(self):

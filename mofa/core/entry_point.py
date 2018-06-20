@@ -118,7 +118,7 @@ class entry_point():
     self.train_opts['drop'] = { "by_r2":float(dropR2) }
     self.train_opts['startdrop'] = int(startDrop)
     self.train_opts['freqdrop'] = int(freqDrop)
-    if (dropR2>0): print("\nDropping factors with minimum threshold of {0}% variance explained".format(dropR2))
+    print("\nDropping factors with minimum threshold of {0}% variance explained".format(dropR2))
 
 
     # Tolerance level for convergence

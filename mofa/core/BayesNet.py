@@ -109,9 +109,9 @@ class BayesNet(object):
                         Res = ((Ym - Ypred_mk)**2.).sum()
                         # Res = ((Ypred_m - Ypred_mk)**2.).sum()
                         all_r2[m,k] = 1. - Res/SS
-
             if by_r2 is not None:
-                drop_dic["by_r2"] = s.where( (all_r2>by_r2).sum(axis=0) == 0)[0] 
+                # drop_dic["by_r2"] = s.where( (all_r2>by_r2).sum(axis=0) == 0)[0] 
+                drop_dic["by_r2"] = s.where( ((all_r2)>by_r2+1e-10).sum(axis=0) == 0)[0] 
                 if len(drop_dic["by_r2"]) > 0: # drop one factor at a time
                     drop_dic["by_r2"] = [ s.random.choice(drop_dic["by_r2"]) ]
 
@@ -146,18 +146,14 @@ class BayesNet(object):
 
             # Remove inactive latent variables
             if (i >= self.options["startdrop"]) and (i % self.options['freqdrop']) == 0:
-                if any(self.options['drop'].values()):
-                    self.removeInactiveFactors(**self.options['drop'])
+                self.removeInactiveFactors(**self.options['drop'])
                 activeK[i] = self.dim["K"]
 
             # Update node by node, with E and M step merged
             for node in self.options["schedule"]:
                 if node=="Theta" and i<self.options['startSparsity']:
                     continue
-                # t = time();
                 self.nodes[node].update()
-                # print(node)
-                # print(t - time())
 
             # Calculate Evidence Lower Bound
             if (i+1) % self.options['elbofreq'] == 0 and activeK[i]==activeK[i-1]:
@@ -188,7 +184,7 @@ class BayesNet(object):
 
             # Do not calculate lower bound
             else:
-                print("Iteration %d: time=%.2f, K=%d\n" % (i+1,time()-t,self.dim["K"]))
+                print("Iteration %d: time=%.2f, Factors=%d, Covariates=%d\n" % (i+1,time()-t,(~self.nodes["Z"].covariates).sum(), self.nodes["Z"].covariates.sum()))
 
             # Flush (we need this to print when running on the cluster)
             sys.stdout.flush()

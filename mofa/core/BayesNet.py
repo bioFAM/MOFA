@@ -160,7 +160,7 @@ class BayesNet(object):
                 # print(t - time())
 
             # Calculate Evidence Lower Bound
-            if (i+1) % self.options['elbofreq'] == 0:
+            if (i+1) % self.options['elbofreq'] == 0 and activeK[i]==activeK[i-1]:
                 elbo.iloc[i] = self.calculateELBO()
 
                 # Print first iteration

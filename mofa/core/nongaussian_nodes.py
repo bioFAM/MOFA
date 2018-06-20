@@ -379,7 +379,10 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY):
         tmp = s.dot(Z,W.T)
         
         # Compute Lower Bound using the Bernoulli likelihood and the observed data
+        # BOTH EXPRESSIONS LEAD TO DECREASE IN ELBO, PARTICULARLY WITH NAs. DAMIEN SAYS THAT WE SHOULD BE USING THE LOWER BOUND EXPRESSION DIRECTLY.
+        # CHECK IT WITH HIM.
         lb = self.obs.data*tmp - s.log(1.+s.exp(tmp))
+        # lb = s.log(1.+s.exp(-(2.*self.obs-1)*tmp)) # DAMIEN'S suggestion
         lb[mask] = 0.
 
         # Compute Lower Bound using the gaussian likelihood with pseudo data

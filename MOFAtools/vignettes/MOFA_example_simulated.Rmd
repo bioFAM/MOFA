@@ -28,6 +28,7 @@ Once the untrained MOFAobject was created, we can specify details on data proces
 Using 'prepareMOFA' the model is set up for training.
 ```{r}
 TrainOptions <- getDefaultTrainOptions()
+TrainOptions$DropFactorThreshold <- 0.01
 ModelOptions <- getDefaultModelOptions(MOFAobject)
 DataOptions <- getDefaultDataOptions()
 
@@ -42,7 +43,7 @@ MOFAobject <- prepareMOFA(
 # Run MOFA
 Once the MOFAobject is set up we can use runMOFA to train the model. As depending on the random initilization the results might differ, we recommend to use runMOFA multiple times (e.g. ten times, here we use a smaller number for illustration as the model training takes some time) and as a next step select the best model in the next step.
 ```{r}
-n_inits <- 3
+n_inits <- 1
 MOFAlist <- lapply(1:n_inits, function(it) {
   runMOFA(MOFAobject, outfile=tempfile())
 })

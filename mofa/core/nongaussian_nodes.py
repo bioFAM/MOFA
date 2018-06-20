@@ -379,14 +379,14 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY):
         SW, SWW = Wtmp["E"], Wtmp["ESWW"]
         Z, ZZ = Ztmp["E"], Ztmp["E2"]
         tmp = s.dot(Z,SW.T)
-        tmp2 = #TODO  expected value of (ZW_nd)^2 we should have it from the tau updates already?
+        # tmp2 = #TODO  expected value of (ZW_nd)^2 we should have it from the tau updates already?
         mask = self.getMask()
 
         # Compute Lower Bound using the Bernoulli likelihood and the observed data
         # BOTH ARE WRONG AS THEY EXCHANGE LOG AND EXPECTATIONS
-        # lb = self.obs.data*tmp - s.log(1.+s.exp(tmp))
-        # lb = s.log(1.+s.exp(-(2.*self.obs-1)*tmp)) # DAMIEN'S suggestion
-        # lb[mask] = 0.
+        lb = self.obs.data*tmp - s.log(1.+s.exp(tmp))
+        lb = s.log(1.+s.exp(-(2.*self.obs-1)*tmp)) # DAMIEN'S suggestion
+        lb[mask] = 0.
 
         # Compute Lower Bound using the gaussian likelihood with pseudo data
         # MISSING CONSTANT TERM
@@ -396,10 +396,10 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY):
         # lb[mask] = 0.
 
         # NEW SUGGECTION:
-        zeta = self.params["zeta"]
-        term1 = s.log(zeta)
-        term2 = 0.5 * ((2*self.obs.data -1)*tmp -zeta)
-        term3 = 1/(4*szeta) * s.tanh(zeta/2)*(tmp2 - zeta^2)
-        lb = term1 + term2 - term3
-        lb[mask] = 0.
+        # zeta = self.params["zeta"]
+        # term1 = s.log(zeta)
+        # term2 = 0.5 * ((2*self.obs.data -1)*tmp -zeta)
+        # term3 = 1/(4*szeta) * s.tanh(zeta/2)*(tmp2 - zeta^2)
+        # lb = term1 + term2 - term3
+        # lb[mask] = 0.
         return lb.sum()

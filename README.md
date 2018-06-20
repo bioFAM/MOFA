@@ -70,7 +70,7 @@ The workflow of MOFA consists of two steps:
 <img src="images/workflow.png">
 </p>
 
-A list of all **relevant methods** with a short description can be found [here](https://github.com/PMBio/MOFA/blob/master/MOFAtools/Documentation.md)  
+A cheatsheet with all **relevant methods**, together with a short description, can be found [here](https://github.com/PMBio/MOFA/blob/master/MOFAtools/CheatSheet.md)  
 
 ### Step 1: Fitting the model
 First you need to create the MOFA object with your input data, and subsequently you need to train the model. Everything is explained in [the vignette](http://htmlpreview.github.com/?https://github.com/PMBio/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_CLL.html). 

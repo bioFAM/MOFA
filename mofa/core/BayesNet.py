@@ -111,13 +111,14 @@ class BayesNet(object):
                         all_r2[m,k] = 1. - Res/SS
             if by_r2 is not None:
                 # drop_dic["by_r2"] = s.where( (all_r2>by_r2).sum(axis=0) == 0)[0] 
-                drop_dic["by_r2"] = s.where( ((all_r2)>by_r2+1e-10).sum(axis=0) == 0)[0] 
+                drop_dic["by_r2"] = s.where( ((all_r2)>by_r2+1e-16).sum(axis=0) == 0)[0] 
                 if len(drop_dic["by_r2"]) > 0: # drop one factor at a time
                     drop_dic["by_r2"] = [ s.random.choice(drop_dic["by_r2"]) ]
 
         # Drop the factors
         drop = s.unique(s.concatenate(list(drop_dic.values())))
         if len(drop) > 0:
+            print("...A Factor explains less than {0}% of variance, dropping it and recomputing ELBO...".format(by_r2*100))
             for node in self.nodes.keys():
                 self.nodes[node].removeFactors(drop)
         self.dim['K'] -= len(drop)
@@ -145,7 +146,7 @@ class BayesNet(object):
             t = time();
 
             # Remove inactive latent variables
-            if (i >= self.options["startdrop"]) and (i % self.options['freqdrop']) == 0:
+            if (i>=self.options["startdrop"]) and (i%self.options['freqdrop'])==0 and i<=self.options["enddrop"]:
                 self.removeInactiveFactors(**self.options['drop'])
                 activeK[i] = self.dim["K"]
 
@@ -161,7 +162,7 @@ class BayesNet(object):
 
                 # Print first iteration
                 if i==0:
-                    print("Iteration 1: time=%.2f ELBO=%.2f, Factors=%d, Covariates=%d" % (time()-t,elbo.iloc[i]["total"], (~self.nodes["Z"].covariates).sum(), self.nodes["Z"].covariates.sum() ))
+                    print("Iteration 1: time=%.2f ELBO=%.2f, Factors=%d" % (time()-t,elbo.iloc[i]["total"], (~self.nodes["Z"].covariates).sum() ))
                     if self.options['verbose']:
                         print("".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n")
 
@@ -170,7 +171,8 @@ class BayesNet(object):
                     delta_elbo = elbo.iloc[i]["total"]-elbo.iloc[i-self.options['elbofreq']]["total"]
 
                     # Print ELBO monitoring
-                    print("Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, Factors=%d, Covariates=%d" % (i+1, time()-t, elbo.iloc[i]["total"], delta_elbo, (~self.nodes["Z"].covariates).sum(), self.nodes["Z"].covariates.sum() ))
+                    if not s.isnan(delta_elbo):
+                        print("Iteration %d: time=%.2f ELBO=%.2f, deltaELBO=%.4f, Factors=%d" % (i+1, time()-t, elbo.iloc[i]["total"], delta_elbo, (~self.nodes["Z"].covariates).sum() ))
                     if self.options['verbose']:
                         print("".join([ "%s=%.2f  " % (k,v) for k,v in elbo.iloc[i].drop("total").iteritems() ]) + "\n")
                     if delta_elbo<0 and i!=self.options['startSparsity'] and self.options['verbose']: print("Warning, lower bound is decreasing..."); print('\a')
@@ -184,7 +186,7 @@ class BayesNet(object):
 
             # Do not calculate lower bound
             else:
-                print("Iteration %d: time=%.2f, Factors=%d, Covariates=%d\n" % (i+1,time()-t,(~self.nodes["Z"].covariates).sum(), self.nodes["Z"].covariates.sum()))
+                print("Iteration %d: time=%.2f, Factors=%d" % (i+1,time()-t,(~self.nodes["Z"].covariates).sum()))
 
             # Flush (we need this to print when running on the cluster)
             sys.stdout.flush()

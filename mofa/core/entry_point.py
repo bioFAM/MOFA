@@ -100,7 +100,7 @@ class entry_point():
       self.data = removeIncompleteSamples(self.data)
 
   def set_train_options(self, iter=5000, elbofreq=1, startSparsity=100, tolerance=0.01, 
-    startDrop=1, freqDrop=1, dropR2=0, nostop=False, verbose=False, seed=None
+    startDrop=1, freqDrop=1, endDrop=9999, dropR2=0, nostop=False, verbose=False, seed=None
     ):
     """ Set training options """
 
@@ -118,7 +118,8 @@ class entry_point():
     self.train_opts['drop'] = { "by_r2":float(dropR2) }
     self.train_opts['startdrop'] = int(startDrop)
     self.train_opts['freqdrop'] = int(freqDrop)
-    print("\nDropping factors with minimum threshold of {0}% variance explained".format(dropR2))
+    self.train_opts['enddrop'] = int(endDrop)
+    # print("\nDropping factors with minimum threshold of {0}% variance explained".format(dropR2*100))
 
 
     # Tolerance level for convergence
@@ -173,8 +174,10 @@ class entry_point():
 
     # Define whether to use spike and slab sparsity or not
     if sparsity:
+      self.model_opts['sparsity_bool'] = True
       self.model_opts['sparsity'] = [s.ones(K) for m in range(M)]
     else:
+      self.model_opts['sparsity_bool'] = False
       print("\nWarning... sparsity is desactivated, we recommend using it\n")
       self.model_opts['sparsity'] = [s.zeros(K) for m in range(M)]
 

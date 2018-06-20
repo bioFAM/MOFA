@@ -14,7 +14,7 @@ For more details you can read our paper: http://msb.embopress.org/cgi/doi/10.152
 
 ## News
 - 21/06/2018 Version 1.0 released
-- 20/06/2018 Paper published
+- 20/06/2018 Paper published [link](http://msb.embopress.org/content/14/6/e8124)
 - 10/11/2017 Paper uploaded to bioRxiv
 - 10/11/2017 We created a Slack group to provide personalised help on running and interpreting MOFA, [this is the link](https://join.slack.com/t/mofahelp/shared_invite/enQtMjcxNzM3OTE3NjcxLTkyZmE5YzNiMDc4OTkxYWExYWNlZTRhMWI2OWNkNzhmYmNlZjJiMjA4MjNiYjI2YTc4NjExNzU2ZTZiYzQyNjY)
  
@@ -47,15 +47,15 @@ R CMD install MOFAtools
 ```
 
 ## Tutorials/Vignettes
-We currently provide two example workflows:
+We currently provide three example workflows:
 
 * [Integration of multi-omics cancer data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_CLL.html).
 * [Integration of single-cell multi-omics data](https://cdn.rawgit.com/bioFAM/MOFA/9eee74b7/MOFAtools/vignettes/MOFA_example_scMT.html).
+* [Integration of simulated data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_simulation.html). (This workshop focusses on how to train a model, check its robustness and select a model for further analyses, for details on the down-stream analyses have a look at one of the two workflows above).
 
 We are preparing the following workflows, to be released soon:
 * Test imputation performance.
 * Relate factors with clinical data.
-* Model selection and robustness.
 
 If there is any tutorial that you would like us to do, or if you want to share your analysis with MOFA, please contact us.
 

@@ -15,7 +15,7 @@
 #' MOFAexample <- makeExampleData()
 #' MOFAexample
 
-makeExampleData <- function(n_views=3, n_features=500, n_samples = 100, n_factors = 5, likelihood = "gaussian") {
+makeExampleData <- function(n_views=3, n_features=200, n_samples = 50, n_factors = 5, likelihood = "gaussian") {
   
   # Sanity checks
   if (!all(likelihood %in% c("gaussian", "bernoulli", "poisson")))
@@ -54,15 +54,15 @@ makeExampleData <- function(n_views=3, n_features=500, n_samples = 100, n_factor
   data <- lapply(1:n_views, function(vw){
     lk <- likelihood[vw]
     if(lk=="gaussian"){
-      mu[[vw]] + rnorm(length(mu[[vw]]),0,sqrt(1/tau))
+      t(mu[[vw]] + rnorm(length(mu[[vw]]),0,sqrt(1/tau)))
     }
     else if(lk == "poisson"){
       term <- log(1+exp(mu[[vw]]))
-      apply(term, 2, function(tt) rpois(length(tt),tt))
+      t(apply(term, 2, function(tt) rpois(length(tt),tt)))
     }
       else if(lk == "bernoulli") {
         term <- 1/(1+exp(-mu[[vw]]))
-        apply(term, 2, function(tt) rbinom(length(tt),1,tt))
+        t(apply(term, 2, function(tt) rbinom(length(tt),1,tt)))
       }
   })
   

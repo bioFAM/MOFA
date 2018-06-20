@@ -55,7 +55,13 @@ compareFactors <- function(models, comparison = "all", show_rownames=FALSE, show
       stop("No common samples in all models for comparison")
     
     #subset LFs to common samples
-    LFscommon <- Reduce(cbind, lapply(LFs, function(Z) Z[commonSamples,, drop=FALSE]))
+    LFscommon <- Reduce(cbind, lapply(LFs, function(Z) {
+      Z <- Z[commonSamples,, drop=FALSE]
+      nonconst <- apply(Z,2,var, na.rm=TRUE) > 0
+      if(sum(nonconst) < ncol(Z)) message("Removing ", sum(!nonconst), " constant factors from the comparison.")
+      Z[, nonconst]
+    })
+      )
 
     # calculate correlation
     corLFs <- cor(LFscommon, use="complete.obs")
@@ -150,6 +156,6 @@ selectModel <- function(models, plotit =TRUE) {
     stop("Each element of the the list 'models' has to be an instance of MOFAmodel")
 
   elbo_vals <- sapply(models, getELBO)
-  if(plotit) compare_models(models)
+  if(plotit) compareModels(models)
   models[[which.max(elbo_vals)]]
 }

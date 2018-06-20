@@ -34,10 +34,9 @@ setClass("MOFAmodel",
                  ImputedData = "list",
                  Expectations = "list", 
                  TrainStats = "list",
-                 TrainOptions = "list",
                  DataOptions = "list",
+                 TrainOptions = "list",
                  ModelOptions = "list",
-                 DirOptions = "list",
                  Dimensions = "list",
                  Status = "character")
 )

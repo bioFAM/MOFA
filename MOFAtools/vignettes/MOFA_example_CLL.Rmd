@@ -94,8 +94,9 @@ Next, we define training options. The most important are:
 * **DropFactorThreshold**: threshold of fraction of variance explained to define a factor as inactive. This is the key parameter to let the model learn the number of factors. Factors explaining less than 'DropFactorThreshold' fraction of variation in all views will be removed. For example, a value of 0.01 (default) means that factors that explain less than 1\% of variance in all views will be discarded.
 ```{r}
 TrainOptions <- getDefaultTrainOptions()
-TrainOptions$maxiter <- 100
-TrainOptions
+
+# Automatically drop factors that explain less than 2% of variance in all omics
+TrainOptions$DropFactorThreshold <- 0.02
 ```
 
 ## Prepare MOFA

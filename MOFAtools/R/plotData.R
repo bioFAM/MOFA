@@ -36,14 +36,15 @@
 #' MOFA_CLL <- loadModel(filepath)
 #' # plot top 30 features on Factor 1 in the mRNA view
 #' plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30)
-#' # without column- and rownames (extra arguments passed to pheatmap)
-#' plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30, show_colnames = FALSE, show_rownames = FALSE)
+#' # without column names (extra arguments passed to pheatmap)
+#' plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30, show_colnames = FALSE)
 #' # transpose the heatmap
 #' plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30, transpose=TRUE)
-#' # do not cluster rows or columns (extra arguments passed to pheatmap)
-#' plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30, cluster_rows=FALSE, cluster_cols=FALSE)
+#' # do not cluster rows (extra arguments passed to pheatmap)
+#' plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30, cluster_rows=FALSE)
 #' @export
-plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights = FALSE, transpose = FALSE, imputed = FALSE, ...) {
+plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights = FALSE, 
+                            transpose = FALSE, imputed = FALSE, ...) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")

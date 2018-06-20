@@ -34,15 +34,6 @@ runMOFA <- function(object, outfile) {
   if (object@Status=="trained") 
     stop("The model is already trained! If you want to retrain, create a new untrained MOFAmodel")
   
-  if (object@TrainOptions$learnFactors == FALSE) {
-    object@TrainOptions$DropFactorThreshold <- 0.00
-  } else {
-    if (object@TrainOptions$DropFactorThreshold==0) { 
-      print("Warning: learnFactors is set to TRUE but dropFactorThreshold is 0, this is contradictory.")
-      print("Please read the documentation in prepareMOFA about learning the number of factors.")
-    }
-  }
-  
   # Initiate reticulate
   mofa <- import("mofa")
   mofa_entrypoint <- mofa$core.entry_point$entry_point()

@@ -79,8 +79,10 @@ Next, we define training options. The most important are:
 ```{r}
 TrainOptions <- getDefaultTrainOptions()
 TrainOptions$seed <- 2017
-TrainOptions$learnFactors <- FALSE
 TrainOptions$maxiter <- 100
+
+# Automatically drop factors that explain less than 2% of variance in all omics
+TrainOptions$DropFactorThreshold <- 0.02
 ```
 
 ## Prepare MOFA

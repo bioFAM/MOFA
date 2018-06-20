@@ -2,7 +2,7 @@
 #' @title Initialize a MOFA object
 #' @name createMOFAobject
 #' @description Method to initialize a \code{\link{MOFAmodel}} object with a multi-omics data set.
-#' @param data either a \code{MultiAssayExperiment} or a list of matrices with features as rows and samples as columns.
+#' @param data either a \code{\link{MultiAssayExperiment}} or a list of matrices with features as rows and samples as columns.
 #' @details
 #' If the multi-omics data is provided as a list of matrices, please make sure that features 
 #' are stored as rows and samples are stored as columns. \cr 
@@ -13,8 +13,7 @@
 #' @export
 #' 
 #' @examples
-#' # Option 1: Create a MOFAobject from a list of matrices
-#' with features in rows and samples in columns
+#' # Option 1: Create a MOFAobject from a list of matrices with features in rows and samples in columns
 #' data("CLL_data")
 #' MOFAobject <- createMOFAobject(CLL_data)
 #'

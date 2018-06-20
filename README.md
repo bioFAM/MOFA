@@ -5,7 +5,7 @@ Intuitively, MOFA can be viewed as a versatile and statistically rigorous genera
 
 Once trained, the model output can be used for a range of downstream analyses, including the visualisation of samples in factor space, the automatic annotation of factors using (gene set) enrichment analysis, the identification of outliers (e.g. due to sample swaps) and the imputation of missing values.  
 
-For more details you can read our preprint: https://www.biorxiv.org/content/early/2017/11/10/217554
+For more details you can read our paper: http://msb.embopress.org/cgi/doi/10.15252/msb.20178124
 <p align="center"> 
 <img src="images/logo.png" style="width: 50%; height: 50%"/>​
 </p>
@@ -13,6 +13,8 @@ For more details you can read our preprint: https://www.biorxiv.org/content/earl
 
 
 ## News
+- 21/06/2018: Version 1.0 released
+- 20/06/2018: Paper published
 - 10/11/2017 Paper uploaded to bioRxiv
 - 10/11/2017 We created a Slack group to provide personalised help on running and interpreting MOFA, [this is the link](https://join.slack.com/t/mofahelp/shared_invite/enQtMjcxNzM3OTE3NjcxLTkyZmE5YzNiMDc4OTkxYWExYWNlZTRhMWI2OWNkNzhmYmNlZjJiMjA4MjNiYjI2YTc4NjExNzU2ZTZiYzQyNjY)
  
@@ -47,8 +49,16 @@ R CMD install MOFAtools
 ## Tutorials/Vignettes
 We currently provide two example workflows:
 
-* [Integration of clinical multi-omics cancer data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_CLL.html).
+* [Integration of multi-omics cancer data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_CLL.html).
 * [Integration of single-cell multi-omics data](https://cdn.rawgit.com/bioFAM/MOFA/9eee74b7/MOFAtools/vignettes/MOFA_example_scMT.html).
+
+We are preparing the following workflows, to be released soon:
+* Test imputation performance
+* Relate factors with clinical data
+* How to perform model selection?
+
+If there is any tutorial that you would like us to do, or if you want to share your analysis with MOFA, please contact us.
+
 
 ## MOFA workflow
 
@@ -99,7 +109,7 @@ Converged!
 
 There are two important quantities to keep track of: 
 * **Number of factors**: you start the model with a large enough amount of factors, and the model will automatically remove the factors that do not explain significant amounts of variation. 
-* **deltaELBO**: this is the objective function being maximised which is used to assess model convergence. Once the deltaELBO decreases below a threshold, training will end and the model will be saved as an .hdf5 file. Then, you are ready to start the analysis with the R package.
+* **deltaELBO**: this is the convergence statistic. Once the deltaELBO decreases below a threshold (close to zero), training will end and the model will be saved as an .hdf5 file. Then, you are ready to start the downstream analysis.
 
 ### Step 2: Disentangle the variability
 MOFA disentangles the heterogeneity of a high-dimensional multi-omics data set into a reduced set of latent factors that capture global sources of variation. 
@@ -123,7 +133,7 @@ Please refer to the paper for details on the different analysis.
 
 ### Step 4: Using the factors to get biological insights in downstream analysis
 The latent factors can be used for several purposes, such as:  
-(1) **Dimensionality reduction**: similar to PCA, dimensionality reduction plots can be obtained by plotting the Factors against each other.  
+(1) **Dimensionality reduction**: similar to PCA, dimensionality reduction visualisations can be obtained by plotting the Factors against each other.  
 (2) **Imputation**: Factors can be used to predict missing values, including entire missing assays.  
 (3) **Predicting clinical response**: if the factors capture phenotypical information, they can capture clinical covariates of interest.  
 (4) **Regressing out technical effects**: if a factor is capturing an undesired technical effect, its effect can be regressed out from your original data matrix.  
@@ -132,20 +142,7 @@ Please refer to the paper for details on the different analysis.
 
 ## Frequently asked questions
 
-**(1) I get the following error when running MOFA:**
-```
-sh: mofa: command not found
-```
-This occurs if the mofa binary is not in the $PATH of R. This will be fixed in a new update, a simple workaround is to get the full path of the mofa executable by doing on the terminal:
-```
-which mofa
-```
-and then copy the path into runMOFA:
-```
-runMOFA(object, DirOptions, ..., mofaPath="PUT THE PATH HERE")
-```
-
-**(2) I get the following error when installing the R package:**
+**(Q) I get the following error when installing the R package:**
 ```
 ERROR: dependencies 'pcaMethods', 'MultiAssayExperiment' are not available for package 'MOFAtools'
 ```
@@ -155,8 +152,46 @@ source("https://bioconductor.org/biocLite.R")
 biocLite(c('pcaMethods', 'MultiAssayExperiment'))
 ```
 
+**(Q) How many factors should I use?**
+Similar to other Factor Analysis models, this is a hard question to answer. It depends depends on the data set and the aim of the analysis. As a general rule, the bigger the data set, the higher the number of factors that you will likely retrieve, and the less the variance that will be explained per factor.
+If you want to get an overview on the major sources of variability then use a small number of factors (K<=15). If you want to capture small sources of variability, for example to improve imputation performance or for eQTL mapping, then go for a large number of factors (K>=50)
+
+
+**(Q) How does MOFA handle missing values?**
+It simpy ignores them, there is no a priori imputation step required. In fact, matrix factorisation models are known to be very robust to the presence of large amounts of missing values. 
+
+**(Q) Should I do any filtering to the input data?**
+It is not mandatory, but it is highly recommended to filter lowly variable features. It makes the model more robust and speeds up the training.
+
+**(Q) My data sets have different dimensionalities, does this matter?**
+Yes, this is important. Bigger data modalities will tend to be overrepresent in the MOFA model. It is good practice to filter features (based for example on variance) in order to have the different dimensionalities within the same order of magnitudes. If this is unavoidable, take into account that the model has the risk of missing (small) sources of variation unique to the small data set.
+
+
+**(Q) Can MOFA automatically learn the number of factors?**
+Yes, MOFA can automatically learn the number of factors, but a hyperparameter needs to be provided. The user needs to specify a minimum value of fraction of variance explained that is considered meaningful. Then, MOFA will actively remove factors (during training) that explain less than the specified amount of variance.
+If you have no idea on what to expect, it is better to start with a fixed number of factors.
+
+
+**(Q) What data modalities can MOFA cope with?**
+* Continuous data: should be modelled using a gaussian likelihood. For example, log normalised RNA-seq data or M-values of bulk methylation data
+* Binary data: should be modelled using a bernoulli likelihood. For example, somatic mutations or single-cell methylation data.
+* Count data: should be modelled using a poisson likelihood. For example, copy number variation or scRNA-seq UMI data.
+The use of non-gaussian likelihoods require further approximations and are not as accurate as the gaussian likelihood. Hence, if your data can be safely transformed to match the gaussian likelihood assumptions, this is always recommended. For example log-transform and variance stabilisation of bulk RNA-seq data or M-value computation in DNA methylation data.
+
+**(Q) How do I assess convergence?**
+MOFA is trained using variational bayes, a fast inference framework that consists on optimising a statistica called the Evidence Lower Bound (ELBO). The model uses the change in ELBO (deltaELBO) to assess convergence. A model is defined to be converged when deltaELBO is close to 0. For a quick exploratory analysis, we suggest a convergence threshold between 1 to 10.
+
+**(Q) What input formats are allowed?**
+The data has to be input in two possible formats: 
+* Bioconductor: a [MultiAssayExperiment](https://bioconductor.org/packages/release/bioc/html/MultiAssayExperiment.html) object
+* Base R approach: a list of matrices where features are rows and samples are columns. See vignette `XXX`
+
+**(Q) Does MOFA always converge to the same solutions?**
+No, as occurs in most complex Bayesian models, they are not guaranteed to always converge to the smae (optimal) solution.
+In practice, however, we observed that the solutions are highly consistent, particularly for strong factors. However, one should always assess the robustness and do a proper model selection. We are currently preparing a vignette on this.
+
+
 ## Contact
 The package is maintained by Britta Velten (britta.velten@embl.de) and Ricard Argelaguet (ricard@ebi.ac.uk). 
 Please, contact us for problems, comments or suggestions.
-
 

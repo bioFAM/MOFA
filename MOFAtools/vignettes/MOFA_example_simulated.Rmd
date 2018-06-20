@@ -30,9 +30,7 @@ Using 'prepareMOFA' the model is set up for training.
 TrainOptions <- getDefaultTrainOptions()
 ModelOptions <- getDefaultModelOptions(MOFAobject)
 DataOptions <- getDefaultDataOptions()
-TrainOptions$learnFactors <- TRUE
-TrainOptions$DropFactorThreshold <- 0.02
-  
+
 MOFAobject <- prepareMOFA(
   MOFAobject, 
   DataOptions = DataOptions,
@@ -63,7 +61,7 @@ MOFAobject
 ```
 
 # Downstream analyses
-On the trained MOFAobject we can now start looking into the inferred factros, its weights etc. 
+On the trained MOFAobject we can now start looking into the inferred factors, its weights etc. Here the data was generated using five factors, whose activity patterns we can recover using 'plotVarianceExplained'.
 ```{r}
 plotVarianceExplained(MOFAobject)
 ```

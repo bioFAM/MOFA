@@ -478,12 +478,9 @@ def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_na
         os.makedirs(os.path.dirname(outfile))
 
     # For some reason h5py orders the datasets alphabetically, so we have to sort the likelihoods accordingly
-    print(view_names)
-    print(model_opts["likelihoods"])
     idx = sorted(range(len(view_names)), key=lambda k: view_names[k])
     tmp = [model_opts["likelihoods"][idx[m]] for m in range(len(model_opts["likelihoods"]))]
     model_opts["likelihoods"] = tmp
-    print(model_opts["likelihoods"])
 
     # Open HDF5 handler
     hdf5 = h5py.File(outfile,'w')

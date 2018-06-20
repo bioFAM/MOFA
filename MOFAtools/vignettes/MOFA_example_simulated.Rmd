@@ -30,7 +30,9 @@ Using 'prepareMOFA' the model is set up for training.
 TrainOptions <- getDefaultTrainOptions()
 ModelOptions <- getDefaultModelOptions(MOFAobject)
 DataOptions <- getDefaultDataOptions()
-
+TrainOptions$learnFactors <- TRUE
+TrainOptions$DropFactorThreshold <- 0.02
+  
 MOFAobject <- prepareMOFA(
   MOFAobject, 
   DataOptions = DataOptions,
@@ -40,10 +42,10 @@ MOFAobject <- prepareMOFA(
 ```
 
 # Run MOFA
-Once the MOFAobject is set up we can use runMOFA to train the model. As depending on the random initilization the results might differ, we recommend to use runMOFA multiple times (here ten times) and as a next step select the best model in the next step.
+Once the MOFAobject is set up we can use runMOFA to train the model. As depending on the random initilization the results might differ, we recommend to use runMOFA multiple times (e.g. ten times, here we use a smaller number for illustration as the model training takes some time) and as a next step select the best model in the next step.
 ```{r}
-n_inits <- 10
-MOFA_list <- lapply(1:n_inits, function(it) {
+n_inits <- 3
+MOFAlist <- lapply(1:n_inits, function(it) {
   runMOFA(MOFAobject, outfile=tempfile())
 })
 ```
@@ -54,9 +56,9 @@ Having a list of trained models we can use 'compareModels' to get an overview of
 
 For down-stream analyses we recommned to choose the model with the best ELBO value as is done by 'selectModel.
 ```{r}
-compareModels(MOFA_list)
-compareFactors(MOFA_list)
-MOFAobject <- selectModel(MOFA_list)
+compareModels(MOFAlist)
+compareFactors(MOFAlist)
+MOFAobject <- selectModel(MOFAlist)
 MOFAobject
 ```
 

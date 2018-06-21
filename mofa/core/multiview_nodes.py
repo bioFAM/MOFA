@@ -68,6 +68,10 @@ class Multiview_Node(Node):
         """Method to get the nodes"""
         return self.nodes
         
+    def getMask(self):
+        """Method to get the masks"""
+        return [ self.nodes[m].getMask() for m in self.activeM ]
+
     def getExpectation(self):
         """Method to get the first moments (expectation)"""
         return [ self.nodes[m].getExpectation() for m in self.activeM ]
@@ -93,6 +97,10 @@ class Multiview_Node(Node):
         assert s.all(m in self.activeM), "Trying to update the dimensionality of a node that doesnt exist in a view"
         M = self.activeM if m is None else m
         for m in M: self.nodes[m].updateDim(axis,new_dim)
+
+    def precompute(self):
+        for m in self.activeM:
+            self.nodes[m].precompute()
 
 class Multiview_Variational_Node(Multiview_Node, Variational_Node):
     """General class for multiview variational nodes."""
@@ -132,9 +140,11 @@ class Multiview_Mixed_Node(Multiview_Constant_Node, Multiview_Variational_Node):
         # nodes: list of M 'Node' instances
         Multiview_Node.__init__(self, M, *nodes)
 
+
     def update(self):
         """Method to update values of the nodes"""
-        for m in self.activeM: self.nodes[m].update()
+        for m in self.activeM: 
+            self.nodes[m].update()
 
     def calculateELBO(self):
         """Method to calculate variational evidence lower bound

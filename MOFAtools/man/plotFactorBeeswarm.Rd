@@ -38,3 +38,15 @@ One of the main steps for the annotation of factors is to visualise and color th
 This function generates a Beeswarm plot of the sample values in a given latent factor. \cr
 Similar functions are \code{\link{plotFactorScatter}} for doing scatter plots and \code{\link{plotFactorHist}} for doing histogram plots
 }
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+plotFactorBeeswarm(MOFA_CLL, factor=1:3)
+plotFactorBeeswarm(MOFA_CLL, factor=1:2, color_by= "IGHV")
+
+# Example on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+plotFactorBeeswarm(MOFA_scMT)
+}

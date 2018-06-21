@@ -85,10 +85,6 @@ class PseudoY(Unobserved_Variational_Node):
     def getMask(self):
         return ma.getmask(self.obs)
 
-    def precompute(self):
-        # Precompute some terms to speed up the calculations
-        pass
-
     def updateExpectations(self):
         print("Error: expectation updates for pseudodata node depend on the type of likelihood. They have to be specified in a new class.")
         exit()
@@ -144,7 +140,7 @@ class PseudoY_Seeger(PseudoY):
         # lb = 0.5*( ma.sum(s.log(tau_expanded)) - ma.sum(tau_expanded*(self.E-s.dot(Z,SW.T))**2 ) ) # (1) tau is of shape (D,) (2) missing a constant term
         return lb
 
-class Poisson_PseudoY(PseudoY_Seeger):
+class Poisson_PseudoY_Seeger(PseudoY_Seeger):
     """
     Class for a Poisson pseudodata node.
     Likelihood:
@@ -199,7 +195,7 @@ class Poisson_PseudoY(PseudoY_Seeger):
         tmp = self.ratefn(s.dot(Z,SW.T))
         lb = ma.masked_invalid(self.obs*s.log(tmp) - tmp).sum()
         return lb
-class Bernoulli_PseudoY(PseudoY_Seeger):
+class Bernoulli_PseudoY_Seeger(PseudoY_Seeger):
     """
     Class for a Bernoulli pseudodata node used to model binary data
     Likelihood:
@@ -227,21 +223,32 @@ class Bernoulli_PseudoY(PseudoY_Seeger):
         PseudoY_Seeger.__init__(self, dim=dim, obs=obs, params=params, E=E)
 
         # Initialise the observed data
-        assert s.all( (self.obs==0) | (self.obs==1) ), "Data must be binary, encoded as zeroes and ones"
+        assert s.all( (self.obs==0) | (self.obs==1) ), "Data modelled using bernoulli likelihood must be binary, encoded as 0s or 1s"
 
     def updateExpectations(self):
         # Update the pseudodata
-        # TO-DO: WE SHOULD EXTRACT THE 4. FROM THE TAU NODE, WHICH IS A CONSTANT NODE
         self.E = self.params["zeta"] - 4.*(sigmoid(self.params["zeta"]) - self.obs)
 
     def calculateELBO(self):
-        # Compute Lower Bound using the Bernoulli likelihood in the observed data
         Z = self.markov_blanket["Z"].getExpectation()
-        SW = self.markov_blanket["SW"].getExpectation()
-        tmp = s.dot(Z,SW.T)
-        lik = ma.sum( self.obs*tmp - s.log(1.+s.exp(tmp)) )
-        return lik
-class Binomial_PseudoY(PseudoY_Seeger):
+        W = self.markov_blanket["SW"].getExpectation()
+        mask = self.getMask()
+        tmp = s.dot(Z,W.T)
+        
+        # Compute Lower Bound using the Bernoulli likelihood and the observed data
+        lb = self.obs.data*tmp - s.log(1.+s.exp(tmp))
+        lb[mask] = 0.
+
+        # Compute Lower Bound using the gaussian likelihood with pseudo data
+        # MISSING CONSTANT TERM
+        # term1 = 0.5*s.log(self.params["zeta"])
+        # term2 = 0.5*self.params["zeta"]*(self.E-tmp)**2
+        # lb = term1 - term2
+        # lb[mask] = 0.
+
+        return lb.sum()
+
+class Binomial_PseudoY_Seeger(PseudoY_Seeger):
     """
     Class for a Binomial pseudodata node 
     Likelihood:
@@ -333,7 +340,7 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY):
     Class for a Bernoulli pseudodata node using the Jaakkola approach:
     Likelihood:
         p(y|x) = (e^{yx}) / (1+e^x)
-    Following Jaakola et al and intterpreting the bound as a liklihood on gaussian pseudodata
+    Following Jaakola et al and intterpreting the bound as a likelihood on gaussian pseudodata
     leads to the folllowing updates
 
     Pseudodata is given by
@@ -353,23 +360,58 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY):
     """
     def __init__(self, dim, obs, params=None, E=None):
         PseudoY.__init__(self, dim=dim, obs=obs, params=params, E=E)
-
+        
         # Initialise the observed data
-        assert s.all( (self.obs==0) | (self.obs==1) ), "Data must be binary"
+        assert s.all( (self.obs==0) | (self.obs==1) ), "Data modelled using bernoulli likelihood must be binary, encoded as 0s or 1s"
 
     def updateExpectations(self):
-        self.E = (2.*self.obs - 1.)/(4.*lambdafn(self.params["zeta"]))
+        self.E = (2.*self.obs - 1.) / (4.*lambdafn(self.params["zeta"]))
 
     def updateParameters(self):
         Z = self.markov_blanket["Z"].getExpectations()
         SW = self.markov_blanket["SW"].getExpectations()
         self.params["zeta"] = s.sqrt( s.square(Z["E"].dot(SW["E"].T)) - s.dot(s.square(Z["E"]),s.square(SW["E"].T)) + s.dot(Z["E2"], SW["ESWW"].T) )
-        self.params["zeta"] = ma.masked_invalid(self.params["zeta"])
 
     def calculateELBO(self):
-        # Compute Lower Bound using the Bernoulli likelihood with observed data
         Z = self.markov_blanket["Z"].getExpectation()
-        SW = self.markov_blanket["SW"].getExpectation()
+        Wtmp = self.markov_blanket["SW"].getExpectations()
+        Ztmp = self.markov_blanket["Z"].getExpectations()
+        SW, SWW = Wtmp["E"], Wtmp["ESWW"]
+        Z, ZZ = Ztmp["E"], Ztmp["E2"]
         tmp = s.dot(Z,SW.T)
-        lik = ma.sum( self.obs*tmp - s.log(1.+s.exp(tmp)) )
-        return lik
+        mask = self.getMask()
+
+        # Compute Lower Bound using the Bernoulli likelihood and the observed data
+        # BOTH ARE WRONG AS THEY EXCHANGE LOG AND EXPECTATIONS
+        # lb = self.obs.data*tmp - s.log(1.+s.exp(tmp))
+        # lb = s.log(1.+s.exp(-(2.*self.obs-1)*tmp)) # DAMIEN'S suggestion
+        # lb[mask] = 0.
+
+        # Compute Lower Bound using the gaussian likelihood with pseudo data
+        # MISSING CONSTANT TERM
+        # term1 = 0.5*s.log(self.params["zeta"])
+        # term2 = 0.5*self.params["zeta"]*(self.E-tmp)**2
+        # lb = term1 - term2
+        # lb[mask] = 0.
+
+        # Compute Evidence Lower Bound using the lower bound to the likelihood
+
+        # Calculate E[(ZW_nd)^2]
+        ZW = Z.dot(SW.T)
+        ZW[mask] = 0.
+        term2 = ZZ.dot(SWW.T)
+        term2[mask] = 0
+        term2 = term2.sum(axis=0)
+        term3 = s.dot(s.square(Z),s.square(SW).T)
+        term3[mask] = 0.
+        term3 = -term3.sum(axis=0)
+        EZZWW = term2 + term3
+
+        zeta = self.params["zeta"]
+        term1 = s.log(zeta)
+        term2 = 0.5 * ((2.*self.obs.data - 1.)*tmp - zeta)
+        term3 = 1./(4.*zeta) * s.tanh(zeta/2.)*(EZZWW - zeta**2)
+        lb = term1 + term2 - term3
+        lb[mask] = 0.
+        
+        return lb.sum()

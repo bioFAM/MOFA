@@ -66,49 +66,57 @@ This part of the pipeline is implemented in Python, so first of all make sure yo
 
 ## Define options
 
-### Define I/O options
+### Define data options
+The most important options the user needs to define are:
+* **centerFeatures**: logical indicating whether to center the features to zero mean. This is optional, as the model can learn the feature-wise intercepts by setting ModelOptions$learnIntercept to TRUE. However, centered data is always recommended, so default is TRUE. Note that this only applies to continuous data that is modelled with a gaussian likelihood. Binary or count data are not centered.
+* **scaleViews**: logical indicating whether to scale views to have unit variance. As long as the scale of the different data sets is not too high, this is not required. Default is FALSE.
+* **removeIncompleteSamples*+: logical indicating whether to remove samples that are not profiled in all omics. The model can cope with missing assays, so this option is not required. Default is FALSE.
 ```{r}
-DirOptions <- list(
-  "dataDir" = tempdir(), # Folder to store the input matrices as .txt files, it can be a simple temporary folder
-  "outFile" = 'CLL_model.hdf5' # Output file of the model (use hdf5 extension)
-)
+DataOptions <- getDefaultDataOptions()
+DataOptions 
 ```
 
 ### Define model options
-The most important options the user needs to define are:
-* numFactors: initial number of factors
-* likelihoods: likelihood for each view, gaussian for continuous data, bernoulli for binary data and poisson for count data. If not provided, the model tries to guess it from the data.
+Next, we define model options. The most important are:  
+* **numFactors**: number of factors (default is 25). By default, the model does not automatically learn the number of factors. If you want the model to do this (based on a minimum variance explained criteria), set `TrainOptions$dropFactorThreshold` to a non-zero value.
+* **likelihoods**: likelihood for each view. Usually we recommend gaussian for continuous data, bernoulli for binary data and poisson for count data. By default, the model tries to guess it from the data.
+* **sparsity**: do you want to use sparsity? This makes the interpretation easier so it is recommended (Default is TRUE).
 ```{r}
 ModelOptions <- getDefaultModelOptions(MOFAobject)
 ModelOptions
 ```
 
 ### Define training options
-The most important options the user needs to define are:
-* maxiter: Maximum number of iterations, ideally set it large enough and use the convergence criteria
-* tolerance: Convergence threshold based on change in the evidence lower bound. We recommend you stick to the default value.
-* DropFactorThreshold: Threshold on fraction of variance explained to define inactive factors. That is, factors explaining less than 'DropFactorThreshold' percentage of variation in all views will be dropped during training.
+Next, we define training options. The most important are:  
+* **maxiter**: maximum number of iterations. Ideally set it large enough and use the convergence criteria `TrainOptions$tolerance`.
+* **tolerance**: convergence threshold based on change in the evidence lower bound. For an exploratory run you can use a value between 1.0 and 0.1, but for a "final" model we recommend a value of 0.01.
+* **DropFactorThreshold**: hyperparameter to automatically learn the number of factors based on a minimum variance explained criteria. Factors explaining less than 'DropFactorThreshold' fraction of variation in all views will be removed. For example, a value of 0.01 (default) means that factors that explain less than 1\% of variance in all views will be discarded.
 ```{r}
 TrainOptions <- getDefaultTrainOptions()
-TrainOptions$maxiter <- 5
+
+# Automatically drop factors that explain less than 2% of variance in all omics
+TrainOptions$DropFactorThreshold <- 0.01
+
 TrainOptions
 ```
 
 ## Prepare MOFA
-prepareMOFA internally performs a set of sanity checks, fills the TrainOptions and ModelOptions slots of the MOFAmodel object and it also creates a set of temporary files with the input matrices that will be loaded by the Python core implementation
+`prepareMOFA` internally performs a set of sanity checks and fills the `DataOptions`, `TrainOptions` and `ModelOptions` slots of the `MOFAobject`
 ```{r}
-MOFAobject <- prepareMOFA(MOFAobject, 
-                      DirOptions = DirOptions,
-                      ModelOptions = ModelOptions,
-                      TrainOptions = TrainOptions
+MOFAobject <- prepareMOFA(
+  MOFAobject, 
+  DataOptions = DataOptions,
+  ModelOptions = ModelOptions,
+  TrainOptions = TrainOptions
 )
 ```
 
 ## Run MOFA
-This step can take some time (around 20 min with default parameters), for illustration we provide an existing trained model
+Now we are ready to train the `MOFAobject`, which is done with the function `runMOFA`. This step can take some time (around 15 min with default parameters). For illustration we provide an existing trained `MOFAobject`
 ```{r, eval=FALSE}
-# MOFAobject <- runMOFA(MOFAobject, DirOptions)
+MOFAobject <- runMOFA(MOFAobject, outfile=tempfile())
 ```
+
 
 ```{r}
 # Loading an existing trained model
@@ -131,18 +139,19 @@ Part 2: Characterisation of individual factors:
 For details, please read the Methods section of the Manuscript.
 
 ## Part 1: Disentangling the heterogeneity, calculation of variance explained by each factor in each view
-This is done by the 'plotVarianceExplained' function. The resulting plot allows to get an overivew of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of the different views.
+This is done by the `plotVarianceExplained` function. The resulting plot allows to get an overivew of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of the different views.
 
 ```{r}
+r2 <- calculateVarianceExplained(MOFAobject)
 plotVarianceExplained(MOFAobject)
 ```
 
 ## Part 2: Characterisation of individual factors
 ### Inspection of top weighted features in the active views
-To get an overview of the weights across all factors in a given view you can use the 'plotWeightsHeatmap' function.
-For example, here we plot all weights for factors 1 to 5 in the Mutation data:
+To get an overview of the weights across all factors in a given view you can use the `plotWeightsHeatmap` function.
+For example, here we plot all weights from all factors in the Mutation data:
 ```{r}
-plotWeightsHeatmap(MOFAobject, "Mutations", factors=1:5, show_colnames=F)
+plotWeightsHeatmap(MOFAobject, view = "Mutations", factors=1:5, show_colnames=F)
 ```
 We observe that factors 1 and 2 have non-zero weights. To explore a single factor in more detail we can  plot all weights for a single factor using the 'plotWeights' function.
 For example, here we plot all weights from Factor 1 in the Mutation data. With 'nfeatures' we can set how many features should be labelled ('manual' let's you specify feautres manually to be labelled in the plot.)
@@ -171,7 +180,7 @@ Sometimes looking at the loadings of single features can be challenging, and oft
 
 Here we implemented a function for feature set enrichment analysis method (FeatureSetEnrichmentAnalysis) derived from the [PCGSE package](https://cran.r-project.org/web/packages/PCGSE/index.html).
 
-The input of this function is a MOFA trained model (MOFAmodel), the factors for which to perform feature set enrichment (a character vector), the feature sets (a binary matrix) and a set of options regarding how the analysis should be performed, see also documentation of 'FeatureSetEnrichmentAnalysis'
+The input of this function is a MOFA trained model (MOFAmodel), the factors for which to perform feature set enrichment (a character vector), the feature sets (a binary matrix) and a set of options regarding how the analysis should be performed, see also documentation of `FeatureSetEnrichmentAnalysis`
 
 We illustrate the use of this function using the [reactome](http://reactome.org) annotations.
 ```{r}
@@ -200,23 +209,23 @@ for (factor in interestingFactors) {
 
 ## Ordination of samples by factors to reveal clusters and graadients in the sample space
 
-Samples can be visualized along factors of interest using the 'FactorsScatterPlot' function.
+Samples can be visualized along factors of interest using the `FactorsScatterPlot` function.
 ```{r}
 plotFactorScatter(MOFAobject, factors = 1:2, color_by = "IGHV", shape_by = "trisomy12")
 ```
 
-An overview of pair-wise sctterplots for all or a subset of factors is produced by the 'FactorsScatterPairs' function
+An overview of pair-wise sctterplots for all or a subset of factors is produced by the `FactorsScatterPairs` function
 ```{r}
 plotFactorScatters(MOFAobject, factors = 1:4, color_by = "IGHV")
 ```
 
-A single factor can be visualised using the 'FactorBeeswarmPlot' function
+A single factor can be visualised using the `FactorBeeswarmPlot` function
 ```{r}
 plotFactorBeeswarm(MOFAobject, factors = 1, color_by = "IGHV")
 ```
 
 ## Customized analysis
-For customized exploration of weights and factors, you can directly fetch the variables from the model using 'get' functions: 'getWeights', 'getFactors' and 'getTrainData':
+For customized exploration of weights and factors, you can directly fetch the variables from the model using 'get' functions: `getWeights`, `getFactors` and `getTrainData`:
 ```{r}
 MOFAweights <- getWeights(MOFAobject, views="all", factors="all", as.data.frame = T)
 head(MOFAweights)
@@ -236,23 +245,23 @@ head(MOFAdata)
 # Further functionalities 
 
 ## Prediction of views
-With the 'predict' function, full views can be predicted based on the MOFA model with all or a subset of factors
+With the `predict` function, full views can be predicted based on the MOFA model with all or a subset of factors
 ```{r}
 predictedDrugs <- predict(MOFAobject, view="Drugs", factors="all")
 ```
 
 ## Imputation of missing observations
-With the 'imputeMissing' function all missing values are imputed based on the MOFA model. The imputed data is then stored in the ImputedData slot of the MOFAobject and can be accessed via the 'getImputedData' function.
+With the 'imputeMissing' function all missing values are imputed based on the MOFA model. The imputed data is then stored in the ImputedData slot of the MOFAobject and can be accessed via the `getImputedData` function.
 ```{r}
 MOFAobject <- imputeMissing(MOFAobject)
 imputedDrugs <- getImputedData(MOFAobject, view="Drugs")
 ```
 
 ## Clustering of samples based on latent factors
-Samples can be clustered according to their values on some or all latent factors using the 'clusterSamples' function. CLusters can for example be visualised using the FactorsScatterPlot function
+Samples can be clustered according to their values on some or all latent factors using the `clusterSamples` function. Clusters can for example be visualised using the FactorsScatterPlot function
 ```{r}
-h <- clusterSamples(MOFAobject, k=2, factors=1)
-plotFactorScatters(MOFAobject, factors=1:2, color_by=h$cluster)
+clusters <- clusterSamples(MOFAobject, k=2, factors=1)
+plotFactorScatters(MOFAobject, factors=1:2, color_by=clusters)
 ```
 
 

@@ -1,6 +1,6 @@
 #' @title qualityControl
 #' @name qualityControl
-#' @description Function to do quality control on a \code{\link{MOFAmodel}} object. \cr
+#' @description Function to do quality control on a \code{\link{MOFAmodel}} object.
 #' @param object a trained \code{\link{MOFAmodel}} object.
 #' @param verbose logical indicating whether to generate a verbose output.
 #' @export
@@ -23,7 +23,7 @@ qualityControl <- function(object, verbose = F) {
 
   # Check that the model has the right node names
   if (verbose==T) message("Checking nodes...")
-  stopifnot(identical(sort(c("W","Z","Theta","Tau","AlphaW","Y")), sort(names(object@Expectations))))
+  stopifnot(identical(sort(c("W","Z","Theta","Tau","Alpha","Y")), sort(names(object@Expectations))))
   
   # Check that all expectations are the correct object
   if (verbose==T) message("Checking expectations...")
@@ -36,8 +36,8 @@ qualityControl <- function(object, verbose = F) {
   # stopifnot(all(sapply(object@Expectations$Theta, is.matrix)))
   stopifnot(is.list(object@Expectations$Tau))
   stopifnot(all(sapply(object@Expectations$Tau, is.numeric)))
-  stopifnot(is.list(object@Expectations$AlphaW))
-  stopifnot(all(sapply(object@Expectations$AlphaW, is.numeric)))
+  stopifnot(is.list(object@Expectations$Alpha))
+  stopifnot(all(sapply(object@Expectations$Alpha, is.numeric)))
   
   # Check that the dimensionalities match
   # TO-DO...

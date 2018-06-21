@@ -1,4 +1,5 @@
 
+# Function to automatically infer the likelihoods from the data
 .inferLikelihoods <- function(object) {
   likelihood <- rep(x="gaussian", times=object@Dimensions$M)
   names(likelihood) <- viewNames(object)
@@ -16,6 +17,7 @@
   return(likelihood)
 }
 
+# Function to update old models
 .updateOldModel <- function(object) {
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
   
@@ -26,11 +28,16 @@
     colnames(object@TrainStats$elbo_terms)[colnames(object@TrainStats$elbo_terms)=="SW"] <- "W"
   }
   
+  if ("AlphaW" %in% names(object@Expectations)) {
+    names(object@Expectations)[names(object@Expectations) == "AlphaW"] <- "Alpha"
+    colnames(object@TrainStats$elbo_terms)[colnames(object@TrainStats$elbo_terms)=="AlphaW"] <- "Alpha"
+  }
+  
   # Update expectations
   if (is.list(object@Expectations$Z)) {
     object@Expectations$Z <- object@Expectations$Z$E
     for (view in viewNames(object)) {
-      object@Expectations$AlphaW[[view]] <- object@Expectations$AlphaW[[view]]$E
+      object@Expectations$Alpha[[view]] <- object@Expectations$Alpha[[view]]$E
       object@Expectations$W[[view]] <- object@Expectations$W[[view]]$E
       object@Expectations$Tau[[view]] <- object@Expectations$Tau[[view]]$E
       object@Expectations$Theta[[view]] <- object@Expectations$Theta[[view]]$E
@@ -50,19 +57,23 @@
   return(object)
 }
 
-# Function to find factors that act like an intercept term for the sample, 
-# which means that they capture global mean effects
-findInterceptFactors <- function(object, cor_threshold = 0.8) {
+# Function to find factors that act as an intercept term for the samples,
+.detectInterceptFactors <- function(object, cor_threshold = 0.75) {
+  
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
   
+  # Fetch data
   data <- getTrainData(object)
   factors <- getFactors(object, include_intercept = F)
   
+  # Correlate the factors with global means per sample
   r <- lapply(data, function(x) abs(cor(apply(x,2,mean),factors, use="complete.obs")))
   for (i in names(r)) {
-    if (any(r[[i]]>cor_threshold))
-      cat(paste0("Warning: factor ",which(r[[i]]>cor_threshold)," is capturing a size factor effect in ", i, " view, which indicates that input data might not be properly normalised...\n"))
+    if (any(r[[i]]>cor_threshold)) {
+      cat(paste0("Factor ",which(r[[i]]>cor_threshold)," is capturing an intercept effect in ",i,"\n"))
+      cat("Intercept factors arise from global differences between the samples, which could be different library size, mean methylation rates, etc.")
+    }
   }
 }
 
@@ -78,7 +89,10 @@ subset_augment <- function(mat, pats) {
 }
 
 
-detectPassengers <- function(object, views = "all", factors = "all", r2_threshold = 0.02) {
+# Function to mask passenger samples.
+# Passenger samples n occur when factor k is unique to view m, but sample n is missing view m.
+# In such a case, the model has no information on the value of sample n on factor k, and the value should be masked.
+.detectPassengers <- function(object, views = "all", factors = "all", r2_threshold = 0.02) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")

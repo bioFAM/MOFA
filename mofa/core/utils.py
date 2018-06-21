@@ -1,14 +1,21 @@
 from __future__ import division
 from time import sleep
+from copy import deepcopy
 
 import numpy as np
 import pandas as pd
 import numpy.ma as ma
 import os
 import h5py
+import sys
 
 """
-Module to define some useful util functions
+Module to define util functions
+
+TO-DO: 
+- Create a proper class for saving the models
+- Create a proper class for loading and parsing the data
+- Move the util math functions into a math.py
 """
 
 
@@ -39,8 +46,6 @@ def removeIncompleteSamples(data):
         data_filt[m] = data[m].iloc[samples_to_keep]
 
     return data_filt
-
-
 
 def maskData(data, data_opts):
     """ Method to mask values of the data, 
@@ -81,8 +86,89 @@ def maskData(data, data_opts):
 
     return data
 
-# Function to load the data
-def loadData(data_opts, verbose=True):
+def parseData(data, data_opts):
+    """ Method to do parse the data
+    
+    TO-DO: CHECK IF ANY SAMPLE HAS MISSING VALUES IN ALL VIEWS 
+
+    PARAMETERS
+    ----------
+    data: list of numpy arrays or pandas dataframes
+    """
+    M = len(data)
+    parsed_data = deepcopy(data)
+    for m in range(M):
+        # Convert to float32
+        parsed_data[m] = parsed_data[m].astype(pd.np.float32)
+
+        # For some reason, reticulate stores missing values in integer matrices as -2147483648
+        parsed_data[m][parsed_data[m] == -2147483648] = np.nan
+        # Center the features
+        if data_opts['center_features'][m]:
+            print("Centering features for view " + str(m) + "...")
+            parsed_data[m] = parsed_data[m] - np.nanmean(parsed_data[m],axis=0)
+
+        # Scale the views to unit variance
+        if data_opts['scale_views'][m]:
+            print("Scaling view " + str(m) + " to unit variance...")
+            parsed_data[m] = parsed_data[m] / np.nanstd(parsed_data[m].as_matrix())
+
+        # Scale the features to unit variance
+        if data_opts['scale_features'][m]:
+            print("Scaling features for view " + str(m) + " to unit variance...")
+            parsed_data[m] = parsed_data[m] / np.nanstd(parsed_data[m], axis=0, )
+
+    print("\nAfter parsing the data:")
+    for m in range(M): print("view %d has %d samples and %d features..." % (m, parsed_data[m].shape[0], parsed_data[m].shape[1]))
+
+    return parsed_data
+
+def qcData(data):
+    """ Method to do quality control on the data
+    
+    TO-DO: CHECK IF ANY SAMPLE HAS MISSING VALUES IN ALL VIEWS 
+
+    PARAMETERS
+    ----------
+    data: list of numpy arrays or pandas dataframes
+    """
+
+    M = len(data)
+
+    # Check that the dimensions match
+    if len(set([data[m].shape[0] for m in range(M)])) != 1:
+        if all([data[m].shape[1] for m in range(M)]):
+            print("\nWarning: columns seem to be the shared axis, transposing the data...")
+            for m in range(M): data[m] = data[m].T
+        else:
+            print("\nError: Dimensionalities do not match, aborting. Make sure that either columns or rows are shared!")
+            sys.stdout.flush()
+            exit()
+
+
+    # Sanity checks on the data
+    print ("\n" +"#"*46)
+    print("## Doing sanity checks and parsing the data ##")
+    print ("#"*46 + "\n")
+    for m in range(M):
+
+        # Detect features with complete missing values
+        nas = np.isnan(data[m]).mean(axis=0)
+        if np.any(nas==1.):
+            print("Error: %d features(s) on view %d have missing values in all samples, please remove them before running the model." % ( (nas==1.).sum(), m) )
+            sys.stdout.flush()
+            exit()
+            # data[m].drop(data[m].columns[np.where(nas==1.)], axis=1, inplace=True)
+
+        # Detect features with no variance
+        var = data[m].std(axis=0) 
+        if np.any(var==0.):
+            print("Warning: %d features(s) on view %d have zero variance, consider removing them..." % ( (var==0.).sum(),m) )
+            # data[m].drop(data[m].columns[np.where(var==0.)], axis=1, inplace=True)
+
+    return data
+
+def loadData(data_opts):
     """ Method to load the data
     
     PARAMETERS
@@ -91,80 +177,28 @@ def loadData(data_opts, verbose=True):
     verbose: boolean
     """
     
+    print("Depreciated")
+    exit()
+
     print ("\n")
     print ("#"*18)
     print ("## Loading data ##")
     print ("#"*18)
     print ("\n")
-    sleep(1)
 
     M = len(data_opts['input_files'])
 
-    Y =  [None]*M
+    data =  [None]*M
     for m in range(M):
 
         # Read file
         file = data_opts['input_files'][m]
-        Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"]).astype(pd.np.float32)
+        data[m] = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"]).astype(pd.np.float32)
 
-        # Y[m] = pd.read_csv(file, delimiter=data_opts["delimiter"])
-        print("Loaded %s with %d samples and %d features..." % (file, Y[m].shape[0], Y[m].shape[1]))
-        # Checking missing values on features
-        # print max(np.isnan(Y[m]).mean(axis=1))
-        # exit()
+        # data[m] = pd.read_csv(file, delimiter=data_opts["delimiter"])
+        print("Loaded %s with %d samples and %d features..." % (file, data[m].shape[0], data[m].shape[1]))
 
-        # Checking missing values on samples
-        # print np.isnan(Y[m]).mean(axis=1)
-        # exit()
-
-    # Check that the dimensions match
-    if len(set([Y[m].shape[0] for m in range(M)])) != 1:
-        if all([Y[m].shape[1] for m in range(M)]):
-            print("\nColumns seem to be the shared axis, transposing the data...")
-            for m in range(M): Y[m] = Y[m].T
-        else:
-            print("\nDimensionalities do not match, aborting. Make sure that either columns or rows are shared!")
-            exit()
-
-    # TO-DO: CHECK IF ANY SAMPLE HAS MISSING VALUES IN ALL VIEWS 
-
-    # Sanity checks on the data
-    print ("\n" +"#"*46)
-    print("## Doing sanity checks and parsing the data ##")
-    print ("#"*46 + "\n")
-    for m in range(M):
-
-        # Removing features with complete missing values
-        nas = np.isnan(Y[m]).mean(axis=0)
-        if np.any(nas==1.):
-            print("Warning: %d features(s) on view %d have missing values in all samples, removing them..." % ( (nas==1.).sum(), m) )
-            Y[m].drop(Y[m].columns[np.where(nas==1.)], axis=1, inplace=True)
-
-        # Warning if there are features with no variance
-        var = Y[m].std(axis=0) 
-        if np.any(var==0.):
-            print("Warning: %d features(s) on view %d have zero variance, consider removing them..." % ( (var==0.).sum(),m) )
-            # Y[m].drop(Y[m].columns[np.where(var==0.)], axis=1, inplace=True)
-
-        # Center the features
-        if data_opts['center_features'][m]:
-            print("Centering features for view " + str(m) + "...")
-            Y[m] = (Y[m] - Y[m].mean(axis=0))
-
-        # Scale the views to unit variance
-        if data_opts['scale_views'][m]:
-            print("Scaling view " + str(m) + " to unit variance...")
-            Y[m] = Y[m] / np.nanstd(Y[m].as_matrix())
-
-        # Scale the features to unit variance
-        if data_opts['scale_features'][m]:
-            print("Scaling features for view " + str(m) + " to unit variance...")
-            Y[m] = Y[m] / np.std(Y[m], axis=0, )
-
-    print("\nAfter data processing:")
-    for m in range(M): print("view %d has %d samples and %d features..." % (m, Y[m].shape[0], Y[m].shape[1]))
-
-    return Y
+    return data
 
 def dotd(A, B, out=None):
     """Diagonal of :math:`\mathrm A\mathrm B^\intercal`.
@@ -371,6 +405,9 @@ def saveTrainingOpts(opts, hdf5):
                 opts[str(k)+"_"+str(k1)] = v1
             opts.pop(k)
 
+    if 'schedule' in opts.keys():
+        del opts['schedule']
+
     # Create HDF5 data set
     hdf5.create_dataset("training_opts", data=np.array(list(opts.values()), dtype=np.float))
     hdf5['training_opts'].attrs['names'] = np.asarray(list(opts.keys())).astype('S')
@@ -380,11 +417,12 @@ def saveModelOpts(opts, hdf5):
     
     PARAMETERS
     ----------
-    opts:
-    hdf5: 
+    opts: model options
+    hdf5: h5py.File instance
     """
-    opts_interest = ["learnIntercept","schedule","likelihood","sparsity"]
+    opts_interest = ["learnIntercept","likelihoods","sparsity_bool"]
     opts = dict((k, opts[k]) for k in opts_interest)
+    opts["sparsity"] = opts.pop("sparsity_bool")
     grp = hdf5.create_group('model_opts')
     for k,v in opts.items():
         grp.create_dataset(k, data=np.asarray(v).astype('S'))
@@ -396,24 +434,25 @@ def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_na
     PARAMETERS
     ----------
     model: a BayesNet instance
-    hdf5: 
-    view_names
-    sample_names
-    feature_names
+    hdf5: h5py.File instance
+    view_names: list with view names as characters. If None, no view names will be saved
+    sample_names: list with sample names as characters. If None, no sample names will be saved
+    feature_names: list with feature names as characters. If None, no feature names will be saved
     """
     data = model.getTrainingData()
     data_grp = hdf5.create_group("data")
     featuredata_grp = hdf5.create_group("features")
-    hdf5.create_dataset("samples", data=np.array(sample_names, dtype='S50'))
 
-    if likelihoods is not None:
-        data_grp.attrs['likelihood'] = np.array(likelihoods, dtype='S50')
+    if sample_names is not None:
+        hdf5.create_dataset("samples", data=np.array(sample_names, dtype='S50'))
+
+    # if likelihoods is not None:
+    #     data_grp.attrs['likelihood'] = np.array(likelihoods, dtype='S50')
 
     for m in range(len(data)):
         view = view_names[m] if view_names is not None else str(m)
         data_grp.create_dataset(view, data=data[m].data.T)
         if feature_names is not None:
-            # data_grp.attrs['features'] = np.array(feature_names[m], dtype='S')
             featuredata_grp.create_dataset(view, data=np.array(feature_names[m], dtype='S50'))
         
 
@@ -427,8 +466,12 @@ def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_na
 
     # QC checks
     assert model.trained == True, "Model is not trained yet"
-    assert len(np.unique(view_names)) == len(view_names), 'View names must be unique'
-    assert len(np.unique(sample_names)) == len(sample_names), 'Sample names must be unique'
+    if view_names is not None:
+        assert len(np.unique(view_names)) == len(view_names), 'View names must be unique'
+    if sample_names is not None:
+        assert len(np.unique(sample_names)) == len(sample_names), 'Sample names must be unique'
+    if feature_names is not None:
+        for x in feature_names: assert len(np.unique(x)) == len(x), 'Feature names must be unique'
 
     # Create output directory
     if not os.path.isdir(os.path.dirname(outfile)):
@@ -437,8 +480,8 @@ def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_na
 
     # For some reason h5py orders the datasets alphabetically, so we have to sort the likelihoods accordingly
     idx = sorted(range(len(view_names)), key=lambda k: view_names[k])
-    tmp = [model_opts["likelihood"][idx[m]] for m in range(len(model_opts["likelihood"]))]
-    model_opts["likelihood"] = tmp
+    tmp = [model_opts["likelihoods"][idx[m]] for m in range(len(model_opts["likelihoods"]))]
+    model_opts["likelihoods"] = tmp
 
     # Open HDF5 handler
     hdf5 = h5py.File(outfile,'w')
@@ -459,7 +502,7 @@ def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_na
     saveModelOpts(model_opts,hdf5)
 
     # Save training data
-    saveTrainingData(model, hdf5, view_names, sample_names, feature_names, model_opts["likelihood"])
+    saveTrainingData(model, hdf5, view_names, sample_names, feature_names, model_opts["likelihoods"])
 
     # Close HDF5 file
     hdf5.close()

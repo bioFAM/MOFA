@@ -4,15 +4,25 @@
 \alias{subsetFactors}
 \title{Subset factors}
 \usage{
-subsetFactors(object, factors, keep_intercept = T)
+subsetFactors(object, factors, keep_intercept = TRUE)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{factors}{character vector with the factor names, or numeric vector with the index of the factors.}
+\item{factors}{character vector with the factor names (LF1,LF2,...), or numeric vector with the index of the factors.}
 
-\item{keep_intercept}{bool whether intercept is kept when subsetting (default TRUE).}
+\item{keep_intercept}{logical indicating whether the optional intercept factor should be kept when subsetting (default TRUE).}
 }
 \description{
-Method to subset (or sort) factors
+Method to subset (or sort) factors. \cr
+Some factors might not be interesting for the downstream analysis and the user can choose to remove them.
+This has no effect on the values of the other factors. For example, this could be done it the model contains factors
+which are inactive in all views.
+}
+\examples{
+# Using an existing trained model on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+MOFA_CLL_small <- subsetFactors(MOFA_CLL, factors=c(1,2,3))
+MOFA_CLL_small <- subsetFactors(MOFA_CLL, factors=c("LF1","LF2","LF3"))
 }

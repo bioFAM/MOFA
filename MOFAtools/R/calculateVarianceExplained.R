@@ -5,15 +5,26 @@
 #' As a measure of variance explained for gaussian data we adopt the coefficient of determination (R2). \cr
 #' For non-gaussian views the calculations are based on the normally-distributed pseudo-data 
 #' (for more information on the non-gaussian model see Supplementary Methods of the MOFA paper or Seeger & Bouchard, 2012).
-#' @param object a \code{\link{MOFAmodel}} object.
+#' @param object a trained \code{\link{MOFAmodel}} object.
 #' @param views character vector with the view names, or numeric vector with view indexes. Default is 'all'
 #' @param factors character vector with the factor names, or numeric vector with the factor indexes. Default is 'all'
 #' @param include_intercept include the intercept factor for calculation of variance explained (only used when an intercept was learned)
 #' @details This function takes a trained MOFA model as input and calculates for each view the coefficient of determination (R2),
 #' i.e. the proportion of variance in the data explained by the MOFA factor(s) (both jointly and for each individual factor). 
 #' In case of non-Gaussian data the variance explained on the Gaussian pseudo-data is calculated. 
-#' @return a list with matrices with the amount of variation explained per factor and view, and optionally total variance explained per view and variance explained by each feature alone
+#' @return a list with matrices with the amount of variation explained per factor and view and the total variance explained per view.
 #' @export
+#' @examples
+#' # Using an existing trained model on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotVarianceExplained(MOFA_CLL)
+#'
+#' # Using an existing trained model on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotVarianceExplained(MOFA_scMT)
+
 calculateVarianceExplained <- function(object, views = "all", factors = "all", include_intercept = TRUE, ...) {
   
   # Sanity checks
@@ -32,7 +43,7 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", i
     stopifnot(all(views %in% viewNames(object)))  
   }
   M <- length(views)
-
+  
   # Define factors
   if (paste0(factors,collapse="") == "all") { 
     factors <- factorNames(object) 
@@ -47,66 +58,46 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", i
   }
   factors <- factors[factors!="intercept"]
   K <- length(factors)
-
+  
   # Collect relevant expectations
   W <- getWeights(object,views,factors)
-  Z <- getFactors(object,factors)
+  Z <- getFactors(object, factors)
   Y <- getExpectations(object,"Y") # for non-Gaussian likelihoods the pseudodata is considered
   
-  # Calulcate feature-wise means as null model
-  FeatureMean <- lapply(views, function(m)  { apply(Y[[m]],2,mean,na.rm=T) })
-  names(FeatureMean) <- views
-
-  # Sweep out the feature-wise mean to calculate null model residuals
-  resNullModel <- lapply(views, function(m) sweep(Y[[m]],2,FeatureMean[[m]],"-"))
-  names(resNullModel) <- views
-
   # replace masked values on Z by 0 (so that they do not contribute to predictions)
   Z[is.na(Z)] <- 0 
-    
-  # Calculate predictions under the MOFA model using all (non-intercept) factors
-  Ypred_m <- lapply(views, function(m) Z%*%t(W[[m]])); names(Ypred_m) <- views
-
-  # Calculate predictions under the MOFA model using each (non-intercept) factors on its own
-  Ypred_mk <- lapply(views, function(m) {
-                      ltmp <- lapply(factors, function(k) Z[,k]%*%t(W[[m]][,k]) )
-                      names(ltmp) <- factors
-                      ltmp
-                    })
-  names(Ypred_mk) <- views
   
   # If an intercept is included, regress out the intercept from the data
-  if (include_intercept==T) {
-      intercept <- getWeights(object,views,"intercept")
-      Y <- lapply(views, function(m) sweep(Y[[m]],2,intercept[[m]],"-"))
-      names(Y) <- views
+  if (include_intercept) {
+    intercept <- getWeights(object,views,"intercept")
+    Y <- lapply(views, function(m) sweep(Y[[m]],2,intercept[[m]],"-"))
+    names(Y) <- views
   }
-
-  # Calculate coefficient of determination per view
-  fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-Ypred_m[[m]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T))
-   
-  # Calculate coefficient of determination per factor and view
-  tmp <- sapply(views, function(m) {
-    sapply(factors, function(k) {
-      1 - sum((Y[[m]]-Ypred_mk[[m]][[k]])**2, na.rm=T) / sum(resNullModel[[m]]**2, na.rm=T) 
-    })
-  }) 
-  fvar_mk <- matrix(tmp, ncol=length(views), nrow=length(factors))
   
-  # Set names
+  # Calculate coefficient of determination per view
+  tmp <- sapply(views, function(m) sum(scale(Y[[m]],center=T, scale=F)**2, na.rm=T))
+  fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-tcrossprod(Z,W[[m]]))**2, na.rm=T) / tmp[m])
   names(fvar_m) <- views
+  
+  # Calculate coefficient of determination per factor and view
+  fvar_mk <- matrix(99, ncol=length(views), nrow=length(factors))
   colnames(fvar_mk) <- views
   rownames(fvar_mk) <- factors
-
+  for (m in views) {
+    for (k in factors) {
+      fvar_mk[k,m] <- 1 - sum( (Y[[m]]-tcrossprod(Z[,k],W[[m]][,k]))**2, na.rm=T) / tmp[m]
+    }
+  }
+  
   # Replace negative values by zero
   fvar_m[fvar_m<0] <- 0
   fvar_mk[fvar_mk<0] <- 0
   
   # Store results
   R2_list <- list(R2Total = fvar_m, R2PerFactor = fvar_mk)
-
+  
   return(R2_list)
- 
+  
 }
 
 #' @title Plot variance explained by the model
@@ -121,7 +112,18 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", i
 #' @import pheatmap ggplot2 reshape2
 #' @importFrom cowplot plot_grid
 #' @export
-plotVarianceExplained <- function(object, cluster = T, ...) {
+#' @examples
+#' # Using an existing trained model on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotVarianceExplained(MOFA_CLL)
+#'
+#' # Using an existing trained model on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotVarianceExplained(MOFA_scMT)
+
+plotVarianceExplained <- function(object, cluster = TRUE, ...) {
   
   # Calculate Variance Explained
   R2_list <- calculateVarianceExplained(object, ...)
@@ -135,7 +137,7 @@ plotVarianceExplained <- function(object, cluster = T, ...) {
   fvar_mk_df$factor <- factor(fvar_mk_df$factor)
   
   # If multiple views, sort factors according to hierarchical clustering
-  if (cluster==TRUE & ncol(fvar_mk)>1) {
+  if (cluster & ncol(fvar_mk)>1) {
     hc <- hclust(dist(t(fvar_mk)))
     fvar_mk_df$view <- factor(fvar_mk_df$view, levels = colnames(fvar_mk)[hc$order])
   }

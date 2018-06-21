@@ -1,0 +1,71 @@
+---
+title: "Vignette illustrating the use of MOFA on simulated data"
+author: "Britta Velten and Ricard Argelaguet"
+date: "`r Sys.Date()`"
+output:
+  BiocStyle::html_document:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Example_CLL}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r}
+library(MOFAtools)
+```
+
+# Simulate an example data set
+To illustrate the MOFA workflow we simulate a small example data set with 3 different views. 'makeExampleData' generates an untrained MOFAobject containing the simulated data. If you work on your own data use 'createMOFAobject' to create the untrained MOFA object (see our vignettes for CLL and scMT data).
+```{r}
+MOFAobject <- makeExampleData()
+MOFAobject
+```
+
+# Prepare MOFA: Set the training and model options
+Once the untrained MOFAobject was created, we can specify details on data processing, model specifications and training options such as the number of factors, the likelihood models etc. Default option can be obtained using the functions 'getDefaultTrainOptions', 'getDefaultModelOptions' and 'getDefaultDataOptions'. 
+
+Using 'prepareMOFA' the model is set up for training.
+```{r}
+TrainOptions <- getDefaultTrainOptions()
+TrainOptions$DropFactorThreshold <- 0.01
+ModelOptions <- getDefaultModelOptions(MOFAobject)
+DataOptions <- getDefaultDataOptions()
+
+MOFAobject <- prepareMOFA(
+  MOFAobject, 
+  DataOptions = DataOptions,
+  ModelOptions = ModelOptions,
+  TrainOptions = TrainOptions
+)
+```
+
+# Run MOFA
+Once the MOFAobject is set up we can use runMOFA to train the model. As depending on the random initilization the results might differ, we recommend to use runMOFA multiple times (e.g. ten times, here we use a smaller number for illustration as the model training takes some time) and as a next step select the best model in the next step.
+```{r}
+n_inits <- 1
+MOFAlist <- lapply(1:n_inits, function(it) {
+  runMOFA(MOFAobject, outfile=tempfile())
+})
+```
+
+
+# Compare different random inits and select the best model
+Having a list of trained models we can use 'compareModels' to get an overview of how many factors were inferred in each run and what the optimized ELBO value is (a model with larger ELBO is preferred). With 'compareFactors' we can get an overview of how robust the factors are between different model instances.
+
+For down-stream analyses we recommned to choose the model with the best ELBO value as is done by 'selectModel.
+```{r}
+compareModels(MOFAlist)
+compareFactors(MOFAlist)
+MOFAobject <- selectModel(MOFAlist)
+MOFAobject
+```
+
+# Downstream analyses
+On the trained MOFAobject we can now start looking into the inferred factors, its weights etc. Here the data was generated using five factors, whose activity patterns we can recover using 'plotVarianceExplained'.
+```{r}
+plotVarianceExplained(MOFAobject)
+```
+
+For details on down-stream analysis please have a look at the vignettes on the CLL data and scMT data.
+

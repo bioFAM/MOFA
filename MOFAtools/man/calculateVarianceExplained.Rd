@@ -8,7 +8,7 @@ calculateVarianceExplained(object, views = "all", factors = "all",
   include_intercept = TRUE, ...)
 }
 \arguments{
-\item{object}{a \code{\link{MOFAmodel}} object.}
+\item{object}{a trained \code{\link{MOFAmodel}} object.}
 
 \item{views}{character vector with the view names, or numeric vector with view indexes. Default is 'all'}
 
@@ -17,7 +17,7 @@ calculateVarianceExplained(object, views = "all", factors = "all",
 \item{include_intercept}{include the intercept factor for calculation of variance explained (only used when an intercept was learned)}
 }
 \value{
-a list with matrices with the amount of variation explained per factor and view, and optionally total variance explained per view and variance explained by each feature alone
+a list with matrices with the amount of variation explained per factor and view and the total variance explained per view.
 }
 \description{
 Method to calculate variance explained by the MOFA model for each view and latent factor. \cr
@@ -29,4 +29,15 @@ For non-gaussian views the calculations are based on the normally-distributed ps
 This function takes a trained MOFA model as input and calculates for each view the coefficient of determination (R2),
 i.e. the proportion of variance in the data explained by the MOFA factor(s) (both jointly and for each individual factor). 
 In case of non-Gaussian data the variance explained on the Gaussian pseudo-data is calculated.
+}
+\examples{
+# Using an existing trained model on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+plotVarianceExplained(MOFA_CLL)
+
+# Using an existing trained model on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+plotVarianceExplained(MOFA_scMT)
 }

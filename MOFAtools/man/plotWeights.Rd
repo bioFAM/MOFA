@@ -30,6 +30,20 @@ This function plots all loadings for a given latent factor and view, labeling th
 In contrast, the function \code{\link{plotTopWeights}} displays only the top features with highest loading.
 }
 \details{
-The weights of the features within a view are relative andthey should not be interpreted in an absolute scale.
-Therefore, for interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
+The weights of the features within a view are relative and they should not be interpreted in an absolute scale.
+For interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
+}
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+plotWeights(MOFA_CLL, view="Mutations", factor=1)
+plotWeights(MOFA_CLL, view="Mutations", factor=1,
+  manual=list("IGHV", c("TP53", "del17p13")), color_manual=c("blue", "red"))
+
+# Example on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+plotWeights(MOFA_scMT, view="RNA expression", factor=1)
+plotWeights(MOFA_scMT, view="RNA expression", factor=1, nfeatures=15)
 }

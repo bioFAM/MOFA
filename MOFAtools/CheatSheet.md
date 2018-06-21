@@ -1,4 +1,4 @@
-# Basic MOFAmodel object
+# MOFAmodel object
 MOFAmodel it is the main S4 class used to store all relevant data to analyse a MOFA model. Its slots are the following (accessible using @):
 * **InputData**: input data, either a list of matrices or a MultiAssayExperiment
 * **TrainData**: training data, a list of matrices with processed data (centered, scaled, etc.)
@@ -14,7 +14,7 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 * **createMOFAobject**: first function to create an untrained MOFA model from input multi-omics data  
 * **prepareMOFA**: prepare an untrained MOFA, always run it after createMOFAobject and before runMOFA  
 * **runMOFA**: function to train an untrained MOFA model. This calls the Python framework  
-* **loadModel**: load a trained MOFA model  
+* **loadModel**: load a trained MOFA model from an hdf5 file stored in disk  
 
 ## get functions
 * **factorNames**: get or set factor names  
@@ -41,7 +41,7 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 * **plotFactorScatters**: pairwise combination of scatterplots between multiple factors  
 * **plotFactorBeeswarm**: beeswarm plot for a single factor  
 
-## Inspect training data
+## Inspect the data
 * **plotTilesData**: plot overview of the input data, including the number of samples, views, features, and the missing assays.
 * **plotDataHeatmap**: heatmap of the training data using only top features for a given factor. This is very useful to map the factors and features back to the original data  
 * **plotDataScatter**: scatterplot of the data using only top features for a given factor  
@@ -51,14 +51,21 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 * **LinePlot_FeatureSetEnrichmentAnalysis**: plot the top most enriched feature sets per factor  
 
 ## Clustering
-* **clusterSamples**: k-means clustering of samples on the latent space (similar to what iCluster does)  
+* **clusterSamples**: k-means clustering of samples on the factor space
 
 ## Compare models
 * **compareModels**: compare factors and weights between multiple runs of the model  
 
-## Impute missing values
-* **imputeMissing**: impute missing data  
+## Predictions and imputation
+* **prediction**: predict observations
+* **imputeMissing**: impute missing data
 
+## Subset
+* **subsetSamples**: subset samples
+* **subsetViews**:  subset views
+* **subsetFactors**: subset factors
+## Examples
+* **makeExampleData**: make example data set
 
 
 

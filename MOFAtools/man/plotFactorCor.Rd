@@ -27,3 +27,14 @@ particularly with large number factors. \cr
 Generally, correlated factors are redundant and should be avoided, as they make interpretation harder. Therefore, 
 if you have too many correlated factors we suggest you try reducing the number of factors.
 }
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+plotFactorCor(MOFA_CLL)
+
+# Example on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+plotFactorCor(MOFA_scMT)
+}

@@ -5,7 +5,7 @@
 \title{Scatterplots of feature values against latent factors}
 \usage{
 plotDataScatter(object, view, factor, features = 10, color_by = NULL,
-  name_color = "", shape_by = NULL, name_shape = "")
+  name_color = "", shape_by = NULL, name_shape = "", showMissing = TRUE)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
@@ -18,17 +18,17 @@ plotDataScatter(object, view, factor, features = 10, color_by = NULL,
 
 \item{color_by}{specifies groups or values used to color the samples. 
 This can be either: 
-a character giving the name of a feature, 
-a character giving the same of a covariate (only if using MultiAssayExperiment as input), 
-or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.}
+(a) a character giving the name of a feature, 
+(b) a character giving the same of a covariate (only if using MultiAssayExperiment as input), or
+(c) a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.}
 
 \item{name_color}{name for the color legend}
 
 \item{shape_by}{specifies groups or values used to shape the samples. 
 This can be either: 
-a character giving the name of a feature present in the training data, 
-a character giving the same of a covariate (only if using MultiAssayExperiment as input), 
-or a vector of the same length as the number of samples specifying discrete groups.}
+(a) a character giving the name of a feature present in the training data, 
+(b) a character giving the same of a covariate (only if using MultiAssayExperiment as input), or 
+(c) a vector of the same length as the number of samples specifying discrete groups.}
 
 \item{name_shape}{name for the shape legend}
 }
@@ -36,9 +36,21 @@ or a vector of the same length as the number of samples specifying discrete grou
 Function to do a scatterplot of the feature(s) values against the latent factor values.
 }
 \details{
-One of the first steps for the annotation of factors is to visualise the loadings using \code{\link{plotWeights}} or \code{\link{plotTopWeights}}, 
-which show you which features drive the heterogeneity of each factor. 
-However, one might also be interested in visualising the direct relationship between features and factors, rather than looking at "abstract" weights. \cr
-This function generates scatterplots of features against factors, so that you can observe the association between them. \cr
+One of the first steps for the annotation of a given factor is to visualise the corresponding loadings, 
+using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}.
+These functions display the top features that are driving the heterogeneity captured by a factor. \cr
+However, one might also be interested in visualising the coordinated heterogeneity in the input data, 
+rather than looking at "abstract" weights. \cr
+This function generates scatterplots of features against factors (each dot is a sample), 
+so that you can observe the association between them. \cr
 A similar function for doing heatmaps rather than scatterplots is \code{\link{plotDataHeatmap}}.
+}
+\examples{
+# Load CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+# plot scatter for top 5 features on factor 1 in the view mRNA:
+plotDataScatter(MOFA_CLL, view="mRNA", factor=1, features=5)
+# coloring by the IGHV status (features in Mutations view), not showing samples with missing IGHV:
+plotDataScatter(MOFA_CLL, view="mRNA", factor=1, features=5, color_by="IGHV", showMissing=FALSE)
 }

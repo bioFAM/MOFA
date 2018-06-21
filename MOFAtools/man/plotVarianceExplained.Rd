@@ -4,7 +4,7 @@
 \alias{plotVarianceExplained}
 \title{Plot variance explained by the model}
 \usage{
-plotVarianceExplained(object, cluster = T, ...)
+plotVarianceExplained(object, cluster = TRUE, ...)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
@@ -20,4 +20,15 @@ ggplot object
 Method to plot variance explained (R-squared) by the MOFA model for each view and latent factor. \cr
 As a measure of variance explained for gaussian data we adopt the coefficient of determination (R2). \cr
 For details on the computation see the help of the \code{\link{calculateVarianceExplained}} function
+}
+\examples{
+# Using an existing trained model on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+plotVarianceExplained(MOFA_CLL)
+
+# Using an existing trained model on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+plotVarianceExplained(MOFA_scMT)
 }

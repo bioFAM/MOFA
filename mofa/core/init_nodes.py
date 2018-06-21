@@ -1,21 +1,6 @@
 
 """
 Module to initalise the nodes
-
-Z: the latent variables can be initialised either randomly, orthogonal or with the PCA solution
-    MuZ:
-
-SW:
-    Alpha:
-
-Tau:
-
-Y:
-
-Theta:
-    ThetaConst
-    ThetaLearn
-    ThetaMixed
 """
 
 import scipy as s
@@ -122,7 +107,8 @@ class initModel(object):
                         pvar=s.ones((self.K,))*pvar,
                         qmean=s.ones((self.N,self.K))*qmean,
                         qvar=s.ones((self.N,self.K))*qvar,
-                        qE=qE, qE2=qE2,
+                        qE=qE, 
+                        qE2=qE2,
                         idx_covariates=idx_covariates)
         self.nodes["Z"] = self.Z
 
@@ -173,8 +159,7 @@ class initModel(object):
         self.SW = Multiview_Variational_Node(self.M, *SW_list)
         self.nodes["SW"] = self.SW
 
-    def initAlphaW_mk(self, pa, pb, qa, qb, qE):
-
+    def initAlpha(self, pa, pb, qa, qb, qE):
         """Method to initialise the precision of the group-wise ARD prior
 
         PARAMETERS
@@ -191,12 +176,9 @@ class initModel(object):
         
         alpha_list = [None]*self.M
         for m in range(self.M):
-            alpha_list[m] = AlphaW_Node_mk(dim=(self.K,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
-            # alpha_list[m] = Constant_Node(dim=(self.K,), value=qE[m])
-            # alpha_list[m].factors_axis = 0
-        self.AlphaW = Multiview_Variational_Node(self.M, *alpha_list)
-        # self.AlphaW = Multiview_Constant_Node(self.M, *alpha_list)
-        self.nodes["AlphaW"] = self.AlphaW
+            alpha_list[m] = Alpha_Node(dim=(self.K,), pa=pa[m], pb=pb[m], qa=qa[m], qb=qb[m], qE=qE[m])
+        self.Alpha = Multiview_Variational_Node(self.M, *alpha_list)
+        self.nodes["Alpha"] = self.Alpha
 
     def initTau(self, pa, pb, qa, qb, qE):
         # Method to initialise the precision of the noise
@@ -212,7 +194,7 @@ class initModel(object):
                 tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
             elif self.lik[m] == "bernoulli":
                 # seeger
-                # tau_list[m] = Constant_Node(dim=(self.D[m],), value=0.25)
+                # tau_list[m] = Constant_Node(dim=((self.N,self.D[m])), value=0.25)
                 # Jaakkola
                 tau_list[m] = Tau_Jaakkola(dim=((self.N,self.D[m])), value=1.)
             elif self.lik[m] == "binomial":
@@ -232,48 +214,48 @@ class initModel(object):
                 Y_list[m] = Y_Node(dim=(self.N,self.D[m]), value=self.data[m])
             elif self.lik[m]=="poisson":
                 # tmp = stats.norm.rvs(loc=0, scale=1, size=(self.N,self.D[m]))
-                Y_list[m] = Poisson_PseudoY(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
+                Y_list[m] = Poisson_PseudoY_Seeger(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
             elif self.lik[m]=="bernoulli":
                 # Seeger
-                # Y_list[m] = Bernoulli_PseudoY(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
+                # Y_list[m] = Bernoulli_PseudoY_Seeger(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
                 # Jaakkola
                 Y_list[m] =  Bernoulli_PseudoY_Jaakkola(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
         self.Y = Multiview_Mixed_Node(self.M, *Y_list)
         self.nodes["Y"] = self.Y
 
-    def initThetaMixed(self, pa, pb, qa, qb, qE, learnTheta):
+    def initThetaMixed(self, pa, pb, qa, qb, qE, sparsity):
         # Method to initialie a general theta node
         # Inputs:
         #  pa (float): 'a' parameter of the prior distribution
         #  pb (float): 'b' parameter of the prior distribution
         #  qb (float): initialisation of the 'b' parameter of the variational distribution
         #  qE (float): initial expectation of the variational distribution
-        #  learnTheta (binary): list with binary matrices with dim (D[m],K)
+        #  sparsity (binary): list with binary matrices with dim (D[m],K)
 
         Theta_list = [None] * self.M
         for m in range(self.M):
             
             # Initialise constant node
-            Kconst = learnTheta[m]==0
+            Kconst = sparsity[m]==0
             if Kconst.sum() == 0:
                 ConstThetaNode = None
             else:
-                # ConstThetaNode = Theta_Constant_Node(dim=(self.D[m],s.sum(Kconst),), value=s.repeat(qE[m][:,Kconst][None,:], self.D[m], 0), N_cells=1.)
-                ConstThetaNode = Theta_Constant_Node(dim=(self.D[m],s.sum(Kconst),), value=qE[m][:,Kconst], N_cells=1)
+                # ConstThetaNode = Theta_Constant_Node(dim=(self.D[m],s.sum(Kconst),), value=qE[m][:,Kconst])
+                ConstThetaNode = Theta_Constant_Node(dim=(s.sum(Kconst),), value=qE[m][Kconst])
                 Theta_list[m] = ConstThetaNode
 
             # Initialise non-constant node
-            Klearn = learnTheta[m]==1
+            Klearn = sparsity[m]==1
             if Klearn.sum() == 0:
                 LearnThetaNode = None
             else:
                 # FOR NOW WE JUST TAKE THE FIRST ROW BECAUSE IT IS EXPANDED. IT IS UGLY AS HELL
-                LearnThetaNode = Theta_Node(dim=(s.sum(Klearn),), pa=pa[m][Klearn], pb=pb[m][Klearn], qa=qa[m][Klearn], qb=qb[m][Klearn], qE=qE[m][0,Klearn])
+                LearnThetaNode = Theta_Node(dim=(s.sum(Klearn),), pa=pa[m][Klearn], pb=pb[m][Klearn], qa=qa[m][Klearn], qb=qb[m][Klearn], qE=qE[m][Klearn])
                 Theta_list[m] = LearnThetaNode
 
             # Initialise mixed node
             if (ConstThetaNode is not None) and (LearnThetaNode is not None):
-                Theta_list[m] = Mixed_Theta_Nodes(LearnTheta=LearnThetaNode, ConstTheta=ConstThetaNode, idx=learnTheta[m])
+                Theta_list[m] = Mixed_Theta_Nodes(LearnTheta=LearnThetaNode, ConstTheta=ConstThetaNode, idx=sparsity[m])
 
         self.Theta = Multiview_Mixed_Node(self.M, *Theta_list)
         self.nodes["Theta"] = self.Theta

@@ -40,7 +40,7 @@ MOFAobject <- createMOFAobject(scMT_data)
 
 The function `plotTilesData` can be used to obtain an overview of the structure of the data:
 ```{r}
-plotTilesData(MOFAobject, colors=c("#31A354","#377EB8","#377EB8","#377EB8"))
+# plotTilesData(MOFAobject, colors=c("#31A354","#377EB8","#377EB8","#377EB8"))
 ```
 
 # Fit the MOFA model
@@ -49,55 +49,56 @@ The next step is to train the model. Internally, this is done using Python, so m
 ## Define options
 
 ### Define I/O options
-First, we define input and output options:
+
+### Define data options
+Next, we define data options. The most important are:  
+* **centerFeatures**:  logical indicating whether to learn the intercept (the means) in a per feature basis. This prevents you from having to center the data, so this option is always recommended (Default is TRUE). Only works for Gaussian views.
+* **removeIncompleteSamples**: logical indicating whether to remove samples that are not profiled in all omics (Default is FALSE)
 ```{r}
-DirOptions <- list(
-  "dataDir" = tempdir(), # Directory to store the input matrices as .txt files, it can be a temporary folder
-  "outFile" = "scMT_model.hdf5" # Output file of the model (use hdf5 extension)
-)
+DataOptions <- getDefaultDataOptions()
+DataOptions$centerFeatures <- TRUE
 ```
+
 
 ### Define model options
 Next, we define model options. The most important are:  
-
-* **numFactors**: initial number of factors (default is 25). If you want the model to automatically learn the number of factors based on minimum variance explained, set `modelOptions$numFactors` to a large value and make sure you define the `TrainOptions$dropFactorThreshold` parameter. Alternatively, if you want to learn a fixed number of factors, set `TrainOptions$dropFactorThreshold` to zero.
-* **likelihoods**: likelihood for each view. Usually we recommend gaussian for continuous data, bernoulli for binary data and poisson for count data. If not provided, the model tries to guess it from the data.
+* **numFactors**: number of factors (default is 25). By default, the model does not automatically learn the number of factors. If you want the model to do this (based on a minimum variance explained criteria), set `TrainOptions$dropFactorThreshold` to a non-zero value.
+* **likelihoods**: likelihood for each view. Usually we recommend gaussian for continuous data, bernoulli for binary data and poisson for count data. By default, the model tries to guess it from the data.
 * **sparsity**: do you want to use sparsity? This makes the interpretation easier so it is recommended (Default is TRUE).
-
 ```{r}
 ModelOptions <- getDefaultModelOptions(MOFAobject)
-ModelOptions
+ModelOptions$learnIntercept <- FALSE
 ```
 
 ### Define training options
 Next, we define training options. The most important are:  
-
-* **maxiter**: Maximum number of iterations. Ideally set it large enough and use the convergence criteria `TrainOptions$tolerance`.
-* **learnFactors**: Logical indicating whether to learn the number of factors. If you want the model to automatically learn the number of factors based on a minimum variance explained criterion, set `ModelOptions$numFactors` to a large value and make sure you define the `TrainOptions$dropFactorThreshold` parameter. If `TrainOptions$learnFactors==FALSE` then set `TrainOptions$dropFactorThreshold` to zero. 
-* **tolerance**: Convergence threshold based on change in the evidence lower bound. For an exploratory run you can use a value between 1.0 and 0.1, but for a "final" model we recommend a value of 0.01.
-* **DropFactorThreshold**: Threshold of fraction of variance explained to define a factor as inactive. This is the key parameter to determine the number of factors that the model will learn. Factors explaining less than 'DropFactorThreshold' percentage of variation in all views will be removed.For example, a value of 0.01 (default) means that factors that explain less than 1\% of variance in all views will be discarded.
-
+* **maxiter**: maximum number of iterations. Ideally set it large enough and use the convergence criteria `TrainOptions$tolerance`.
+* **tolerance**: convergence threshold based on change in the evidence lower bound. For an exploratory run you can use a value between 1.0 and 0.1, but for a "final" model we recommend a value of 0.01.
+* **DropFactorThreshold**: hyperparameter to automatically learn the number of factors based on a minimum variance explained criteria. Factors explaining less than 'DropFactorThreshold' fraction of variation in all views will be removed. For example, a value of 0.01 (default) means that factors that explain less than 1\% of variance in all views will be discarded.
 ```{r}
 TrainOptions <- getDefaultTrainOptions()
 TrainOptions$seed <- 2017
-TrainOptions
+TrainOptions$maxiter <- 100
+
+# Automatically drop factors that explain less than 2% of variance in all omics
+TrainOptions$DropFactorThreshold <- 0.02
 ```
 
 ## Prepare MOFA
-`prepareMOFA` internally performs a set of sanity checks, fills the `TrainOptions` and `ModelOptions` slots of the `MOFAobject` and it also creates a set of temporary files that will be loaded by the Python framework.
+`prepareMOFA` internally performs a set of sanity checks and fills the `DataOptions`, `TrainOptions` and `ModelOptions` slots of the `MOFAobject`
 ```{r}
 MOFAobject <- prepareMOFA(
   MOFAobject, 
-  DirOptions = DirOptions,
+  DataOptions = DataOptions,
   ModelOptions = ModelOptions,
   TrainOptions = TrainOptions
 )
 ```
 
 ## Run MOFA
-Now we are ready to train the `MOFAobject`, which is done with the function `runMOFA`. This step can take some time (around 20 min with default parameters). For illustration we provide an existing trained `MOFAobject`
+Now we are ready to train the `MOFAobject`, which is done with the function `runMOFA`. This step can take some time (around 15 min with default parameters). For illustration we provide an existing trained `MOFAobject`
 ```{r, eval=FALSE}
-MOFAobject <- runMOFA(MOFAobject, DirOptions)
+MOFAobject <- runMOFA(MOFAobject, outfile=tempfile())
 ```
 
 ```{r}
@@ -182,7 +183,7 @@ df <- data.frame(
 plotDataHeatmap(
   object = MOFAobject, 
   view = "RNA expression", 
-  factor = 1, 
+  factor = "LF_1", 
   features = 20, 
   transpose = T, 
   show_colnames=F, show_rownames=T, cluster_cols = F, annotation_col=df # pheatmap options
@@ -326,9 +327,7 @@ h <- clusterSamples(MOFAobject, k=2, factors=1)
 plotFactorScatter(
   object = MOFAobject,
   factors = 1:2,
-  color_by = h$cluster,
+  color_by = h,
   shape_by = "culture"
 )
 ```
-
-

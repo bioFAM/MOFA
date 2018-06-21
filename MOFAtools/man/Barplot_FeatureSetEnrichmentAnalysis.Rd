@@ -17,6 +17,13 @@ Barplot_FeatureSetEnrichmentAnalysis(fsea.out, alpha = 0.05)
 \description{
 this method generates a barplot with the number of enriched feature sets per factor
 }
-\details{
-TO-DO: IT NEEDS A BIT MORE WORK ON THE THEME
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+# perform FeatureSetEnrichmentAnalysis on mRNA data for all factors using the Reactome gene sets
+data("reactomeGS")
+fsea.out <- FeatureSetEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
+# overview of number of enriched pathways per factor at an FDR of 1\%
+Barplot_FeatureSetEnrichmentAnalysis(fsea.out, alpha=0.01)
 }

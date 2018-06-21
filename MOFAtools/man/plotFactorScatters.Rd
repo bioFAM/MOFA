@@ -43,3 +43,15 @@ This method generates multiple scatterplots for pairwise combinations of several
 Similar functions are \code{\link{plotFactorScatter}} for doing single scatter plots and 
 \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots for single factors.
 }
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+plotFactorScatters(MOFA_CLL, factors=1:3)
+plotFactorScatters(MOFA_CLL, factors=1:3, color_by= "IGHV")
+
+# Example on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+plotFactorScatters(MOFA_scMT)
+}

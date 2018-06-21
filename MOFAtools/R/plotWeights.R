@@ -30,20 +30,24 @@
 #' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotWeightsHeatmap(MOFA_scMT, view="RNA expression")
-
-plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", threshold = 0, breaks=NA, color=NULL, main= NULL, ...) {
+plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", threshold = 0, breaks=NA, color=NULL, ...) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
+  if (is.numeric(view)) view <- viewNames(object)[view]
   stopifnot(all(view %in% viewNames(object)))  
   
   # Get factors
   if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } 
     else if(is.numeric(factors)) {
-      if (object@ModelOptions$learnIntercept == T) factors <- factorNames(object)[factors+1]
-      else factors <- factorNames(object)[factors]
+      if (object@ModelOptions$learnIntercept == TRUE) { 
+        factors <- factorNames(object)[factors+1]
+      } else {
+        factors <- factorNames(object)[factors]
+      }
+    } else { 
+      stopifnot(all(factors %in% factorNames(object))) 
     }
-      else{ stopifnot(all(factors %in% factorNames(object))) }
   
   # Define features
   if (paste(features,collapse="")=="all") { 
@@ -52,13 +56,11 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
     stopifnot(all(features %in% featureNames(object)[[view]]))  
   }
 
-  # Get relevant data
-  # W <- getExpectations(object,"W")[[view]][features,factors]
+  # Fetch the weights
   W <- getWeights(object, views=view, factors=factors)[[1]][features,]
   
-
   # Set title
-  if (is.null(main)) { main <- paste("Loadings of Latent Factors on", view) }
+  # if (is.null(main)) { main <- paste("Loadings of Latent Factors on", view) }
   
   # apply thresholding of loadings
   W <- W[!apply(W,1,function(r) all(abs(r)<threshold)),]
@@ -94,8 +96,8 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
 #' @param manual A nested list of character vectors with features to be manually labelled.
 #' @param color_manual a character vector with colors, one for each element of 'manual'
 #' @param scale logical indicating whether to scale all loadings from 0 to 1.
-#' @details The weights of the features within a view are relative andthey should not be interpreted in an absolute scale.
-#' Therefore, for interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
+#' @details The weights of the features within a view are relative and they should not be interpreted in an absolute scale.
+#' For interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
 #' @import ggplot2 ggrepel
 #' @export
 #' @examples
@@ -111,29 +113,36 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
 #' MOFA_scMT <- loadModel(filepath)
 #' plotWeights(MOFA_scMT, view="RNA expression", factor=1)
 #' plotWeights(MOFA_scMT, view="RNA expression", factor=1, nfeatures=15)
-
-
-plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = NULL, color_manual = NULL, scale = TRUE, main= NULL) {
+plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = NULL, color_manual = NULL, scale = TRUE) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
+  if (is.numeric(view)) view <- viewNames(object)[view]
   stopifnot(all(view %in% viewNames(object))) 
 
   # Get factor
-  if(is.numeric(factor)) {
-      if (object@ModelOptions$learnIntercept == T) factor <- factorNames(object)[factor+1]
-      else factor <- factorNames(object)[factor]
-    } else{ stopifnot(factor %in% factorNames(object)) }
+  if (is.numeric(factor)) {
+    if (object@ModelOptions$learnIntercept == TRUE) {
+      factor <- factorNames(object)[factor+1]
+    } else {
+      factor <- factorNames(object)[factor]
+    }
+  } else { 
+    stopifnot(factor %in% factorNames(object)) 
+  }
 
-  if(!is.null(manual)) { stopifnot(class(manual)=="list"); stopifnot(all(Reduce(intersect,manual) %in% featureNames(object)[[view]]))  }
+  # Get manual features to color by
+  if (!is.null(manual)) { 
+    stopifnot(class(manual)=="list")
+    stopifnot(all(Reduce(intersect,manual) %in% featureNames(object)[[view]]))  
+  }
   
-  # Collect expectations  
-  # W <- getExpectations(object,"W", as.data.frame = T)
-  W <- getWeights(object,views=view, factors=factor, as.data.frame = T)
+  # Fetch the weights
+  W <- getWeights(object, views=view, factors=factor, as.data.frame = T)
   W <- W[W$factor==factor & W$view==view,]
   
-    # Scale values
-  if(scale) W$value <- W$value/max(abs(W$value))
+  # Scale values
+  if (scale) W$value <- W$value/max(abs(W$value))
   
   # Parse the weights
   if (abs) W$value <- abs(W$value)
@@ -314,6 +323,7 @@ plotTopWeights <- function(object, view, factor, nfeatures = 10, abs = TRUE, sca
   else if(abs & !scale) p <- p + ylab(paste("Absolute loading on factor", factor))
   else if(!abs & scale) p <- p + ylab(paste("Loading on factor", factor))
   else p <- p + ylab(paste("Loading on factor", factor))
+  
   return(p)
   
 }

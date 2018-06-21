@@ -9,13 +9,26 @@ plotTilesData(object, colors = NULL)
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{colors}{a vector specifying the colors per view.}
+\item{colors}{a character vector specifying the colors per view. NULL (default) uses an internal palette.}
 }
 \description{
-Function to do a tile plot showing the missing value structure of the multi-omics input data
+Function to do a tile plot showing the dimensionality and 
+the missing value structure of the multi-omics data.
 }
 \details{
-This function is helpful to get an overview of the missing value structure of the training data used for MOFA. 
-It shows the number of samples, the number of views, the number of features, and the structure of missing values.
-In particular, it is useful to visualise incomplete data sets, where some samples are missing subsets of assays.
+This function is helpful to get an overview of the dimensionality and the missing value structure of the training data. \cr 
+It shows the number of samples, the number of views, the number of features, and the structure of missing values. \cr
+It is particularly useful to visualise incomplete data sets, where some samples are missing subsets of assays.
+}
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+plotTilesData(MOFA_CLL)
+
+# Example on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+# using customized colors
+plotTilesData(MOFA_scMT, colors= c("blue", "red", "red", "red"))
 }

@@ -24,6 +24,13 @@ nothing
 \description{
 Line plot of the Feature Set Enrichment Analyisis results for a specific latent variable
 }
-\details{
-fill this
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+# perform FeatureSetEnrichmentAnalysis on mRNA data for all factors using the Reactome gene sets
+data("reactomeGS")
+fsea.out <- FeatureSetEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
+# top 10 enriched pathwyas on factor 5:
+LinePlot_FeatureSetEnrichmentAnalysis(fsea.out, factor=5,  max.pathways=10)
 }

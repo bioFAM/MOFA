@@ -5,19 +5,16 @@ import sys
 
 def setup_package():
   install_requires = ['pandas', 'scipy', 'numpy', 'sklearn', 'argparse', 'h5py']
-  console_scripts = [ 'mofa=mofa.core.init_asd:entry_point'],
   metadata = dict(
       name = 'MOFA',
-      version = '0.1',
+      version = '1.0',
       description = 'Multi-Omics Factor Analysis',
-      #long_description=read('README.rst'),
       url = 'https://github.com/PMBio/MOFA',
       author = 'Ricard Argelaguet, Damien Arnol and Britta Velten',
       author_email = 'ricard.argelaguet@gmail.com',
       license = 'MIT',
       packages = find_packages(),
-      install_requires = install_requires,
-      entry_points = {'console_scripts': console_scripts}
+      install_requires = install_requires
     )
 
   setup(**metadata)

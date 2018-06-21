@@ -43,3 +43,15 @@ This method generates a single scatterplot for the combination of two latent fac
 Similar functions are \code{\link{plotFactorScatters}} for doing multiple scatter plots and 
 \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots for single factors.
 }
+\examples{
+# Example on the CLL data
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFA_CLL <- loadModel(filepath)
+plotFactorScatter(MOFA_CLL, factors=1:2)
+plotFactorScatter(MOFA_CLL, factors=1:2, color_by= "IGHV", shape_by="trisomy12", showMissing=FALSE)
+
+# Example on the scMT data
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFA_scMT <- loadModel(filepath)
+plotFactorScatter(MOFA_scMT, factors=c(1,3))
+}

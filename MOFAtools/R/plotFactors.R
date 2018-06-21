@@ -26,31 +26,55 @@
 #' @return Returns a \code{ggplot2} object
 #' @import ggplot2
 #' @export
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotFactorHist(MOFA_CLL, factor=1)
+#' plotFactorHist(MOFA_CLL, factor=1, group_by= "IGHV")
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotFactorHist(MOFA_scMT, factor=2)
+
 plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", alpha = 0.5, binwidth = NULL, showMissing = FALSE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
-  
+  if(length(factor)>1)  stop("Please specify a single factor!")
   # Collect relevant data
-  N <- object@Dimensions[["N"]]
   Z <- getFactors(object, factors = factor, as.data.frame = TRUE)
-  factor <- unique(Z$factor)
+  
+  # Get factors
+  if (is.numeric(factor)) {
+    if (object@ModelOptions$learnIntercept) {
+      factor <- factorNames(object)[factor+1]
+    } else {
+      factor <- factorNames(object)[factor]
+    }
+  } else { 
+    stopifnot(factor %in% factorNames(object)) 
+  }
+  
   # get groups
+  N <- object@Dimensions[["N"]]
   groupLegend <- T
   if (!is.null(group_by)) {
     
     # It is the name of a covariate or a feature in the TrainData
     if (length(group_by) == 1 & is.character(group_by)) {
-      if(group_names=="") group_names <- group_by
+      if (group_names=="") group_names <- group_by
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData(object), rownames)
-      if(group_by %in% Reduce(union,featureNames)) {
+      if (group_by %in% Reduce(union,featureNames)) {
         viewidx <- which(sapply(featureNames, function(vnm) group_by %in% vnm))
         group_by <- TrainData[[viewidx]][group_by,]
-      } else if(class(object@InputData) == "MultiAssayExperiment"){
+      } else if (class(object@InputData) == "MultiAssayExperiment") {
         group_by <- getCovariates(object, group_by)
+      } else {
+        stop("'group_by' was specified but it was not recognised, please read the documentation")
       }
-      else stop("'group_by' was specified but it was not recognised, please read the documentation")
       
     # It is a vector of length N
     } else if (length(group_by) > 1) {
@@ -121,16 +145,40 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
 #' @import ggplot2 ggbeeswarm RColorBrewer grDevices
 #' @export
 plotFactorBeeswarm <- function(object, factors, color_by = NULL, shape_by = NULL, name_color = "", name_shape = "", showMissing = FALSE) {
-  
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotFactorBeeswarm(MOFA_CLL, factor=1:3)
+#' plotFactorBeeswarm(MOFA_CLL, factor=1:2, color_by= "IGHV")
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotFactorBeeswarm(MOFA_scMT)
+
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
 
-  # Collect relevant data
-  N <- object@Dimensions[["N"]]
-  Z <- getFactors(object, factors=factors, include_intercept=FALSE, as.data.frame=T)
+  # Get factors
+  if (is.numeric(factors)) {
+    if (object@ModelOptions$learnIntercept) {
+      factors <- factorNames(object)[factors+1]
+    } else {
+      factors <- factorNames(object)[factors]
+    }
+  } else { 
+    if (paste0(factors,collapse="") == "all") { 
+      factors <- factorNames(object) 
+    } else {
+      stopifnot(all(factors %in% factorNames(object)))  
+    }
+  }
+  Z <- getFactors(object, factors=factors, include_intercept=F, as.data.frame=T)
   Z$factor <- as.factor(Z$factor)
   
   # Set color
+  N <- object@Dimensions[["N"]]
   colorLegend <- T
   if (!is.null(color_by)) {
     # It is the name of a covariate or a feature in the TrainData
@@ -194,6 +242,7 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, shape_by = NULL
   # Remove samples with missing values
   if (showMissing==F) {
     Z <- Z[!(is.na(color_by) | is.nan(color_by) | color_by=="NaN" | is.na(shape_by) | is.nan(shape_by) | shape_by=="NaN"),]
+    # Z <- Z[!(is.na(color_by) | is.nan(color_by) | color_by=="NaN"),]
   }
   
   # Generate plot
@@ -266,6 +315,18 @@ plotFactorBeeswarm <- function(object, factors, color_by = NULL, shape_by = NULL
 #' @return Returns a \code{ggplot2} object
 #' @import ggplot2
 #' @export
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotFactorScatter(MOFA_CLL, factors=1:2)
+#' plotFactorScatter(MOFA_CLL, factors=1:2, color_by= "IGHV", shape_by="trisomy12", showMissing=FALSE)
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotFactorScatter(MOFA_scMT, factors=c(1,3))
+
 plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL, name_color="",
                          name_shape="", showMissing = TRUE) {
   
@@ -273,11 +334,26 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(factors)==2)
   
-  # Collect relevant data  
-  N <- object@Dimensions[["N"]]
+  # Get factors
+  if (is.numeric(factors)) {
+    if (object@ModelOptions$learnIntercept) {
+      factors <- factorNames(object)[factors+1]
+    } else {
+      factors <- factorNames(object)[factors]
+    }
+  } else { 
+    if (paste0(factors,collapse="") == "all") { 
+      factors <- factorNames(object) 
+    } else {
+      stopifnot(all(factors %in% factorNames(object)))  
+    }
+  }
   Z <- getFactors(object, factors = factors)
   factors <- colnames(Z)
+  
+  # Get samples
   samples <- sampleNames(object)
+  N <- object@Dimensions[["N"]]
   
   # Set color
   colorLegend <- T
@@ -399,6 +475,18 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
 #' @return \code{ggplot2} object
 #' @import ggplot2
 #' @export
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotFactorScatters(MOFA_CLL, factors=1:3)
+#' plotFactorScatters(MOFA_CLL, factors=1:3, color_by= "IGHV")
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotFactorScatters(MOFA_scMT)
+
 plotFactorScatters <- function(object, factors = "all", showMissing=TRUE, 
                          color_by=NULL, name_color="",  
                          shape_by=NULL, name_shape="") {
@@ -412,14 +500,21 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
   factors <- colnames(Z)
   
   # Get factors
-  if (paste0(factors,collapse="") == "all") { 
-    factors <- factorNames(object) 
-    # if(is.null(factors)) factors <- 1:ncol(Z) # old object are not compatible with factro names
-  } else {
-    stopifnot(all(factors %in% factorNames(object)))  
+  if (is.numeric(factors)) {
+    if (object@ModelOptions$learnIntercept) {
+      factors <- factorNames(object)[factors+1]
+    } else {
+      factors <- factorNames(object)[factors]
+    }
+  } else { 
+    if (paste0(factors,collapse="") == "all") { 
+      factors <- factorNames(object) 
+    } else {
+      stopifnot(all(factors %in% factorNames(object)))  
+    }
   }
-  Z <- Z[,factors]
-
+  Z <- getFactors(object, factors = factors)
+  
   # Remove constant factors 
   tmp <- apply(Z,2,var,na.rm=T)
   if (any(tmp==0)) {
@@ -563,6 +658,17 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
 #' @return Returns a symmetric matrix with the correlation coefficient between every pair of factors.
 #' @importFrom corrplot corrplot
 #' @export
+#' @examples
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFA_CLL <- loadModel(filepath)
+#' plotFactorCor(MOFA_CLL)
+#'
+#' # Example on the scMT data
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFA_scMT <- loadModel(filepath)
+#' plotFactorCor(MOFA_scMT)
+
 plotFactorCor <- function(object, method = "pearson", ...) {
   
   # Sanity checks

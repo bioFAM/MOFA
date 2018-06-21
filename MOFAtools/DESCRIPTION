@@ -1,8 +1,8 @@
 Package: MOFAtools
 Type: Package
-Maintainer: Ricard Argelaguet <ricard.argealguet@ebi.ac.uk> and Britta Velten <britta.velten@embl.de>
+Maintainer: Ricard Argelaguet <ricard.argelaguet@ebi.ac.uk> and Britta Velten <britta.velten@embl.de>
 Title: Multi-Omics Factor Analysis (MOFA)
-Version: 0.1
+Version: 1.0
 Authors@R: c(person("Ricard", "Argelaguet", role=c("aut", "cre"), email="ricard@ebi.ac.uk"), 
 		person("Britta", "Velten", role=c("aut", "ctb"), email="britta.velten@embl.de"), 
 		person("Damien", "Arnol", role=c("aut"), email="damien.arnol@ebi.ac.uk"), 
@@ -14,11 +14,11 @@ License: GPL (>= 2)
 Description: A collection of tools for running and analysing MOFA models.
 Encoding: UTF-8
 Depends: R (>= 3.4)
-Imports: rhdf5, dplyr, tidyr, reshape2, pheatmap, corrplot, ggplot2, ggbeeswarm, methods, scales, GGally, RColorBrewer, cowplot, ggrepel, MultiAssayExperiment, Biobase, doParallel, foreach
-Suggests: knitr, pcaMethods
+Imports: rhdf5, dplyr, tidyr, reshape2, pheatmap, corrplot, ggplot2, ggbeeswarm, methods, scales, GGally, RColorBrewer, cowplot, ggrepel, MultiAssayExperiment, Biobase, doParallel, foreach, reticulate
+Suggests: knitr
 biocViews:
 VignetteBuilder: knitr
 LazyData: true
 NeedsCompilation: yes
 RoxygenNote: 6.0.1
-SystemRequirements: Python (>=2.7.0), numpy, pandas, h5py, scipy, argparse, sklearn, mofa
+SystemRequirements: Python (>=2.7.0), numpy, pandas, h5py, scipy, sklearn

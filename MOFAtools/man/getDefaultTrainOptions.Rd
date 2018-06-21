@@ -7,7 +7,7 @@
 getDefaultTrainOptions()
 }
 \value{
-Returns a list with default training options
+Returns a list with default training options, which have to be passed as an argument to \code{\link{prepareMOFA}}
 }
 \description{
 Function to obtain the default training options.
@@ -15,15 +15,17 @@ Function to obtain the default training options.
 \details{
 The training options are the following: \cr
 \itemize{
- \item{\strong{maxiter}:}{ numeric indicating the maximum number of iterations. 
- Default is 1000, but we recommend using the convergence criteria.}
- \item{\strong{tolerance}:}{ numeric indicating the convergence threshold based on the change in Evidence Lower Bound (deltaELBO). 
- For quick exploration we recommend this to be around 1.0, and for a thorough training we recommend a value of 0.01}
- \item{\strong{learnFactors}:}{ logical indicating whether to learn the number of factors. 
- The criteria to shut down factors is based on a minimum fraction of variance explained, defined in the DropFactorThreshold option}
- \item{\strong{DropFactorThreshold}:}{ numeric indicating the threshold on fraction of variance explained to consider a factor inactive and drop it from the model.
- For example, a value of 0.01 implies that factors explaining less than 1\% of variance (in each view) will be dropped.}
+ \item{\strong{maxiter}:}{ numeric value indicating the maximum number of iterations. 
+ Default is 5000, but we recommend using the 'tolerance' as convergence criteria.}
+ \item{\strong{tolerance}:}{ numeric value indicating the convergence threshold based on the change in Evidence Lower Bound (deltaELBO). 
+ For quick exploration we recommend this to be around 1.0, and for a thorough training we recommend a value of 0.01. Default is 0.1}
+ \item{\strong{DropFactorThreshold}:}{ numeric hyperparamter to automatically learn the number of factors.
+ It indicates the threshold on fraction of variance explained to consider a factor inactive and 
+ automatically drop it from the model during training. 
+ For example, a value of 0.01 implies that factors explaining less than 1\% of variance (in each view) will be dropped.
+ Default is 0, which implies that only factors that explain no variance at all will be removed
+ }
  \item{\strong{verbose}:}{ logical indicating whether to generate a verbose output.}
- \item{\strong{seed}:}{ random seed for reproducibility (default is NULL).}
+ \item{\strong{seed}:}{ random seed for reproducibility (default is NULL, which samples a random seed).}
 }
 }

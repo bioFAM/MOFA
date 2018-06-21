@@ -376,9 +376,9 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY):
         Z = self.markov_blanket["Z"].getExpectation()
         Wtmp = self.markov_blanket["SW"].getExpectations()
         Ztmp = self.markov_blanket["Z"].getExpectations()
+        zeta = self.params["zeta"]
         SW, SWW = Wtmp["E"], Wtmp["ESWW"]
         Z, ZZ = Ztmp["E"], Ztmp["E2"]
-        tmp = s.dot(Z,SW.T)
         mask = self.getMask()
 
         # Compute Lower Bound using the Bernoulli likelihood and the observed data
@@ -396,22 +396,22 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY):
 
         # Compute Evidence Lower Bound using the lower bound to the likelihood
 
-        # Calculate E[(ZW_nd)^2]
+        # calculate E(Z)E(W)
         ZW = Z.dot(SW.T)
         ZW[mask] = 0.
-        term2 = ZZ.dot(SWW.T)
-        term2[mask] = 0
-        term2 = term2.sum(axis=0)
-        term3 = s.dot(s.square(Z),s.square(SW).T)
-        term3[mask] = 0.
-        term3 = -term3.sum(axis=0)
-        EZZWW = term2 + term3
 
-        zeta = self.params["zeta"]
-        term1 = s.log(zeta)
-        term2 = 0.5 * ((2.*self.obs.data - 1.)*tmp - zeta)
-        term3 = 1./(4.*zeta) * s.tanh(zeta/2.)*(EZZWW - zeta**2)
-        lb = term1 + term2 - term3
+        # Calculate E[(ZW_nd)^2]
+        # this is equal to E[\sum_{k != k} z_k w_k z_k' w_k'] + E[\sum_{k} z_k^2 w_k^2]
+        tmp1 = s.square(ZW) - s.dot(s.square(Z),s.square(SW).T) # this is for terms in k != k'
+        tmp2 = ZZ.dot(SWW.T) # this is for terms in k = k'
+        EZZWW = tmp1 + tmp2
+
+        # calculate elbo terms
+        term1 = 0.5 * ((2.*self.obs.data - 1.)*ZW - zeta)
+        term2 = - s.log(1 + s.exp(-zeta))
+        term3 = - 1/(4 * zeta) *  s.tanh(zeta/2.) * (EZZWW - zeta**2)
+
+        lb = term1 + term2 + term3
         lb[mask] = 0.
-        
+
         return lb.sum()

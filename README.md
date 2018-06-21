@@ -13,9 +13,7 @@ For more details you can read our paper: http://msb.embopress.org/cgi/doi/10.152
 
 
 ## News
-- 21/06/2018 Version 1.0 released
-- 20/06/2018 Paper published [link](http://msb.embopress.org/content/14/6/e8124)
-- 10/11/2017 Paper uploaded to bioRxiv
+- 21/06/2018 Beta version released
 - 10/11/2017 We created a Slack group to provide personalised help on running and interpreting MOFA, [this is the link](https://join.slack.com/t/mofahelp/shared_invite/enQtMjcxNzM3OTE3NjcxLTkyZmE5YzNiMDc4OTkxYWExYWNlZTRhMWI2OWNkNzhmYmNlZjJiMjA4MjNiYjI2YTc4NjExNzU2ZTZiYzQyNjY)
  
 
@@ -51,11 +49,11 @@ We currently provide three example workflows:
 
 * [Integration of multi-omics cancer data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_CLL.html).
 * [Integration of single-cell multi-omics data](https://cdn.rawgit.com/bioFAM/MOFA/9eee74b7/MOFAtools/vignettes/MOFA_example_scMT.html).
-* [Integration of simulated data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_simulation.html). (This workshop focusses on how to train a model, check its robustness and select a model for further analyses, for details on the down-stream analyses have a look at one of the two workflows above).
+* [Integration of simulated data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_simulation.html): this tutorial is focused on model selection and robustness. For details on the down-stream analyses have a look at one of the two workflows above.
 
 We are preparing the following workflows, to be released soon:
-* Test imputation performance.
-* Relate factors with clinical data.
+* Imputation.
+* Prediction of clinical covariates.
 
 If there is any tutorial that you would like us to do, or if you want to share your analysis with MOFA, please contact us.
 
@@ -73,7 +71,7 @@ The workflow of MOFA consists of two steps:
 A cheatsheet with all **relevant methods**, together with a short description, can be found [here](https://github.com/PMBio/MOFA/blob/master/MOFAtools/CheatSheet.md)  
 
 ### Step 1: Fitting the model
-First you need to create the MOFA object with your input data, and subsequently you need to train the model. Everything is explained in [the vignette](http://htmlpreview.github.com/?https://github.com/PMBio/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_CLL.html). 
+First you need to create the MOFA object with your input data, and subsequently you need to train the model. Everything is explained in the vignettes.  
 If everything is successful, you should observe an output analogous to the following:
 ```
   ###########################################################
@@ -99,20 +97,20 @@ Loaded /Users/ricard/MOFA/MOFA/test/data/500_2.txt with dim (100,500)...
 #############################################
 
 Trial 1, Iteration 1: time=0.08 ELBO=-345954.96, Factors=10, Covariates=1
-Trial 1, Iteration 2: time=0.10 ELBO=-283729.31, deltaELBO=62225.6421, Factors=10, Covariates=1
-Trial 1, Iteration 3: time=0.10 ELBO=-257427.42, deltaELBO=26301.8893, Factors=10, Covariates=1
+Trial 1, Iteration 2: time=0.10 ELBO=-283729.31, deltaELBO=62225.6421, Factors=10
+Trial 1, Iteration 3: time=0.10 ELBO=-257427.42, deltaELBO=26301.8893, Factors=10
 ...
-Trial 1, Iteration 100: time=0.07 ELBO=-221171.01, deltaELBO=0.0998, Factors=10, Covariates=1
+Trial 1, Iteration 100: time=0.07 ELBO=-221171.01, deltaELBO=0.0998, Factors=10
 
 Converged!
 ```
 
 There are two important quantities to keep track of: 
-* **Number of factors**: you start the model with a large enough amount of factors, and the model will automatically remove the factors that do not explain significant amounts of variation. 
+* **Number of factors**: you can choose whether to fix the number or factors or let the model automatically learn the dimensionality of the latent space.
 * **deltaELBO**: this is the convergence statistic. Once the deltaELBO decreases below a threshold (close to zero), training will end and the model will be saved as an .hdf5 file. Then, you are ready to start the downstream analysis.
 
-### Step 2: Disentangle the variability
-MOFA disentangles the heterogeneity of a high-dimensional multi-omics data set into a reduced set of latent factors that capture global sources of variation. 
+### Step 2: Downstream analysis: disentangle the variability between omics
+MOFA disentangles the heterogeneity of a high-dimensional multi-omics data set into a set of latent factors that capture global sources of variation.  
 Importantly, these factors can have different activity patterns in different omics. For example, a batch effect might be affecting the RNA data but not the Methylation data. 
 Decoupling this heterogeneity is a mandatory first step in the analysis of multi-omics data. For example, this is the variance decomposition plot for the Chronic Lymphocytic Leukemia data set analysed in the paper:
 
@@ -184,7 +182,7 @@ MOFA is trained using variational bayes, a fast inference framework that consist
 **(Q) What input formats are allowed?**  
 The data has to be input in two possible formats: 
 * Bioconductor: a [MultiAssayExperiment](https://bioconductor.org/packages/release/bioc/html/MultiAssayExperiment.html) object
-* Base R approach: a list of matrices where features are rows and samples are columns. See vignette `XXX`
+* Base R approach: a list of matrices where features are rows and samples are columns. Examples are shown in the vignettes.
 
 **(Q) Does MOFA always converge to the same solutions?**  
 No, as occurs in most complex Bayesian models, they are not guaranteed to always converge to the smae (optimal) solution.
@@ -192,6 +190,6 @@ In practice, however, we observed that the solutions are highly consistent, part
 
 
 ## Contact
-The package is maintained by Britta Velten (britta.velten@embl.de) and Ricard Argelaguet (ricard@ebi.ac.uk). 
-Please, contact us for problems, comments or suggestions.
+The package is maintained by Britta Velten (britta.velten@embl.de) and Ricard Argelaguet (ricard@ebi.ac.uk).  
+We created a Slack group to provide personalised help on running and analysing MOFA, [this is the link](https://join.slack.com/t/mofahelp/shared_invite/enQtMjcxNzM3OTE3NjcxLTkyZmE5YzNiMDc4OTkxYWExYWNlZTRhMWI2OWNkNzhmYmNlZjJiMjA4MjNiYjI2YTc4NjExNzU2ZTZiYzQyNjY). Please, reach us for problems, comments or suggestions.
 

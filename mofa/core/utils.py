@@ -422,6 +422,7 @@ def saveModelOpts(opts, hdf5):
     """
     opts_interest = ["learnIntercept","likelihoods","sparsity_bool"]
     opts = dict((k, opts[k]) for k in opts_interest)
+    opts["sparsity"] = opts.pop("sparsity_bool")
     grp = hdf5.create_group('model_opts')
     for k,v in opts.items():
         grp.create_dataset(k, data=np.asarray(v).astype('S'))

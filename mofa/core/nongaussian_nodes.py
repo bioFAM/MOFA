@@ -374,19 +374,18 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY):
 
     def calculateELBO(self):
         Z = self.markov_blanket["Z"].getExpectation()
-        Wtmp = self.markov_blanket["SW"].getExpectation()
-        Ztmp = self.markov_blanket["Z"].getExpectation()
+        Wtmp = self.markov_blanket["SW"].getExpectations()
+        Ztmp = self.markov_blanket["Z"].getExpectations()
         SW, SWW = Wtmp["E"], Wtmp["ESWW"]
         Z, ZZ = Ztmp["E"], Ztmp["E2"]
         tmp = s.dot(Z,SW.T)
-        # tmp2 = #TODO  expected value of (ZW_nd)^2 we should have it from the tau updates already?
         mask = self.getMask()
 
         # Compute Lower Bound using the Bernoulli likelihood and the observed data
         # BOTH ARE WRONG AS THEY EXCHANGE LOG AND EXPECTATIONS
-        lb = self.obs.data*tmp - s.log(1.+s.exp(tmp))
-        lb = s.log(1.+s.exp(-(2.*self.obs-1)*tmp)) # DAMIEN'S suggestion
-        lb[mask] = 0.
+        # lb = self.obs.data*tmp - s.log(1.+s.exp(tmp))
+        # lb = s.log(1.+s.exp(-(2.*self.obs-1)*tmp)) # DAMIEN'S suggestion
+        # lb[mask] = 0.
 
         # Compute Lower Bound using the gaussian likelihood with pseudo data
         # MISSING CONSTANT TERM
@@ -395,11 +394,24 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY):
         # lb = term1 - term2
         # lb[mask] = 0.
 
-        # NEW SUGGECTION:
-        # zeta = self.params["zeta"]
-        # term1 = s.log(zeta)
-        # term2 = 0.5 * ((2*self.obs.data -1)*tmp -zeta)
-        # term3 = 1/(4*szeta) * s.tanh(zeta/2)*(tmp2 - zeta^2)
-        # lb = term1 + term2 - term3
-        # lb[mask] = 0.
+        # Compute Evidence Lower Bound using the lower bound to the likelihood
+
+        # Calculate E[(ZW_nd)^2]
+        ZW = Z.dot(SW.T)
+        ZW[mask] = 0.
+        term2 = ZZ.dot(SWW.T)
+        term2[mask] = 0
+        term2 = term2.sum(axis=0)
+        term3 = s.dot(s.square(Z),s.square(SW).T)
+        term3[mask] = 0.
+        term3 = -term3.sum(axis=0)
+        EZZWW = term2 + term3
+
+        zeta = self.params["zeta"]
+        term1 = s.log(zeta)
+        term2 = 0.5 * ((2.*self.obs.data - 1.)*tmp - zeta)
+        term3 = 1./(4.*zeta) * s.tanh(zeta/2.)*(EZZWW - zeta**2)
+        lb = term1 + term2 - term3
+        lb[mask] = 0.
+        
         return lb.sum()

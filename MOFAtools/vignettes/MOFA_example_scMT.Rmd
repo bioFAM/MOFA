@@ -183,7 +183,7 @@ df <- data.frame(
 plotDataHeatmap(
   object = MOFAobject, 
   view = "RNA expression", 
-  factor = "LF_1", 
+  factor = "LF1", 
   features = 20, 
   transpose = T, 
   show_colnames=F, show_rownames=T, cluster_cols = F, annotation_col=df # pheatmap options

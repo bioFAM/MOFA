@@ -37,8 +37,7 @@
 #' # overview of number of enriched pathways per factor at an FDR of 1%
 #' Barplot_FeatureSetEnrichmentAnalysis(fsea.out, alpha=0.01)
 #' # e.g. top 10 enriched pathwyas on factor 5:
-#' LinePlot_FeatureSetEnrichmentAnalysis(fsea.out, factor=5,  max.pathways=10)
-
+#' LinePlot_FeatureSetEnrichmentAnalysis(MOFA_CLL, fsea.out, factor=5,  max.pathways=10)
 FeatureSetEnrichmentAnalysis <- function(object, view, feature.sets, factors = "all", local.statistic = c("loading", "cor", "z"),
                                          global.statistic = c("mean.diff", "rank.sum"), statistical.test = c("parametric", "cor.adj.parametric", "permutation"),
                                          transformation = c("abs.value", "none"), min.size = 10, nperm = 1000, cores = 1, p.adj.method = "BH", alpha=0.1) {
@@ -172,7 +171,7 @@ FeatureSetEnrichmentAnalysis <- function(object, view, feature.sets, factors = "
 #' @description Line plot of the Feature Set Enrichment Analyisis results for a specific latent variable
 #' @param fsea.out output of \link{FeatureSetEnrichmentAnalysis} function
 #' @param factor Factor for which to show wnriched pathways in the lineplot
-#' @param threshold p.value threshold to filter out feature sets
+#' @param alpha p.value threshold to filter out feature sets
 #' @param max.pathways maximum number of enriched pathways to display
 #' @param adjust use multiple testing correction
 #' @return nothing
@@ -186,8 +185,8 @@ FeatureSetEnrichmentAnalysis <- function(object, view, feature.sets, factors = "
 #' data("reactomeGS")
 #' fsea.out <- FeatureSetEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
 #' # top 10 enriched pathwyas on factor 5:
-#' LinePlot_FeatureSetEnrichmentAnalysis(fsea.out, factor=5,  max.pathways=10)
-LinePlot_FeatureSetEnrichmentAnalysis <- function(object, fsea.out, factor, threshold=0.1, max.pathways=25, adjust=T) {
+#' LinePlot_FeatureSetEnrichmentAnalysis(MOFA_CLL, fsea.out, factor=5,  max.pathways=10)
+LinePlot_FeatureSetEnrichmentAnalysis <- function(object, fsea.out, factor, alpha=0.1, max.pathways=25, adjust=T) {
   
   # Sanity checks
   stopifnot(length(factor)==1) 
@@ -203,9 +202,9 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(object, fsea.out, factor, thre
   colnames(tmp) <- c("pvalue")
   
   # Filter out pathways
-  tmp <- tmp[tmp$pvalue<=threshold,,drop=F]
+  tmp <- tmp[tmp$pvalue<=alpha,,drop=F]
   if(nrow(tmp)==0) {
-    warning("No siginificant pathways at the specified threshold. For an overview use Heatmap_FeatureSetEnrichmentAnalysis().")
+    warning("No siginificant pathways at the specified alpha threshold. For an overview use Heatmap_FeatureSetEnrichmentAnalysis().")
     return()
   }
   
@@ -217,7 +216,7 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(object, fsea.out, factor, thre
   tmp$log <- -log10(tmp$pvalue)
   
   # Annotate significcant pathways
-  # tmp$sig <- factor(tmp$pvalue<threshold)
+  # tmp$sig <- factor(tmp$pvalue<alpha)
   
   #order according to significance
   tmp$pathway <- factor(tmp$pathway <- rownames(tmp), levels = tmp$pathway[order(tmp$pvalue, decreasing = T)])
@@ -225,7 +224,7 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(object, fsea.out, factor, thre
   p <- ggplot(tmp, aes(x=pathway, y=log)) +
     # ggtitle(paste("Enriched sets in factor", factor)) +
     geom_point(size=5) +
-    geom_hline(yintercept=-log10(threshold), linetype="longdash") +
+    geom_hline(yintercept=-log10(alpha), linetype="longdash") +
     # scale_y_continuous(limits=c(0,7)) +
     scale_color_manual(values=c("black","red")) +
     geom_segment(aes(xend=pathway, yend=0)) +
@@ -262,11 +261,11 @@ LinePlot_FeatureSetEnrichmentAnalysis <- function(object, fsea.out, factor, thre
 #' # overview of enriched pathways per factor at an FDR of 1%
 #' Heatmap_FeatureSetEnrichmentAnalysis(fsea.out, alpha=0.01)
 
-Heatmap_FeatureSetEnrichmentAnalysis <- function(fsea.out, threshold = 0.05, log = TRUE, ...) {
+Heatmap_FeatureSetEnrichmentAnalysis <- function(fsea.out, alpha = 0.05, log = TRUE, ...) {
 
   # get p-values
   p.values <- fsea.out$pval.adj
-  p.values <- p.values[!apply(p.values, 1, function(x) sum(x>=threshold)) == ncol(p.values),, drop=FALSE]
+  p.values <- p.values[!apply(p.values, 1, function(x) sum(x>=alpha)) == ncol(p.values),, drop=FALSE]
   
   # Apply Log transform
   if (log==T) {
@@ -278,8 +277,8 @@ Heatmap_FeatureSetEnrichmentAnalysis <- function(fsea.out, threshold = 0.05, log
   }
   
   # Generate heatmap
-  if(ncol(p.values)==1) cluster_cols <-FALSE
-  pheatmap::pheatmap(p.values, color = col, cluster_cols=cluster_cols)
+  # if (ncol(p.values)==1) cluster_cols <-FALSE
+  pheatmap::pheatmap(p.values, color = col)
 }
 
 
@@ -304,7 +303,7 @@ Heatmap_FeatureSetEnrichmentAnalysis <- function(fsea.out, threshold = 0.05, log
 
 Barplot_FeatureSetEnrichmentAnalysis <- function(fsea.out, alpha = 0.05) {
 
-  if(all(fsea.out$pval.adj > alpha)) stop(paste0("No enriched gene sets found on the considered factors at the FDR threshold of ", alpha,"."))
+  if(all(fsea.out$pval.adj > alpha)) stop(paste0("No enriched gene sets found on the considered factors at the FDR alpha of ", alpha,"."))
   # Get enriched pathways at FDR of alpha
   pathwayList <- lapply(colnames(fsea.out$pval.adj), function(f) {
     f <- fsea.out$pval.adj[,f]

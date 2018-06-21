@@ -144,7 +144,7 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
 #' @return Returns a \code{ggplot2} object
 #' @import ggplot2 ggbeeswarm RColorBrewer grDevices
 #' @export
-plotFactorBeeswarm <- function(object, factors, color_by = NULL, shape_by = NULL, name_color = "", name_shape = "", showMissing = FALSE) {
+plotFactorBeeswarm <- function(object, factors="all", color_by = NULL, shape_by = NULL, name_color = "", name_shape = "", showMissing = FALSE) {
 #' @examples
 #' # Example on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
@@ -585,7 +585,7 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
   }
 
   # Crete data.frame
-  df <- as.data.frame(Z); colnames(df) <- paste0("LF_",colnames(df))
+  df <- as.data.frame(Z); colnames(df) <- paste0("LF",colnames(df))
   df <- cbind(df, color_by=color_by, shape_by=shape_by)
 
     #turn into factors
@@ -681,8 +681,8 @@ plotFactorCor <- function(object, method = "pearson", ...) {
   Z <- Z[,colnames(Z)!="intercept"]
   
   # Compute and plot correlation
-  rownames(Z) <- paste0("LF_",1:nrow(Z))
-  colnames(Z) <- paste0("LF_",1:ncol(Z))
+  rownames(Z) <- paste0("LF",1:nrow(Z))
+  colnames(Z) <- paste0("LF",1:ncol(Z))
   r <- abs(cor(x=Z, y=Z, method=method, use = "complete.obs"))
   p <- corrplot(r, tl.col="black", ...)
   

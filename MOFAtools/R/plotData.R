@@ -133,6 +133,8 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
 #' (c) a vector of the same length as the number of samples specifying discrete groups.
 #' @param name_color name for the color legend
 #' @param name_shape name for the shape legend
+#' @param showMissing logical indicating whether to show samples with missing values for the color or the shape.
+#' Default is TRUE.
 #' @details One of the first steps for the annotation of a given factor is to visualise the corresponding loadings, 
 #' using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}.
 #' These functions display the top features that are driving the heterogeneity captured by a factor. \cr

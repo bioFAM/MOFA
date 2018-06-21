@@ -5,7 +5,7 @@
 \title{Plot heatmap of the weights}
 \usage{
 plotWeightsHeatmap(object, view, features = "all", factors = "all",
-  threshold = 0, breaks = NA, color = NULL, ...)
+  threshold = 0, ...)
 }
 \arguments{
 \item{object}{a trained \code{\link{MOFAmodel}} object.}

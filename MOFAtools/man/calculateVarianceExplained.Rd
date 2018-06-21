@@ -5,7 +5,7 @@
 \title{Calculate variance explained by the model}
 \usage{
 calculateVarianceExplained(object, views = "all", factors = "all",
-  include_intercept = TRUE, ...)
+  include_intercept = TRUE)
 }
 \arguments{
 \item{object}{a trained \code{\link{MOFAmodel}} object.}

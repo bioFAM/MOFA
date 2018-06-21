@@ -31,6 +31,9 @@ This can be either:
 (c) a vector of the same length as the number of samples specifying discrete groups.}
 
 \item{name_shape}{name for the shape legend}
+
+\item{showMissing}{logical indicating whether to show samples with missing values for the color or the shape.
+Default is TRUE.}
 }
 \description{
 Function to do a scatterplot of the feature(s) values against the latent factor values.

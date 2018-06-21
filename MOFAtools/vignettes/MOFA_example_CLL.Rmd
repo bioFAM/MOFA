@@ -201,7 +201,7 @@ Barplot_FeatureSetEnrichmentAnalysis(fsea.out, alpha=0.01)
 ```{r}
 interestingFactors <- 4:5
 for (factor in interestingFactors) {
-  lineplot <- LinePlot_FeatureSetEnrichmentAnalysis(MOFAobject, fsea.out, factor, threshold=0.01, max.pathways=10)
+  lineplot <- LinePlot_FeatureSetEnrichmentAnalysis(MOFAobject, fsea.out, factor, alpha=0.01, max.pathways=10)
   print(lineplot)
 }
 ```

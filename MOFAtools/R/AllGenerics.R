@@ -4,6 +4,7 @@
 ##################
 
 #' @title factorNames: set and retrieve factor names
+#' @description
 #' @name factorNames
 #' @rdname factorNames
 #' @export

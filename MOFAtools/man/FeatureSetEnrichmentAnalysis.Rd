@@ -61,5 +61,5 @@ Heatmap_FeatureSetEnrichmentAnalysis(fsea.out, alpha=0.01)
 # overview of number of enriched pathways per factor at an FDR of 1\%
 Barplot_FeatureSetEnrichmentAnalysis(fsea.out, alpha=0.01)
 # e.g. top 10 enriched pathwyas on factor 5:
-LinePlot_FeatureSetEnrichmentAnalysis(fsea.out, factor=5,  max.pathways=10)
+LinePlot_FeatureSetEnrichmentAnalysis(MOFA_CLL, fsea.out, factor=5,  max.pathways=10)
 }

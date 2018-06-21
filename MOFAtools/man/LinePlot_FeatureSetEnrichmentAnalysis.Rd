@@ -4,15 +4,15 @@
 \alias{LinePlot_FeatureSetEnrichmentAnalysis}
 \title{Line plot of Feature Set Enrichment Analysis results}
 \usage{
-LinePlot_FeatureSetEnrichmentAnalysis(object, fsea.out, factor,
-  threshold = 0.1, max.pathways = 25, adjust = T)
+LinePlot_FeatureSetEnrichmentAnalysis(object, fsea.out, factor, alpha = 0.1,
+  max.pathways = 25, adjust = T)
 }
 \arguments{
 \item{fsea.out}{output of \link{FeatureSetEnrichmentAnalysis} function}
 
 \item{factor}{Factor for which to show wnriched pathways in the lineplot}
 
-\item{threshold}{p.value threshold to filter out feature sets}
+\item{alpha}{p.value threshold to filter out feature sets}
 
 \item{max.pathways}{maximum number of enriched pathways to display}
 
@@ -32,5 +32,5 @@ MOFA_CLL <- loadModel(filepath)
 data("reactomeGS")
 fsea.out <- FeatureSetEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
 # top 10 enriched pathwyas on factor 5:
-LinePlot_FeatureSetEnrichmentAnalysis(fsea.out, factor=5,  max.pathways=10)
+LinePlot_FeatureSetEnrichmentAnalysis(MOFA_CLL, fsea.out, factor=5,  max.pathways=10)
 }

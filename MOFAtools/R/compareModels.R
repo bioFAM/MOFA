@@ -146,16 +146,21 @@ compareModels <- function(models, show_modelnames = FALSE) {
 #' @description Different objects of \code{\link{MOFAmodel}} are compared in terms of the final value of the ELBO statistics 
 #' and the model with the highest ELBO value is selected.
 #' @param models a list containing \code{\link{MOFAmodel}} objects.
+#' @param plotit logical indicating whether to plot the model selection.
 #' @export
-
-selectModel <- function(models, plotit =TRUE) {
+selectModel <- function(models, plotit=TRUE) {
+  
   # Sanity checks
   if(!is.list(models))
     stop("'models' has to be a list")
   if (!all(sapply(models, function (l) class(l)=="MOFAmodel")))
     stop("Each element of the the list 'models' has to be an instance of MOFAmodel")
-
+  
+  # Get ELBO values
   elbo_vals <- sapply(models, getELBO)
-  if(plotit) compareModels(models)
-  models[[which.max(elbo_vals)]]
+  # Plot
+  if (plotit) compareModels(models)
+  
+  # Return model with the highest ELBO
+  return(models[[which.max(elbo_vals)]])
 }

@@ -25,7 +25,7 @@
 #' MOFA_scMT <- loadModel(filepath)
 #' plotVarianceExplained(MOFA_scMT)
 
-calculateVarianceExplained <- function(object, views = "all", factors = "all", include_intercept = TRUE, ...) {
+calculateVarianceExplained <- function(object, views = "all", factors = "all", include_intercept = TRUE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")

@@ -8,6 +8,8 @@ selectModel(models, plotit = TRUE)
 }
 \arguments{
 \item{models}{a list containing \code{\link{MOFAmodel}} objects.}
+
+\item{plotit}{logical indicating whether to plot the model selection.}
 }
 \description{
 Different objects of \code{\link{MOFAmodel}} are compared in terms of the final value of the ELBO statistics 

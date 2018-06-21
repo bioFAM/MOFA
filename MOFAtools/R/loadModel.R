@@ -129,9 +129,9 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
     order_factors <- order(r2, decreasing = T)
     object <- subsetFactors(object,order_factors)
     if (object@ModelOptions$learnIntercept==T) { 
-      factorNames(object) <- c("intercept",paste0("LF_",1:(object@Dimensions$K-1)))
+      factorNames(object) <- c("intercept",paste0("LF",1:(object@Dimensions$K-1)))
     } else {
-      factorNames(object) <- paste0("LF_",c(1:object@Dimensions$K) )
+      factorNames(object) <- paste0("LF",c(1:object@Dimensions$K) )
     }
   }
   

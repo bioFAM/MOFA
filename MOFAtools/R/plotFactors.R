@@ -144,7 +144,6 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
 #' @return Returns a \code{ggplot2} object
 #' @import ggplot2 ggbeeswarm RColorBrewer grDevices
 #' @export
-plotFactorBeeswarm <- function(object, factors="all", color_by = NULL, shape_by = NULL, name_color = "", name_shape = "", showMissing = FALSE) {
 #' @examples
 #' # Example on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
@@ -156,6 +155,7 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL, shape_by 
 #' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotFactorBeeswarm(MOFA_scMT)
+plotFactorBeeswarm <- function(object, factors="all", color_by = NULL, shape_by = NULL, name_color = "", name_shape = "", showMissing = FALSE) {
 
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")

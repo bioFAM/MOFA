@@ -90,9 +90,9 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
   
   
   # Set view, sample, feature and factor names
-  viewNames(object) <- names(object@TrainData)
-  sampleNames(object) <- colnames(object@TrainData[[1]])
-  featureNames(object) <- lapply(object@TrainData,rownames)
+  viewNames(object) <- as.character(names(object@TrainData))
+  sampleNames(object) <- as.character(colnames(object@TrainData[[1]]))
+  featureNames(object) <- lapply(object@TrainData, function(x) as.character(rownames(x)))
   factorNames(object) <- paste0("LF",as.character(1:object@Dimensions[["K"]]))
   
   # Add names to likelihood vector

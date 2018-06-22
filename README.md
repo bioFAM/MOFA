@@ -165,7 +165,7 @@ use_python("YOUR_PYTHON_PATH")
 You can read more about the [reticulate](https://rstudio.github.io/reticulate/) package and [how it integrates Python and R](https://rstudio.github.io/reticulate/articles/versions.html)
 
 **(Q) I don't like R, can I run everythinbg from Python?**  
-Yes you can, and we recommend this for training, as it will be slightly faster. See [this template script](XXX). However, we don't provide downstream analysis functions with Python, we don't like it for plotting. Sorry.
+Yes you can, and we recommend this for training, as it will be slightly faster. See [this template script](https://github.com/bioFAM/MOFA/blob/master/mofa/run/python_template.py). However, we do not provide downstream analysis functions with Python.
 
 **(Q) How many factors should I use?**  
 Similar to other Factor Analysis models, this is a hard question to answer. It depends depends on the data set and the aim of the analysis. As a general rule, the bigger the data set, the higher the number of factors that you will likely retrieve, and the less the variance that will be explained per factor.

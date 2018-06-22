@@ -23,23 +23,23 @@ MOFA is run exclusively from R, but it requires some python dependencies that yo
 ### Python dependencies 
 We are on the process of uploading it to PyPI. For now, you can install it using:
 ```r
-pip install git+git://github.com/PMBio/MOFA
+pip install git+git://github.com/bioFAM/MOFA
 ```
 Or clone the repository and then install it using the setup.py:
 ```r
-git clone https://github.com/PMBio/MOFA
+git clone https://github.com/bioFAM/MOFA
 python setup.py install
 ```
 
 ### R package
 The easier way to install the R package is via github:
 ```r
-devtools::install_github("PMBio/MOFA", subdir="MOFAtools")
+devtools::install_github("bioFAM/MOFA", subdir="MOFAtools")
 ```
 
 Alternatively, you can clone the repository and install locally:
 ```r
-git clone https://github.com/PMBio/MOFA
+git clone https://github.com/bioFAM/MOFA
 R CMD build MOFAtools
 R CMD install MOFAtools
 ```
@@ -68,7 +68,7 @@ The workflow of MOFA consists of two steps:
 <img src="images/workflow.png">
 </p>
 
-A cheatsheet with all **relevant methods**, together with a short description, can be found [here](https://github.com/PMBio/MOFA/blob/master/MOFAtools/CheatSheet.md)  
+A cheatsheet with all **relevant methods**, together with a short description, can be found [here](https://github.com/bioFAM/MOFA/blob/master/MOFAtools/CheatSheet.md)  
 
 ### Step 1: Fitting the model
 First you need to create the MOFA object with your input data, and subsequently you need to train the model. Everything is explained in the vignettes.  
@@ -149,6 +149,18 @@ These two packages are available from Bioconductor, not CRAN. You can install th
 source("https://bioconductor.org/biocLite.R")
 biocLite(c('pcaMethods', 'MultiAssayExperiment'))
 ```
+
+**(Q) I get the following error when running MOFA:**  
+```
+AttributeError: 'module' object has no attribute 'core.entry_point
+```
+This means that either (1) you did not install the mofa Python package (see above), or (2) you have multiple python installations and R is not detecting the correct one where mofa is installed. You need to find out the right Python interpreter, which usually will be the one you get when running `which python` in the terminal. You can test if the mofa packaged is installed by running INSIDE python: `import mofa`.  
+Once everything if figured out, specify the following at the beginning of your R script:
+```
+library(reticulate)
+use_python("YOUR_PYTHON_PATH")
+```
+You can read more about the [reticulate](https://rstudio.github.io/reticulate/) package and [how it integrates Python and R](https://rstudio.github.io/reticulate/articles/versions.html)
 
 **(Q) How many factors should I use?**  
 Similar to other Factor Analysis models, this is a hard question to answer. It depends depends on the data set and the aim of the analysis. As a general rule, the bigger the data set, the higher the number of factors that you will likely retrieve, and the less the variance that will be explained per factor.

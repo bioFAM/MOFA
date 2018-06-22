@@ -16,28 +16,6 @@
 #' @return Returns an untrained \code{\link{MOFAmodel}} with specified data, model and training options.
 #' Next step is to train the model with \code{\link{runMOFA}}
 #' @export
-#' @examples
-#' # Generate a random data set
-#' gaussian_data <- matrix(rnorm(100,mean=0,sd=1),10,10)
-#' poisson_data <- matrix(rpois(100, lambda=1),10,10)
-#' data <- list("gaussian_view"=gaussian_data, "poisson_view"=poisson_data)
-#' # Create a MOFA object
-#' MOFAobject <- createMOFA(data)
-#' # Define Data Options
-#' DataOptions <- getDefaultDataOptions()
-#' # Define Model Options
-#' ModelOptions <- getDefaultModelOptions(MOFAobject)
-#' # Manually set the likelihoods 
-#' ModelOptions$likelihood <- c("gaussian","poisson")
-#' ModelOptions <- getDefaultModelOptions(MOFAobject)
-#' # Define Training Options
-#' TrainOptions <- getDefaultTrainOptions()
-#' # Manually set the maximum number of iterations
-#' TrainOptions$maxiter <- 100
-#' # Prepare MOFA object for training
-#' MOFAobject <- prepareMOFA(MOFAobject, DataOptions, ModelOptions, TrainOptions)
-#' # Train the model
-#' MOFAobject <- runMOFA(MOFAobject, outfile=tempfile())
 prepareMOFA <- function(object, DataOptions = NULL, ModelOptions = NULL, TrainOptions = NULL) {
   
   # Sanity checks

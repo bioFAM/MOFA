@@ -191,7 +191,9 @@ class initModel(object):
         for m in range(self.M):
             if self.lik[m] == "poisson":
                 tmp = 0.25 + 0.17*s.amax(self.data[m],axis=0)
-                tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
+                # tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
+                tau_list[m] = Constant_Node(dim=((self.N,self.D[m])), value=s.repeat(tmp[None,:],self.N,0))
+
             elif self.lik[m] == "bernoulli":
                 # seeger
                 # tau_list[m] = Constant_Node(dim=((self.N,self.D[m])), value=0.25)

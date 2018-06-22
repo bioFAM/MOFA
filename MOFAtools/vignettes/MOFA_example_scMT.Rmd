@@ -13,10 +13,6 @@ vignette: >
 
 This vignette show how to MOFA can be used to disentangle the heterogeneity in single-cell DNA methylation and RNA expression (scMT) data.  
 
-<!-- <p align="center">  -->
-<!-- <img src="../../images/scmt.png" style="width: 100%; height: 100%"/> -->
-<!-- </p> -->
-
 Briefly, the data set consists of 87 mouse embryonic stem cells (mESCs), comprising of 16 cells cultured in ‘2i’ media, which induces a naive pluripotency state, and 71 serum-grown cells, which commits cells to a primed pluripotency state poised for cellular differentiation (Angermueller, 2016). 
 
 
@@ -44,7 +40,7 @@ The function `plotTilesData` can be used to obtain an overview of the structure 
 ```
 
 # Fit the MOFA model
-The next step is to train the model. Internally, this is done using Python, so make sure you have the corresponding package installed (see installation instructions in the README file).
+The next step is to train the model. Internally, this is done via Python, so make sure you have the corresponding package installed (see installation instructions and the FAQ in the README file).
 
 ## Define options
 
@@ -52,8 +48,10 @@ The next step is to train the model. Internally, this is done using Python, so m
 
 ### Define data options
 Next, we define data options. The most important are:  
-* **centerFeatures**:  logical indicating whether to learn the intercept (the means) in a per feature basis. This prevents you from having to center the data, so this option is always recommended (Default is TRUE). Only works for Gaussian views.
-* **removeIncompleteSamples**: logical indicating whether to remove samples that are not profiled in all omics (Default is FALSE)
+
+* **centerFeatures**:  logical indicating whether to learn the intercept (the means) in a per feature basis. This prevents you from having to center the data, so this option is always recommended (Default is `TRUE`). Only works for Gaussian views.  
+
+* **removeIncompleteSamples**: logical indicating whether to remove samples that are not profiled in all omics (Default is `FALSE`)  
 ```{r}
 DataOptions <- getDefaultDataOptions()
 DataOptions$centerFeatures <- TRUE
@@ -62,9 +60,12 @@ DataOptions$centerFeatures <- TRUE
 
 ### Define model options
 Next, we define model options. The most important are:  
-* **numFactors**: number of factors (default is 25). By default, the model does not automatically learn the number of factors. If you want the model to do this (based on a minimum variance explained criteria), set `TrainOptions$dropFactorThreshold` to a non-zero value.
-* **likelihoods**: likelihood for each view. Usually we recommend gaussian for continuous data, bernoulli for binary data and poisson for count data. By default, the model tries to guess it from the data.
-* **sparsity**: do you want to use sparsity? This makes the interpretation easier so it is recommended (Default is TRUE).
+
+* **numFactors**: number of factors (default is 25). By default, the model will only remove a factor if it explains exactly zero variance in the data. You can increase this threshold on minimum variance explained by setting `TrainOptions$dropFactorThreshold` to a value higher than zero.  
+
+* **likelihoods**: likelihood for each view. Usually we recommend gaussian for continuous data, bernoulli for binary data and poisson for count data. By default, the model tries to guess it from the data.  
+
+* **sparsity**: do you want to use sparsity? This makes the interpretation easier so it is recommended (Default is `TRUE`).  
 ```{r}
 ModelOptions <- getDefaultModelOptions(MOFAobject)
 ModelOptions$learnIntercept <- FALSE
@@ -72,13 +73,15 @@ ModelOptions$learnIntercept <- FALSE
 
 ### Define training options
 Next, we define training options. The most important are:  
-* **maxiter**: maximum number of iterations. Ideally set it large enough and use the convergence criteria `TrainOptions$tolerance`.
-* **tolerance**: convergence threshold based on change in the evidence lower bound. For an exploratory run you can use a value between 1.0 and 0.1, but for a "final" model we recommend a value of 0.01.
+
+* **maxiter**: maximum number of iterations. Ideally set it large enough and use the convergence criteria `TrainOptions$tolerance`.  
+
+* **tolerance**: convergence threshold based on change in the evidence lower bound. For an exploratory run you can use a value between 1.0 and 0.1, but for a "final" model we recommend a value of 0.01.  
+
 * **DropFactorThreshold**: hyperparameter to automatically learn the number of factors based on a minimum variance explained criteria. Factors explaining less than 'DropFactorThreshold' fraction of variation in all views will be removed. For example, a value of 0.01 (default) means that factors that explain less than 1\% of variance in all views will be discarded.
 ```{r}
 TrainOptions <- getDefaultTrainOptions()
 TrainOptions$seed <- 2017
-TrainOptions$maxiter <- 100
 
 # Automatically drop factors that explain less than 2% of variance in all omics
 TrainOptions$DropFactorThreshold <- 0.02
@@ -109,38 +112,31 @@ MOFAobject
 
 
 # Analyse a trained MOFA model
-After training, we can explore the results from MOFA. Here we provide a semi-automated pipeline to disentangle and characterize all the identified sources of variation (the factors).
+After training, we can explore the results from MOFA. Here we provide a semi-automated pipeline to disentangle and characterize all the identified sources of variation (the factors).  
 
-<!-- <p align="center">  -->
-<!-- <img src="../../images/workflow.png" style="width: 100%; height: 100%"/> -->
-<!-- </p> -->
+**Part 1: Disentangling the heterogeneity**  
+Calculation of variance explained by each factor in each view. This is probably the most important plot that MOFA generates, as it summarises the entire heterogeneity of the dataset in a single figure.  
+**Part 2: Characterisation of individual factors**    
+* Inspection of top features with highest loadings: the loading is a measure of feature importance, so features with high loading are the ones driving the heterogeneity captured by the factor.  
+* Feature set enrichment analysis (where set annotations are present, e.g. gene sets for mRNA views).  
+* Ordination of samples by factors to reveal clusters and/or graadients: this is similar to what is traditionally done with Principal Component Analysis or t-SNE.  
 
-In a nutshell, first you need to calculate the variance explained $R^2$ by each factor in each view. This is probably the most important result that MOFA produces, it summarises the entire heterogeneity of the dataset in a single figure: 
-
-Next, one has to characterise the individual factors as either technical or biological (i.e phenotypic) sources of variability. It can be done via three approaches: 
-
-* **Ordination of samples in the factor space**: this reveals clusters (or gradients), similar to what is traditionally done in Principal Component Analysis.
-* **Inspection of top loadings in each factor**: the loading is a measure of feature importance, so features with high loading are the ones driving the heterogeneity captured by the factor. 
-* **Feature set enrichemnt analysis**: if annotations exist (e.g. gene sets for mRNA views). 
-
-For details, please read the Methods section of the Manuscript.
+Other analysis, including imputation of missing values and prediction of clinical data are also available. Vignettes coming soon.
 
 ## Disentangling the heterogeneity, calculation of variance explained by each factor in each view
-This is done by `calculateVarianceExplained` and `plotVarianceExplained` function. The resulting plot allows to get an overview of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of different views.
+This is done by `calculateVarianceExplained` (to get the numerical values) and `plotVarianceExplained` (to get the plot).  
+The resulting figure gives an overview of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of different data modalities.  
 
-In this data set MOFA identified 3 Factors with a minimum variance of 2%. While Factor 1 is shared across all data modalities (7% variance explained in the RNA data and between 53% and 72% in the methylation data sets), Factors 2 and 3 are active primarily in the RNA data
+In this data set MOFA identified 3 Factors with a minimum variance of 2%. While *Factor 1* is shared across all data modalities (7% variance explained in the RNA data and between 53% and 72% in the methylation data sets), Factors 2 and 3 are active primarily in the RNA data
 ```{r}
-
-# Calculate the variance decomposition values 
+# Calculate the variance explained (R2) per factor in each view 
 r2 <- calculateVarianceExplained(MOFAobject)
-
-# Total variance explained per view by the combination of all factors
 head(r2$R2Total)
 
 # Variance explained by each factor in each view
 head(r2$R2PerFactor)
 
-# Plot the R2 values
+# Plot it
 plotVarianceExplained(MOFAobject)
 ```
 
@@ -148,7 +144,7 @@ plotVarianceExplained(MOFAobject)
 ## Characterisation of individual factors
 
 ### Inspection of loadings for Factor 1
-Plotting the RNA expression gene loadings for Factor 1, we can see that it is enriched for naive pluripotency marker genes such as Rex1/Zpf42, Tbx3, Fbxo15 and Essrb. Hence, based on previous studies (Mohammed et al, 2016) we can hypothetise that Factor 1 captures a transition from a naive pluripotent state to a primed pluripotent states.
+Plotting the RNA expression gene loadings for *Factor 1*, we can see that it is enriched for naive pluripotency marker genes such as Rex1/Zpf42, Tbx3, Fbxo15 and Essrb. Hence, based on previous studies (Mohammed et al, 2016) we can hypothetise that *Factor 1* captures a transition from a naive pluripotent state to a primed pluripotent states.
 ```{r}
 # Plot all weights and highlight specific gene markers
 plotWeights(
@@ -190,7 +186,7 @@ plotDataHeatmap(
 )
 ```
 
-We can now connect these transcriptomic changes to coordinated changes on the DNA methylation. As Factor 1 is active in all genomic contexts, it suggests that there is a massive genome-wide DNA methylation remodelling. This can confirmed by inspecting the weights in the DNA methylation views: notice that most features (CpG sites) have a negative weight, which suggests that  their DNA methylation decrease in a manner that is inversely proportional to the direction of Factor 1.
+We can now connect these transcriptomic changes to coordinated changes on the DNA methylation. As *Factor 1* is active in all genomic contexts, it suggests that there is a massive genome-wide DNA methylation remodelling. This can confirmed by inspecting the weights in the DNA methylation views: notice that most features (CpG sites) have a negative weight, which suggests that  their DNA methylation decrease in a manner that is inversely proportional to the direction of *Factor 1*.
 ```{r}
 plotWeights(
   object = MOFAobject,
@@ -202,7 +198,7 @@ plotWeights(
 )
 ```
 
-As done before, let's observe the heterogeneity captured by Factor 1 in the original data space. This clearly confirms that most of the CpG sites are getting methylated as cells progress in Factor 1 from naive to primed pluripotent stem cells
+As done before, let's observe the heterogeneity captured by *Factor 1* in the original data space. This clearly confirms that most of the CpG sites are getting methylated as cells progress in *Factor 1* from naive to primed pluripotent stem cells
 ```{r}
 plotDataHeatmap(
   object = MOFAobject, 
@@ -215,7 +211,7 @@ plotDataHeatmap(
 ```
 
 ### Inspection of loadings for Factor 2
-A similar analysis for Factor 2 reveals that it captures a second axis of differentiation from the primed pluripotency state to a differentiated state, with highest RNA loadings for known differentiation markers such as keratins and annexins.
+A similar analysis for *Factor 2* reveals that it captures a second axis of differentiation from the primed pluripotency state to a differentiated state, with highest RNA loadings for known differentiation markers such as keratins and annexins.
 ```{r}
 # Plot all weights and highlight specific gene markers
 plotWeights(

@@ -37,15 +37,21 @@ If using the Bioconductor approach, you need to provide or create a [MultiAssayE
 library(MultiAssayExperiment)
 
 # Load data
-data("CLL_data") # import list containing matrices for mRNA, Methylation, Drug Response and Mutation data. 
-lapply(CLL_data, dim) # check dimensionalities, samples are columns, features are rows
+# import list with mRNA, Methylation, Drug Response and Mutation data. 
+data("CLL_data") 
 
-# Load sample metadata (colData): Sex and Diagnosis
+# check dimensionalities, samples are columns, features are rows
+lapply(CLL_data, dim) 
+
+# Load sample metadata: Sex and Diagnosis
 data("CLL_covariates")
 head(CLL_covariates)
 
 # Create MultiAssayExperiment object 
-mae_CLL <- MultiAssayExperiment(experiments = CLL_data, colData = CLL_covariates)
+mae_CLL <- MultiAssayExperiment(
+  experiments = CLL_data, 
+  colData = CLL_covariates
+)
 
 # Build the MOFA object
 MOFAobject <- createMOFAobject(mae_CLL)
@@ -62,15 +68,19 @@ plotTilesData(MOFAobject)
 
 # Step 2: Fit the MOFA model
 The next step is to fit the model. 
-This part of the pipeline is implemented in Python, so first of all make sure you have the corresponding package installed (see installation instructions in the README file). In principle, we recommend to train the model directly from the command line (see running instructions, it is very simple), but we have created the following R wrapper if you do not feel comfortable with bash.
+This part of the pipeline is implemented in Python, so first of all make sure you have the corresponding package installed (see installation instructions and read the FAQ if you have problems).
 
 ## Define options
 
 ### Define data options
-The most important options the user needs to define are:
-* **centerFeatures**: logical indicating whether to center the features to zero mean. This is optional, as the model can learn the feature-wise intercepts by setting ModelOptions$learnIntercept to TRUE. However, centered data is always recommended, so default is TRUE. Note that this only applies to continuous data that is modelled with a gaussian likelihood. Binary or count data are not centered.
-* **scaleViews**: logical indicating whether to scale views to have unit variance. As long as the scale of the different data sets is not too high, this is not required. Default is FALSE.
-* **removeIncompleteSamples*+: logical indicating whether to remove samples that are not profiled in all omics. The model can cope with missing assays, so this option is not required. Default is FALSE.
+The most important options the user needs to define are:  
+
+* **centerFeatures**: logical indicating whether to center the features to zero mean. This is optional, as the model can learn the feature-wise intercepts by setting `ModelOptions$learnIntercept` to `TRUE`. However, centered data is always recommended, so default is `TRUE`. Note that this only applies to continuous data that is modelled with a gaussian likelihood. Binary or count data are not centered.  
+
+* **scaleViews**: logical indicating whether to scale views to have unit variance. As long as the scale of the different data sets is not too high, this is not required. Default is `FALSE`.  
+
+* **removeIncompleteSamples**: logical indicating whether to remove samples that are not profiled in all omics. The model can cope with missing assays, so this option is not required. Default is `FALSE`.  
+
 ```{r}
 DataOptions <- getDefaultDataOptions()
 DataOptions 
@@ -78,9 +88,12 @@ DataOptions
 
 ### Define model options
 Next, we define model options. The most important are:  
-* **numFactors**: number of factors (default is 25). By default, the model does not automatically learn the number of factors. If you want the model to do this (based on a minimum variance explained criteria), set `TrainOptions$dropFactorThreshold` to a non-zero value.
-* **likelihoods**: likelihood for each view. Usually we recommend gaussian for continuous data, bernoulli for binary data and poisson for count data. By default, the model tries to guess it from the data.
-* **sparsity**: do you want to use sparsity? This makes the interpretation easier so it is recommended (Default is TRUE).
+
+* **numFactors**: number of factors (default is 25). By default, the model will only remove a factor if it explains exactly zero variance in the data. You can increase this threshold on minimum variance explained by setting `TrainOptions$dropFactorThreshold` to a value higher than zero.  
+
+* **likelihoods**: likelihood for each view. Usually we recommend gaussian for continuous data, bernoulli for binary data and poisson for count data. By default, the model tries to guess it from the data.  
+
+* **sparsity**: do you want to use sparsity? This makes the interpretation easier so it is recommended (Default is `TRUE`).  
 ```{r}
 ModelOptions <- getDefaultModelOptions(MOFAobject)
 ModelOptions
@@ -88,9 +101,12 @@ ModelOptions
 
 ### Define training options
 Next, we define training options. The most important are:  
-* **maxiter**: maximum number of iterations. Ideally set it large enough and use the convergence criteria `TrainOptions$tolerance`.
-* **tolerance**: convergence threshold based on change in the evidence lower bound. For an exploratory run you can use a value between 1.0 and 0.1, but for a "final" model we recommend a value of 0.01.
-* **DropFactorThreshold**: hyperparameter to automatically learn the number of factors based on a minimum variance explained criteria. Factors explaining less than 'DropFactorThreshold' fraction of variation in all views will be removed. For example, a value of 0.01 (default) means that factors that explain less than 1\% of variance in all views will be discarded.
+* **maxiter**: maximum number of iterations. Ideally set it large enough and use the convergence criteria `TrainOptions$tolerance`.  
+
+* **tolerance**: convergence threshold based on change in the evidence lower bound. For an exploratory run you can use a value between 1.0 and 0.1, but for a "final" model we recommend a value of 0.01.  
+
+* **DropFactorThreshold**: hyperparameter to automatically learn the number of factors based on a minimum variance explained criteria. Factors explaining less than 'DropFactorThreshold' fraction of variation in all views will be removed. For example, a value of 0.01 (default) means that factors that explain less than 1\% of variance in all views will be discarded.  
+
 ```{r}
 TrainOptions <- getDefaultTrainOptions()
 
@@ -127,22 +143,29 @@ MOFAobject
 
 
 # Step 3: Analyse a trained MOFA model
-After training, we can explore the results from MOFA. Here we provide a semi-automated pipeline to disentangle and characterize the sources of variation (the factors) identified by MOFA.
+After training, we can explore the results from MOFA. Here we provide a semi-automated pipeline to disentangle and characterize all the identified sources of variation (the factors).  
 
-Part 1: Disentangling the heterogeneity:
-- Calculation of variance explained by each factor in each view
-Part 2: Characterisation of individual factors:
-- Inspection of top weighted features in the active views
-- Feature set enrichemnt analysis in the active views (where set annotations are present, e.g. gene sets for mRNA views)
-- Ordination of samples by factors to reveal clusters and graadients in the sample space
+**Part 1: Disentangling the heterogeneity**  
+Calculation of variance explained by each factor in each view. This is probably the most important plot that MOFA generates, as it summarises the entire heterogeneity of the dataset in a single figure.  
+**Part 2: Characterisation of individual factors**    
+* Inspection of top features with highest loadings: the loading is a measure of feature importance, so features with high loading are the ones driving the heterogeneity captured by the factor.  
+* Feature set enrichment analysis (where set annotations are present, e.g. gene sets for mRNA views).  
+* Ordination of samples by factors to reveal clusters and/or graadients: this is similar to what is traditionally done with Principal Component Analysis or t-SNE.  
 
-For details, please read the Methods section of the Manuscript.
+Other analysis, including imputation of missing values and prediction of clinical data are also available. Vignettes coming soon.
 
 ## Part 1: Disentangling the heterogeneity, calculation of variance explained by each factor in each view
-This is done by the `plotVarianceExplained` function. The resulting plot allows to get an overivew of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of the different views.
+This is done by `calculateVarianceExplained` (to get the numerical values) and `plotVarianceExplained` (to get the plot). The resulting figure gives an overview of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of different data modalities.  
 
 ```{r}
+# Calculate the variance explained (R2) per factor in each view 
 r2 <- calculateVarianceExplained(MOFAobject)
+head(r2$R2Total)
+
+# Variance explained by each factor in each view
+head(r2$R2PerFactor)
+
+# Plot it
 plotVarianceExplained(MOFAobject)
 ```
 
@@ -151,47 +174,70 @@ plotVarianceExplained(MOFAobject)
 To get an overview of the weights across all factors in a given view you can use the `plotWeightsHeatmap` function.
 For example, here we plot all weights from all factors in the Mutation data:
 ```{r}
-plotWeightsHeatmap(MOFAobject, view = "Mutations", factors=1:5, show_colnames=F)
+plotWeightsHeatmap(
+  MOFAobject, 
+  view = "Mutations", 
+  factors = 1:5,
+  show_colnames = FALSE
+)
 ```
-We observe that factors 1 and 2 have non-zero weights. To explore a single factor in more detail we can  plot all weights for a single factor using the 'plotWeights' function.
-For example, here we plot all weights from Factor 1 in the Mutation data. With 'nfeatures' we can set how many features should be labelled ('manual' let's you specify feautres manually to be labelled in the plot.)
+We observe that factors 1 and 2 have non-zero weights. To explore a single factor in more detail we can  plot all weights for a single factor using the `plotWeights` function.
+For example, here we plot all weights from Factor 1 in the Mutation data. With `nfeatures` we can set how many features should be labelled (`manual` let's you specify feautres manually to be labelled in the plot.)
 ```{r}
-plotWeights(MOFAobject, view = "Mutations", factor = 1, nfeatures = 5)
+plotWeights(
+  MOFAobject, 
+  view = "Mutations", 
+  factor = 1, 
+  nfeatures = 5
+)
 ```
-If you are only interested in looking at the top features you can use the 'plotTopWeights' function.
+If you are only interested in looking at the top features you can use the `plotTopWeights` function.
 For example, here we plot the mutations with largest loadings on Factor 1. The sign on the right indicates the direction of the loading (positive/negative).
 ```{r}
 plotTopWeights(MOFAobject, "Mutations", 1)
 ```
-Features with large weight in a given factor means that they follow the pattern of covariation associated with the factor. For example, if a factor is capturing sex differences, then the largest weights will be associated with features that show sex-specific effects. Here, the factor is associated with the B-cell of tumour's origin, consistent with a large weight on the IGHV status (see our manuscript for more details).
+Features with large weight in a given factor means that they follow the pattern of covariation associated with the factor. For example, if Factor X is capturing sex differences, then the largest weights will be associated with features that show sex-specific effects. Here, the factor is associated with the B-cell of tumour's origin, consistent with a large weight on the IGHV status (see our manuscript for more details).
 
 From the previous plots, we can clearly see that Factor 1 is associated to IGHV status. Now if we look at the mRNA view, the top features will also be associated to IGHV status:
 ```{r}
 plotTopWeights(MOFAobject, "mRNA", 1)
 ```
 
-Finally, instead of looking at an the "abstract" weight, it is useful to observe the coordinated heterogeneity of the top features in the original data. This can be done using the 'plotDataHeatmap' function.
+Finally, instead of looking at an "abstract" weight, it is useful to observe the coordinated heterogeneity of the top features in the original data. This can be done using the `plotDataHeatmap` function.
 ```{r}
-plotDataHeatmap(MOFAobject, view="mRNA", factor=1, features=20, show_rownames=FALSE)
+plotDataHeatmap(
+  MOFAobject, 
+  view = "mRNA", 
+  factor = 1, 
+  features = 20, 
+  show_rownames = FALSE
+)
 ```
 
 ### Feature set enrichment analysis in the active views
 Sometimes looking at the loadings of single features can be challenging, and often the combination of signal from functionally related sets of features (i.e. gene ontologies) is required.
 
-Here we implemented a function for feature set enrichment analysis method (FeatureSetEnrichmentAnalysis) derived from the [PCGSE package](https://cran.r-project.org/web/packages/PCGSE/index.html).
+Here we implemented a function for feature set enrichment analysis method (`FeatureSetEnrichmentAnalysis`) derived from the [PCGSE package](https://cran.r-project.org/web/packages/PCGSE/index.html).
 
 The input of this function is a MOFA trained model (MOFAmodel), the factors for which to perform feature set enrichment (a character vector), the feature sets (a binary matrix) and a set of options regarding how the analysis should be performed, see also documentation of `FeatureSetEnrichmentAnalysis`
 
 We illustrate the use of this function using the [reactome](http://reactome.org) annotations.
 ```{r}
-# Load reactome annotations, binary matrix with feature sets in rows and feautres in columns
+# Load reactome annotations
+# binary matrix with feature sets in rows and feautres in columns
 data("reactomeGS")
 
-# perfrom enrichment analysis
-fsea.out <- FeatureSetEnrichmentAnalysis(MOFAobject, "mRNA", reactomeGS, alpha = 0.01)
+# perform enrichment analysis
+fsea.out <- FeatureSetEnrichmentAnalysis(
+  MOFAobject,
+  "mRNA",
+  reactomeGS,
+  alpha = 0.01
+)
 ```
 
-The next step is to visualise the results of the Gene Set Enrichment Analysis. There are two default plots:
+The next step is to visualise the results of the Gene Set Enrichment Analysis. There are two default plots:  
+
 (a) General Overview: Barplot with number of enriched gene sets per view
 ```{r}
 Barplot_FeatureSetEnrichmentAnalysis(fsea.out, alpha=0.01)
@@ -227,17 +273,30 @@ plotFactorBeeswarm(MOFAobject, factors = 1, color_by = "IGHV")
 ## Customized analysis
 For customized exploration of weights and factors, you can directly fetch the variables from the model using 'get' functions: `getWeights`, `getFactors` and `getTrainData`:
 ```{r}
-MOFAweights <- getWeights(MOFAobject, views="all", factors="all", as.data.frame = T)
+MOFAweights <- getWeights(
+  MOFAobject, 
+  views = "all", 
+  factors = "all", 
+  as.data.frame = TRUE
+)
 head(MOFAweights)
 ```
 
 ```{r}
-MOFAfactors <- getFactors(MOFAobject, factors=c(1,2), as.data.frame = F)
+MOFAfactors <- getFactors(
+  MOFAobject, 
+  factors = c(1,2),
+  as.data.frame = FALSE
+)
 head(MOFAfactors)
 ```
 
 ```{r}
-MOFAdata <- getTrainData(MOFAobject, as.data.frame = T, views = "Mutations")
+MOFAdata <- getTrainData(
+  MOFAobject,
+  as.data.frame = TRUE, 
+  views = "Mutations"
+)
 head(MOFAdata)
 ```
 

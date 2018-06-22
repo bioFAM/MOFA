@@ -26,7 +26,7 @@ In the case of outliers, we strongly recommend removing them before training the
 filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 MOFA_CLL <- loadModel(filepath)
 # Subset samples via character vector
-MOFA_CLL_small <- subsetSamples(MOFA_CLL, samples=c("A02","A03","A04","A05"))
+MOFA_CLL_small <- subsetSamples(MOFA_CLL, samples=c("H045","H109","H024","H056"))
 # Subset samples via numeric vector
 MOFA_CLL_small <- subsetSamples(MOFA_CLL, samples=1:10)
 }

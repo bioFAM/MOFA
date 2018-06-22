@@ -4,8 +4,9 @@
 \alias{plotFactorBeeswarm}
 \title{Beeswarm plot of latent factors}
 \usage{
-plotFactorBeeswarm(object, factors, color_by = NULL, shape_by = NULL,
-  name_color = "", name_shape = "", showMissing = FALSE)
+plotFactorBeeswarm(object, factors = "all", color_by = NULL,
+  shape_by = NULL, name_color = "", name_shape = "",
+  showMissing = FALSE)
 }
 \arguments{
 \item{object}{a trained \code{\link{MOFAmodel}} object.}

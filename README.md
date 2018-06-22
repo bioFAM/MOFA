@@ -154,13 +154,18 @@ biocLite(c('pcaMethods', 'MultiAssayExperiment'))
 ```
 AttributeError: 'module' object has no attribute 'core.entry_point
 ```
-This means that either (1) you did not install the mofa Python package (see above), or (2) you have multiple python installations and R is not detecting the correct one where mofa is installed. You need to find out the right Python interpreter, which usually will be the one you get when running `which python` in the terminal. You can test if the mofa packaged is installed by running INSIDE python: `import mofa`.  
-Once everything if figured out, specify the following at the beginning of your R script:
+This means that either:  
+(1) you did not install the mofa Python package (follow instructions above)  
+(2) you have multiple python installations and R is not detecting the correct one where mofa is installed. You need to find out the right Python interpreter, which usually will be the one you get when running `which python` in the terminal. You can test if the mofa packaged is installed by running INSIDE python: `import mofa`.  
+Once everything is figured out, specify the following at the beginning of your R script:
 ```
 library(reticulate)
 use_python("YOUR_PYTHON_PATH")
 ```
 You can read more about the [reticulate](https://rstudio.github.io/reticulate/) package and [how it integrates Python and R](https://rstudio.github.io/reticulate/articles/versions.html)
+
+**(Q) I don't like R, can I run everythinbg from Python?**  
+Yes you can, and we recommend this for training, as it will be slightly faster. See [this template script](XXX). However, we don't provide downstream analysis functions with Python, we don't like it for plotting. Sorry.
 
 **(Q) How many factors should I use?**  
 Similar to other Factor Analysis models, this is a hard question to answer. It depends depends on the data set and the aim of the analysis. As a general rule, the bigger the data set, the higher the number of factors that you will likely retrieve, and the less the variance that will be explained per factor.

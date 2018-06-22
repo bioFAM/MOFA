@@ -71,7 +71,7 @@ subsetFactors <- function(object, factors, keep_intercept=TRUE) {
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 #' MOFA_CLL <- loadModel(filepath)
 #' # Subset samples via character vector
-#' MOFA_CLL_small <- subsetSamples(MOFA_CLL, samples=c("A02","A03","A04","A05"))
+#' MOFA_CLL_small <- subsetSamples(MOFA_CLL, samples=c("H045","H109","H024","H056"))
 #' # Subset samples via numeric vector
 #' MOFA_CLL_small <- subsetSamples(MOFA_CLL, samples=1:10)
 subsetSamples <- function(object, samples) {
@@ -92,8 +92,10 @@ subsetSamples <- function(object, samples) {
   object@Expectations$Z <- object@Expectations$Z[samples,, drop=F]
   object@Expectations$Y <- sapply(object@Expectations$Y, function(x) x[samples,], simplify = F, USE.NAMES = T)
   object@TrainData <- sapply(object@TrainData, function(x) x[,samples], simplify = F, USE.NAMES = T)
-  object@InputData <- object@InputData[,samples,] 
-  if (length(object@ImputedData)==0) { object@ImputedData <- sapply(object@ImputedData, function(x) x[,samples], simplify = F, USE.NAMES = T)}
+  if (length(object@InputData)>0)
+    object@InputData <- object@InputData[,samples,]
+  if (length(object@ImputedData)==0)
+    object@ImputedData <- sapply(object@ImputedData, function(x) x[,samples], simplify = F, USE.NAMES = T)
 
   # Modify dimensionality
   object@Dimensions[["N"]] <- length(samples)

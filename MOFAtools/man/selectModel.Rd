@@ -2,16 +2,32 @@
 % Please edit documentation in R/compareModels.R
 \name{selectModel}
 \alias{selectModel}
-\title{Select a model from a list of trained MOFAobjects based on the best ELBO value}
+\title{Select the best model from a list of trained \code{\link{MOFAmodel}} objects}
 \usage{
 selectModel(models, plotit = TRUE)
 }
 \arguments{
 \item{models}{a list containing \code{\link{MOFAmodel}} objects.}
 
-\item{plotit}{logical indicating whether to plot the model selection.}
+\item{plotit}{show a plot of the characteristics of the compared  \code{\link{MOFAmodel}} objects (ELBO value and number of inferred factors)?}
 }
 \description{
-Different objects of \code{\link{MOFAmodel}} are compared in terms of the final value of the ELBO statistics 
+Different trained objects of \code{\link{MOFAmodel}} are compared in terms of the final value of the ELBO statistics 
 and the model with the highest ELBO value is selected.
+}
+\examples{
+### Example on simulated data
+#Simulate Data
+MOFAobject <- makeExampleData()
+
+# Prepare MOFA
+TrainOptions <- getDefaultTrainOptions()
+ModelOptions <- getDefaultModelOptions(MOFAobject)
+DataOptions <- getDefaultDataOptions()
+MOFAobject <- prepareMOFA(MOFAobject, DataOptions = DataOptions, ModelOptions = ModelOptions, TrainOptions = TrainOptions)
+
+# Train MOFA multiple times
+n_inits <- 3 
+MOFAlist <- lapply(1:n_inits, function(it) runMOFA(MOFAobject, outfile=tempfile()))
+selectModel(MOFAlist)
 }

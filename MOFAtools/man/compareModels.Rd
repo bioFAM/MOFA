@@ -2,14 +2,32 @@
 % Please edit documentation in R/compareModels.R
 \name{compareModels}
 \alias{compareModels}
-\title{Compare different trained MOFA object in terms of the final value of the ELBO statistics and number of inferred factors}
+\title{Compare different instances of trained \code{\link{MOFAmodel}}}
 \usage{
 compareModels(models, show_modelnames = FALSE)
 }
 \arguments{
 \item{models}{a list containing \code{\link{MOFAmodel}} objects.}
+
+\item{show_modelnames}{boolean, whether to indicate the name of each model instance (names of the list in models) or not}
 }
 \description{
 Different objects of \code{\link{MOFAmodel}} are compared in terms of the final value of the ELBO statistics. 
-For model selection the model with the highest ELBO value is selected.
+For model selection the model with the highest ELBO value is selected. The height of the bar indicates the number of inferred factors and the color of the bar the value of the ELBO statistic.
+}
+\examples{
+### Example on simulated data
+#Simulate Data
+MOFAobject <- makeExampleData()
+
+# Prepare MOFA
+TrainOptions <- getDefaultTrainOptions()
+ModelOptions <- getDefaultModelOptions(MOFAobject)
+DataOptions <- getDefaultDataOptions()
+MOFAobject <- prepareMOFA(MOFAobject, DataOptions = DataOptions, ModelOptions = ModelOptions, TrainOptions = TrainOptions)
+
+# Train MOFA multiple times
+n_inits <- 3 
+MOFAlist <- lapply(1:n_inits, function(it) runMOFA(MOFAobject, outfile=tempfile()))
+compareModels(MOFAlist)
 }

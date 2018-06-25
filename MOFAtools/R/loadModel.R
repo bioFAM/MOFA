@@ -119,6 +119,14 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
     factorNames(object) <- factornames
   }
   
+  # Remove zero factors
+  nonzero_factors <- which(apply(object@Expectations$Z[,factorNames(object)!="intercept"], 2, function(z) !all(z==0)))
+  if (length(nonzero_factors) < sum(factorNames(object)!="intercept")) 
+    message("Removing ", sum(factorNames(object)!="intercept") - length(nonzero_factors), " factors that are constant zero from the model...")
+  object <- subsetFactors(object, nonzero_factors, keep_intercept = TRUE)
+  factorNames(object)[factorNames(object)!="intercept"] <- paste0("LF",as.character(1:length(nonzero_factors)))
+  
+  
   # Parse factors: Mask passenger samples
   if(is.null(minR2)) minR2 <- object@TrainOptions$DropFactorThreshold
   object <- .detectPassengers(object, r2_threshold=minR2)

@@ -156,7 +156,7 @@ Other analysis, including imputation of missing values and prediction of clinica
 
 ## Part 1: Disentangling the heterogeneity, calculation of variance explained by each factor in each view
 This is done by `calculateVarianceExplained` (to get the numerical values) and `plotVarianceExplained` (to get the plot). The resulting figure gives an overview of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of different data modalities.  
-
+Here, for example Factor 1 is active in all data modalities, while Factor 4 is specific to mRNA.
 ```{r}
 # Calculate the variance explained (R2) per factor in each view 
 r2 <- calculateVarianceExplained(MOFAobject)
@@ -191,19 +191,22 @@ plotWeights(
   nfeatures = 5
 )
 ```
-If you are only interested in looking at the top features you can use the `plotTopWeights` function.
+We see strong contributions of features in the Mutations data modality for Factor 1 and 2. To investiate a single factor in detail we can use the `plotWeights` function, which shows us all weights of the specified view (here Mutations) on this factor (e.g. Factor 1). Features with large (absolute) weight in a given factor means that they follow the pattern of covariation associated with the factor.  
+In our case, this reveals a strong link to the IGHV status, hence recovering an important clinical marker in CLL (see our paper for details on the biological interpretation.) Note that the sign of the weight can only be interpreted relative to the signs of other weights and the factor values.  
+
+If you are only interested in looking at the top features you can use the `plotTopWeights` function.  
 For example, here we plot the mutations with largest loadings on Factor 1. The sign on the right indicates the direction of the loading (positive/negative).
 ```{r}
 plotTopWeights(MOFAobject, "Mutations", 1)
 ```
 Features with large weight in a given factor means that they follow the pattern of covariation associated with the factor. For example, if Factor X is capturing sex differences, then the largest weights will be associated with features that show sex-specific effects. Here, the factor is associated with the B-cell of tumour's origin, consistent with a large weight on the IGHV status (see our manuscript for more details).
 
-From the previous plots, we can clearly see that Factor 1 is associated to IGHV status. Now if we look at the mRNA view, the top features will also be associated to IGHV status:
+From the previous plots, we can clearly see that Factor 1 is associated to IGHV status. As the variance decomposition above told us that this factor is also relevant on all the other data modalities we can investigate its weights on other modalities, e.g. mRNA, to make connections of the IGHV-linked axes of variation to other molecular layers.
 ```{r}
 plotTopWeights(MOFAobject, "mRNA", 1)
 ```
 
-Finally, instead of looking at an "abstract" weight, it is useful to observe the coordinated heterogeneity of the top features in the original data. This can be done using the `plotDataHeatmap` function.
+Finally, instead of looking at an "abstract" weight, it is useful to observe the coordinated heterogeneity of the top features in the original data. This can be done using the `plotDataHeatmap` function. Here samples (in rows) are ordered according to their value on the factor (here Factor 1). Here, this shows clear patterns of the samples' gene expression in the 20 top weighted genes.
 ```{r}
 plotDataHeatmap(
   MOFAobject, 
@@ -242,6 +245,7 @@ The next step is to visualise the results of the Gene Set Enrichment Analysis. T
 ```{r}
 Barplot_FeatureSetEnrichmentAnalysis(fsea.out, alpha=0.01)
 ```
+From this we find enriched at a FDR of 1% gene sets on Factors 3-6 and 8. To look into which gene sets these are we can choose a factor of interest and visualize the most enriched gene sets as follows:  
 
 (b) Factor-specific:
 ```{r}
@@ -251,7 +255,7 @@ for (factor in interestingFactors) {
   print(lineplot)
 }
 ```
-
+This shows us that Factor 4 is capturing variation related to immune response (possibly due to T-cell contamination of the samples) and Factor 5 is related to differences in stress response, as discussed in our paper.
 
 ## Ordination of samples by factors to reveal clusters and graadients in the sample space
 
@@ -259,6 +263,7 @@ Samples can be visualized along factors of interest using the `FactorsScatterPlo
 ```{r}
 plotFactorScatter(MOFAobject, factors = 1:2, color_by = "IGHV", shape_by = "trisomy12")
 ```
+Here we find again a clear separation of samples based on their IGHV status (color) along Factor 1 and by the absence or prescence of trisomy 12 along Factor 2 as indicated by the corresponding factor weights in the Mutations view.  
 
 An overview of pair-wise sctterplots for all or a subset of factors is produced by the `FactorsScatterPairs` function
 ```{r}

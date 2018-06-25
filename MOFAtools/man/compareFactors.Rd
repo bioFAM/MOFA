@@ -2,7 +2,7 @@
 % Please edit documentation in R/compareModels.R
 \name{compareFactors}
 \alias{compareFactors}
-\title{Plot the robustness of the latent factors across diferent trials}
+\title{Correlation of the latent factors across different trials}
 \usage{
 compareFactors(models, comparison = "all", show_rownames = FALSE,
   show_colnames = FALSE, ...)
@@ -10,7 +10,7 @@ compareFactors(models, comparison = "all", show_rownames = FALSE,
 \arguments{
 \item{models}{a list containing \code{\link{MOFAmodel}} objects.}
 
-\item{comparison}{tye of comparison, either 'pairwise' or 'all'}
+\item{comparison}{tye of comparison, either 'pairwise', i.e. compare one model with another one at a time, or 'all', i.e. calculate correlation between factors from all model. By default, all models are compared.}
 
 \item{...}{extra arguments passed to pheatmap}
 }
@@ -26,7 +26,25 @@ Ideally, the output should look like a block diagonal matrix, suggesting that al
 If not, it suggests that some factors are weak and not captured by all models.
 }
 \details{
-TO-FILL
+This function can be helpful to evaluate the robustness of factors across different random initilizations. 
+Large block of factors from different models in the correlation matrix show consistent factors, while stand-alone factors that are only recovered in a single model instance are less reliable.
+}
+\examples{
+### Example on simulated data
+#Simulate Data
+MOFAobject <- makeExampleData()
+
+# Prepare MOFA
+TrainOptions <- getDefaultTrainOptions()
+ModelOptions <- getDefaultModelOptions(MOFAobject)
+DataOptions <- getDefaultDataOptions()
+MOFAobject <- prepareMOFA(MOFAobject, DataOptions = DataOptions, ModelOptions = ModelOptions, TrainOptions = TrainOptions)
+
+# Train MOFA multiple times
+n_inits <- 3 
+MOFAlist <- lapply(1:n_inits, function(it) runMOFA(MOFAobject, outfile=tempfile()))
+compareFactors(MOFAlist, comparison="all")
+compareFactors(MOFAlist, comparison="pairwise")
 }
 \references{
 fill this

@@ -150,7 +150,11 @@ source("https://bioconductor.org/biocLite.R")
 biocLite(c('pcaMethods', 'MultiAssayExperiment'))
 ```
 
-**(Q) I get the following error when running MOFA:**  
+**(Q) I get one of the following errors when running MOFA:**  
+```
+Error in py_module_import(module, convert = convert) :
+ ModuleNotFoundError: No module named 'mofa'
+```
 ```
 AttributeError: 'module' object has no attribute 'core.entry_point
 ```

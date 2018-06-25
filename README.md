@@ -152,21 +152,20 @@ biocLite(c('pcaMethods', 'MultiAssayExperiment'))
 
 **(Q) I get one of the following errors when running MOFA:**  
 ```
+AttributeError: 'module' object has no attribute 'core.entry_point
+
 Error in py_module_import(module, convert = convert) :
  ModuleNotFoundError: No module named 'mofa'
 ```
-```
-AttributeError: 'module' object has no attribute 'core.entry_point
-```
-This means that either:  
-(1) you did not install the mofa Python package (follow instructions above)  
+First thing: restart R and try again. If the error still holds, this means that either:  
+(1) you did not install the mofa Python package (see instructions above).
 (2) you have multiple python installations and R is not detecting the correct one where mofa is installed. You need to find out the right Python interpreter, which usually will be the one you get when running `which python` in the terminal. You can test if the mofa packaged is installed by running INSIDE python: `import mofa`.  
 Once everything is figured out, specify the following at the beginning of your R script:
 ```
 library(reticulate)
-use_python("YOUR_PYTHON_PATH")
+use_python("YOUR_PYTHON_PATH", required=TRUE)
 ```
-You can read more about the [reticulate](https://rstudio.github.io/reticulate/) package and [how it integrates Python and R](https://rstudio.github.io/reticulate/articles/versions.html)
+You can also use `use_conda` instead of `use_python` if you work with conda environments. Read more about the [reticulate](https://rstudio.github.io/reticulate/) package and [how it integrates Python and R](https://rstudio.github.io/reticulate/articles/versions.html)
 
 
 **(Q) I hate R, can I do MOFA only with Python?**  

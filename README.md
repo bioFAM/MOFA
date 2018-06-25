@@ -48,7 +48,7 @@ R CMD install MOFAtools
 We currently provide three example workflows:
 
 * [Integration of multi-omics cancer data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_CLL.html).
-* [Integration of single-cell multi-omics data](https://cdn.rawgit.com/bioFAM/MOFA/9eee74b7/MOFAtools/vignettes/MOFA_example_scMT.html).
+* [Integration of single-cell multi-omics data](http://htmlpreview.github.io/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_scMT.html).
 * [Integration of simulated data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_simulation.html): this tutorial is focused on model selection and robustness. For details on the down-stream analyses have a look at one of the two workflows above.
 
 We are preparing the following workflows, to be released soon:

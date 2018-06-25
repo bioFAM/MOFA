@@ -61,7 +61,7 @@ MOFAobject
 
 
 ## Overview of training data
-The function 'plotTilesData' can be used to obtain an overview of the data stored in the object for training. FOr each sample it shows in which views data are available.
+The function `plotTilesData` can be used to obtain an overview of the data stored in the object for training. FOr each sample it shows in which views data are available.
 ```{r}
 plotTilesData(MOFAobject)
 ```
@@ -105,7 +105,7 @@ Next, we define training options. The most important are:
 
 * **tolerance**: convergence threshold based on change in the evidence lower bound. For an exploratory run you can use a value between 1.0 and 0.1, but for a "final" model we recommend a value of 0.01.  
 
-* **DropFactorThreshold**: hyperparameter to automatically learn the number of factors based on a minimum variance explained criteria. Factors explaining less than 'DropFactorThreshold' fraction of variation in all views will be removed. For example, a value of 0.01 (default) means that factors that explain less than 1\% of variance in all views will be discarded.  
+* **DropFactorThreshold**: hyperparameter to automatically learn the number of factors based on a minimum variance explained criteria. Factors explaining less than `DropFactorThreshold` fraction of variation in all views will be removed. For example, a value of 0.01 (default) means that factors that explain less than 1\% of variance in all views will be discarded.  
 
 ```{r}
 TrainOptions <- getDefaultTrainOptions()
@@ -199,7 +199,7 @@ For example, here we plot the mutations with largest loadings on Factor 1. The s
 ```{r}
 plotTopWeights(MOFAobject, "Mutations", 1)
 ```
-Features with large weight in a given factor means that they follow the pattern of covariation associated with the factor. For example, if Factor X is capturing sex differences, then the largest weights will be associated with features that show sex-specific effects. Here, the factor is associated with the B-cell of tumour's origin, consistent with a large weight on the IGHV status (see our manuscript for more details).
+Features with large weight in a given factor means that they follow the pattern of covariation associated with the factor. For example, if Factor X is capturing sex differences, then the largest weights will be associated with features that show sex-specific effects. Here, the factor is associated with the B-cell of tumour's origin, consistent with a large weight on the IGHV status (see our manuscript for more details).  
 
 From the previous plots, we can clearly see that Factor 1 is associated to IGHV status. As the variance decomposition above told us that this factor is also relevant on all the other data modalities we can investigate its weights on other modalities, e.g. mRNA, to make connections of the IGHV-linked axes of variation to other molecular layers.
 ```{r}
@@ -218,9 +218,9 @@ plotDataHeatmap(
 ```
 
 ### Feature set enrichment analysis in the active views
-Sometimes looking at the loadings of single features can be challenging, and often the combination of signal from functionally related sets of features (i.e. gene ontologies) is required.
+Sometimes looking at the loadings of single features can be challenging, and often the combination of signal from functionally related sets of features (i.e. gene ontologies) is required.  
 
-Here we implemented a function for feature set enrichment analysis method (`FeatureSetEnrichmentAnalysis`) derived from the [PCGSE package](https://cran.r-project.org/web/packages/PCGSE/index.html).
+Here we implemented a function for feature set enrichment analysis method (`FeatureSetEnrichmentAnalysis`) derived from the [PCGSE package](https://cran.r-project.org/web/packages/PCGSE/index.html).  
 
 The input of this function is a MOFA trained model (MOFAmodel), the factors for which to perform feature set enrichment (a character vector), the feature sets (a binary matrix) and a set of options regarding how the analysis should be performed, see also documentation of `FeatureSetEnrichmentAnalysis`
 
@@ -315,7 +315,7 @@ predictedDrugs <- predict(MOFAobject, view="Drugs", factors="all")
 ```
 
 ## Imputation of missing observations
-With the 'imputeMissing' function all missing values are imputed based on the MOFA model. The imputed data is then stored in the ImputedData slot of the MOFAobject and can be accessed via the `getImputedData` function.
+With the `imputeMissing` function all missing values are imputed based on the MOFA model. The imputed data is then stored in the ImputedData slot of the MOFAobject and can be accessed via the `getImputedData` function.
 ```{r}
 MOFAobject <- imputeMissing(MOFAobject)
 imputedDrugs <- getImputedData(MOFAobject, view="Drugs")

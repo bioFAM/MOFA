@@ -13,7 +13,7 @@
 #' @export
 #' 
 #' @examples
-#' # Option 1: Create a MOFAobject from a list of matrices with features in rows and samples in columns
+#' # Option 1: Create a MOFAobject from a list of matrices, features in rows and samples in columns.
 #' data("CLL_data")
 #' MOFAobject <- createMOFAobject(CLL_data)
 #'

@@ -15,7 +15,7 @@
 #' MOFAexample <- makeExampleData()
 #' MOFAexample
 
-makeExampleData <- function(n_views=3, n_features=200, n_samples = 50, n_factors = 5, likelihood = "gaussian") {
+makeExampleData <- function(n_views=3, n_features=100, n_samples = 50, n_factors = 5, likelihood = "gaussian") {
   
   # Sanity checks
   if (!all(likelihood %in% c("gaussian", "bernoulli", "poisson")))
@@ -54,17 +54,21 @@ makeExampleData <- function(n_views=3, n_features=200, n_samples = 50, n_factors
   data <- lapply(1:n_views, function(vw){
     lk <- likelihood[vw]
     if(lk=="gaussian"){
-      t(mu[[vw]] + rnorm(length(mu[[vw]]),0,sqrt(1/tau)))
+      dd <- t(mu[[vw]] + rnorm(length(mu[[vw]]),0,sqrt(1/tau)))
     }
     else if(lk == "poisson"){
       term <- log(1+exp(mu[[vw]]))
-      t(apply(term, 2, function(tt) rpois(length(tt),tt)))
+      dd <- t(apply(term, 2, function(tt) rpois(length(tt),tt)))
     }
       else if(lk == "bernoulli") {
         term <- 1/(1+exp(-mu[[vw]]))
-        t(apply(term, 2, function(tt) rbinom(length(tt),1,tt)))
+        dd <- t(apply(term, 2, function(tt) rbinom(length(tt),1,tt)))
       }
+    colnames(dd) <- paste0("sample_", 1:ncol(dd))
+    rownames(dd) <- paste0("feature", 1:nrow(dd))
+    dd
   })
+  names(data) <- paste0("view_", 1:n_views)
   
   object <- createMOFAobject(data)
   return(object)

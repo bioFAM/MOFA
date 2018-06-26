@@ -1,5 +1,5 @@
 # MOFAmodel object
-MOFAmodel it is the main S4 class used to store all relevant data to analyse a MOFA model. Its slots are the following (accessible using @):
+MOFAmodel it is the main S4 class used to store all relevant data to analyse a MOFA model. Its slots are the following (accessible using @ or the correspon):
 * **InputData**: input data, either a list of matrices or a MultiAssayExperiment
 * **TrainData**: training data, a list of matrices with processed data (centered, scaled, etc.)
 * **TrainOptions**: training options
@@ -7,6 +7,10 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 * **ModelOptions**: model options
 * **TrainStats**: training statistics
 * **Expectations**: expectations of the different random variables
+* **Status**: trained/untrained
+* **Dimensions**: Number of views (M), samples (N), features per view (D) and factors (K)
+* **ImputedData**: imputed data (filled by running imputeMissing on the object)
+
 
 # List of relevant functions
 
@@ -34,6 +38,7 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 ## Inspect loadings
 * **plotTopWeights**: plot the top loadings for a given factor and view  
 * **plotWeights**: plot all loadings for a given factor and view  
+* **plotWeightsHeatmap**: plot a heatmap of the loadings from multiple factors in a given view
 
 ## Inspect factors
 * **plotFactorCor**: correlation plot between factors. Ideally, they should be uncorrelated  
@@ -48,13 +53,16 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 
 ## Feature set enrichment analysis
 * **FeatureSetEnrichmentAnalysis**: do feature set enrichment analysis. Takes a bit amount of options, check the example on the vignette  
-* **LinePlot_FeatureSetEnrichmentAnalysis**: plot the top most enriched feature sets per factor  
+* **LinePlot_FeatureSetEnrichmentAnalysis**: plot the top most enriched feature sets per factor
+* **Barplot_FeatureSetEnrichmentAnalysis**: plot the number of enriched feature sets per factor as a barplot
 
 ## Clustering
 * **clusterSamples**: k-means clustering of samples on the factor space
 
-## Compare models
-* **compareModels**: compare factors and weights between multiple runs of the model  
+## Compare and select models
+* **compareModels**: compare MOFAmodel objects from multiple runs in terms of number of factors and ELBO statistics (for model selection)
+* **compareFactors**: compare MOFAmodel objects from multiple runs in terms of their factors
+* **selectModel**: select the best MOFAmodel object from multiple MOFAmodel objects based on the ELBO
 
 ## Predictions and imputation
 * **prediction**: predict observations
@@ -64,8 +72,9 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 * **subsetSamples**: subset samples
 * **subsetViews**:  subset views
 * **subsetFactors**: subset factors
+
 ## Examples
-* **makeExampleData**: make example data set
+* **makeExampleData**: make example MOFAmodel object with simulated data
 
 
 

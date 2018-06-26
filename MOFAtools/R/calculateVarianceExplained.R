@@ -111,6 +111,7 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", i
 #' @return ggplot object
 #' @import pheatmap ggplot2 reshape2
 #' @importFrom cowplot plot_grid
+#' @importFrom stats hclust dist
 #' @export
 #' @examples
 #' # Using an existing trained model on the CLL data
@@ -143,8 +144,8 @@ plotVarianceExplained <- function(object, cluster = TRUE, ...) {
   }
   
   # Grid plot with the variance explained per factor and view
-  hm <- ggplot(fvar_mk_df, aes(view,factor)) + 
-    geom_tile(aes(fill=value), color="black") +
+  hm <- ggplot(fvar_mk_df, aes_string(x="view",y="factor")) + 
+    geom_tile(aes_string(fill="value"), color="black") +
     guides(fill=guide_colorbar("R2")) +
     scale_fill_gradientn(colors=c("gray97","darkblue"), guide="colorbar") +
     ylab("Latent factor") +
@@ -173,7 +174,7 @@ plotVarianceExplained <- function(object, cluster = TRUE, ...) {
   }
   
   # Barplot with variance explained per view
-  bplt <- ggplot(fvar_m_df, aes(x=view, y=R2)) + 
+  bplt <- ggplot(fvar_m_df, aes_string(x="view", y="R2")) + 
     ggtitle("Total variance explained per view") +
     geom_bar(stat="identity", fill="deepskyblue4", width=0.9) +
     xlab("") + ylab("R2") +

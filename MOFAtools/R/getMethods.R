@@ -362,6 +362,7 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
 #' @name getELBO
 #' @description Extract the value of the ELBO statistics after model training. This can be useful for model selection.
 #' @param object a \code{\link{MOFAmodel}} object.
+#' @importFrom utils tail
 #' @export
 getELBO <- function(object) {
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  

@@ -8,6 +8,7 @@
 #' @param n_factors number of factors
 #' @param likelihood likelihood for each view, one of "gaussian", "bernoulli", "poisson" or a character vector of length n_views
 #' @return Returns an untrained \code{\link{MOFAmodel}} containing simulated data as training data.
+#' @importFrom stats rnorm rbinom rpois
 #' @export
 #' @examples
 #' 

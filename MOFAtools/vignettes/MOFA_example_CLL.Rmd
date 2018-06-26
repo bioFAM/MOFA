@@ -166,7 +166,7 @@ Here, for example Factor 1 is active in all data modalities, while Factor 4 is s
 ```{r}
 # Calculate the variance explained (R2) per factor in each view 
 r2 <- calculateVarianceExplained(MOFAobject)
-head(r2$R2Total)
+r2$R2Total
 
 # Variance explained by each factor in each view
 head(r2$R2PerFactor)

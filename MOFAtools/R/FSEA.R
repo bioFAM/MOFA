@@ -23,7 +23,7 @@
 #' This function is based upon the \link[PCGSE]{pcgse} function with small modifications.
 #' @return a list with three components: pval and pval.adj contain matrices with p-values and adjusted p-values, repectively. sigPathways contains a list with significant pathwayd at FDR alpha per factor.
 #' @import foreach doParallel
-#' @importFrom stats p.adjust
+#' @importFrom stats p.adjust p.adjust.methods
 #' @export
 #' @examples 
 #' # Example on the CLL data
@@ -124,7 +124,7 @@ runEnrichmentAnalysis <- function(object, view, feature.sets, factors = "all", l
       rownames(data_null) <- rownames(data)
       
       # Compute null statistic
-      s.null <- pcgse(data=data_null, prcomp.output=list(rotation=W_null, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
+      s.null <- .pcgse(data=data_null, prcomp.output=list(rotation=W_null, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
                       transformation=transformation, feature.set.statistic=global.statistic, feature.set.test="parametric", nperm=NA)$statistic
       abs(s.null)
     }
@@ -132,7 +132,7 @@ runEnrichmentAnalysis <- function(object, view, feature.sets, factors = "all", l
     colnames(null_dist) <- factors
     
     # Compute true statistics
-    s.true <- pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
+    s.true <- .pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
                     transformation=transformation, feature.set.statistic=global.statistic, feature.set.test="parametric", nperm=NA)$statistic
     colnames(s.true) <- factors
     rownames(s.true) <- rownames(feature.sets)
@@ -146,7 +146,7 @@ runEnrichmentAnalysis <- function(object, view, feature.sets, factors = "all", l
 
 # parametric version
   } else {
-    p.values <- pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
+    p.values <- .pcgse(data=data, prcomp.output=list(rotation=W, x=Z), pc.indexes=1:length(factors), feature.sets=feature.sets, feature.statistic=local.statistic,
                       transformation=transformation, feature.set.statistic=global.statistic, feature.set.test=statistical.test, nperm=nperm)$p.values
     colnames(p.values) <- factors
     rownames(p.values) <- rownames(feature.sets)
@@ -178,6 +178,7 @@ runEnrichmentAnalysis <- function(object, view, feature.sets, factors = "all", l
 #' @param adjust use multiple testing correction
 #' @return nothing
 #' @import ggplot2
+#' @importFrom utils head
 #' @export
 #' @examples 
 #' # Example on the CLL data
@@ -216,21 +217,22 @@ plotEnrichment <- function(object, fsea.out, factor, alpha=0.1, max.pathways=25,
     tmp <- head(tmp[order(tmp$pvalue),],n=max.pathways)
   
   # Convert pvalues to log scale (add a small regulariser to avoid numerical errors)
-  tmp$log <- -log10(tmp$pvalue)
+  tmp$logp <- -log10(tmp$pvalue)
   
   # Annotate significcant pathways
   # tmp$sig <- factor(tmp$pvalue<alpha)
   
   #order according to significance
   tmp$pathway <- factor(tmp$pathway <- rownames(tmp), levels = tmp$pathway[order(tmp$pvalue, decreasing = T)])
-  
-  p <- ggplot(tmp, aes(x=pathway, y=log)) +
+  tmp$start <- 0
+
+    p <- ggplot(tmp, aes_string(x="pathway", y="logp")) +
     # ggtitle(paste("Enriched sets in factor", factor)) +
     geom_point(size=5) +
     geom_hline(yintercept=-log10(alpha), linetype="longdash") +
     # scale_y_continuous(limits=c(0,7)) +
     scale_color_manual(values=c("black","red")) +
-    geom_segment(aes(xend=pathway, yend=0)) +
+    geom_segment(aes_string(xend="pathway", yend="start")) +
     ylab("-log pvalue") +
     coord_flip() +
     theme(
@@ -249,7 +251,7 @@ plotEnrichment <- function(object, fsea.out, factor, alpha=0.1, max.pathways=25,
 #' @description This method generates a heatmap with the adjusted p.values that result from the the feature set enrichment analysis. Rows are feature sets and columns are factors.
 #' @param fsea.out output of \link{runEnrichmentAnalysis} function
 #' @param alpha FDR threshold to filter out unsignificant feature sets which are not represented in the heatmap. Default is 0.05.
-#' @param log boolean indicating whether to plot the log of the p.values.
+#' @param logScale boolean indicating whether to plot the log of the p.values.
 #' @param ... extra arguments to be passed to \link{pheatmap} function
 #' @import pheatmap
 #' @importFrom grDevices colorRampPalette
@@ -264,14 +266,14 @@ plotEnrichment <- function(object, fsea.out, factor, alpha=0.1, max.pathways=25,
 #' # overview of enriched pathways per factor at an FDR of 1%
 #' plotEnrichmentHeatmap(fsea.out, alpha=0.01)
 
-plotEnrichmentHeatmap <- function(fsea.out, alpha = 0.05, log = TRUE, ...) {
+plotEnrichmentHeatmap <- function(fsea.out, alpha = 0.05, logScale = TRUE, ...) {
 
   # get p-values
   p.values <- fsea.out$pval.adj
   p.values <- p.values[!apply(p.values, 1, function(x) sum(x>=alpha)) == ncol(p.values),, drop=FALSE]
   
   # Apply Log transform
-  if (log==T) {
+  if (logScale) {
     p.values <- -log10(p.values)
     alpha <- -log10(alpha)
     col <- colorRampPalette(c("lightgrey", "red"))(n=10)
@@ -318,20 +320,12 @@ plotEnrichmentBars <- function(fsea.out, alpha = 0.05) {
   pathwaysDF <- dplyr::mutate(pathwaysDF, factor= factor(factor, levels = colnames(fsea.out$pval)))
   
   # Count enriched gene sets per pathway
-  pathwaysSummary <- dplyr::group_by(pathwaysDF,factor)
-  pathwaysSummary <- dplyr::summarise(pathwaysSummary, n_enriched=length(pathway)) 
-  if(!all(colnames(fsea.out$pval) %in% pathwaysSummary$factor))
-  pathwaysSummary <- rbind(pathwaysSummary, data.frame(factor = colnames(fsea.out$pval)[!colnames(fsea.out$pval) %in% pathwaysSummary$factor],
-                                                     n_enriched=0))
-  pathwaysSummary$factor <- factor(pathwaysSummary$factor, levels=colnames(fsea.out$pval))
-  
-  # THIS IS A COMMIT THAT WAS IN RETICULATE BRANCH. BRITTA CAN YOU CHECK THIS?
-  # n_enriched <- table(pathwaysDF$factor)
-  # pathwaysSummary <- data.frame(n_enriched = as.numeric(n_enriched),
-  #                               factor = factor(names(n_enriched), levels = colnames(fsea.out$pval)))
+  n_enriched <- table(pathwaysDF$factor)
+  pathwaysSummary <- data.frame(n_enriched = as.numeric(n_enriched),
+                                factor = factor(names(n_enriched), levels = colnames(fsea.out$pval)))
   
   # Generate plot
-  ggplot(pathwaysSummary, aes(x=factor, y=n_enriched)) +
+  ggplot(pathwaysSummary, aes_string(x="factor", y="n_enriched")) +
     geom_bar(stat="identity") + coord_flip() + 
     ylab(paste0("Enriched gene sets at FDR ", alpha*100,"%")) +
     xlab("Factor") + 
@@ -350,7 +344,7 @@ plotEnrichmentBars <- function(fsea.out, alpha = 0.05) {
 ##############################################
 
 # This is a modified version of the PCGSE module
-pcgse = function(data, 
+.pcgse = function(data, 
                  prcomp.output, 
                  pc.indexes=1, 
                  feature.sets,
@@ -399,7 +393,7 @@ pcgse = function(data,
   # Turn the feature set matrix into list form if feature.set.test is not "permutation"
   feature.set.indexes = feature.sets  
   if (is.matrix(feature.sets)) {
-    feature.set.indexes = createVarGroupList(var.groups=feature.sets)  
+    feature.set.indexes = .createVarGroupList(var.groups=feature.sets)  
   }
   
   n = nrow(data)
@@ -409,24 +403,26 @@ pcgse = function(data,
   feature.statistics = matrix(0, nrow=p, ncol=length(pc.indexes))
   for (i in 1:length(pc.indexes)) {
     pc.index = pc.indexes[i]
-    feature.statistics[,i] = computefeatureStatistics(data=data, prcomp.output=prcomp.output, pc.index=pc.index, feature.statistic, transformation)
+    feature.statistics[,i] = .computefeatureStatistics(data=data, prcomp.output=prcomp.output, pc.index=pc.index, feature.statistic, transformation)
   }
   
   # Perform the specified feature set test for each feature set on each specified PC using the feature-level statistics
   if (feature.set.test == "parametric" | feature.set.test == "cor.adj.parametric") {
     if (feature.set.statistic == "mean.diff") {
-      results = pcgseViaTTest(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, feature.set.indexes=feature.set.indexes,
+      results = .pcgseViaTTest(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, feature.set.indexes=feature.set.indexes,
                               feature.statistics=feature.statistics, cor.adjustment=(feature.set.test == "cor.adj.parametric"))      
     } else if (feature.set.statistic == "rank.sum") {
-      results = pcgseViaWMW(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, feature.set.indexes=feature.set.indexes,
+      results = .pcgseViaWMW(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, feature.set.indexes=feature.set.indexes,
                             feature.statistics=feature.statistics, cor.adjustment=(feature.set.test == "cor.adj.parametric"))
     }     
-  } else if (feature.set.test == "permutation") {
+  }
+  # else if (feature.set.test == "permutation") {
+    # not used, permutation version implemented as part of runEnrichmentAnalysis
     # results = pcgseViaSAFE(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, feature.set.indexes=feature.set.indexes, 
     #                        feature.statistic=feature.statistic, transformation=transformation, feature.set.statistic=feature.set.statistic, nperm=nperm)
-    results = pcgseViaPermutation(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, feature.set.indexes=feature.set.indexes, 
-                                  feature.statistics=feature.statistics, feature.set.statistic=feature.set.statistic, nperm=nperm)        
-  }
+    # results = pcgseViaPermutation(data=data, prcomp.output=prcomp.output, pc.indexes=pc.indexes, feature.set.indexes=feature.set.indexes, 
+    #                               feature.statistics=feature.statistics, feature.set.statistic=feature.set.statistic, nperm=nperm)        
+  # }
   
   return (results) 
 }
@@ -435,7 +431,7 @@ pcgse = function(data,
 
 
 # Turn the annotation matrix into a list of var group indexes for the valid sized var groups
-createVarGroupList = function(var.groups) {
+.createVarGroupList = function(var.groups) {
   var.group.indexes = list()  
   for (i in 1:nrow(var.groups)) {
     member.indexes = which(var.groups[i,]==1)
@@ -446,7 +442,7 @@ createVarGroupList = function(var.groups) {
 }
 
 # Computes the feature-level statistics
-computefeatureStatistics = function(data, prcomp.output, pc.index, feature.statistic, transformation) {
+.computefeatureStatistics = function(data, prcomp.output, pc.index, feature.statistic, transformation) {
   p = ncol(data)
   n = nrow(data)
   feature.statistics = rep(0, p)
@@ -472,7 +468,8 @@ computefeatureStatistics = function(data, prcomp.output, pc.index, feature.stati
 }
 
 # Compute enrichment via t-test
-pcgseViaTTest = function(data, prcomp.output, pc.indexes, feature.set.indexes, feature.statistics, cor.adjustment) {
+#' @importFrom stats pt
+.pcgseViaTTest = function(data, prcomp.output, pc.indexes, feature.set.indexes, feature.statistics, cor.adjustment) {
   
   num.feature.sets = length(feature.set.indexes)
   n= nrow(data)
@@ -528,7 +525,8 @@ pcgseViaTTest = function(data, prcomp.output, pc.indexes, feature.set.indexes, f
 }
 
 # Compute enrichment via Wilcoxon Mann Whitney 
-pcgseViaWMW = function(data, prcomp.output, pc.indexes, feature.set.indexes, feature.statistics, cor.adjustment) {
+#' @importFrom stats wilcox.test pnorm
+.pcgseViaWMW = function(data, prcomp.output, pc.indexes, feature.set.indexes, feature.statistics, cor.adjustment) {
   
   num.feature.sets = length(feature.set.indexes)
   n= nrow(data)

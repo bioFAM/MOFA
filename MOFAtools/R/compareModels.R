@@ -20,6 +20,7 @@
 #' The corresponding correlation matrix or list or pairwise correlation matrices is returned
 #' @references fill this
 #' @importFrom stats cor
+#' @importFrom stats var
 #' @importFrom pheatmap pheatmap
 #' @importFrom grDevices colorRampPalette
 #' @export
@@ -172,8 +173,8 @@ compareModels <- function(models, show_modelnames = FALSE) {
     n_fac
     })
   if(is.null(names(models))) names(models) <- paste0("model_", seq_along(models))
-  df <- data.frame(ELBO=elbo_vals, model = names(models))
-  gg <- ggplot(df, aes(x=model,y=n_factors, fill=ELBO)) + geom_bar(stat="identity")+
+  df <- data.frame(ELBO=elbo_vals, model = names(models), n_factors=n_factors)
+  gg <- ggplot(df, aes_string(x="model",y="n_factors", fill="ELBO")) + geom_bar(stat="identity")+
     ylab("Number of inferred factors")
   if(show_modelnames) gg <- gg + theme(axis.text.x=element_text(angle=60, vjust=1, hjust=1))
   else gg <- gg + theme(axis.text.x=element_blank())

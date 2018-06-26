@@ -27,6 +27,7 @@
 #' By default, the conflictive samples are ignored in the clustering procedure and NAs are returned.
 #' 
 #' @return output from \code{\link{kmeans}} function
+#' @importFrom stats kmeans
 #' @export
 #' @examples
 #' # Example on the CLL data

@@ -4,14 +4,14 @@
 \alias{plotEnrichmentHeatmap}
 \title{Heatmap of Feature Set Enrichment Analysis results}
 \usage{
-plotEnrichmentHeatmap(fsea.out, alpha = 0.05, log = TRUE, ...)
+plotEnrichmentHeatmap(fsea.out, alpha = 0.05, logScale = TRUE, ...)
 }
 \arguments{
 \item{fsea.out}{output of \link{runEnrichmentAnalysis} function}
 
 \item{alpha}{FDR threshold to filter out unsignificant feature sets which are not represented in the heatmap. Default is 0.05.}
 
-\item{log}{boolean indicating whether to plot the log of the p.values.}
+\item{logScale}{boolean indicating whether to plot the log of the p.values.}
 
 \item{...}{extra arguments to be passed to \link{pheatmap} function}
 }

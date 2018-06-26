@@ -30,6 +30,7 @@
 #' the underlying heterogeneity that is captured by the latent factor. \cr
 #' A similar function for doing scatterplots rather than heatmaps is \code{\link{plotDataScatter}}.
 #' @import pheatmap
+#' @importFrom utils tail
 #' @examples
 #' # Load CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
@@ -145,6 +146,7 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
 #' A similar function for doing heatmaps rather than scatterplots is \code{\link{plotDataHeatmap}}.
 #' @import ggplot2
 #' @import dplyr
+#' @importFrom utils tail
 #' @export
 #' @examples
 #' # Load CLL data
@@ -347,13 +349,16 @@ plotTilesData <- function(object, colors = NULL) {
   molten_ovw$ptotal <- paste("d=", sapply(TrainData, nrow)[as.character(molten_ovw$view) ], sep="")
     
   # Define y-axis label
-  molten_ovw <-  mutate(molten_ovw, view_label = paste(view, ptotal, sep="\n"))
+  molten_ovw$view_label = paste(molten_ovw$view, molten_ovw$ptotal, sep="\n")
+  
+  #position of label on x-axis
+  molten_ovw$label_pos <- levels(molten_ovw$sample)[n/2]
   
   # Plot
-  p <- ggplot(molten_ovw, aes(x=sample, y=view_label, fill=combi)) +
+  p <- ggplot(molten_ovw, aes_string(x="sample", y="view_label", fill="combi")) +
     geom_tile(width=0.7, height=0.9, col="black") +
     geom_text(data=filter(molten_ovw, sample==levels(molten_ovw$sample)[1]),
-              aes(x=levels(molten_ovw$sample)[n/2],label=ntotal), size=6) +
+              aes_string(x="label_pos", label="ntotal"), size=6) +
     scale_fill_manual(values = c('missing'="grey", colors)) +
     # ggtitle("Samples available for training") +
     xlab(paste0("Samples (n=",n,")")) + ylab("") +

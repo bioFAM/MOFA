@@ -474,6 +474,7 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
 #' \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots for single factors.
 #' @return \code{ggplot2} object
 #' @import ggplot2
+#' @importFrom stats var
 #' @export
 #' @examples
 #' # Example on the CLL data

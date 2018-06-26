@@ -181,11 +181,11 @@ plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = 
   
   # Generate plot
   W$tmp <- as.character(W$group!="0")
-  gg_W <- ggplot(W, aes(x=feature, y=value, col=group)) + 
+  gg_W <- ggplot(W, aes_string(x="feature", y="value", col="group")) + 
     # scale_y_continuous(expand = c(0.01,0.01)) + scale_x_discrete(expand = c(0.01,0.01)) +
-    geom_point(aes(size=tmp)) + labs(x="Rank position", y="Loading") +
+    geom_point(aes_string(size="tmp")) + labs(x="Rank position", y="Loading") +
     scale_x_discrete(breaks = NULL, expand=c(0.05,0.05)) +
-    ggrepel::geom_text_repel(data = W[W$group!="0",], aes(label = feature, col = group),
+    ggrepel::geom_text_repel(data = W[W$group!="0",], aes_string(label = "feature", col = "group"),
                              segment.alpha=0.1, segment.color="black", segment.size=0.3, box.padding = unit(0.5, "lines"), show.legend= F)
   # Define size
   gg_W <- gg_W + scale_size_manual(values=c(0.5,2)) + guides(size=F)
@@ -288,10 +288,11 @@ plotTopWeights <- function(object, view, factor, nfeatures = 10, abs = TRUE, sca
   # Sort according to loadings
   W <- W[with(W, order(-value, decreasing = T)), ]
   W$feature <- factor(W$feature, levels=W$feature)
+  W$start <- 0
   
-  p <- ggplot(W, aes(x=feature, y=value)) +
+  p <- ggplot(W, aes_string(x="feature", y="value")) +
     geom_point(size=2) +
-    geom_segment(aes(xend=feature, yend=0), size=0.75) +
+    geom_segment(aes_string(yend="start", xend="feature"), size=0.75) +
     scale_colour_gradient(low="grey", high="black") +
     # scale_colour_manual(values=c("#F8766D","#00BFC4")) +
     # guides(colour = guide_legend(title.position="top", title.hjust = 0.5)) +

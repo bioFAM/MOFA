@@ -46,7 +46,6 @@ Once the MOFAobject is set up we can use `runMOFA` to train the model. As depend
 ```{r}
 n_inits <- 3
 MOFAlist <- lapply(1:n_inits, function(it) {
-  MOFAobject@
   runMOFA(MOFAobject, outfile=tempfile())
 })
 ```

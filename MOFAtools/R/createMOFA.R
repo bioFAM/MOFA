@@ -40,7 +40,7 @@ createMOFAobject <- function(data) {
     message("Creating MOFA object from list of matrices, please make sure that samples are columns and features are rows...\n")
     object <- .createMOFAobjectFromList(data)
   } else {
-    stop("Error: input data has to be provided either as a list of matrices or as a MultiAssayExperiment objectºn")
+    stop("Error: input data has to be provided either as a list of matrices or as a MultiAssayExperiment object \n")
   }
   
   # Set dimensionalities
@@ -54,19 +54,18 @@ createMOFAobject <- function(data) {
     viewNames(object) <- names(data) 
   } else { 
     viewNames(object) <- paste("view",1:length(object@TrainData), sep="_")
-    warning(paste0("View names are not specified in the data, renaming them to: ",paste("view",1:length(object@TrainData), collapse=" "), "\n"))
+    warning(paste0("View names are not specified in the data, renaming them to: ",paste0("view_",1:length(object@TrainData), collapse=", "), "\n"))
   }
   
   # Set feature names
   for (m in 1:object@Dimensions[["M"]]) {
     if (is.null(rownames(object@TrainData[[m]]))) {
       warning(sprintf("Feature names are not specified for view %d, using default: feature1_v%d,feature2_v%d...\n",m,m,m))
-      rownames(object@TrainData[[m]]) <- paste0("feature_",1:nrow(object@TrainData[[m]]))
+      rownames(object@TrainData[[m]]) <- paste0("feature_",1:nrow(object@TrainData[[m]]),"_v",m )
     }
   }
-
-  # Set sample names
-  # TO-DO...
+  
+  # Feature names are already set in .createMOFAobjectFromList in case they are missing
   
   return(object)
 }
@@ -115,7 +114,8 @@ createMOFAobject <- function(data) {
     if (length(N)>1) { 
       stop("If the matrices have no column (samples) names that can be used to match the different views, all matrices must have the same number of columns")
     }
-    samples <- as.character(1:N)
+    warning(sprintf("Sample names are not specified, using default: sample_1,sample_2...\n Make sure the columns match between data matrices or provide sample names! \n"))
+    samples <- paste0("sample_",1:N)
     for (m in 1:length(data)) { colnames(data[[m]]) <- samples }
   }
   

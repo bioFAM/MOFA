@@ -4,7 +4,7 @@
 \alias{makeExampleData}
 \title{make an example multi-view data set for illustration of MOFA}
 \usage{
-makeExampleData(n_views = 3, n_features = 200, n_samples = 50,
+makeExampleData(n_views = 3, n_features = 100, n_samples = 50,
   n_factors = 5, likelihood = "gaussian")
 }
 \arguments{

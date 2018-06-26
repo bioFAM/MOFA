@@ -117,6 +117,7 @@ subsetSamples <- function(object, samples) {
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param views character vector with the view names, numeric vector with the view indices or logical vector with the view to be kept as TRUE.
 #' @export
+#' @examples
 #' # Using an existing trained model on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 #' MOFA_CLL <- loadModel(filepath)

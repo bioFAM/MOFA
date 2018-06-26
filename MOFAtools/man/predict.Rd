@@ -18,13 +18,16 @@ Default is "all".}
 
 \item{type}{type of prediction returned, either: 
 \itemize{
- \item{\strong{response}:}{ gives the response vector, the mean for Gaussian and Poisson, and success probabilities for Bernoulli.}
+ \item{\strong{response}:}{ gives the response vector, the mean for Gaussian and Poisson,
+  and success probabilities for Bernoulli.}
  \item{\strong{link}:}{ gives the linear predictions.}
- \item{\strong{inRange}:}{ rounds the fitted values of integer-valued distributions (Poisson and Bernoulli) to the next integer.
+ \item{\strong{inRange}:}{ rounds the fitted values of integer-valued distributions 
+ (Poisson and Bernoulli) to the next integer.
  This is the default option.}
 }}
 
-\item{include_intercept}{logical indicating whether to include the optional intercept factor for the prediction.
+\item{include_intercept}{logical indicating whether
+ to include the optional intercept factor for the prediction.
 Default is TRUE.}
 }
 \value{
@@ -34,9 +37,11 @@ Returns a list with data predictions.
 This function uses the factors and the corresponding weights to do data predictions.
 }
 \details{
-the denoised and condensed low-dimensional representation of the data captures the main sources of heterogeneity of the data. 
+the denoised and condensed low-dimensional representation of the data
+ captures the main sources of heterogeneity of the data. 
 These representation can be used to do predictions using the equation Y = WX. 
-This is the key step underlying imputation, see \code{\link{imputeMissing}} and the Methods section of the article.
+This is the key step underlying imputation, 
+see \code{\link{imputeMissing}} and the Methods section of the article.
 }
 \examples{
 # Example on the CLL data

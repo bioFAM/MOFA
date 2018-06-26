@@ -9,9 +9,11 @@ loadModel(file, object = NULL, sortFactors = TRUE, minR2 = 0.01)
 \arguments{
 \item{file}{an hdf5 file saved by the MOFA python framework.}
 
-\item{object}{either NULL (default) or an an existing untrained MOFA object. If NULL, the \code{\link{MOFAmodel}} object is created from the scratch.}
+\item{object}{either NULL (default) or an an existing untrained MOFA object.
+If NULL, the \code{\link{MOFAmodel}} object is created from the scratch.}
 
-\item{sortFactors}{boolean indicating whether factors should be sorted by variance explained (default is TRUE)}
+\item{sortFactors}{boolean indicating whether factors should be sorted
+by variance explained (default is TRUE)}
 
 \item{minR2}{minimum R2 threshold to call 'active' factors (default is 0.01).}
 }
@@ -20,5 +22,6 @@ a \code{\link{MOFAmodel}} model.
 }
 \description{
 Method to load a trained MOFA model. \cr
-The training of MOFA is done using a Python framework, and the model output is saved as an .hdf5 file, which has to be loaded in the R package.
+The training of MOFA is done using a Python framework, and the model output
+ is saved as an .hdf5 file, which has to be loaded in the R package.
 }

@@ -10,16 +10,19 @@ plotFactorScatters(object, factors = "all", showMissing = TRUE,
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{factors}{character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. 
+\item{factors}{character vector with the factor name(s), or
+ numeric vector with the index of the factor(s) to use. 
 Default is 'all'}
 
-\item{showMissing}{logical indicating whether to include samples for which \code{shape_by} or \code{color_by} is missing}
+\item{showMissing}{logical indicating whether to include samples for which
+\code{shape_by} or \code{color_by} is missing}
 
 \item{color_by}{specifies groups or values used to color the samples. 
 This can be either: 
 a character giving the name of a feature present in the training data, 
 a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
-or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.}
+or a vector of the same length as the number of samples specifying discrete groups or 
+continuous numeric values.}
 
 \item{name_color}{name for color legend (usually only used if color_by is not a character itself)}
 
@@ -38,7 +41,8 @@ or a vector of the same length as the number of samples specifying discrete grou
 Scatterplots of the sample values for pair-wise combinations of multiple latent factors.
 }
 \details{
-One of the first steps for the annotation of factors is to visualise and group/color them using known covariates such as phenotypic or clinical data.
+One of the first steps for the annotation of factors is to visualise and
+ group/color them using known covariates such as phenotypic or clinical data.
 This method generates multiple scatterplots for pairwise combinations of several latent factors.
 Similar functions are \code{\link{plotFactorScatter}} for doing single scatter plots and 
 \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots for single factors.

@@ -9,11 +9,15 @@ compareModels(models, show_modelnames = FALSE)
 \arguments{
 \item{models}{a list containing \code{\link{MOFAmodel}} objects.}
 
-\item{show_modelnames}{boolean, whether to indicate the name of each model instance (names of the list in models) or not}
+\item{show_modelnames}{boolean, whether to indicate the name of each model instance
+(names of the list in models) or not}
 }
 \description{
-Different objects of \code{\link{MOFAmodel}} are compared in terms of the final value of the ELBO statistics. 
-For model selection the model with the highest ELBO value is selected. The height of the bar indicates the number of inferred factors and the color of the bar the value of the ELBO statistic.
+Different objects of \code{\link{MOFAmodel}} are compared in terms
+ of the final value of the ELBO statistics. 
+For model selection the model with the highest ELBO value is selected.
+ The height of the bar indicates the number of inferred factors and 
+ the color of the bar the value of the ELBO statistic.
 }
 \examples{
 ### Example on simulated data
@@ -24,7 +28,10 @@ MOFAobject <- makeExampleData()
 TrainOptions <- getDefaultTrainOptions()
 ModelOptions <- getDefaultModelOptions(MOFAobject)
 DataOptions <- getDefaultDataOptions()
-MOFAobject <- prepareMOFA(MOFAobject, DataOptions = DataOptions, ModelOptions = ModelOptions, TrainOptions = TrainOptions)
+MOFAobject <- prepareMOFA(MOFAobject,
+ DataOptions = DataOptions,
+ ModelOptions = ModelOptions,
+  TrainOptions = TrainOptions)
 
 # Train MOFA multiple times
 n_inits <- 3 

@@ -6,10 +6,11 @@
 #' @title train a MOFA model
 #' @name runMOFA
 #' @description Function to train an untrained \code{\link{MOFAmodel}} object.
-#' @details In this step the R package is calling the \code{mofa} Python package, where the the training is performed. \cr
+#' @details In this step the R package is calling the \code{mofa} Python package,
+#'  where the the training is performed. \cr
 #' The interface with Python is done with the \code{\link{reticulate}} package. 
-#' If you have several versions of Python installed and Rstudio is not detecting the correct one, you can change it using
-#' \code{reticulate::use_python}.
+#' If you have several versions of Python installed and Rstudio is not detecting
+#'  the correct one, you can change it using' \code{reticulate::use_python}.
 #' @param object an untrained \code{\link{MOFAmodel}} object
 #' @param outfile output .hdf5 file
 #' @return a trained \code{\link{MOFAmodel}} object
@@ -32,7 +33,8 @@ runMOFA <- function(object, outfile) {
     stop("'object' has to be an instance of MOFAmodel")
     
   if (object@Status=="trained") 
-    stop("The model is already trained! If you want to retrain, create a new untrained MOFAmodel")
+    stop("The model is already trained!
+         If you want to retrain, create a new untrained MOFAmodel")
   
   # Initiate reticulate
   mofa <- import("mofa")
@@ -85,7 +87,9 @@ runMOFA <- function(object, outfile) {
   # Save the model
   sample_names <- colnames(object@TrainData[[1]])
   feature_names <- unname(lapply(object@TrainData,rownames))
-  mofa_entrypoint$save_model(outfile, sample_names=sample_names, feature_names=feature_names)
+  mofa_entrypoint$save_model(outfile,
+                             sample_names=sample_names,
+                             feature_names=feature_names)
   
   # Load the model back into R
   object <- loadModel(outfile, object)

@@ -20,8 +20,10 @@ Default is \code{FALSE}.}
 Default is \code{TRUE}.}
 }
 \value{
-By default it returns the latent factor matrix of dimensionality (N,K), where N is number of samples and K is number of factors. \cr
-Alternatively, if \code{as.data.frame} is \code{TRUE}, returns a long-formatted data frame with columns (sample,factor,value).
+By default it returns the latent factor matrix of dimensionality (N,K),
+ where N is number of samples and K is number of factors. \cr
+Alternatively, if \code{as.data.frame} is \code{TRUE},
+ returns a long-formatted data frame with columns (sample,factor,value).
 }
 \description{
 Extract the latent factors from the model.

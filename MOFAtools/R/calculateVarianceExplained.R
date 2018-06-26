@@ -4,15 +4,22 @@
 #' @description Method to calculate variance explained by the MOFA model for each view and latent factor. \cr
 #' As a measure of variance explained for gaussian data we adopt the coefficient of determination (R2). \cr
 #' For non-gaussian views the calculations are based on the normally-distributed pseudo-data 
-#' (for more information on the non-gaussian model see Supplementary Methods of the MOFA paper or Seeger & Bouchard, 2012).
+#' (for more information on the non-gaussian model 
+#' see Supplementary Methods of the MOFA paper or Seeger & Bouchard, 2012).
 #' @param object a trained \code{\link{MOFAmodel}} object.
-#' @param views character vector with the view names, or numeric vector with view indexes. Default is 'all'
-#' @param factors character vector with the factor names, or numeric vector with the factor indexes. Default is 'all'
-#' @param include_intercept include the intercept factor for calculation of variance explained (only used when an intercept was learned)
-#' @details This function takes a trained MOFA model as input and calculates for each view the coefficient of determination (R2),
-#' i.e. the proportion of variance in the data explained by the MOFA factor(s) (both jointly and for each individual factor). 
+#' @param views character vector with the view names, or numeric vector with view indexes.
+#'  Default is 'all'
+#' @param factors character vector with the factor names,
+#'  or numeric vector with the factor indexes. Default is 'all'
+#' @param include_intercept include the intercept factor for calculation of variance explained
+#'  (only used when an intercept was learned)
+#' @details This function takes a trained MOFA model as input and calculates
+#'  for each view the coefficient of determination (R2),
+#' i.e. the proportion of variance in the data explained by the MOFA factor(s) 
+#' (both jointly and for each individual factor). 
 #' In case of non-Gaussian data the variance explained on the Gaussian pseudo-data is calculated. 
-#' @return a list with matrices with the amount of variation explained per factor and view and the total variance explained per view.
+#' @return a list with matrices with the amount of variation explained 
+#' per factor and view and the total variance explained per view.
 #' @export
 #' @examples
 #' # Using an existing trained model on the CLL data
@@ -48,7 +55,7 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", i
   if (paste0(factors,collapse="") == "all") { 
     factors <- factorNames(object) 
   } else if (is.numeric(factors)) {
-    if (include_intercept == T) {
+    if (include_intercept == TRUE) {
       factors <- factorNames(object)[factors+1] 
     } else {
       factors <- factorNames(object)[factors]
@@ -75,8 +82,8 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", i
   }
   
   # Calculate coefficient of determination per view
-  tmp <- sapply(views, function(m) sum(scale(Y[[m]],center=T, scale=F)**2, na.rm=T))
-  fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-tcrossprod(Z,W[[m]]))**2, na.rm=T) / tmp[m])
+  tmp <- sapply(views, function(m) sum(scale(Y[[m]],center=TRUE, scale=FALSE)**2, na.rm=TRUE))
+  fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-tcrossprod(Z,W[[m]]))**2, na.rm=TRUE) / tmp[m])
   names(fvar_m) <- views
   
   # Calculate coefficient of determination per factor and view
@@ -85,7 +92,7 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", i
   rownames(fvar_mk) <- factors
   for (m in views) {
     for (k in factors) {
-      fvar_mk[k,m] <- 1 - sum( (Y[[m]]-tcrossprod(Z[,k],W[[m]][,k]))**2, na.rm=T) / tmp[m]
+      fvar_mk[k,m] <- 1 - sum( (Y[[m]]-tcrossprod(Z[,k],W[[m]][,k]))**2, na.rm=TRUE) / tmp[m]
     }
   }
   

@@ -12,6 +12,8 @@ getCovariates(object, covariate)
 \item{covariate}{names of the covariate}
 }
 \description{
-This function extracts covariates from the \code{colData} in the input \code{MultiAssayExperiment} object. \cr
-Note that if you did not use \code{MultiAssayExperiment} to create your \code{\link{createMOFAobject}}, this function will not work.
+This function extracts covariates from the \code{colData}
+ in the input \code{MultiAssayExperiment} object. \cr
+Note that if you did not use \code{MultiAssayExperiment} to create
+ your \code{\link{createMOFAobject}}, this function will not work.
 }

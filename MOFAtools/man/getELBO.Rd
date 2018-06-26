@@ -10,5 +10,6 @@ getELBO(object)
 \item{object}{a \code{\link{MOFAmodel}} object.}
 }
 \description{
-Extract the value of the ELBO statistics after model training. This can be useful for model selection.
+Extract the value of the ELBO statistics after model training.
+ This can be useful for model selection.
 }

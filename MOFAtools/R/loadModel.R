@@ -7,10 +7,13 @@
 #' @title loading a trained MOFA model
 #' @name loadModel
 #' @description Method to load a trained MOFA model. \cr
-#' The training of MOFA is done using a Python framework, and the model output is saved as an .hdf5 file, which has to be loaded in the R package.
+#' The training of MOFA is done using a Python framework, and the model output
+#'  is saved as an .hdf5 file, which has to be loaded in the R package.
 #' @param file an hdf5 file saved by the MOFA python framework.
-#' @param object either NULL (default) or an an existing untrained MOFA object. If NULL, the \code{\link{MOFAmodel}} object is created from the scratch.
-#' @param sortFactors boolean indicating whether factors should be sorted by variance explained (default is TRUE)
+#' @param object either NULL (default) or an an existing untrained MOFA object.
+#'  If NULL, the \code{\link{MOFAmodel}} object is created from the scratch.
+#' @param sortFactors boolean indicating whether factors should be sorted
+#'  by variance explained (default is TRUE)
 #' @param minR2 minimum R2 threshold to call 'active' factors (default is 0.01).
 #' @return a \code{\link{MOFAmodel}} model.
 #' @importFrom rhdf5 h5read
@@ -22,7 +25,8 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
   if (is.null(object)) object <- new("MOFAmodel")
   
   # if(.hasSlot(object,"Status") & length(object@Status) !=0)
-  #   if (object@Status == "trained") warning("The specified object is already trained, over-writing training output with new results!")
+  #   if (object@Status == "trained") 
+        # warning("The specified object is already trained, over-writing training output with new results!")
   
   # Load expectations
   object@Expectations <- h5read(file,"expectations")
@@ -31,23 +35,26 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
   
   # Load training statistics
   tryCatch( {
-    object@TrainStats <- h5read(file, 'training_stats',read.attributes=T);
-    colnames(object@TrainStats$elbo_terms) <- attr(h5read(file,"training_stats/elbo_terms", read.attributes=T),"colnames")
+    object@TrainStats <- h5read(file, 'training_stats',read.attributes=TRUE);
+    colnames(object@TrainStats$elbo_terms) <- attr(h5read(file,"training_stats/elbo_terms", read.attributes=TRUE),
+                                                   "colnames")
   }, error = function(x) { print("Training stats not found, not loading it...") })
 
   
   # Load training options
   if (length(object@TrainOptions) == 0) {
-    tryCatch(object@TrainOptions <- as.list(h5read(file, 'training_opts',read.attributes=T)), error = function(x) { print("Training opts not found, not loading it...") })
+    tryCatch(object@TrainOptions <- as.list(h5read(file, 'training_opts',read.attributes=TRUE)),
+             error = function(x) { print("Training opts not found, not loading it...") })
   }
-  # different names in R and python package (drop_by_r2 in python corresponds to DropFactorThreshold in R) - needs to be adapted
+  # different names in R and python package (drop_by_r2 in python corresponds to DropFactorThreshold in R)
   if("drop_by_r2" %in% names(object@TrainOptions)) {
     object@TrainOptions$DropFactorThreshold <- object@TrainOptions$drop_by_r2
     object@TrainOptions$drop_by_r2 <- NULL
   }
     
   # Load model options
-  tryCatch(object@ModelOptions <- as.list(h5read(file, 'model_opts',read.attributes=T)), error = function(x) { print("Model opts not found, not loading it...") })
+  tryCatch(object@ModelOptions <- as.list(h5read(file, 'model_opts',read.attributes=TRUE)),
+           error = function(x) { print("Model opts not found, not loading it...") })
   object@ModelOptions$sparsity <- as.logical(object@ModelOptions$sparsity)
   
   
@@ -99,12 +106,15 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
   names(object@ModelOptions$likelihood) <- viewNames(object)
   
   # Rename covariates, including intercept
-  # if (object@ModelOptions$learnIntercept == TRUE) factorNames(object) <- c("intercept",as.character(1:(object@Dimensions[["K"]]-1)))
+  # if (object@ModelOptions$learnIntercept == TRUE) 
+  #   factorNames(object) <- c("intercept",as.character(1:(object@Dimensions[["K"]]-1)))
   # if (!is.null(object@ModelOptions$covariates)) {
   #   if (object@ModelOptions$learnIntercept == TRUE) {
-  #     factorNames(object) <- c("intercept", colnames(object@ModelOptions$covariates), as.character((ncol(object@ModelOptions$covariates)+1:(object@Dimensions[["K"]]-1-ncol(object@ModelOptions$covariates)))))
+  #     factorNames(object) <- c("intercept", colnames(object@ModelOptions$covariates),
+  #                              as.character((ncol(object@ModelOptions$covariates)+1:(object@Dimensions[["K"]]-1-ncol(object@ModelOptions$covariates)))))
   #   } else {
-  #     factorNames(object) <- c(colnames(object@ModelOptions$covariates), as.character((ncol(object@ModelOptions$covariates)+1:(object@Dimensions[["K"]]-1))))
+  #     factorNames(object) <- c(colnames(object@ModelOptions$covariates),
+  #                              as.character((ncol(object@ModelOptions$covariates)+1:(object@Dimensions[["K"]]-1))))
   #   }
   # }
   
@@ -120,9 +130,11 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
   }
   
   # Remove zero factors
-  nonzero_factors <- which(apply(object@Expectations$Z[,factorNames(object)!="intercept"], 2, function(z) !all(z==0)))
+  nonzero_factors <- which(apply(object@Expectations$Z[,factorNames(object)!="intercept"], 2,
+                                 function(z) !all(z==0)))
   if (length(nonzero_factors) < sum(factorNames(object)!="intercept")) 
-    message("Removing ", sum(factorNames(object)!="intercept") - length(nonzero_factors), " factors that are constant zero from the model...")
+    message("Removing ", sum(factorNames(object)!="intercept") - length(nonzero_factors),
+            " factors that are constant zero from the model...")
   object <- subsetFactors(object, nonzero_factors, keep_intercept = TRUE)
   factorNames(object)[factorNames(object)!="intercept"] <- paste0("LF",as.character(1:length(nonzero_factors)))
   
@@ -132,11 +144,11 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
   object <- .detectPassengers(object, r2_threshold=minR2)
 
   # Parse factors: order factors in order of variance explained
-  if (sortFactors == T) {
+  if (sortFactors == TRUE) {
     r2 <- rowSums(calculateVarianceExplained(object)$R2PerFactor)
-    order_factors <- order(r2, decreasing = T)
+    order_factors <- order(r2, decreasing = TRUE)
     object <- subsetFactors(object,order_factors)
-    if (object@ModelOptions$learnIntercept==T) { 
+    if (object@ModelOptions$learnIntercept==TRUE) { 
       factorNames(object) <- c("intercept",paste0("LF",1:(object@Dimensions$K-1)))
     } else {
       factorNames(object) <- paste0("LF",c(1:object@Dimensions$K) )

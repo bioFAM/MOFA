@@ -14,12 +14,13 @@ plotDataHeatmap(object, view, factor, features = 50, includeWeights = FALSE,
 
 \item{factor}{character vector with the factor name, or numeric vector with the index of the factor.}
 
-\item{features}{if an integer, the total number of top features to plot, based on the absolute value of the loading.
+\item{features}{if an integer, the total number of top features to plot,
+ based on the absolute value of the loading.
 If a character vector, a set of manually-defined features. 
 Default is 50.}
 
-\item{includeWeights}{logical indicating whether to include the weight of each feature as an extra annotation in the heatmap. 
-Default is FALSE.}
+\item{includeWeights}{logical indicating whether to include the weight
+of each feature as an extra annotation in the heatmap. Default is FALSE.}
 
 \item{transpose}{logical indicating whether to transpose the output heatmap. 
 Default corresponds to features as rows and samples as columns.}
@@ -34,7 +35,8 @@ Function to plot a heatmap of the input data for relevant features,
 usually the ones with highest loadings in a given factor.
 }
 \details{
-One of the first steps for the annotation of a given factor is to visualise the corresponding loadings, 
+One of the first steps for the annotation of a given factor
+ is to visualise the corresponding loadings, 
 using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}.
 These functions display the top features that are driving the heterogeneity captured by a factor. \cr
 However, one might also be interested in visualising the coordinated heterogeneity in the input data, 

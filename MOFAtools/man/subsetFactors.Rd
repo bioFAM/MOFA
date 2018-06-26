@@ -9,14 +9,17 @@ subsetFactors(object, factors, keep_intercept = TRUE)
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{factors}{character vector with the factor names (LF1,LF2,...), or numeric vector with the index of the factors.}
+\item{factors}{character vector with the factor names (LF1,LF2,...),
+or numeric vector with the index of the factors.}
 
-\item{keep_intercept}{logical indicating whether the optional intercept factor should be kept when subsetting (default TRUE).}
+\item{keep_intercept}{logical indicating whether the optional intercept factor
+should be kept when subsetting (default TRUE).}
 }
 \description{
 Method to subset (or sort) factors. \cr
 Some factors might not be interesting for the downstream analysis and the user can choose to remove them.
-This has no effect on the values of the other factors. For example, this could be done it the model contains factors
+This has no effect on the values of the other factors.
+For example, this could be done it the model contains factors
 which are inactive in all views.
 }
 \examples{

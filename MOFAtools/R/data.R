@@ -27,7 +27,8 @@
 #'
 #' A matrix containing feature binary membership indictors for the Reactome Gene Sets.
 #'
-#' @format A matrix containing feature binary membership indictors for different genes (in columns) and Reactome Gene Sets (in rows).
+#' @format A matrix containing feature binary membership indictors for different genes (in columns)
+#'  and Reactome Gene Sets (in rows).
 #' @name reactomeGS
 #' @usage data(reactomeGS)
  "reactomeGS"

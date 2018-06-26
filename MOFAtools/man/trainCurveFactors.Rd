@@ -10,10 +10,13 @@ trainCurveFactors(object)
 \item{object}{a \code{\link{MOFAmodel}} object.}
 }
 \description{
-the MOFA model starts with an initial number of factors and inactive factors are dropped during training if they explain small amounts of variation. 
+the MOFA model starts with an initial number of factors and inactive factors
+ can be dropped during training if they explain small amounts of variation 
+ (as defined in \code{\link{getDefaultModelOptions}}. 
 This allows the model to automatically infer the dimensionality of the latent space.
 The corresponding hyperparameters are defined in \code{\link{prepareMOFA}}. \cr
-All training statistics, including the number of active factors, can be fetch from the TrainStats slot of \code{\link{MOFAmodel}} .
+All training statistics, including the number of active factors, can be fetch from the
+ TrainStats slot of \code{\link{MOFAmodel}} .
 }
 \examples{
 # Example on the CLL data

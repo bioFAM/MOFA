@@ -10,17 +10,19 @@
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param view character vector with the view name, or numeric vector with the index of the view.
 #' @param factor character vector with the factor name, or numeric vector with the index of the factor.
-#' @param features if an integer, the total number of top features to plot, based on the absolute value of the loading.
+#' @param features if an integer, the total number of top features to plot,
+#'  based on the absolute value of the loading.
 #' If a character vector, a set of manually-defined features. 
 #' Default is 50.
-#' @param includeWeights logical indicating whether to include the weight of each feature as an extra annotation in the heatmap. 
-#' Default is FALSE.
+#' @param includeWeights logical indicating whether to include the weight
+#'  of each feature as an extra annotation in the heatmap. Default is FALSE.
 #' @param transpose logical indicating whether to transpose the output heatmap. 
 #' Default corresponds to features as rows and samples as columns.
 #' @param imputed logical indicating whether to plot the imputed data instead of the original data. 
 #' Default is FALSE.
 #' @param ... further arguments that can be passed to \code{\link[pheatmap]{pheatmap}}
-#' @details One of the first steps for the annotation of a given factor is to visualise the corresponding loadings, 
+#' @details One of the first steps for the annotation of a given factor
+#'  is to visualise the corresponding loadings, 
 #' using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}.
 #' These functions display the top features that are driving the heterogeneity captured by a factor. \cr
 #' However, one might also be interested in visualising the coordinated heterogeneity in the input data, 
@@ -57,7 +59,7 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
 
   # Get factors
   if (is.numeric(factor)) {
-    if (object@ModelOptions$learnIntercept == T) {
+    if (object@ModelOptions$learnIntercept == TRUE) {
       factor <- factorNames(object)[factor+1]
     } else {
       factor <- factorNames(object)[factor]
@@ -92,17 +94,17 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
   data <- data[features,]
   
   # Sort samples according to the latent factor
-  order_samples <- names(sort(Z, decreasing=T))
+  order_samples <- names(sort(Z, decreasing=TRUE))
   order_samples <- order_samples[order_samples %in% colnames(data)]
   data <- data[,order_samples]
   
   # Transpose the data
-  if (transpose==T) { data <- t(data) }
+  if (transpose==TRUE) { data <- t(data) }
   
   # Plot heatmap
   if (includeWeights==TRUE) { 
     anno <- data.frame(row.names=names(W[features]), weight=W[features]) 
-    if (transpose==T) {
+    if (transpose==TRUE) {
       pheatmap(t(data), annotation_col=anno, ...)
     } else {
       pheatmap(t(data), annotation_row=anno, ...)
@@ -121,12 +123,14 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param view character vector with a view name, or numeric vector with the index of the view.
 #' @param factor character vector with a factor name, or numeric vector with the index of the factor.
-#' @param features if an integer, the total number of features to plot (10 by default). If a character vector, a set of manually-defined features.
+#' @param features if an integer, the total number of features to plot (10 by default).
+#'  If a character vector, a set of manually-defined features.
 #' @param color_by specifies groups or values used to color the samples. 
 #' This can be either: 
 #' (a) a character giving the name of a feature, 
 #' (b) a character giving the same of a covariate (only if using MultiAssayExperiment as input), or
-#' (c) a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.
+#' (c) a vector of the same length as the number of samples
+#'  specifying discrete groups or continuous numeric values.
 #' @param shape_by specifies groups or values used to shape the samples. 
 #' This can be either: 
 #' (a) a character giving the name of a feature present in the training data, 
@@ -134,9 +138,11 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
 #' (c) a vector of the same length as the number of samples specifying discrete groups.
 #' @param name_color name for the color legend
 #' @param name_shape name for the shape legend
-#' @param showMissing logical indicating whether to show samples with missing values for the color or the shape.
+#' @param showMissing logical indicating whether to show samples
+#'  with missing values for the color or the shape.
 #' Default is TRUE.
-#' @details One of the first steps for the annotation of a given factor is to visualise the corresponding loadings, 
+#' @details One of the first steps for the annotation of a given factor
+#'  is to visualise the corresponding loadings, 
 #' using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}.
 #' These functions display the top features that are driving the heterogeneity captured by a factor. \cr
 #' However, one might also be interested in visualising the coordinated heterogeneity in the input data, 
@@ -191,7 +197,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
   
   
   # Set color
-  colorLegend <- T
+  colorLegend <- TRUE
   if (!is.null(color_by)) {
     # It is the name of a covariate or a feature in the TrainData
     if (length(color_by) == 1 & is.character(color_by)) {
@@ -214,11 +220,11 @@ plotDataScatter <- function(object, view, factor, features = 10,
     }
   } else {
     color_by <- rep(TRUE,N)
-    colorLegend <- F
+    colorLegend <- FALSE
   }
 
   # Set shape
-  shapeLegend <- T
+  shapeLegend <- TRUE
   if (!is.null(shape_by)) {
     # It is the name of a covariate 
     if (length(shape_by) == 1 & is.character(shape_by)) {
@@ -241,13 +247,14 @@ plotDataScatter <- function(object, view, factor, features = 10,
     }
   } else {
     shape_by <- rep(TRUE,N)
-    shapeLegend <- F
+    shapeLegend <- FALSE
   }
   
   
   # Create data frame 
-  df1 <- data.frame(sample=names(Z), x = Z, shape_by = shape_by, color_by = color_by, stringsAsFactors=F)
-  df2 <- getTrainData(object, views=view, features = list(features), as.data.frame=T)
+  df1 <- data.frame(sample=names(Z), x = Z, shape_by = shape_by,
+                    color_by = color_by, stringsAsFactors=FALSE)
+  df2 <- getTrainData(object, views=view, features = list(features), as.data.frame=TRUE)
   df <- dplyr::left_join(df1,df2, by="sample")
     # Remove samples with missing values
   if (!showMissing) {
@@ -291,10 +298,14 @@ plotDataScatter <- function(object, view, factor, features = 10,
 #' @description Function to do a tile plot showing the dimensionality and 
 #' the missing value structure of the multi-omics data.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param colors a character vector specifying the colors per view. NULL (default) uses an internal palette.
-#' @details This function is helpful to get an overview of the dimensionality and the missing value structure of the training data. \cr 
-#' It shows the number of samples, the number of views, the number of features, and the structure of missing values. \cr
-#' It is particularly useful to visualise incomplete data sets, where some samples are missing subsets of assays.
+#' @param colors a character vector specifying the colors per view.
+#'  NULL (default) uses an internal palette.
+#' @details This function is helpful to get an overview of the dimensionality and
+#'  the missing value structure of the training data. \cr 
+#' It shows the number of samples, the number of views, the number of features,
+#'  and the structure of missing values. \cr
+#' It is particularly useful to visualise incomplete data sets,
+#'  where some samples are missing subsets of assays.
 #' @import ggplot2
 #' @import dplyr
 #' @import reshape2
@@ -340,7 +351,7 @@ plotTilesData <- function(object, colors = NULL) {
   molten_ovw <- melt(ovw, varnames=c("sample", "view"))
   
   # order samples
-  molten_ovw$sample <- factor(molten_ovw$sample, levels = rownames(ovw)[order(rowSums(ovw), decreasing = T)])
+  molten_ovw$sample <- factor(molten_ovw$sample, levels = rownames(ovw)[order(rowSums(ovw), decreasing = TRUE)])
   n <- length(unique(molten_ovw$sample))
   
   # Add number of samples and features per view
@@ -362,7 +373,7 @@ plotTilesData <- function(object, colors = NULL) {
     scale_fill_manual(values = c('missing'="grey", colors)) +
     # ggtitle("Samples available for training") +
     xlab(paste0("Samples (n=",n,")")) + ylab("") +
-    guides(fill=F) + 
+    guides(fill=FALSE) + 
     theme(
       axis.text.x =element_blank(),
       panel.background = element_rect(fill="white"),

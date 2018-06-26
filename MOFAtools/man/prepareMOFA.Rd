@@ -24,5 +24,6 @@ Returns an untrained \code{\link{MOFAmodel}} with specified data, model and trai
 Next step is to train the model with \code{\link{runMOFA}}
 }
 \description{
-Function to prepare a \code{\link{MOFAmodel}} object for training. Here, data, input/output option are specified and data, model and training options can be set.
+Function to prepare a \code{\link{MOFAmodel}} object for training.
+Here, data, input/output option are specified and data, model and training options can be set.
 }

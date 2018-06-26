@@ -6,10 +6,13 @@
 #' @rdname trainCurveFactors
 #' @name trainCurveFactors
 #' @title Training curve for the number of active factors
-#' @description the MOFA model starts with an initial number of factors and inactive factors are dropped during training if they explain small amounts of variation. 
+#' @description the MOFA model starts with an initial number of factors and inactive factors
+#'  can be dropped during training if they explain small amounts of variation 
+#'  (as defined in \code{\link{getDefaultModelOptions}}. 
 #' This allows the model to automatically infer the dimensionality of the latent space.
 #' The corresponding hyperparameters are defined in \code{\link{prepareMOFA}}. \cr
-#' All training statistics, including the number of active factors, can be fetch from the TrainStats slot of \code{\link{MOFAmodel}} .
+#' All training statistics, including the number of active factors, can be fetch from the
+#'  TrainStats slot of \code{\link{MOFAmodel}} .
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @import ggplot2 scales
 #' @export
@@ -63,12 +66,16 @@ trainCurveFactors <- function(object) {
 #' @name trainCurveELBO
 #' @rdname trainCurveELBO
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param log boolean indicating whether to apply log transform
-#' @description MOFA inference is done using the variational Bayes algorithm, which maximises a quantity called the Evidence Lower Bound (ELBO).
-#' The ELBO is supposed to increase monotonically up to convergence, but it can decrease substantially when dropping inactive factors.
+#' @param logScale boolean indicating whether to apply log transform
+#' @description MOFA inference is done using the variational Bayes algorithm,
+#'  which maximises a quantity called the Evidence Lower Bound (ELBO).
+#' The ELBO is supposed to increase monotonically up to convergence,
+#'  but it can decrease substantially when dropping inactive factors.
 #' For more details read the supplementary methods
-#' The frequency of ELBO computation as well as the convergence criteria are defined as hyperparameters in \code{\link{prepareMOFA}}. \cr
-#' All Training statistics, including the ELBO, can be fetch from the TrainStats slot of \code{\link{MOFAmodel}} .
+#' The frequency of ELBO computation as well as the convergence criteria are defined
+#'  as hyperparameters in \code{\link{prepareMOFA}}. \cr
+#' All Training statistics, including the ELBO,
+#'  can be fetch from the TrainStats slot of \code{\link{MOFAmodel}} .
 #' @import ggplot2 scales
 #' @export
 #' @examples
@@ -76,24 +83,26 @@ trainCurveFactors <- function(object) {
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 #' MOFA_CLL <- loadModel(filepath)
 #' trainCurveELBO(MOFA_CLL)
-#' trainCurveELBO(MOFA_CLL, log= TRUE)
+#' trainCurveELBO(MOFA_CLL, logScale= TRUE)
 #'
 #' # Example on the scMT data
 #' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
 #' MOFA_scMT <- loadModel(filepath)
 #' trainCurveELBO(MOFA_scMT)
 
-trainCurveELBO <- function(object, log = FALSE) {
+trainCurveELBO <- function(object, logScale = FALSE) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") { stop("'object' has to be an instance of MOFAmodel") }
+  if (class(object) != "MOFAmodel") { 
+    stop("'object' has to be an instance of MOFAmodel") 
+    }
   
   # Fetch ELBO from TrainStats  
   idx = seq(1,length(object@TrainStats$elbo),object@TrainOptions$elbofreq)
   stat = object@TrainStats$elbo[idx]
   
   # Apply log transform
-  if (log==T) { stat <- -log(-stat) }
+  if (logScale==TRUE) { stat <- -log(-stat) }
   
   data <- data.frame(time=idx, value=stat)
   p <- ggplot2::ggplot(data, aes_string(x="time", y="value")) +
@@ -114,8 +123,10 @@ trainCurveELBO <- function(object, log = FALSE) {
       panel.background = element_blank()
     )
   
-  if (log==F) {
-      scientific_10 <- function(x) { parse(text=gsub("e", " %*% 10^", scales::scientific_format()(x))) }
+  if (logScale==FALSE) {
+      scientific_10 <- function(x) {
+        parse(text=gsub("e", " %*% 10^", scales::scientific_format()(x))) 
+        }
       p <- p + scale_y_continuous(labels=scientific_10)
   }
   

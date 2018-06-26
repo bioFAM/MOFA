@@ -10,23 +10,29 @@ plotWeightsHeatmap(object, view, features = "all", factors = "all",
 \arguments{
 \item{object}{a trained \code{\link{MOFAmodel}} object.}
 
-\item{view}{character vector with the view name(s), or numeric vector with the index of the view(s) to use. 
+\item{view}{character vector with the view name(s),
+ or numeric vector with the index of the view(s) to use. 
 Default is 'all'}
 
-\item{features}{character vector with the feature name(s), or numeric vector with the index of the feature(s) to use. 
+\item{features}{character vector with the feature name(s),
+ or numeric vector with the index of the feature(s) to use. 
 Default is 'all'}
 
-\item{factors}{character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. 
+\item{factors}{character vector with the factor name(s),
+ or numeric vector with the index of the factor(s) to use. 
 Default is 'all'}
 
-\item{threshold}{threshold on absolute weight values, so that loadings with a magnitude below this threshold (in all factors) are removed}
+\item{threshold}{threshold on absolute weight values, so that loadings
+with a magnitude below this threshold (in all factors) are removed}
 
 \item{...}{extra arguments passed to \code{\link[pheatmap]{pheatmap}}.}
 }
 \description{
 Function to visualize the loadings for a given set of factors in a given view. \cr 
-This is useful to visualize the overall pattern of the weights but not to individually characterise the factors. \cr
-To inspect the loadings of individual factors, use the functions \code{\link{plotWeights}} and \code{\link{plotTopWeights}}
+This is useful to visualize the overall pattern of the weights
+ but not to individually characterise the factors. \cr
+To inspect the loadings of individual factors, use the functions
+ \code{\link{plotWeights}} and \code{\link{plotTopWeights}}
 }
 \examples{
 # Example on the CLL data

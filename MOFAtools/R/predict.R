@@ -13,16 +13,21 @@
 #' Default is "all".
 #' @param type type of prediction returned, either: 
 #' \itemize{
-#'  \item{\strong{response}:}{ gives the response vector, the mean for Gaussian and Poisson, and success probabilities for Bernoulli.}
+#'  \item{\strong{response}:}{ gives the response vector, the mean for Gaussian and Poisson,
+#'   and success probabilities for Bernoulli.}
 #'  \item{\strong{link}:}{ gives the linear predictions.}
-#'  \item{\strong{inRange}:}{ rounds the fitted values of integer-valued distributions (Poisson and Bernoulli) to the next integer.
+#'  \item{\strong{inRange}:}{ rounds the fitted values of integer-valued distributions 
+#'  (Poisson and Bernoulli) to the next integer.
 #'  This is the default option.}
 #' }
-#' @param include_intercept logical indicating whether to include the optional intercept factor for the prediction.
+#' @param include_intercept logical indicating whether
+#'  to include the optional intercept factor for the prediction.
 #' Default is TRUE.
-#' @details the denoised and condensed low-dimensional representation of the data captures the main sources of heterogeneity of the data. 
+#' @details the denoised and condensed low-dimensional representation of the data
+#'  captures the main sources of heterogeneity of the data. 
 #' These representation can be used to do predictions using the equation Y = WX. 
-#' This is the key step underlying imputation, see \code{\link{imputeMissing}} and the Methods section of the article.
+#' This is the key step underlying imputation, 
+#' see \code{\link{imputeMissing}} and the Methods section of the article.
 #' @return Returns a list with data predictions.
 #' @export
 #' @examples 
@@ -67,15 +72,18 @@ predict <- function(object, views = "all", factors = "all",
   if (paste0(factors,collapse="") == "all") { 
     factors <- factorNames(object) 
   } else if(is.numeric(factors)) {
-      if (object@ModelOptions$learnIntercept == T) factors <- factorNames(object)[factors+1]
+      if (object@ModelOptions$learnIntercept) 
+        factors <- factorNames(object)[factors+1]
       else factors <- factorNames(object)[factors]
   } else { 
     stopifnot(all(factors %in% factorNames(object))) 
   }
 
   # add intercept factor for prediction
-  if(!"intercept" %in% factors & object@ModelOptions$learnIntercept & include_intercept) factors <- c("intercept", factors)  
-  if(!include_intercept & "intercept" %in% factors) factors <- factors[factors!="intercept"]
+  if(!"intercept" %in% factors & object@ModelOptions$learnIntercept & include_intercept) 
+    factors <- c("intercept", factors)  
+  if(!include_intercept & "intercept" %in% factors) 
+    factors <- factors[factors!="intercept"]
   
   # Get type of predictions wanted 
   type = match.arg(type)

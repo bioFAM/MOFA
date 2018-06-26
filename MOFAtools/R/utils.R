@@ -23,7 +23,6 @@
   
   # Update node names
   if ("SW" %in% names(object@Expectations)) {
-    # object@ModelOptions$schedule[object@ModelOptions$schedule == "SW"] <- "W" # schedule is depreciated from ModelOptions
     names(object@Expectations)[names(object@Expectations)=="SW"] <- "W"
     colnames(object@TrainStats$elbo_terms)[colnames(object@TrainStats$elbo_terms)=="SW"] <- "W"
   }
@@ -65,14 +64,15 @@
   
   # Fetch data
   data <- getTrainData(object)
-  factors <- getFactors(object, include_intercept = F)
+  factors <- getFactors(object, include_intercept = FALSE)
   
   # Correlate the factors with global means per sample
   r <- lapply(data, function(x) abs(cor(apply(x,2,mean),factors, use="complete.obs")))
   for (i in names(r)) {
     if (any(r[[i]]>cor_threshold)) {
-      cat(paste0("Factor ",which(r[[i]]>cor_threshold)," is capturing an intercept effect in ",i,"\n"))
-      cat("Intercept factors arise from global differences between the samples, which could be different library size, mean methylation rates, etc.")
+      message(paste0("Factor ",which(r[[i]]>cor_threshold)," is capturing an intercept effect in ",i,"\n"))
+      message("Intercept factors arise from global differences between the samples,
+          which could be different library size, mean methylation rates, etc.")
     }
   }
 }
@@ -91,7 +91,8 @@ subset_augment <- function(mat, pats) {
 
 # Function to mask passenger samples.
 # Passenger samples n occur when factor k is unique to view m, but sample n is missing view m.
-# In such a case, the model has no information on the value of sample n on factor k, and the value should be masked.
+# In such a case, the model has no information on the value of sample n on factor k, 
+# and the value should be masked.
 .detectPassengers <- function(object, views = "all", factors = "all", r2_threshold = 0.02) {
   
   # Sanity checks
@@ -121,11 +122,13 @@ subset_augment <- function(mat, pats) {
   unique_factors <- names(which(rowSums(r2>=r2_threshold)==1))
   
   # Mask samples that are unique in the unique factors
-  missing <- sapply(getTrainData(object,views), function(view) sampleNames(object)[apply(view, 2, function(x) all(is.na(x)))] )
+  missing <- sapply(getTrainData(object,views), function(view) {
+    sampleNames(object)[apply(view, 2, function(x) all(is.na(x)))] 
+    })
   names(missing) <- viewNames(object)
   for (factor in unique_factors) {
     # view <- names(which(r2[factor,]>=r2_threshold))
-    view <- colnames(r2[,which(r2[factor,]>=r2_threshold),drop=F])
+    view <- colnames(r2[,which(r2[factor,]>=r2_threshold),drop=FALSE])
     missing_samples <- missing[[view]]
     if (length(missing_samples)>0) {
       Z[missing_samples,factor] <- NA

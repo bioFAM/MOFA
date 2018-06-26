@@ -11,7 +11,8 @@ clusterSamples(object, k, factors = "all", ...)
 
 \item{k}{number of clusters}
 
-\item{factors}{character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. 
+\item{factors}{character vector with the factor name(s), 
+or numeric vector with the index of the factor(s) to use. 
 Default is 'all'}
 
 \item{...}{extra arguments  passed to \code{\link{kmeans}}}
@@ -20,11 +21,13 @@ Default is 'all'}
 output from \code{\link{kmeans}} function
 }
 \description{
-MOFA factors are continuous in nature but they can be used to predict discrete clusters of samples, 
+MOFA factors are continuous in nature
+ but they can be used to predict discrete clusters of samples, 
 similar to the iCluster model (Shen, 2009). \cr
 The clustering can be performed in a single factor, which is equivalent to setting a manual threshold; 
 or using multiple factors, where multiple sources of variation are aggregated. \cr
-Importantly, this type of clustering is not weighted and does not take into account the different importance of the latent factors.
+Importantly, this type of clustering is not weighted and
+ does not take into account the different importance of the latent factors.
 }
 \details{
 In some cases, samples can have missing values in the factor space. 

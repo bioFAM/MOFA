@@ -10,7 +10,8 @@ getDefaultModelOptions(object)
 \item{object}{an untrained \code{\link{MOFAmodel}} object}
 }
 \value{
-Returns a list with the default model options, which have to be passed as an argument to \code{\link{prepareMOFA}}
+Returns a list with the default model options, which have to be passed as
+ an argument to \code{\link{prepareMOFA}}
 }
 \description{
 Function to obtain the default model options.
@@ -22,8 +23,10 @@ The model options are the following: \cr
  'gaussian' for continuous data, 'bernoulli' for binary data and 'poisson' for count data.
  By default, they are guessed internally.}
  \item{\strong{numFactors}:}{ numeric value indicating the initial number of factors. 
- If you want to learn the number of factors automatically we recommend setting this to a large value, around 50. Default is 25.}
- \item{\strong{learnIntercept}:}{ logical indicating whether to learn an intercept term to capture differences in feature means.
+ If you want to learn the number of factors automatically we recommend
+  setting this to a large value, default is 25.}
+ \item{\strong{learnIntercept}:}{ logical indicating whether to learn an intercept
+  term to capture differences in feature means.
  If you are using gaussian likelihoods, we recommend centering and setting learnIntercept to FALSE.
  However, if you have non-gaussian likelihoods, learning an intercept factor is important. Default is TRUE.}
  \item{\strong{sparsity}:}{ logical indicating whether to use sparsity.

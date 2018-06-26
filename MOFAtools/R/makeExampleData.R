@@ -6,7 +6,8 @@
 #' @param n_features number of features in each view 
 #' @param n_samples number of samples
 #' @param n_factors number of factors
-#' @param likelihood likelihood for each view, one of "gaussian", "bernoulli", "poisson" or a character vector of length n_views
+#' @param likelihood likelihood for each view, one of "gaussian", "bernoulli", "poisson"
+#'  or a character vector of length n_views
 #' @return Returns an untrained \code{\link{MOFAmodel}} containing simulated data as training data.
 #' @importFrom stats rnorm rbinom rpois
 #' @export
@@ -16,7 +17,8 @@
 #' MOFAexample <- makeExampleData()
 #' MOFAexample
 
-makeExampleData <- function(n_views=3, n_features=100, n_samples = 50, n_factors = 5, likelihood = "gaussian") {
+makeExampleData <- function(n_views=3, n_features=100, n_samples = 50,
+                            n_factors = 5, likelihood = "gaussian") {
   
   # Sanity checks
   if (!all(likelihood %in% c("gaussian", "bernoulli", "poisson")))

@@ -11,22 +11,26 @@ plotFactorBeeswarm(object, factors = "all", color_by = NULL,
 \arguments{
 \item{object}{a trained \code{\link{MOFAmodel}} object.}
 
-\item{factors}{character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. 
+\item{factors}{character vector with the factor name(s),
+ or numeric vector with the index of the factor(s) to use. 
 Default is 'all'}
 
 \item{color_by}{specifies groups or values used to color the samples. 
 This can be either: 
 a character giving the name of a feature, 
 a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
-or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.}
+or a vector of the same length as the number of samples
+ specifying discrete groups or continuous numeric values.}
 
-\item{shape_by}{specifies groups or values used for the shape of samples. See color_by for how this can be specified. A maximum of 6 different values can be specified.}
+\item{shape_by}{specifies groups or values used for the shape of samples.
+See color_by for how this can be specified. A maximum of 6 different values can be specified.}
 
 \item{name_color}{name for color legend (usually only used if color_by is not a character itself)}
 
 \item{name_shape}{name for shape legend (usually only used if shape_by is not a character itself)}
 
-\item{showMissing}{logical indicating whether to remove samples for which \code{shape_by} or \code{color_by} is missing.}
+\item{showMissing}{logical indicating whether to remove samples
+for which \code{shape_by} or \code{color_by} is missing.}
 }
 \value{
 Returns a \code{ggplot2} object
@@ -35,9 +39,11 @@ Returns a \code{ggplot2} object
 Beeswarm plot of the latent factor values.
 }
 \details{
-One of the main steps for the annotation of factors is to visualise and color them using known covariates or phenotypic data. \cr
+One of the main steps for the annotation of factors is
+ to visualise and color them using known covariates or phenotypic data. \cr
 This function generates a Beeswarm plot of the sample values in a given latent factor. \cr
-Similar functions are \code{\link{plotFactorScatter}} for doing scatter plots and \code{\link{plotFactorHist}} for doing histogram plots
+Similar functions are \code{\link{plotFactorScatter}} for doing scatter plots and
+ \code{\link{plotFactorHist}} for doing histogram plots
 }
 \examples{
 # Example on the CLL data

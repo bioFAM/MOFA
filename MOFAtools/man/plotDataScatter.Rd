@@ -14,13 +14,15 @@ plotDataScatter(object, view, factor, features = 10, color_by = NULL,
 
 \item{factor}{character vector with a factor name, or numeric vector with the index of the factor.}
 
-\item{features}{if an integer, the total number of features to plot (10 by default). If a character vector, a set of manually-defined features.}
+\item{features}{if an integer, the total number of features to plot (10 by default).
+If a character vector, a set of manually-defined features.}
 
 \item{color_by}{specifies groups or values used to color the samples. 
 This can be either: 
 (a) a character giving the name of a feature, 
 (b) a character giving the same of a covariate (only if using MultiAssayExperiment as input), or
-(c) a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.}
+(c) a vector of the same length as the number of samples
+ specifying discrete groups or continuous numeric values.}
 
 \item{name_color}{name for the color legend}
 
@@ -32,14 +34,16 @@ This can be either:
 
 \item{name_shape}{name for the shape legend}
 
-\item{showMissing}{logical indicating whether to show samples with missing values for the color or the shape.
+\item{showMissing}{logical indicating whether to show samples
+ with missing values for the color or the shape.
 Default is TRUE.}
 }
 \description{
 Function to do a scatterplot of the feature(s) values against the latent factor values.
 }
 \details{
-One of the first steps for the annotation of a given factor is to visualise the corresponding loadings, 
+One of the first steps for the annotation of a given factor
+ is to visualise the corresponding loadings, 
 using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}.
 These functions display the top features that are driving the heterogeneity captured by a factor. \cr
 However, one might also be interested in visualising the coordinated heterogeneity in the input data, 

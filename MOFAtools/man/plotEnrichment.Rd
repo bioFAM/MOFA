@@ -5,7 +5,7 @@
 \title{Line plot of Feature Set Enrichment Analysis results}
 \usage{
 plotEnrichment(object, fsea.out, factor, alpha = 0.1, max.pathways = 25,
-  adjust = T)
+  adjust = TRUE)
 }
 \arguments{
 \item{object}{\code{\link{MOFAmodel}} object, on which the Feature Set Enrichment Analyisis was performed}

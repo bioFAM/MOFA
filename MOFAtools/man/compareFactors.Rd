@@ -10,7 +10,9 @@ compareFactors(models, comparison = "all", show_rownames = FALSE,
 \arguments{
 \item{models}{a list containing \code{\link{MOFAmodel}} objects.}
 
-\item{comparison}{tye of comparison, either 'pairwise', i.e. compare one model with another one at a time, or 'all', i.e. calculate correlation between factors from all model. By default, all models are compared.}
+\item{comparison}{tye of comparison, either 'pairwise', i.e. compare one model
+with another one at a time, or 'all', i.e. calculate correlation between factors from all model.
+By default, all models are compared.}
 
 \item{show_rownames}{logical indicating whether to show rownames in heatmap (see also pheatmap documentation)}
 
@@ -26,12 +28,15 @@ The corresponding correlation matrix or list or pairwise correlation matrices is
 \description{
 Different objects of \code{\link{MOFAmodel}} are compared in terms of correlation between 
 their latent factors. The correlation is calculated only on those samples which are present in all models.
-Ideally, the output should look like a block diagonal matrix, suggesting that all detected factors are robust under different initialisations.
+Ideally, the output should look like a block diagonal matrix, suggesting that
+ all detected factors are robust under different initialisations.
 If not, it suggests that some factors are weak and not captured by all models.
 }
 \details{
-This function can be helpful to evaluate the robustness of factors across different random initilizations. 
-Large block of factors from different models in the correlation matrix show consistent factors, while stand-alone factors that are only recovered in a single model instance are less reliable.
+This function can be helpful to evaluate the robustness of factors across
+ different random initilizations. 
+Large block of factors from different models in the correlation matrix show consistent factors,
+ while stand-alone factors that are only recovered in a single model instance are less reliable.
 }
 \examples{
 ### Example on simulated data
@@ -42,7 +47,10 @@ MOFAobject <- makeExampleData()
 TrainOptions <- getDefaultTrainOptions()
 ModelOptions <- getDefaultModelOptions(MOFAobject)
 DataOptions <- getDefaultDataOptions()
-MOFAobject <- prepareMOFA(MOFAobject, DataOptions = DataOptions, ModelOptions = ModelOptions, TrainOptions = TrainOptions)
+MOFAobject <- prepareMOFA(MOFAobject,
+ DataOptions = DataOptions,
+ ModelOptions = ModelOptions,
+ TrainOptions = TrainOptions)
 
 # Train MOFA multiple times
 n_inits <- 3 

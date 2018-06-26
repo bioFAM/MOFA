@@ -14,8 +14,9 @@ logical vector with the samples to be kept as TRUE.}
 }
 \description{
 Method to subset (or sort) samples. \cr
-This function can remove samples from the model. For example, you might want to observe the effect of Factor 1
-on a subset of samples. You can create a new \code{\link{MOFAmodel}} excluding some samples
+This function can remove samples from the model. For example,
+you might want to observe the effect of Factor 1 on a subset of samples.
+You can create a new \code{\link{MOFAmodel}} excluding some samples
 and then visualise the effect of Factor 1 on the remaining ones, for instance via 
 \code{\link{plotDataHeatmap}} or \code{\link{plotFactorScatter}}. \cr
 This functionality is only for exploratory purposes. 

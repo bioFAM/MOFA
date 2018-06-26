@@ -9,20 +9,23 @@ plotEnrichmentHeatmap(fsea.out, alpha = 0.05, logScale = TRUE, ...)
 \arguments{
 \item{fsea.out}{output of \link{runEnrichmentAnalysis} function}
 
-\item{alpha}{FDR threshold to filter out unsignificant feature sets which are not represented in the heatmap. Default is 0.05.}
+\item{alpha}{FDR threshold to filter out unsignificant feature sets which are
+not represented in the heatmap. Default is 0.05.}
 
 \item{logScale}{boolean indicating whether to plot the log of the p.values.}
 
 \item{...}{extra arguments to be passed to \link{pheatmap} function}
 }
 \description{
-This method generates a heatmap with the adjusted p.values that result from the the feature set enrichment analysis. Rows are feature sets and columns are factors.
+This method generates a heatmap with the adjusted p.values that
+ result from the the feature set enrichment analysis. Rows are feature sets and columns are factors.
 }
 \examples{
 # Example on the CLL data
 filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 MOFA_CLL <- loadModel(filepath)
-# perform Feature Set Enrichment Analysis on mRNA data for all factors using the Reactome gene sets
+# perform Feature Set Enrichment Analysis on mRNA data for all factors 
+# using the Reactome gene sets
 data("reactomeGS")
 fsea.out <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
 # overview of enriched pathways per factor at an FDR of 1\%

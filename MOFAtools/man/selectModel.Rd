@@ -9,10 +9,12 @@ selectModel(models, plotit = TRUE)
 \arguments{
 \item{models}{a list containing \code{\link{MOFAmodel}} objects.}
 
-\item{plotit}{show a plot of the characteristics of the compared  \code{\link{MOFAmodel}} objects (ELBO value and number of inferred factors)?}
+\item{plotit}{show a plot of the characteristics of the compared
+\code{\link{MOFAmodel}} objects (ELBO value and number of inferred factors)?}
 }
 \description{
-Different trained objects of \code{\link{MOFAmodel}} are compared in terms of the final value of the ELBO statistics 
+Different trained objects of \code{\link{MOFAmodel}} are compared
+ in terms of the final value of the ELBO statistics 
 and the model with the highest ELBO value is selected.
 }
 \examples{
@@ -24,7 +26,10 @@ MOFAobject <- makeExampleData()
 TrainOptions <- getDefaultTrainOptions()
 ModelOptions <- getDefaultModelOptions(MOFAobject)
 DataOptions <- getDefaultDataOptions()
-MOFAobject <- prepareMOFA(MOFAobject, DataOptions = DataOptions, ModelOptions = ModelOptions, TrainOptions = TrainOptions)
+MOFAobject <- prepareMOFA(MOFAobject,
+ DataOptions = DataOptions,
+ ModelOptions = ModelOptions,
+ TrainOptions = TrainOptions)
 
 # Train MOFA multiple times
 n_inits <- 3 

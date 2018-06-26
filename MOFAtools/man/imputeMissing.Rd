@@ -16,14 +16,17 @@ imputeMissing(object, views = "all", factors = "all", type = c("inRange",
 
 \item{type}{type of prediction returned, either: 
 \itemize{
- \item{\strong{response}:}{ gives the response vector, the mean for Gaussian and Poisson, and success probabilities for Bernoulli.}
+ \item{\strong{response}:}{ gives the response vector, the mean for Gaussian and Poisson,
+  and success probabilities for Bernoulli.}
  \item{\strong{link}:}{ gives the linear predictions.}
- \item{\strong{inRange}:}{ rounds the fitted values of integer-valued distributions (Poisson and Bernoulli) to the next integer.
+ \item{\strong{inRange}:}{ rounds the fitted values of integer-valued distributions
+  (Poisson and Bernoulli) to the next integer.
  This is the default option.}
 }}
 }
 \description{
-This function uses the latent factors and the loadings inferred in order to impute missing values.
+This function uses the latent factors and the loadings inferred
+ in order to impute missing values.
 }
 \details{
 Matrix factorization models generate a denoised and condensed low-dimensional representation 

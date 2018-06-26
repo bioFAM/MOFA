@@ -7,7 +7,8 @@
 createMOFAobject(data)
 }
 \arguments{
-\item{data}{either a \code{\link{MultiAssayExperiment}} or a list of matrices with features as rows and samples as columns.}
+\item{data}{either a \code{\link{MultiAssayExperiment}}
+or a list of matrices with features as rows and samples as columns.}
 }
 \value{
 Returns an untrained \code{\link{MOFAmodel}} object. \cr
@@ -19,8 +20,10 @@ Method to initialize a \code{\link{MOFAmodel}} object with a multi-omics data se
 \details{
 If the multi-omics data is provided as a list of matrices, please make sure that features 
 are stored as rows and samples are stored as columns. \cr 
-If the matrices have sample names, we will use them to match the different matrices, filling the corresponding missing values. \cr
-If matrices have no column names, all matrices must have the same number of columns, and you are responsible for filling any missing values.
+If the matrices have sample names, we will use them to match the different matrices,
+ filling the corresponding missing values. \cr
+If matrices have no column names, all matrices must have the same number of columns,
+ and you are responsible for filling any missing values.
 }
 \examples{
 # Option 1: Create a MOFAobject from a list of matrices, features in rows and samples in columns.

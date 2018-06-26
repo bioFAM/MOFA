@@ -8,15 +8,20 @@
 #' @name compareFactors
 #' @description Different objects of \code{\link{MOFAmodel}} are compared in terms of correlation between 
 #' their latent factors. The correlation is calculated only on those samples which are present in all models.
-#' Ideally, the output should look like a block diagonal matrix, suggesting that all detected factors are robust under different initialisations.
+#' Ideally, the output should look like a block diagonal matrix, suggesting that
+#'  all detected factors are robust under different initialisations.
 #' If not, it suggests that some factors are weak and not captured by all models.
 #' @param models a list containing \code{\link{MOFAmodel}} objects.
-#' @param comparison tye of comparison, either 'pairwise', i.e. compare one model with another one at a time, or 'all', i.e. calculate correlation between factors from all model. By default, all models are compared.
+#' @param comparison tye of comparison, either 'pairwise', i.e. compare one model
+#'  with another one at a time, or 'all', i.e. calculate correlation between factors from all model.
+#'  By default, all models are compared.
 #' @param show_rownames logical indicating whether to show rownames in heatmap (see also pheatmap documentation)
 #' @param show_colnames logical indicating whether to show colnames in heatmap (see also pheatmap documentation)
 #' @param ... extra arguments passed to pheatmap
-#' @details This function can be helpful to evaluate the robustness of factors across different random initilizations. 
-#' Large block of factors from different models in the correlation matrix show consistent factors, while stand-alone factors that are only recovered in a single model instance are less reliable.
+#' @details This function can be helpful to evaluate the robustness of factors across
+#'  different random initilizations. 
+#' Large block of factors from different models in the correlation matrix show consistent factors,
+#'  while stand-alone factors that are only recovered in a single model instance are less reliable.
 #' @return Plots a heatmap of correlation of Latent Factors in all models when 'comparison' is 'all'. 
 #' Otherwise, for each pair of models, a seperate heatmap is produced comparing one model againt the other.
 #' The corresponding correlation matrix or list or pairwise correlation matrices is returned
@@ -37,7 +42,10 @@
 #' TrainOptions <- getDefaultTrainOptions()
 #' ModelOptions <- getDefaultModelOptions(MOFAobject)
 #' DataOptions <- getDefaultDataOptions()
-#' MOFAobject <- prepareMOFA(MOFAobject, DataOptions = DataOptions, ModelOptions = ModelOptions, TrainOptions = TrainOptions)
+#' MOFAobject <- prepareMOFA(MOFAobject,
+#'  DataOptions = DataOptions,
+#'  ModelOptions = ModelOptions,
+#'  TrainOptions = TrainOptions)
 #' 
 #' # Train MOFA multiple times
 #' n_inits <- 3 
@@ -119,8 +127,12 @@ compareFactors <- function(models, comparison = "all", show_rownames=FALSE, show
           # if(is.null(main)) main <- paste("Absolute correlation between factors in model", i,"and",j)
           nonconst1 <- apply(LFs1[common_pairwise,],2,var, na.rm=TRUE) > 0
           nonconst2 <- apply(LFs2[common_pairwise,],2,var, na.rm=TRUE) > 0
-          if(sum(!nonconst1) + sum(!nonconst2)>0) message("Removing ", sum(!nonconst1), " and " ,sum(!nonconst2), " constant factors from the each model for the comparison, respectively.")
-          corLFs_pairs <- cor(LFs1[common_pairwise,nonconst1], LFs2[common_pairwise,nonconst2], use="complete.obs")
+          if(sum(!nonconst1) + sum(!nonconst2)>0) 
+            message("Removing ", sum(!nonconst1), " and " ,sum(!nonconst2),
+                    " constant factors from the each model for the comparison, respectively.")
+          corLFs_pairs <- cor(LFs1[common_pairwise,nonconst1],
+                              LFs2[common_pairwise,nonconst2],
+                              use="complete.obs")
           if(length(unique(abs(corLFs_pairs)))>1){
           pheatmap(abs(corLFs_pairs),color=colorRampPalette(c("white", "orange" ,"red"))(100), ...)
           } else warning("No plot produced as correlations consist of only one value")
@@ -140,10 +152,14 @@ compareFactors <- function(models, comparison = "all", show_rownames=FALSE, show
 
 #' @title Compare different instances of trained \code{\link{MOFAmodel}} 
 #' @name compareModels
-#' @description Different objects of \code{\link{MOFAmodel}} are compared in terms of the final value of the ELBO statistics. 
-#' For model selection the model with the highest ELBO value is selected. The height of the bar indicates the number of inferred factors and the color of the bar the value of the ELBO statistic.
+#' @description Different objects of \code{\link{MOFAmodel}} are compared in terms
+#'  of the final value of the ELBO statistics. 
+#' For model selection the model with the highest ELBO value is selected.
+#'  The height of the bar indicates the number of inferred factors and 
+#'  the color of the bar the value of the ELBO statistic.
 #' @param models a list containing \code{\link{MOFAmodel}} objects.
-#' @param show_modelnames boolean, whether to indicate the name of each model instance (names of the list in models) or not
+#' @param show_modelnames boolean, whether to indicate the name of each model instance
+#'  (names of the list in models) or not
 #' @export
 #' @examples
 #' ### Example on simulated data
@@ -154,7 +170,10 @@ compareFactors <- function(models, comparison = "all", show_rownames=FALSE, show
 #' TrainOptions <- getDefaultTrainOptions()
 #' ModelOptions <- getDefaultModelOptions(MOFAobject)
 #' DataOptions <- getDefaultDataOptions()
-#' MOFAobject <- prepareMOFA(MOFAobject, DataOptions = DataOptions, ModelOptions = ModelOptions, TrainOptions = TrainOptions)
+#' MOFAobject <- prepareMOFA(MOFAobject,
+#'  DataOptions = DataOptions,
+#'  ModelOptions = ModelOptions,
+#'   TrainOptions = TrainOptions)
 #' 
 #' # Train MOFA multiple times
 #' n_inits <- 3 
@@ -185,10 +204,12 @@ compareModels <- function(models, show_modelnames = FALSE) {
 
 #' @title Select the best model from a list of trained \code{\link{MOFAmodel}} objects
 #' @name selectModel
-#' @description Different trained objects of \code{\link{MOFAmodel}} are compared in terms of the final value of the ELBO statistics 
+#' @description Different trained objects of \code{\link{MOFAmodel}} are compared
+#'  in terms of the final value of the ELBO statistics 
 #' and the model with the highest ELBO value is selected.
 #' @param models a list containing \code{\link{MOFAmodel}} objects.
-#' @param plotit show a plot of the characteristics of the compared  \code{\link{MOFAmodel}} objects (ELBO value and number of inferred factors)?
+#' @param plotit show a plot of the characteristics of the compared
+#'   \code{\link{MOFAmodel}} objects (ELBO value and number of inferred factors)?
 #' @export
 #' @examples
 #' ### Example on simulated data
@@ -199,7 +220,10 @@ compareModels <- function(models, show_modelnames = FALSE) {
 #' TrainOptions <- getDefaultTrainOptions()
 #' ModelOptions <- getDefaultModelOptions(MOFAobject)
 #' DataOptions <- getDefaultDataOptions()
-#' MOFAobject <- prepareMOFA(MOFAobject, DataOptions = DataOptions, ModelOptions = ModelOptions, TrainOptions = TrainOptions)
+#' MOFAobject <- prepareMOFA(MOFAobject,
+#'  DataOptions = DataOptions,
+#'  ModelOptions = ModelOptions,
+#'  TrainOptions = TrainOptions)
 #' 
 #' # Train MOFA multiple times
 #' n_inits <- 3 

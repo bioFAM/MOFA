@@ -26,8 +26,10 @@ getDimensions <- function(object) {
 #' Default is \code{TRUE}.
 #' @param as.data.frame logical indicating whether to return a long data frame instead of a matrix.
 #' Default is \code{FALSE}.
-#' @return By default it returns the latent factor matrix of dimensionality (N,K), where N is number of samples and K is number of factors. \cr
-#' Alternatively, if \code{as.data.frame} is \code{TRUE}, returns a long-formatted data frame with columns (sample,factor,value).
+#' @return By default it returns the latent factor matrix of dimensionality (N,K),
+#'  where N is number of samples and K is number of factors. \cr
+#' Alternatively, if \code{as.data.frame} is \code{TRUE},
+#'  returns a long-formatted data frame with columns (sample,factor,value).
 #' @export
 #' 
 getFactors <- function(object, factors = "all", as.data.frame = FALSE, include_intercept = TRUE) {
@@ -39,7 +41,7 @@ getFactors <- function(object, factors = "all", as.data.frame = FALSE, include_i
   if (paste0(factors,collapse="") == "all") { 
     factors <- factorNames(object) 
   } else if (is.numeric(factors)) {
-      if (object@ModelOptions$learnIntercept == T) factors <- factorNames(object)[factors+1]
+      if (object@ModelOptions$learnIntercept == TRUE) factors <- factorNames(object)[factors+1]
       else factors <- factorNames(object)[factors]
   } else { 
     stopifnot(all(factors %in% factorNames(object))) 
@@ -77,7 +79,8 @@ getFactors <- function(object, factors = "all", as.data.frame = FALSE, include_i
 #' Default is \code{FALSE}.
 #' @return By default it returns a list where each element is a loading matrix with dimensionality (D,K), 
 #' where D is the number of features and K is the number of factors. \cr
-#' Alternatively, if \code{as.data.frame} is \code{TRUE}, returns a long-formatted data frame with columns (view,feature,factor,value).
+#' Alternatively, if \code{as.data.frame} is \code{TRUE},
+#'  returns a long-formatted data frame with columns (view,feature,factor,value).
 #' @export
 #' 
 getWeights <- function(object, views = "all", factors = "all", as.data.frame = FALSE) {
@@ -86,13 +89,14 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   
   # Get views and factors
-  if (paste0(views,collapse="") == "all") { views <- viewNames(object) } else { stopifnot(all(views %in% viewNames(object))) }
+  if (paste0(views,collapse="") == "all") { views <- viewNames(object) 
+  } else { stopifnot(all(views %in% viewNames(object))) }
 
   # Get factors
   if (paste0(factors,collapse="") == "all") { 
     factors <- factorNames(object) 
   } else if (is.numeric(factors)) {
-      if (object@ModelOptions$learnIntercept == T) {
+      if (object@ModelOptions$learnIntercept == TRUE) {
         factors <- factorNames(object)[factors+1]
       } else {
         factors <- factorNames(object)[factors]
@@ -101,10 +105,10 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
         
   # Fetch weights
   weights <- getExpectations(object,"W",as.data.frame)
-  if (as.data.frame==T) {
+  if (as.data.frame==TRUE) {
     weights <- weights[weights$view%in%views & weights$factor%in%factors, ]
   } else {
-    weights <- lapply(views, function(m) weights[[m]][,factors,drop=F])
+    weights <- lapply(views, function(m) weights[[m]][,factors,drop=FALSE])
     names(weights) <-  views
     # if (length(views)==1) { weights <- weights[[1]] }
   }
@@ -118,25 +122,30 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param views character vector with the view name(s), or numeric vector with the view index(es). 
 #' Default is "all".
-#' @param features list of character vectors with the feature names or list of numeric vectors with the feature indices. 
+#' @param features list of character vectors with the feature names or
+#'  list of numeric vectors with the feature indices. 
 #' Default is "all"
 #' @param as.data.frame logical indicating whether to return a long data frame instead of a list of matrices.
 #' Default is \code{FALSE}.
-#' @details By default this function returns a list where each element is a data matrix with dimensionality (D,N) 
+#' @details By default this function returns a list where each element
+#'  is a data matrix with dimensionality (D,N) 
 #' where D is the number of features and N is the number of samples. \cr
-#' Alternatively, if \code{as.data.frame} is \code{TRUE}, the function returns a long-formatted data frame with columns (view,feature,sample,value).
+#' Alternatively, if \code{as.data.frame} is \code{TRUE}, the function
+#'  returns a long-formatted data frame with columns (view,feature,sample,value).
 #' @export
-getTrainData <- function(object, views = "all", features = "all", as.data.frame = F) {
+getTrainData <- function(object, views = "all", features = "all", as.data.frame = FALSE) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   
   # Get views
-  if (paste0(views,collapse="") == "all") { views <- viewNames(object) } else { stopifnot(all(views %in% viewNames(object))) }
+  if (paste0(views,collapse="") == "all") { views <- viewNames(object) 
+  } else { stopifnot(all(views %in% viewNames(object))) }
   
   # Get features
   if (class(features)=="list") {
-    stopifnot(all(sapply(1:length(features), function(i) all(features[[i]] %in% featureNames(object)[[views[i]]]))))
+    stopifnot(all(sapply(1:length(features),
+                         function(i) all(features[[i]] %in% featureNames(object)[[views[i]]]))))
   } else {
     if (paste0(features,collapse="") == "all") { 
       features <- featureNames(object)[views]
@@ -147,14 +156,16 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
   
   # Fetch data
   trainData <- object@TrainData[views]
-  trainData <- lapply(1:length(trainData), function(m) trainData[[m]][features[[m]],,drop=F]); names(trainData) <- views
+  trainData <- lapply(1:length(trainData), function(m) trainData[[m]][features[[m]],,drop=FALSE])
+  names(trainData) <- views
   
   # Convert to long data frame
-  if (as.data.frame==T) {
-    tmp <- lapply(views, function(m) { tmp <- reshape2::melt(trainData[[m]]); colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
+  if (as.data.frame==TRUE) {
+    tmp <- lapply(views, function(m) { tmp <- reshape2::melt(trainData[[m]])
+    colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
     trainData <- do.call(rbind,tmp)
     trainData[,c("view","feature","sample")] <- sapply(trainData[,c("view","feature","sample")], as.character)
-  }# else if ((length(views)==1) && (as.data.frame==F)) {
+  }# else if ((length(views)==1) && (as.data.frame==FALSE)) {
   #  trainData <- trainData[[views]]
   #}
   
@@ -164,16 +175,21 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
 
 #' @title getImputedData
 #' @name getImputedData
-#' @description Function to get the imputed data. It requires the previous use of the \code{\link{imputeMissing}} method.
+#' @description Function to get the imputed data. It requires the previous use of the
+#'  \code{\link{imputeMissing}} method.
 #' @param object a trained \code{\link{MOFAmodel}} object.
 #' @param views character vector with the view name(s), or numeric vector with the view index(es). 
 #' Default is "all".
-#' @param features list of character vectors with the feature names or list of numeric vectors with the feature indices. 
+#' @param features list of character vectors with the feature names or
+#'  list of numeric vectors with the feature indices. 
 #' Default is "all"
-#' @param as.data.frame logical indicating whether to return a long-formatted data frame instead of a list of matrices. 
+#' @param as.data.frame logical indicating whether to return a long-formatted data frame
+#'  instead of a list of matrices. 
 #' Default is \code{FALSE}.
-#' @return By default returns a list where each element is a matrix with dimensionality (D,N), where D is the number of features in this view and N is the number of samples. \cr
-#' Alternatively, if \code{as.data.frame} is \code{TRUE}, returns a long-formatted data frame with columns (view,feature,sample,value).
+#' @return By default returns a list where each element is a matrix with dimensionality (D,N), 
+#' where D is the number of features in this view and N is the number of samples. \cr
+#' Alternatively, if \code{as.data.frame} is \code{TRUE},
+#'  returns a long-formatted data frame with columns (view,feature,sample,value).
 #' @export
 getImputedData <- function(object, views = "all", features = "all", as.data.frame = FALSE) {
   
@@ -203,15 +219,18 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
   
   # Fetch imputed data
   ImputedData <- object@ImputedData[views]
-  ImputedData <- lapply(1:length(ImputedData), function(m) ImputedData[[m]][features[[m]],,drop=F]); names(ImputedData) <- views
+  ImputedData <- lapply(1:length(ImputedData),
+                        function(m) ImputedData[[m]][features[[m]],,drop=FALSE]) 
+  names(ImputedData) <- views
   
   # Convert to long data frame
-  if (as.data.frame==T) {
-    tmp <- lapply(views, function(m) { tmp <- reshape2::melt(ImputedData[[m]]); colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
+  if (as.data.frame==TRUE) {
+    tmp <- lapply(views, function(m) { tmp <- reshape2::melt(ImputedData[[m]]) 
+    colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
     ImputedData <- do.call(rbind,tmp)
     ImputedData[,c("view","feature","sample")] <- sapply(ImputedData[,c("view","feature","sample")], as.character)
   } 
-  # else if ((length(views)==1) && (as.data.frame==F)) {
+  # else if ((length(views)==1) && (as.data.frame==FALSE)) {
   #   ImputedData <- ImputedData[[views]]
   # }
   
@@ -220,8 +239,10 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
 
 #' @name getCovariates
 #' @title getCovariates
-#' @description This function extracts covariates from the \code{colData} in the input \code{MultiAssayExperiment} object. \cr
-#' Note that if you did not use \code{MultiAssayExperiment} to create your \code{\link{createMOFAobject}}, this function will not work.
+#' @description This function extracts covariates from the \code{colData}
+#'  in the input \code{MultiAssayExperiment} object. \cr
+#' Note that if you did not use \code{MultiAssayExperiment} to create
+#'  your \code{\link{createMOFAobject}}, this function will not work.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param covariate names of the covariate
 #' @import MultiAssayExperiment
@@ -272,20 +293,30 @@ getCovariates <- function(object, covariate) {
 
 #' @title getExpectations
 #' @name getExpectations
-#' @description Function to extract the expectations from the (variational) posterior distributions of a trained \code{\link{MOFAmodel}} object.
+#' @description Function to extract the expectations from the (variational) posterior
+#'  distributions of a trained \code{\link{MOFAmodel}} object.
 #' @param object a trained \code{\link{MOFAmodel}} object.
 #' @param variable variable name: 'Z' for factors, 'W' for weights, 'Tau' for noise,
-#' 'Y' for pseudodata, 'Theta' for feature-wise spike-and-slab sparsity, 'AlphaW' for view and factor-wise ARD sparsity
-#' @param as.data.frame logical indicating whether to output the result as a long data frame, default is \code{FALSE}.
-#' @details Technical note: MOFA is a Bayesian model where each variable has a prior distribution and a posterior distribution. 
-#' In particular, to achieve scalability we used the variational inference framework, thus true posterior distributions are replaced by approximated variational distributions.
-#' This function extracts the expectations of the variational distributions, which can be used as final point estimates to analyse the results of the model. \cr 
-#' The priors and variational distributions of each variable are extensively described in the supplementary methods of the original paper.
+#' 'Y' for pseudodata, 'Theta' for feature-wise spike-and-slab sparsity,
+#'  'AlphaW' for view and factor-wise ARD sparsity
+#' @param as.data.frame logical indicating whether to output the result as a long data frame,
+#'  default is \code{FALSE}.
+#' @details Technical note: MOFA is a Bayesian model where each variable has a prior distribution
+#'  and a posterior distribution. In particular, to achieve scalability we used the 
+#'  variational inference framework, thus true posterior distributions are replaced
+#'   by approximated variational distributions.
+#' This function extracts the expectations of the variational distributions, 
+#' which can be used as final point estimates to analyse the results of the model. \cr 
+#' The priors and variational distributions of each variable are extensively
+#'  described in the supplementary methods of the original paper.
 #' @return the output varies depending on the variable of interest: \cr
 #' \itemize{
-#'  \item{"Z"}{a matrix with dimensions (samples,factors). If \code{as.data.frame} is \code{TRUE}, a long-formatted data frame with columns (sample,factor,value)}
-#'  \item{"W"}{a list of length (views) where each element is a matrix with dimensions (features,factors). If \code{as.data.frame} is \code{TRUE}, a long-formatted data frame with columns (view,feature,factor,value)}
-#'  \item{"Y"}{a list of length (views) where each element is a matrix with dimensions (features,samples). If \code{as.data.frame} is \code{TRUE}, a long-formatted data frame with columns (view,feature,sample,value)}
+#'  \item{"Z"}{a matrix with dimensions (samples,factors). 
+#'  If \code{as.data.frame} is \code{TRUE}, a long-formatted data frame with columns (sample,factor,value)}
+#'  \item{"W"}{a list of length (views) where each element is a matrix with dimensions (features,factors).
+#'   If \code{as.data.frame} is \code{TRUE}, a long-formatted data frame with columns (view,feature,factor,value)}
+#'  \item{"Y"}{a list of length (views) where each element is a matrix with dimensions (features,samples).
+#'   If \code{as.data.frame} is \code{TRUE}, a long-formatted data frame with columns (view,feature,sample,value)}
 #'  \item{"Theta"}{}
 #'  \item{"Tau"}{}
 #' }
@@ -305,7 +336,7 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
   # }
   
   # Convert to long data frame
-  if (as.data.frame==T) {
+  if (as.data.frame==TRUE) {
     if (variable=="Z") {
       tmp <- reshape2::melt(exp)
       colnames(tmp) <- c("sample","factor","value")
@@ -349,7 +380,10 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
     }
     else if (variable=="Theta") {
       stop("Not implemented")
-      # tmp <- lapply(names(exp), function(m) { tmp <- reshape2::melt(exp[[m]]); colnames(tmp) <- c("sample","feature","value"); tmp$view <- m; tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character); return(tmp) })
+      # tmp <- lapply(names(exp), function(m) { tmp <- reshape2::melt(exp[[m]])
+      # colnames(tmp) <- c("sample","feature","value")
+      # tmp$view <- m; tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character)
+      # return(tmp) })
       # tmp <- do.call(rbind,tmp)
     }
     exp <- tmp
@@ -360,7 +394,8 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
 
 #' @title getELBO
 #' @name getELBO
-#' @description Extract the value of the ELBO statistics after model training. This can be useful for model selection.
+#' @description Extract the value of the ELBO statistics after model training.
+#'  This can be useful for model selection.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @importFrom utils tail
 #' @export

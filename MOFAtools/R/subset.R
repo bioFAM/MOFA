@@ -7,11 +7,14 @@
 #' @name subsetFactors
 #' @description Method to subset (or sort) factors. \cr
 #' Some factors might not be interesting for the downstream analysis and the user can choose to remove them.
-#' This has no effect on the values of the other factors. For example, this could be done it the model contains factors
+#' This has no effect on the values of the other factors.
+#' For example, this could be done it the model contains factors
 #' which are inactive in all views.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param factors character vector with the factor names (LF1,LF2,...), or numeric vector with the index of the factors.
-#' @param keep_intercept logical indicating whether the optional intercept factor should be kept when subsetting (default TRUE).
+#' @param factors character vector with the factor names (LF1,LF2,...),
+#'  or numeric vector with the index of the factors.
+#' @param keep_intercept logical indicating whether the optional intercept factor
+#'  should be kept when subsetting (default TRUE).
 #' @examples
 #' # Using an existing trained model on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
@@ -27,7 +30,7 @@ subsetFactors <- function(object, factors, keep_intercept=TRUE) {
 
     # Get factors
    if(is.numeric(factors)) {
-      if (object@ModelOptions$learnIntercept == T) factors <- factorNames(object)[factors+1]
+      if (object@ModelOptions$learnIntercept == TRUE) factors <- factorNames(object)[factors+1]
       else factors <- factorNames(object)[factors]
     }
       else{ stopifnot(all(factors %in% factorNames(object))) }
@@ -37,10 +40,16 @@ subsetFactors <- function(object, factors, keep_intercept=TRUE) {
   }
   
   # Subset relevant slots
-  object@Expectations$Z <- object@Expectations$Z[,factors, drop=F]
-  object@Expectations$Alpha <- sapply(object@Expectations$Alpha, function(x) x[factors], simplify = F, USE.NAMES = T)
-  object@Expectations$W <- sapply(object@Expectations$W, function(x) x[,factors, drop=F], simplify = F, USE.NAMES = T)
-  object@Expectations$Theta <- sapply(object@Expectations$Theta, function(x) x[factors], simplify = F, USE.NAMES = T)
+  object@Expectations$Z <- object@Expectations$Z[,factors, drop=FALSE]
+  object@Expectations$Alpha <- sapply(object@Expectations$Alpha,
+                                      function(x) x[factors],
+                                      simplify = FALSE, USE.NAMES = TRUE)
+  object@Expectations$W <- sapply(object@Expectations$W,
+                                  function(x) x[,factors, drop=FALSE],
+                                  simplify = FALSE, USE.NAMES = TRUE)
+  object@Expectations$Theta <- sapply(object@Expectations$Theta,
+                                      function(x) x[factors],
+                                      simplify = FALSE, USE.NAMES = TRUE)
 
   # Modify dimensionality
   object@Dimensions[["K"]] <- length(factors)
@@ -56,8 +65,9 @@ subsetFactors <- function(object, factors, keep_intercept=TRUE) {
 #' @title Subset samples
 #' @name subsetSamples
 #' @description Method to subset (or sort) samples. \cr
-#' This function can remove samples from the model. For example, you might want to observe the effect of Factor 1
-#' on a subset of samples. You can create a new \code{\link{MOFAmodel}} excluding some samples
+#' This function can remove samples from the model. For example,
+#' you might want to observe the effect of Factor 1 on a subset of samples.
+#' You can create a new \code{\link{MOFAmodel}} excluding some samples
 #' and then visualise the effect of Factor 1 on the remaining ones, for instance via 
 #' \code{\link{plotDataHeatmap}} or \code{\link{plotFactorScatter}}. \cr
 #' This functionality is only for exploratory purposes. 
@@ -79,7 +89,8 @@ subsetSamples <- function(object, samples) {
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(samples) <= object@Dimensions[["N"]])
-  warning("Removing samples is fine for an exploratory analysis, but we recommend removing them before training!\n")
+  warning("Removing samples is fine for an exploratory analysis,\n
+          but we recommend removing them before training!\n")
   
   # Get samples
   if (is.character(samples)) {
@@ -89,13 +100,16 @@ subsetSamples <- function(object, samples) {
   }
   
   # Subset relevant slots
-  object@Expectations$Z <- object@Expectations$Z[samples,, drop=F]
-  object@Expectations$Y <- sapply(object@Expectations$Y, function(x) x[samples,], simplify = F, USE.NAMES = T)
-  object@TrainData <- sapply(object@TrainData, function(x) x[,samples], simplify = F, USE.NAMES = T)
+  object@Expectations$Z <- object@Expectations$Z[samples,, drop=FALSE]
+  object@Expectations$Y <- sapply(object@Expectations$Y, function(x) x[samples,],
+                                  simplify = FALSE, USE.NAMES = TRUE)
+  object@TrainData <- sapply(object@TrainData, function(x) x[,samples],
+                             simplify = FALSE, USE.NAMES = TRUE)
   if (length(object@InputData)>0)
     object@InputData <- object@InputData[,samples,]
   if (length(object@ImputedData)==0)
-    object@ImputedData <- sapply(object@ImputedData, function(x) x[,samples], simplify = F, USE.NAMES = T)
+    object@ImputedData <- sapply(object@ImputedData, function(x) x[,samples],
+                                 simplify = FALSE, USE.NAMES = TRUE)
 
   # Modify dimensionality
   object@Dimensions[["N"]] <- length(samples)
@@ -111,11 +125,13 @@ subsetSamples <- function(object, samples) {
 #' @name subsetViews
 #' @description Method to subset (or sort) views.
 #' This function can remove entire views from the model. 
-#' For example, you might want to generate the \code{\link{plotVarianceExplained}} plot excluding a particular view. \cr
-#' This functionality is only for exploratory purposes. If some view(s) are not of interest we strongly recommend 
-#' removing them before training the model.
+#' For example, you might want to generate the \code{\link{plotVarianceExplained}} plot
+#'  excluding a particular view. \cr
+#' This functionality is only for exploratory purposes.
+#' If some view(s) are not of interest we strongly recommend removing them before training the model.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param views character vector with the view names, numeric vector with the view indices or logical vector with the view to be kept as TRUE.
+#' @param views character vector with the view names, numeric vector with the view indices
+#'  or logical vector with the view to be kept as TRUE.
 #' @export
 #' @examples
 #' # Using an existing trained model on the CLL data
@@ -130,7 +146,8 @@ subsetViews <- function(object, views) {
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(views) <= object@Dimensions[["N"]])
-  warning("Removing views is fine for an exploratory analysis, but we recommend removing them before training!\n")
+  warning("Removing views is fine for an exploratory analysis,\n
+          but we recommend removing them before training!\n")
   
   # Get views
   if (is.character(views)) {

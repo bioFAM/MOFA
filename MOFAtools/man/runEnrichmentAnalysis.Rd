@@ -16,38 +16,53 @@ runEnrichmentAnalysis(object, view, feature.sets, factors = "all",
 
 \item{view}{name of the view}
 
-\item{feature.sets}{data structure that holds feature set membership information. Must be either a binary membership matrix (rows are feature sets and columns are features) or a list of feature set indexes (see vignette for details).}
+\item{feature.sets}{data structure that holds feature set membership information.
+Must be either a binary membership matrix (rows are feature sets and columns are features) or
+ a list of feature set indexes (see vignette for details).}
 
-\item{factors}{character vector with the factor names, or numeric vector with the index of the factors for which to perform the enrichment.}
+\item{factors}{character vector with the factor names, or numeric vector with the index
+of the factors for which to perform the enrichment.}
 
-\item{local.statistic}{the feature statistic used to quantify the association between each feature and each factor. Must be one of the following: loading (default), cor, z.}
+\item{local.statistic}{the feature statistic used to quantify the association
+between each feature and each factor. Must be one of the following: loading (default), cor, z.}
 
-\item{global.statistic}{the feature set statisic computed from the feature statistics. Must be one of the following: "mean.diff" (default) or "rank.sum".}
+\item{global.statistic}{the feature set statisic computed from the feature statistics.
+Must be one of the following: "mean.diff" (default) or "rank.sum".}
 
-\item{statistical.test}{the statistical test used to compute the significance of the feature set statistics under a competitive null hypothesis.
+\item{statistical.test}{the statistical test used to compute the significance of the feature
+set statistics under a competitive null hypothesis.
 Must be one of the following: "parametric" (default), "cor.adj.parametric", "permutation".}
 
-\item{transformation}{optional transformation to apply to the feature-level statistics. Must be one of the following "none" or "abs.value" (default).}
+\item{transformation}{optional transformation to apply to the feature-level statistics.
+Must be one of the following "none" or "abs.value" (default).}
 
 \item{min.size}{Minimum size of a feature set (default is 10).}
 
-\item{nperm}{number of permutations. Only relevant if statistical.test is set to "permutation". Default is 1000}
+\item{nperm}{number of permutations. Only relevant if statistical.test is set to "permutation".
+Default is 1000}
 
-\item{cores}{number of cores to run the permutation analysis in parallel. Only relevant if statistical.test is set to "permutation". Default is 1}
+\item{cores}{number of cores to run the permutation analysis in parallel.
+Only relevant if statistical.test is set to "permutation". Default is 1}
 
-\item{p.adj.method}{Method to adjust p-values factor-wise for multiple testing. Can be any method in p.adjust.methods(). Default uses Benjamini-Hochberg procedure.}
+\item{p.adj.method}{Method to adjust p-values factor-wise for multiple testing.
+Can be any method in p.adjust.methods(). Default uses Benjamini-Hochberg procedure.}
 
 \item{alpha}{FDR threshold to generate lists of significant pathways. Default is 0.1}
 }
 \value{
-a list with three components: pval and pval.adj contain matrices with p-values and adjusted p-values, repectively. sigPathways contains a list with significant pathwayd at FDR alpha per factor.
+a list with three components: pval and pval.adj contain matrices with p-values and
+ adjusted p-values, repectively. sigPathways contains a list with significant pathwayd at
+ FDR alpha per factor.
 }
 \description{
-Method to perform feature set enrichment analysis. Here we use a slightly modified version of the \link[PCGSE]{pcgse} function.
+Method to perform feature set enrichment analysis.
+ Here we use a slightly modified version of the \link[PCGSE]{pcgse} function.
 }
 \details{
-Based on the weights of each factor in the specified view, this function calculates the enrichment of the feature sets by cmparing the weights of features in a set with those outside the set. 
-This function is based upon the \link[PCGSE]{pcgse} function with small modifications.
+Based on the weights of each factor in the specified view,
+ this function calculates the enrichment of the feature sets by comparing the weights of features
+ in a set with those outside the set.  
+ This function is based upon the \link[PCGSE]{pcgse} function with small modifications.
 }
 \examples{
 # Example on the CLL data

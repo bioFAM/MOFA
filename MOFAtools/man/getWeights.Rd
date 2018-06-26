@@ -21,7 +21,8 @@ Default is \code{FALSE}.}
 \value{
 By default it returns a list where each element is a loading matrix with dimensionality (D,K), 
 where D is the number of features and K is the number of factors. \cr
-Alternatively, if \code{as.data.frame} is \code{TRUE}, returns a long-formatted data frame with columns (view,feature,factor,value).
+Alternatively, if \code{as.data.frame} is \code{TRUE},
+ returns a long-formatted data frame with columns (view,feature,factor,value).
 }
 \description{
 Extract the weights from the model.

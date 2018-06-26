@@ -4,7 +4,8 @@
 \alias{getTrainData}
 \title{getTrainData}
 \usage{
-getTrainData(object, views = "all", features = "all", as.data.frame = F)
+getTrainData(object, views = "all", features = "all",
+  as.data.frame = FALSE)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
@@ -12,7 +13,8 @@ getTrainData(object, views = "all", features = "all", as.data.frame = F)
 \item{views}{character vector with the view name(s), or numeric vector with the view index(es). 
 Default is "all".}
 
-\item{features}{list of character vectors with the feature names or list of numeric vectors with the feature indices. 
+\item{features}{list of character vectors with the feature names or
+ list of numeric vectors with the feature indices. 
 Default is "all"}
 
 \item{as.data.frame}{logical indicating whether to return a long data frame instead of a list of matrices.
@@ -22,7 +24,9 @@ Default is \code{FALSE}.}
 Fetch the training data
 }
 \details{
-By default this function returns a list where each element is a data matrix with dimensionality (D,N) 
+By default this function returns a list where each element
+ is a data matrix with dimensionality (D,N) 
 where D is the number of features and N is the number of samples. \cr
-Alternatively, if \code{as.data.frame} is \code{TRUE}, the function returns a long-formatted data frame with columns (view,feature,sample,value).
+Alternatively, if \code{as.data.frame} is \code{TRUE}, the function
+ returns a long-formatted data frame with columns (view,feature,sample,value).
 }

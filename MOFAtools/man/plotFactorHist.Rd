@@ -23,9 +23,11 @@ or a vector of the same length as the number of samples.}
 \item{alpha}{transparency parameter. 
 Default is 0.5}
 
-\item{binwidth}{binwidth for histogram. Default is \code{NULL}, which uses \code{ggplot2} default calculation.}
+\item{binwidth}{binwidth for histogram. Default is \code{NULL},
+which uses \code{ggplot2} default calculation.}
 
-\item{showMissing}{boolean indicating whether to remove sample for which \code{group_by} is missing (default is FALSE)}
+\item{showMissing}{boolean indicating whether to remove sample
+for which \code{group_by} is missing (default is FALSE)}
 }
 \value{
 Returns a \code{ggplot2} object
@@ -34,7 +36,8 @@ Returns a \code{ggplot2} object
 Plot a histogram of latent factor values.
 }
 \details{
-One of the first steps for the annotation of factors is to visualise and color them using known covariates such as phenotypic or clinical data. \cr
+One of the first steps for the annotation of factors
+ is to visualise and color them using known covariates such as phenotypic or clinical data. \cr
 This method generates a histogram of the sample values in a given latent factor. \cr
 Similar functions are \code{\link{plotFactorScatter}} for doing scatter plots between pairs of factors 
 and \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots of single factors.

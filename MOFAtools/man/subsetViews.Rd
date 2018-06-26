@@ -9,14 +9,16 @@ subsetViews(object, views)
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{views}{character vector with the view names, numeric vector with the view indices or logical vector with the view to be kept as TRUE.}
+\item{views}{character vector with the view names, numeric vector with the view indices
+or logical vector with the view to be kept as TRUE.}
 }
 \description{
 Method to subset (or sort) views.
 This function can remove entire views from the model. 
-For example, you might want to generate the \code{\link{plotVarianceExplained}} plot excluding a particular view. \cr
-This functionality is only for exploratory purposes. If some view(s) are not of interest we strongly recommend 
-removing them before training the model.
+For example, you might want to generate the \code{\link{plotVarianceExplained}} plot
+ excluding a particular view. \cr
+This functionality is only for exploratory purposes.
+If some view(s) are not of interest we strongly recommend removing them before training the model.
 }
 \examples{
 # Using an existing trained model on the CLL data

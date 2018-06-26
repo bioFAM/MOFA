@@ -6,16 +6,22 @@
 #' @title Plot heatmap of the weights
 #' @name plotWeightsHeatmap
 #' @description Function to visualize the loadings for a given set of factors in a given view. \cr 
-#' This is useful to visualize the overall pattern of the weights but not to individually characterise the factors. \cr
-#' To inspect the loadings of individual factors, use the functions \code{\link{plotWeights}} and \code{\link{plotTopWeights}}
+#' This is useful to visualize the overall pattern of the weights
+#'  but not to individually characterise the factors. \cr
+#' To inspect the loadings of individual factors, use the functions
+#'  \code{\link{plotWeights}} and \code{\link{plotTopWeights}}
 #' @param object a trained \code{\link{MOFAmodel}} object.
-#' @param view character vector with the view name(s), or numeric vector with the index of the view(s) to use. 
+#' @param view character vector with the view name(s),
+#'  or numeric vector with the index of the view(s) to use. 
 #' Default is 'all'
-#' @param features character vector with the feature name(s), or numeric vector with the index of the feature(s) to use. 
+#' @param features character vector with the feature name(s),
+#'  or numeric vector with the index of the feature(s) to use. 
 #' Default is 'all'
-#' @param factors character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. 
+#' @param factors character vector with the factor name(s),
+#'  or numeric vector with the index of the factor(s) to use. 
 #' Default is 'all'
-#' @param threshold threshold on absolute weight values, so that loadings with a magnitude below this threshold (in all factors) are removed
+#' @param threshold threshold on absolute weight values, so that loadings
+#'  with a magnitude below this threshold (in all factors) are removed
 #' @param ... extra arguments passed to \code{\link[pheatmap]{pheatmap}}.
 #' @importFrom pheatmap pheatmap
 #' @export
@@ -94,7 +100,8 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
 #' @param manual A nested list of character vectors with features to be manually labelled.
 #' @param color_manual a character vector with colors, one for each element of 'manual'
 #' @param scale logical indicating whether to scale all loadings from 0 to 1.
-#' @details The weights of the features within a view are relative and they should not be interpreted in an absolute scale.
+#' @details The weights of the features within a view are relative and
+#'  they should not be interpreted in an absolute scale.
 #' For interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
 #' @import ggplot2 ggrepel
 #' @export
@@ -111,7 +118,8 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
 #' MOFA_scMT <- loadModel(filepath)
 #' plotWeights(MOFA_scMT, view="RNA expression", factor=1)
 #' plotWeights(MOFA_scMT, view="RNA expression", factor=1, nfeatures=15)
-plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = NULL, color_manual = NULL, scale = TRUE) {
+plotWeights <- function(object, view, factor, nfeatures=10,
+                        abs=FALSE, manual = NULL, color_manual = NULL, scale = TRUE) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
@@ -136,7 +144,7 @@ plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = 
   }
   
   # Fetch the weights
-  W <- getWeights(object, views=view, factors=factor, as.data.frame = T)
+  W <- getWeights(object, views=view, factors=factor, as.data.frame = TRUE)
   W <- W[W$factor==factor & W$view==view,]
   
   # Scale values
@@ -151,13 +159,13 @@ plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = 
   # } else {
   #   stopifnot(class(nfeatures)=="numeric")
   # }
-  # W <- head(W[order(abs(W$value), decreasing=T),], n=nfeatures)
+  # W <- head(W[order(abs(W$value), decreasing=TRUE),], n=nfeatures)
     
   # Define groups for labelling
   W$group <- "0"
   
   # Define group of features to color according to the loading
-  if(nfeatures>0) W$group[abs(W$value) >= sort(abs(W$value), decreasing = T)[nfeatures]] <- "1"
+  if(nfeatures>0) W$group[abs(W$value) >= sort(abs(W$value), decreasing = TRUE)[nfeatures]] <- "1"
   # if(!is.null(threshold)) W$group[abs(W$value) >= threshold] <- "1"
   
   # Define group of features to label manually
@@ -186,13 +194,15 @@ plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = 
     geom_point(aes_string(size="tmp")) + labs(x="Rank position", y="Loading") +
     scale_x_discrete(breaks = NULL, expand=c(0.05,0.05)) +
     ggrepel::geom_text_repel(data = W[W$group!="0",], aes_string(label = "feature", col = "group"),
-                             segment.alpha=0.1, segment.color="black", segment.size=0.3, box.padding = unit(0.5, "lines"), show.legend= F)
+                             segment.alpha=0.1, segment.color="black",
+                             segment.size=0.3, box.padding = unit(0.5, "lines"),
+                             show.legend= FALSE)
   # Define size
-  gg_W <- gg_W + scale_size_manual(values=c(0.5,2)) + guides(size=F)
+  gg_W <- gg_W + scale_size_manual(values=c(0.5,2)) + guides(size=FALSE)
   
   # Define colors
   cols <- c("grey","black",color_manual)
-  gg_W <- gg_W + scale_color_manual(values=cols) + guides(col=F)
+  gg_W <- gg_W + scale_color_manual(values=cols) + guides(col=FALSE)
   
   # Add Theme  
   gg_W <- gg_W +
@@ -230,13 +240,16 @@ plotWeights <- function(object, view, factor, nfeatures=10, abs=FALSE, manual = 
 #' Default is 10.
 #' @param abs logical indicating whether to use the absolute value of the weights.
 #' Default is TRUE.
-#' @param sign can be 'positive', 'negative' or 'both' to show only positive, negative or all weigths, respectively.
+#' @param sign can be 'positive', 'negative' or 'both' to show only positive,
+#'  negative or all weigths, respectively.
 #' Default is 'both'.
 #' @param scale logical indicating whether to scale all loadings from 0 to 1.
 #' Default is TRUE.
 #' @details An important step to annotate factors is to visualise the corresponding feature loadings. \cr
-#' This function displays the top features with highest loading whereas the function \code{\link{plotTopWeights}} plots all loadings for a given latent factor and view. \cr
-#' Importantly, the weights of the features within a view have relative values and they should not be interpreted in an absolute scale.
+#' This function displays the top features with highest loading
+#'whereas the function \code{\link{plotTopWeights}} plots all loadings for a given latent factor and view. \cr
+#' Importantly, the weights of the features within a view have relative values and 
+#' they should not be interpreted in an absolute scale.
 #' Therefore, for interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
 #' @import ggplot2
 #' @return Returns a \code{ggplot2} object
@@ -260,10 +273,11 @@ plotTopWeights <- function(object, view, factor, nfeatures = 10, abs = TRUE, sca
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(view %in% viewNames(object))
-  # if(!is.null(manual_features)) { stopifnot(class(manual_features)=="list"); stopifnot(all(Reduce(intersect,manual_features) %in% featureNames(object)[[view]]))  }
+  # if(!is.null(manual_features)) { stopifnot(class(manual_features)=="list")
+  # stopifnot(all(Reduce(intersect,manual_features) %in% featureNames(object)[[view]]))  }
   
   # Collect expectations  
-  W <- getWeights(object, factors=factor, views=view, as.data.frame=T)
+  W <- getWeights(object, factors=factor, views=view, as.data.frame=TRUE)
 
   # Scale values by loading with highest (absolute) value
   if(scale) W$value <- W$value/max(abs(W$value))
@@ -282,11 +296,12 @@ plotTopWeights <- function(object, view, factor, nfeatures = 10, abs = TRUE, sca
   # Extract relevant features
   W <- W[with(W, order(-abs(value))), ]
   if (nfeatures>0) features <- head(W$feature,nfeatures) # Extract top hits
-  # if (!is.null(manual_features)) features <- W$feature[W$feature %in% manual_features] # Extract manual hits
+  # if (!is.null(manual_features)) 
+  #    features <- W$feature[W$feature %in% manual_features] # Extract manual hits
   W <- W[W$feature %in% features,]
   
   # Sort according to loadings
-  W <- W[with(W, order(-value, decreasing = T)), ]
+  W <- W[with(W, order(-value, decreasing = TRUE)), ]
   W$feature <- factor(W$feature, levels=W$feature)
   W$start <- 0
   

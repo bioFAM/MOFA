@@ -10,14 +10,16 @@ plotFactorScatter(object, factors, color_by = NULL, shape_by = NULL,
 \arguments{
 \item{object}{a trained \code{\link{MOFAmodel}} object.}
 
-\item{factors}{a vector of length two with the factors to plot. Factors can be specified either as a characters
-using the factor names, or as numeric with the index of the factors}
+\item{factors}{a vector of length two with the factors to plot.
+Factors can be specified either as a characters using the factor names,
+ or as numeric with the index of the factors}
 
 \item{color_by}{specifies groups or values used to color the samples. 
 This can be either 
 a character giving the name of a feature present in the training data, 
 a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
-or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.}
+or a vector of the same length as the number of samples specifying
+ discrete groups or continuous numeric values.}
 
 \item{shape_by}{specifies groups or values used to shape the samples. 
 This can be either
@@ -29,7 +31,8 @@ or a vector of the same length as the number of samples specifying discrete grou
 
 \item{name_shape}{name for shape legend (usually only used if shape_by is not a character itself)}
 
-\item{showMissing}{logical indicating whether to include samples for which \code{shape_by} or \code{color_by} is missing}
+\item{showMissing}{logical indicating whether to include samples for which
+\code{shape_by} or \code{color_by} is missing}
 }
 \value{
 Returns a \code{ggplot2} object
@@ -38,7 +41,8 @@ Returns a \code{ggplot2} object
 Scatterplot of the values of two latent factors.
 }
 \details{
-One of the first steps for the annotation of factors is to visualise and group/color them using known covariates such as phenotypic or clinical data.
+One of the first steps for the annotation of factors is to
+ visualise and group/color them using known covariates such as phenotypic or clinical data.
 This method generates a single scatterplot for the combination of two latent factors.
 Similar functions are \code{\link{plotFactorScatters}} for doing multiple scatter plots and 
 \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots for single factors.

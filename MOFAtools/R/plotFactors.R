@@ -17,9 +17,12 @@
 #' @param group_names names for the groups.
 #' @param alpha transparency parameter. 
 #' Default is 0.5
-#' @param binwidth binwidth for histogram. Default is \code{NULL}, which uses \code{ggplot2} default calculation.
-#' @param showMissing boolean indicating whether to remove sample for which \code{group_by} is missing (default is FALSE)
-#' @details One of the first steps for the annotation of factors is to visualise and color them using known covariates such as phenotypic or clinical data. \cr
+#' @param binwidth binwidth for histogram. Default is \code{NULL},
+#'  which uses \code{ggplot2} default calculation.
+#' @param showMissing boolean indicating whether to remove sample
+#'  for which \code{group_by} is missing (default is FALSE)
+#' @details One of the first steps for the annotation of factors
+#'  is to visualise and color them using known covariates such as phenotypic or clinical data. \cr
 #' This method generates a histogram of the sample values in a given latent factor. \cr
 #' Similar functions are \code{\link{plotFactorScatter}} for doing scatter plots between pairs of factors 
 #' and \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots of single factors.
@@ -38,7 +41,8 @@
 #' MOFA_scMT <- loadModel(filepath)
 #' plotFactorHist(MOFA_scMT, factor=2)
 
-plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", alpha = 0.5, binwidth = NULL, showMissing = FALSE) {
+plotFactorHist <- function(object, factor, group_by = NULL, group_names = "",
+                           alpha = 0.5, binwidth = NULL, showMissing = FALSE) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
@@ -59,7 +63,7 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
   
   # get groups
   N <- object@Dimensions[["N"]]
-  groupLegend <- T
+  groupLegend <- TRUE
   if (!is.null(group_by)) {
     
     # It is the name of a covariate or a feature in the TrainData
@@ -87,7 +91,7 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
     
   } else {
     group_by <- rep(TRUE,N)
-    groupLegend <- F
+    groupLegend <- FALSE
   }
   
   names(group_by) <- sampleNames(object)
@@ -127,20 +131,26 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
 #' @name plotFactorBeeswarm
 #' @description Beeswarm plot of the latent factor values.
 #' @param object a trained \code{\link{MOFAmodel}} object.
-#' @param factors character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. 
+#' @param factors character vector with the factor name(s),
+#'  or numeric vector with the index of the factor(s) to use. 
 #' Default is 'all'
 #' @param color_by specifies groups or values used to color the samples. 
 #' This can be either: 
 #' a character giving the name of a feature, 
 #' a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
-#' or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.
-#' @param shape_by specifies groups or values used for the shape of samples. See color_by for how this can be specified. A maximum of 6 different values can be specified.
+#' or a vector of the same length as the number of samples
+#'  specifying discrete groups or continuous numeric values.
+#' @param shape_by specifies groups or values used for the shape of samples.
+#'  See color_by for how this can be specified. A maximum of 6 different values can be specified.
 #' @param name_color name for color legend (usually only used if color_by is not a character itself)
 #' @param name_shape name for shape legend (usually only used if shape_by is not a character itself)
-#' @param showMissing logical indicating whether to remove samples for which \code{shape_by} or \code{color_by} is missing.
-#' @details One of the main steps for the annotation of factors is to visualise and color them using known covariates or phenotypic data. \cr
+#' @param showMissing logical indicating whether to remove samples
+#'  for which \code{shape_by} or \code{color_by} is missing.
+#' @details One of the main steps for the annotation of factors is
+#'  to visualise and color them using known covariates or phenotypic data. \cr
 #' This function generates a Beeswarm plot of the sample values in a given latent factor. \cr
-#' Similar functions are \code{\link{plotFactorScatter}} for doing scatter plots and \code{\link{plotFactorHist}} for doing histogram plots
+#' Similar functions are \code{\link{plotFactorScatter}} for doing scatter plots and
+#'  \code{\link{plotFactorHist}} for doing histogram plots
 #' @return Returns a \code{ggplot2} object
 #' @import ggplot2 ggbeeswarm RColorBrewer grDevices
 #' @export
@@ -155,7 +165,8 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "", al
 #' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotFactorBeeswarm(MOFA_scMT)
-plotFactorBeeswarm <- function(object, factors="all", color_by = NULL, shape_by = NULL, name_color = "", name_shape = "", showMissing = FALSE) {
+plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
+                               shape_by = NULL, name_color = "", name_shape = "", showMissing = FALSE) {
 
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
@@ -174,12 +185,12 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL, shape_by 
       stopifnot(all(factors %in% factorNames(object)))  
     }
   }
-  Z <- getFactors(object, factors=factors, include_intercept=F, as.data.frame=T)
+  Z <- getFactors(object, factors=factors, include_intercept=FALSE, as.data.frame=TRUE)
   Z$factor <- as.factor(Z$factor)
   
   # Set color
   N <- object@Dimensions[["N"]]
-  colorLegend <- T
+  colorLegend <- TRUE
   if (!is.null(color_by)) {
     # It is the name of a covariate or a feature in the TrainData
     if (length(color_by) == 1 & is.character(color_by)) {
@@ -202,14 +213,14 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL, shape_by 
     }
   } else {
     color_by <- rep(TRUE,N)
-    colorLegend <- F
+    colorLegend <- FALSE
   }
   
   if(length(unique(color_by)) < 5) color_by <- as.factor(color_by)
   Z$color_by <- color_by[Z$sample]
   
   # Set shape
-  shapeLegend <- T
+  shapeLegend <- TRUE
   if (!is.null(shape_by)) {
     # It is the name of a covariate or a feature in the TrainData
     if (length(shape_by) == 1 & is.character(shape_by)) {
@@ -232,15 +243,16 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL, shape_by 
     }
   } else {
     shape_by <- rep(TRUE,N)
-    shapeLegend <- F
+    shapeLegend <- FALSE
   }
   if(length(unique(shape_by)) < 7) shape_by <- as.factor(shape_by)
-    else stop("'shape_by' was specified but has too many values. The shape argument can take a maximum of 6 values")
+    else stop("'shape_by' was specified but has too many values.\n
+              The shape argument can take a maximum of 6 values")
   Z$shape_by <- shape_by[Z$sample]
 
 
   # Remove samples with missing values
-  if (showMissing==F) {
+  if (showMissing==FALSE) {
     Z <- Z[!(is.na(color_by) | is.nan(color_by) | color_by=="NaN" | is.na(shape_by) | is.nan(shape_by) | shape_by=="NaN"),]
     # Z <- Z[!(is.na(color_by) | is.nan(color_by) | color_by=="NaN"),]
   }
@@ -293,13 +305,15 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL, shape_by 
 #' @name plotFactorScatter
 #' @description Scatterplot of the values of two latent factors.
 #' @param object a trained \code{\link{MOFAmodel}} object.
-#' @param factors a vector of length two with the factors to plot. Factors can be specified either as a characters
-#' using the factor names, or as numeric with the index of the factors
+#' @param factors a vector of length two with the factors to plot.
+#'  Factors can be specified either as a characters using the factor names,
+#'   or as numeric with the index of the factors
 #' @param color_by specifies groups or values used to color the samples. 
 #' This can be either 
 #' a character giving the name of a feature present in the training data, 
 #' a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
-#' or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.
+#' or a vector of the same length as the number of samples specifying
+#'  discrete groups or continuous numeric values.
 #' @param shape_by specifies groups or values used to shape the samples. 
 #' This can be either
 #' a character giving the name of a feature present in the training data, 
@@ -307,8 +321,10 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL, shape_by 
 #' or a vector of the same length as the number of samples specifying discrete groups.
 #' @param name_color name for color legend (usually only used if color_by is not a character itself)
 #' @param name_shape name for shape legend (usually only used if shape_by is not a character itself)
-#' @param showMissing logical indicating whether to include samples for which \code{shape_by} or \code{color_by} is missing
-#' @details One of the first steps for the annotation of factors is to visualise and group/color them using known covariates such as phenotypic or clinical data.
+#' @param showMissing logical indicating whether to include samples for which
+#'  \code{shape_by} or \code{color_by} is missing
+#' @details One of the first steps for the annotation of factors is to
+#'  visualise and group/color them using known covariates such as phenotypic or clinical data.
 #' This method generates a single scatterplot for the combination of two latent factors.
 #' Similar functions are \code{\link{plotFactorScatters}} for doing multiple scatter plots and 
 #' \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots for single factors.
@@ -356,7 +372,7 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
   N <- object@Dimensions[["N"]]
   
   # Set color
-  colorLegend <- T
+  colorLegend <- TRUE
   if (!is.null(color_by)) {
     # It is the name of a covariate or a feature in the TrainData
     if (length(color_by) == 1 & is.character(color_by)) {
@@ -381,11 +397,11 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
     }
   } else {
     color_by <- rep(TRUE,N)
-    colorLegend <- F
+    colorLegend <- FALSE
   }
 
   # Set shape
-  shapeLegend <- T
+  shapeLegend <- TRUE
   if (!is.null(shape_by)) {
     # It is the name of a covariate 
     if (length(shape_by) == 1 & is.character(shape_by)) {
@@ -407,7 +423,7 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
     }
   } else {
     shape_by <- rep(TRUE,N)
-    shapeLegend <- F
+    shapeLegend <- FALSE
   }
   
   # Create data frame to plot
@@ -453,13 +469,15 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
 #' @name plotFactorScatters
 #' @description Scatterplots of the sample values for pair-wise combinations of multiple latent factors.
 #' @param object a \code{\link{MOFAmodel}} object.
-#' @param factors character vector with the factor name(s), or numeric vector with the index of the factor(s) to use. 
+#' @param factors character vector with the factor name(s), or
+#'  numeric vector with the index of the factor(s) to use. 
 #' Default is 'all'
 #' @param color_by specifies groups or values used to color the samples. 
 #' This can be either: 
 #' a character giving the name of a feature present in the training data, 
 #' a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
-#' or a vector of the same length as the number of samples specifying discrete groups or continuous numeric values.
+#' or a vector of the same length as the number of samples specifying discrete groups or 
+#' continuous numeric values.
 #' @param shape_by specifies groups or values used to shape the samples. 
 #' This can be either: 
 #' a character giving the name of a feature present in the training data, 
@@ -467,8 +485,10 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
 #' or a vector of the same length as the number of samples specifying discrete groups.
 #' @param name_color name for color legend (usually only used if color_by is not a character itself)
 #' @param name_shape name for shape legend (usually only used if shape_by is not a character itself)
-#' @param showMissing logical indicating whether to include samples for which \code{shape_by} or \code{color_by} is missing
-#' @details One of the first steps for the annotation of factors is to visualise and group/color them using known covariates such as phenotypic or clinical data.
+#' @param showMissing logical indicating whether to include samples for which
+#'  \code{shape_by} or \code{color_by} is missing
+#' @details One of the first steps for the annotation of factors is to visualise and
+#'  group/color them using known covariates such as phenotypic or clinical data.
 #' This method generates multiple scatterplots for pairwise combinations of several latent factors.
 #' Similar functions are \code{\link{plotFactorScatter}} for doing single scatter plots and 
 #' \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots for single factors.
@@ -517,7 +537,7 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
   Z <- getFactors(object, factors = factors)
   
   # Remove constant factors 
-  tmp <- apply(Z,2,var,na.rm=T)
+  tmp <- apply(Z,2,var,na.rm=TRUE)
   if (any(tmp==0)) {
     # message(paste0("Removing constant factors: ", paste(which(tmp==0), collapse="")))
     Z <- Z[,!tmp==0]
@@ -525,7 +545,7 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
   }
   
   # Set color
-  colorLegend <- T
+  colorLegend <- TRUE
   if (!is.null(color_by)) {
     # It is the name of a covariate or a feature in the TrainData
     if (length(color_by) == 1 & is.character(color_by)) {
@@ -548,11 +568,11 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
     }
   } else {
     color_by <- rep(TRUE,N)
-    colorLegend <- F
+    colorLegend <- FALSE
   }
 
   # Set shape
-  shapeLegend <- T
+  shapeLegend <- TRUE
   if (!is.null(shape_by)) {
     # It is the name of a covariate 
     if (length(shape_by) == 1 & is.character(shape_by)) {
@@ -575,7 +595,7 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
     }
   } else {
     shape_by <- rep(TRUE,N)
-    shapeLegend <- F
+    shapeLegend <- FALSE
   }
 
   # Remove missing values
@@ -597,7 +617,8 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
   
   # Define title and legend of the plot
   main <- "" 
-  p <- ggplot(df, aes_string(x=colnames(df)[1], y=colnames(df)[2], color="color_by", shape="shape_by")) + geom_point()
+  p <- ggplot(df, aes_string(x=colnames(df)[1], y=colnames(df)[2], color="color_by", shape="shape_by")) +
+    geom_point()
   if (colorLegend | shapeLegend) { 
     p <- p +
       theme(
@@ -620,7 +641,9 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
   
   # Generate plot
   p <- GGally::ggpairs(df, columns = colnames(df[,!colnames(df) %in% c("color_by","shape_by")]), 
-                  lower=list(continuous="points"), diag=list(continuous='blankDiag'), upper=list(continuous='points'),
+                  lower=list(continuous="points"),
+                  diag=list(continuous='blankDiag'),
+                  upper=list(continuous='points'),
           mapping=aes(color=color_by, shape=shape_by), title=main, legend=legend) +
     theme_bw() +
     theme(plot.title = element_text(size = 16, hjust=0.5, color="black"), 
@@ -648,14 +671,16 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
 #' @name plotFactorCor
 #' @description Function to plot the correlation matrix between the latent factors.
 #' @param object a trained \code{\link{MOFAmodel}} object.
-#' @param method a character indicating the type of correlation coefficient to be computed: pearson (default), kendall, or spearman.
+#' @param method a character indicating the type of correlation coefficient to be computed:
+#'  pearson (default), kendall, or spearman.
 #' @param ... arguments passed to \code{\link[corrplot]{corrplot}}
 #' @details This method plots the correlation matrix between the latent factors. \cr 
-#' The model encourages the factors to be uncorrelated, so this function usually yields a diagonal correlation matrix. \cr 
-#' However, it is not a hard constraint such as in Principal Component Analysis and correlations between factors can occur, 
-#' particularly with large number factors. \cr
-#' Generally, correlated factors are redundant and should be avoided, as they make interpretation harder. Therefore, 
-#' if you have too many correlated factors we suggest you try reducing the number of factors.
+#' The model encourages the factors to be uncorrelated, so this function usually
+#'  yields a diagonal correlation matrix. \cr 
+#' However, it is not a hard constraint such as in Principal Component Analysis and
+#'  correlations between factors can occur, particularly with large number factors. \cr
+#' Generally, correlated factors are redundant and should be avoided, as they make interpretation harder.
+#'  Therefore, if you have too many correlated factors we suggest you try reducing the number of factors.
 #' @return Returns a symmetric matrix with the correlation coefficient between every pair of factors.
 #' @importFrom corrplot corrplot
 #' @export

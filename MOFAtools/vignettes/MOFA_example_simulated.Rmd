@@ -11,7 +11,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r}
+```{r, message=FALSE}
 library(MOFAtools)
 ```
 
@@ -23,7 +23,7 @@ MOFAobject
 ```
 
 # Prepare MOFA: Set the training and model options
-Once the untrained MOFAobject was created, we can specify details on data processing, model specifications and training options such as the number of factors, the likelihood models etc. Default option can be obtained using the functions `getDefaultTrainOptions`, `getDefaultModelOptions` and `getDefaultDataOptions`. 
+Once the untrained MOFAobject was created, we can specify details on data processing, model specifications and training options such as the number of factors, the likelihood models etc. Default option can be obtained using the functions `getDefaultTrainOptions`, `getDefaultModelOptions` and `getDefaultDataOptions`. We describe details on these option in our vignettes for CLL and scMT data.
 
 Using `prepareMOFA` the model is set up for training.
 ```{r}
@@ -42,23 +42,31 @@ MOFAobject <- prepareMOFA(
 ```
 
 # Run MOFA
-Once the MOFAobject is set up we can use `runMOFA` to train the model. As depending on the random initilization the results might differ, we recommend to use runMOFA multiple times (e.g. ten times, here we use a smaller number for illustration as the model training takes some time) and as a next step select the best model in the next step.
+Once the MOFAobject is set up we can use `runMOFA` to train the model. As depending on the random initilization the results might differ, we recommend to use runMOFA multiple times (e.g. ten times, here we use a smaller number for illustration as the model training can take some time). As a next step we will ccompare the different fits and select the best model for downstream analyses.
 ```{r}
 n_inits <- 3
 MOFAlist <- lapply(1:n_inits, function(it) {
+  MOFAobject@
   runMOFA(MOFAobject, outfile=tempfile())
 })
 ```
 
 
 # Compare different random inits and select the best model
-Having a list of trained models we can use `compareModels` to get an overview of how many factors were inferred in each run and what the optimized ELBO value is (a model with larger ELBO is preferred). With `compareFactors` we can get an overview of how robust the factors are between different model instances.
+Having a list of trained models we can use `compareModels` to get an overview of how many factors were inferred in each run and what the optimized ELBO value is (a model with larger ELBO is preferred). 
+
+```{r}
+compareModels(MOFAlist)
+```
+
+With `compareFactors` we can get an overview of how robust the factors are between different model instances.
+```{r}
+compareFactors(MOFAlist)
+```
 
 For down-stream analyses we recommned to choose the model with the best ELBO value as is done by `selectModel`.
 ```{r}
-compareModels(MOFAlist)
-compareFactors(MOFAlist)
-MOFAobject <- selectModel(MOFAlist)
+MOFAobject <- selectModel(MOFAlist, plotit = FALSE)
 MOFAobject
 ```
 
@@ -68,5 +76,5 @@ On the trained MOFAobject we can now start looking into the inferred factors, it
 plotVarianceExplained(MOFAobject)
 ```
 
-For details on down-stream analysis please have a look at the vignettes on the CLL data and scMT data.
+For details on down-stream analyses please have a look at the vignettes on the CLL data and scMT data.
 

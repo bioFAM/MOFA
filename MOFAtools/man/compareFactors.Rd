@@ -12,6 +12,10 @@ compareFactors(models, comparison = "all", show_rownames = FALSE,
 
 \item{comparison}{tye of comparison, either 'pairwise', i.e. compare one model with another one at a time, or 'all', i.e. calculate correlation between factors from all model. By default, all models are compared.}
 
+\item{show_rownames}{logical indicating whether to show rownames in heatmap (see also pheatmap documentation)}
+
+\item{show_colnames}{logical indicating whether to show colnames in heatmap (see also pheatmap documentation)}
+
 \item{...}{extra arguments passed to pheatmap}
 }
 \value{

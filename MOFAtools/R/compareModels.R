@@ -12,6 +12,8 @@
 #' If not, it suggests that some factors are weak and not captured by all models.
 #' @param models a list containing \code{\link{MOFAmodel}} objects.
 #' @param comparison tye of comparison, either 'pairwise', i.e. compare one model with another one at a time, or 'all', i.e. calculate correlation between factors from all model. By default, all models are compared.
+#' @param show_rownames logical indicating whether to show rownames in heatmap (see also pheatmap documentation)
+#' @param show_colnames logical indicating whether to show colnames in heatmap (see also pheatmap documentation)
 #' @param ... extra arguments passed to pheatmap
 #' @details This function can be helpful to evaluate the robustness of factors across different random initilizations. 
 #' Large block of factors from different models in the correlation matrix show consistent factors, while stand-alone factors that are only recovered in a single model instance are less reliable.

@@ -171,6 +171,7 @@ runEnrichmentAnalysis <- function(object, view, feature.sets, factors = "all", l
 #' @title Line plot of Feature Set Enrichment Analysis results
 #' @name plotEnrichment
 #' @description Line plot of the Feature Set Enrichment Analyisis results for a specific latent variable
+#'@param object \code{\link{MOFAmodel}} object, on which the Feature Set Enrichment Analyisis was performed
 #' @param fsea.out output of \link{runEnrichmentAnalysis} function
 #' @param factor Factor for which to show wnriched pathways in the lineplot
 #' @param alpha p.value threshold to filter out feature sets

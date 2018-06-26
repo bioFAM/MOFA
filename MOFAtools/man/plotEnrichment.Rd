@@ -8,6 +8,8 @@ plotEnrichment(object, fsea.out, factor, alpha = 0.1, max.pathways = 25,
   adjust = T)
 }
 \arguments{
+\item{object}{\code{\link{MOFAmodel}} object, on which the Feature Set Enrichment Analyisis was performed}
+
 \item{fsea.out}{output of \link{runEnrichmentAnalysis} function}
 
 \item{factor}{Factor for which to show wnriched pathways in the lineplot}

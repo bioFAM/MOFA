@@ -11,7 +11,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-This vignette show how to use MOFA including initialization, training and down-stream analysis.
+This vignette show how to use MOFA including initialization, training and down-stream analyses.
 For illustration we use the CLL data which is used in the MOFA publication.
 
 ```{r, warning=FALSE, message=FALSE}
@@ -61,7 +61,7 @@ MOFAobject
 
 
 ## Overview of training data
-The function `plotTilesData` can be used to obtain an overview of the data stored in the object for training. FOr each sample it shows in which views data are available.
+The function `plotTilesData` can be used to obtain an overview of the data stored in the object for training. For each sample it shows in which views data are available. The rows are the different views and columns are samples. Missing values are indicated by a grey bar.
 ```{r}
 plotTilesData(MOFAobject)
 ```
@@ -101,11 +101,12 @@ ModelOptions
 
 ### Define training options
 Next, we define training options. The most important are:  
-* **maxiter**: maximum number of iterations. Ideally set it large enough and use the convergence criteria `TrainOptions$tolerance`.  
+
+* **maxiter**: maximum number of iterations. Ideally set it large enough and use the convergence criterion `TrainOptions$tolerance`.  
 
 * **tolerance**: convergence threshold based on change in the evidence lower bound. For an exploratory run you can use a value between 1.0 and 0.1, but for a "final" model we recommend a value of 0.01.  
 
-* **DropFactorThreshold**: hyperparameter to automatically learn the number of factors based on a minimum variance explained criteria. Factors explaining less than `DropFactorThreshold` fraction of variation in all views will be removed. For example, a value of 0.01 (default) means that factors that explain less than 1\% of variance in all views will be discarded.  
+* **DropFactorThreshold**: hyperparameter to automatically learn the number of factors based on a minimum variance explained criteria. Factors explaining less than `DropFactorThreshold` fraction of variation in all views will be removed. For example, a value of 0.01 means that factors that explain less than 1\% of variance in all views will be discarded. By default this it zero, meaning that all factors are kept unless they explain no variance at all.  
 
 ```{r}
 TrainOptions <- getDefaultTrainOptions()
@@ -136,7 +137,9 @@ MOFAobject <- runMOFA(MOFAobject, outfile=tempfile())
 
 ```{r}
 # Loading an existing trained model
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5",
+                        package = "MOFAtools")
+
 MOFAobject <- loadModel(filepath, MOFAobject)
 MOFAobject
 ```
@@ -146,15 +149,18 @@ MOFAobject
 After training, we can explore the results from MOFA. Here we provide a semi-automated pipeline to disentangle and characterize all the identified sources of variation (the factors).  
 
 **Part 1: Disentangling the heterogeneity**  
-Calculation of variance explained by each factor in each view. This is probably the most important plot that MOFA generates, as it summarises the entire heterogeneity of the dataset in a single figure.  
+
+Calculation of variance explained by each factor in each view. This is probably the most important plot that MOFA generates, as it summarises the entire heterogeneity of the dataset in a single figure. Here we can see in which view a factor explains variation which can guide further characterisation of the factors by investigating the weights in those views. 
+
 **Part 2: Characterisation of individual factors**    
+
 * Inspection of top features with highest loadings: the loading is a measure of feature importance, so features with high loading are the ones driving the heterogeneity captured by the factor.  
 * Feature set enrichment analysis (where set annotations are present, e.g. gene sets for mRNA views).  
 * Ordination of samples by factors to reveal clusters and/or graadients: this is similar to what is traditionally done with Principal Component Analysis or t-SNE.  
 
-Other analysis, including imputation of missing values and prediction of clinical data are also available. Vignettes coming soon.
+Other analysis, including imputation of missing values and clustering of samples are also available. See below for a short illustration of these functionalities. In addition, the factors can be used in further analyses, for example as predictors, e.g. for predicting clinical outcome or classifying patients, or to control for unwanted sources of variation. Vignettes illustrating this are coming soon. 
 
-## Part 1: Disentangling the heterogeneity, calculation of variance explained by each factor in each view
+## Part 1: Disentangling the heterogeneity: calculation of variance explained by each factor in each view
 This is done by `calculateVarianceExplained` (to get the numerical values) and `plotVarianceExplained` (to get the plot). The resulting figure gives an overview of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of different data modalities.  
 Here, for example Factor 1 is active in all data modalities, while Factor 4 is specific to mRNA.
 ```{r}
@@ -172,7 +178,7 @@ plotVarianceExplained(MOFAobject)
 ## Part 2: Characterisation of individual factors
 ### Inspection of top weighted features in the active views
 To get an overview of the weights across all factors in a given view you can use the `plotWeightsHeatmap` function.
-For example, here we plot all weights from all factors in the Mutation data:
+For example, here we plot all weights from all factors in the Mutations data:
 ```{r}
 plotWeightsHeatmap(
   MOFAobject, 
@@ -181,7 +187,7 @@ plotWeightsHeatmap(
   show_colnames = FALSE
 )
 ```
-We observe that factors 1 and 2 have non-zero weights. To explore a single factor in more detail we can  plot all weights for a single factor using the `plotWeights` function.
+We observe that Factors 1 and 2 have large non-zero weights. To explore a given factor in more detail we can  plot all weights for a single factor using the `plotWeights` function.
 For example, here we plot all weights from Factor 1 in the Mutation data. With `nfeatures` we can set how many features should be labelled (`manual` let's you specify feautres manually to be labelled in the plot.)
 ```{r}
 plotWeights(
@@ -191,22 +197,21 @@ plotWeights(
   nfeatures = 5
 )
 ```
-We see strong contributions of features in the Mutations data modality for Factor 1 and 2. To investiate a single factor in detail we can use the `plotWeights` function, which shows us all weights of the specified view (here Mutations) on this factor (e.g. Factor 1). Features with large (absolute) weight in a given factor means that they follow the pattern of covariation associated with the factor.  
-In our case, this reveals a strong link to the IGHV status, hence recovering an important clinical marker in CLL (see our paper for details on the biological interpretation.) Note that the sign of the weight can only be interpreted relative to the signs of other weights and the factor values.  
+Features with large (absolute) weight on a given factor follow the pattern of covariation associated with the factor.  In our case, this reveals a strong link to the IGHV status, hence recovering an important clinical marker in CLL (see our paper for details on the biological interpretation.) Note that the sign of the weight can only be interpreted relative to the signs of other weights and the factor values.  
 
-If you are only interested in looking at the top features you can use the `plotTopWeights` function.  
+If you are only interested in looking at only the top features you can use the `plotTopWeights` function.  
 For example, here we plot the mutations with largest loadings on Factor 1. The sign on the right indicates the direction of the loading (positive/negative).
 ```{r}
 plotTopWeights(MOFAobject, "Mutations", 1)
 ```
-Features with large weight in a given factor means that they follow the pattern of covariation associated with the factor. For example, if Factor X is capturing sex differences, then the largest weights will be associated with features that show sex-specific effects. Here, the factor is associated with the B-cell of tumour's origin, consistent with a large weight on the IGHV status (see our manuscript for more details).  
+Again, features with large weight in a given factor means that they follow the pattern of covariation associated with the factor. For example, here the factor is associated with the B-cell of tumour's origin, consistent with a large weight on the IGHV status (see our manuscript for more details).  
 
 From the previous plots, we can clearly see that Factor 1 is associated to IGHV status. As the variance decomposition above told us that this factor is also relevant on all the other data modalities we can investigate its weights on other modalities, e.g. mRNA, to make connections of the IGHV-linked axes of variation to other molecular layers.
 ```{r}
 plotTopWeights(MOFAobject, "mRNA", 1)
 ```
 
-Finally, instead of looking at an "abstract" weight, it is useful to observe the coordinated heterogeneity of the top features in the original data. This can be done using the `plotDataHeatmap` function. Here samples (in rows) are ordered according to their value on the factor (here Factor 1). Here, this shows clear patterns of the samples' gene expression in the 20 top weighted genes.
+Finally, instead of looking at an "abstract" weight, it is useful to observe the coordinated heterogeneity of the top features in the original data. This can be done using the `plotDataHeatmap` function. In this plot samples (in rows) are ordered according to their value on the factor (here Factor 1). Here, this shows clear patterns of the samples' gene expression in the 20 top weighted genes along the factor.
 ```{r}
 plotDataHeatmap(
   MOFAobject, 
@@ -224,7 +229,7 @@ Here we implemented a function for feature set enrichment analysis method (`Feat
 
 The input of this function is a MOFA trained model (MOFAmodel), the factors for which to perform feature set enrichment (a character vector), the feature sets (a binary matrix) and a set of options regarding how the analysis should be performed, see also documentation of `FeatureSetEnrichmentAnalysis`
 
-We illustrate the use of this function using the [reactome](http://reactome.org) annotations.
+We illustrate the use of this function using the [reactome](http://reactome.org) annotations, which are contained in the package. Depending on your data other gene or feature sets might be useful and you can prepare your customized feature sets and specify it using the `feature.sets` argument of the function.
 ```{r}
 # Load reactome annotations
 # binary matrix with feature sets in rows and feautres in columns
@@ -233,8 +238,8 @@ data("reactomeGS")
 # perform enrichment analysis
 fsea.out <- FeatureSetEnrichmentAnalysis(
   MOFAobject,
-  "mRNA",
-  reactomeGS,
+  view = "mRNA",
+  feature.sets = reactomeGS,
   alpha = 0.01
 )
 ```
@@ -251,28 +256,39 @@ From this we find enriched at a FDR of 1% gene sets on Factors 3-6 and 8. To loo
 ```{r}
 interestingFactors <- 4:5
 for (factor in interestingFactors) {
-  lineplot <- LinePlot_FeatureSetEnrichmentAnalysis(MOFAobject, fsea.out, factor, alpha=0.01, max.pathways=10)
+  lineplot <- LinePlot_FeatureSetEnrichmentAnalysis(MOFAobject,
+                                                    fsea.out,
+                                                    factor = factor,
+                                                    alpha = 0.01,
+                                                    max.pathways = 10)
   print(lineplot)
 }
 ```
 This shows us that Factor 4 is capturing variation related to immune response (possibly due to T-cell contamination of the samples) and Factor 5 is related to differences in stress response, as discussed in our paper.
 
-## Ordination of samples by factors to reveal clusters and graadients in the sample space
+## Ordination of samples by factors to reveal clusters and gradients in the sample space
 
-Samples can be visualized along factors of interest using the `FactorsScatterPlot` function.
+Samples can be visualized along factors of interest using the `plotFactorScatter` function. We can use features included in the model (such as IGHV or trisomy12) to color or shape the samples by. Alternatively, external covariates can also be used fot this purpose.
 ```{r}
-plotFactorScatter(MOFAobject, factors = 1:2, color_by = "IGHV", shape_by = "trisomy12")
+plotFactorScatter(MOFAobject,
+                  factors = 1:2,
+                  color_by = "IGHV",
+                  shape_by = "trisomy12")
 ```
-Here we find again a clear separation of samples based on their IGHV status (color) along Factor 1 and by the absence or prescence of trisomy 12 along Factor 2 as indicated by the corresponding factor weights in the Mutations view.  
+Here we find again a clear separation of samples based on their IGHV status (color) along Factor 1 and by the absence or prescence of trisomy 12 (shape) along Factor 2 as indicated by the corresponding factor weights in the Mutations view.  
 
-An overview of pair-wise sctterplots for all or a subset of factors is produced by the `FactorsScatterPairs` function
+An overview of pair-wise sctterplots for all or a subset of factors is produced by the `plotFactorScatters` function
 ```{r}
-plotFactorScatters(MOFAobject, factors = 1:4, color_by = "IGHV")
+plotFactorScatters(MOFAobject,
+                   factors = 1:3,
+                   color_by = "IGHV")
 ```
 
-A single factor can be visualised using the `FactorBeeswarmPlot` function
+A single factor can be visualised using the `plotFactorBeeswarm` function
 ```{r}
-plotFactorBeeswarm(MOFAobject, factors = 1, color_by = "IGHV")
+plotFactorBeeswarm(MOFAobject,
+                   factors = 1,
+                   color_by = "IGHV")
 ```
 
 ## Customized analysis
@@ -311,21 +327,30 @@ head(MOFAdata)
 ## Prediction of views
 With the `predict` function, full views can be predicted based on the MOFA model with all or a subset of factors
 ```{r}
-predictedDrugs <- predict(MOFAobject, view="Drugs", factors="all")
+predictedDrugs <- predict(MOFAobject,
+                          view="Drugs",
+                          factors="all")
 ```
 
 ## Imputation of missing observations
-With the `imputeMissing` function all missing values are imputed based on the MOFA model. The imputed data is then stored in the ImputedData slot of the MOFAobject and can be accessed via the `getImputedData` function.
+With the `imputeMissing` function all missing values are imputed based on the MOFA model. The imputed data is then stored in the `ImputedData slot` of the MOFAobject and can be accessed via the `getImputedData` function.
 ```{r}
 MOFAobject <- imputeMissing(MOFAobject)
-imputedDrugs <- getImputedData(MOFAobject, view="Drugs")
+
+imputedDrugs <- getImputedData(MOFAobject,
+                               view="Drugs")
 ```
 
 ## Clustering of samples based on latent factors
-Samples can be clustered according to their values on some or all latent factors using the `clusterSamples` function. Clusters can for example be visualised using the FactorsScatterPlot function
+Samples can be clustered according to their values on some or all latent factors using the `clusterSamples` function. Clusters can for example be visualised using the `plotFactorScatters` function
 ```{r}
-clusters <- clusterSamples(MOFAobject, k=2, factors=1)
-plotFactorScatters(MOFAobject, factors=1:2, color_by=clusters)
+clusters <- clusterSamples(MOFAobject,
+                           k=2,
+                           factors=1)
+
+plotFactorScatter(MOFAobject,
+                   factors=1:2,
+                   color_by=clusters)
 ```
 
 

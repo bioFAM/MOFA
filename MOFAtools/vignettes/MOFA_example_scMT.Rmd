@@ -36,11 +36,11 @@ MOFAobject <- createMOFAobject(scMT_data)
 
 The function `plotTilesData` can be used to obtain an overview of the structure of the data:
 ```{r}
-# plotTilesData(MOFAobject, colors=c("#31A354","#377EB8","#377EB8","#377EB8"))
+plotTilesData(MOFAobject, colors=c("#31A354","#377EB8","#377EB8","#377EB8"))
 ```
 
 # Fit the MOFA model
-The next step is to train the model. Internally, this is done via Python, so make sure you have the corresponding package installed (see installation instructions and the FAQ in the README file).
+The next step is to train the model. Internally, this is done via Python, so make sure you have the corresponding package installed (see installation instructions and read the FAQ if you have problems).
 
 ## Define options
 
@@ -78,7 +78,7 @@ Next, we define training options. The most important are:
 
 * **tolerance**: convergence threshold based on change in the evidence lower bound. For an exploratory run you can use a value between 1.0 and 0.1, but for a "final" model we recommend a value of 0.01.  
 
-* **DropFactorThreshold**: hyperparameter to automatically learn the number of factors based on a minimum variance explained criteria. Factors explaining less than 'DropFactorThreshold' fraction of variation in all views will be removed. For example, a value of 0.01 (default) means that factors that explain less than 1\% of variance in all views will be discarded.
+* **DropFactorThreshold**: hyperparameter to automatically learn the number of factors based on a minimum variance explained criteria. Factors explaining less than 'DropFactorThreshold' fraction of variation in all views will be removed. For example, a value of 0.01 means that factors that explain less than 1\% of variance in all views will be discarded. By default this it zero, meaning that all factors are kept unless they explain no variance at all. Here we use a threshold of 2%. 
 ```{r}
 TrainOptions <- getDefaultTrainOptions()
 TrainOptions$seed <- 2017
@@ -115,13 +115,16 @@ MOFAobject
 After training, we can explore the results from MOFA. Here we provide a semi-automated pipeline to disentangle and characterize all the identified sources of variation (the factors).  
 
 **Part 1: Disentangling the heterogeneity**  
+
 Calculation of variance explained by each factor in each view. This is probably the most important plot that MOFA generates, as it summarises the entire heterogeneity of the dataset in a single figure.  
+
 **Part 2: Characterisation of individual factors**    
+
 * Inspection of top features with highest loadings: the loading is a measure of feature importance, so features with high loading are the ones driving the heterogeneity captured by the factor.  
 * Feature set enrichment analysis (where set annotations are present, e.g. gene sets for mRNA views).  
 * Ordination of samples by factors to reveal clusters and/or graadients: this is similar to what is traditionally done with Principal Component Analysis or t-SNE.  
 
-Other analysis, including imputation of missing values and prediction of clinical data are also available. Vignettes coming soon.
+Other analysis, including imputation of missing values and prediction of clinical data are also available. See below for a short guid on how to impute data. Detailed vignettes will follow soon.
 
 ## Disentangling the heterogeneity, calculation of variance explained by each factor in each view
 This is done by `calculateVarianceExplained` (to get the numerical values) and `plotVarianceExplained` (to get the plot).  
@@ -152,8 +155,9 @@ plotWeights(
   view = "RNA expression", 
   factor = 1, 
   nfeatures = 0, 
-  abs = F, 
-  manual = list(c("Zfp42","Esrrb","Morc1","Fbxo15","Jam2","Klf4","Tcl1","Tbx3","Tex19.1"))
+  abs = FALSE, 
+  manual = list(c("Zfp42","Esrrb","Morc1","Fbxo15",
+                  "Jam2","Klf4","Tcl1","Tbx3","Tex19.1"))
 )
 
 # Plot top 10 genes
@@ -181,8 +185,9 @@ plotDataHeatmap(
   view = "RNA expression", 
   factor = "LF1", 
   features = 20, 
-  transpose = T, 
-  show_colnames=F, show_rownames=T, cluster_cols = F, annotation_col=df # pheatmap options
+  transpose = TRUE, 
+  show_colnames=FALSE, show_rownames=TRUE, # pheatmap options
+  cluster_cols = FALSE, annotation_col=df # pheatmap options
 )
 ```
 
@@ -193,8 +198,8 @@ plotWeights(
   view = "Met Enhancers", 
   factor = 1, 
   nfeatures = 0,
-  abs = F,
-  scale = F
+  abs = FALSE,
+  scale = FALSE
 )
 ```
 
@@ -205,8 +210,10 @@ plotDataHeatmap(
   view = "Met Enhancers", 
   factor = 1, 
   features = 500,
-  transpose = T,
-  cluster_rows=F, cluster_cols=F, show_rownames=F, show_colnames=F, annotation_col=df  # pheatmap options
+  transpose = TRUE,
+  cluster_rows=FALSE, cluster_cols=FALSE, # pheatmap options
+  show_rownames=FALSE, show_colnames=FALSE, # pheatmap options
+  annotation_col=df  # pheatmap options
 )
 ```
 
@@ -219,9 +226,10 @@ plotWeights(
   view="RNA expression", 
   factor = 2, 
   nfeatures = 0, 
-  manual = list(c("Krt8","Cald1","Anxa5","Tagln","Ahnak","Dsp","Anxa3","Krt19")), 
-  scale = F,
-  abs = F
+  manual = list(c("Krt8","Cald1","Anxa5","Tagln",
+                  "Ahnak","Dsp","Anxa3","Krt19")), 
+  scale = FALSE,
+  abs = FALSE
 )
 
 # Plot top 10 genes
@@ -240,8 +248,8 @@ plotWeights(
   view = "Met Enhancers", 
   factor = 2, 
   nfeatures = 0, 
-  abs = F,
-  scale = F
+  abs = FALSE,
+  scale = FALSE
 )
 ```
 
@@ -258,8 +266,10 @@ plotDataHeatmap(
   view = "Met Enhancers", 
   factor = 2, 
   features = 500,
-  transpose = T,
-  cluster_rows=F, cluster_cols=F, show_rownames=F, show_colnames=F, annotation_col=df  # pheatmap options
+  transpose = TRUE,
+  cluster_rows=FALSE, cluster_cols=FALSE,  # pheatmap options
+  show_rownames=FALSE, show_colnames=FALSE,  # pheatmap options
+  annotation_col=df  # pheatmap options
 )
 ```
 
@@ -271,8 +281,8 @@ In this data set, the **combination of Factor 1 and Factor 2 captured the entire
 p <- plotFactorScatter(
   object = MOFAobject, 
   factors=1:2, 
-  color_by = "culture"
-)
+  color_by = "culture")
+
 p + scale_color_manual(values=c("lightsalmon","orangered3"))
 ```
 
@@ -290,11 +300,14 @@ plotFactorBeeswarm(
 For customized exploration of weights and factors, you can directly fetch the variables from the `MOFAobject using 'get' functions: `getWeights`, `getFactors` and `getTrainData`. As an example, here we do a scatterplot between Factor 3 and the true Cellular Detection Rate values
 ```{r, message=FALSE}
 cdr <- colMeans(MOFAobject@TrainData$`RNA expression`>0,na.rm=T)
-factor3 <- getFactors(MOFAobject, factors=3, include_intercept = F)[,1]
+factor3 <- getFactors(MOFAobject,
+                      factors=3,
+                      include_intercept = F)[,1]
 
 foo <- data.frame(factor = factor3, cdr = cdr)
 ggplot(foo, aes_string(x = "factor", y = "cdr")) + 
-  geom_point() + xlab("Factor 3") + ylab("Cellular Detection Rate") +
+  geom_point() + xlab("Factor 3") +
+  ylab("Cellular Detection Rate") +
   stat_smooth(method="lm") +
   theme_bw()
 ```
@@ -306,24 +319,34 @@ ggplot(foo, aes_string(x = "factor", y = "cdr")) +
 The factors can be used to impute missing data (see Methods of the publication). This is done using the `imputeMissing` function, which stores the imputed data in the `ImputedData` slot of the `MOFAobject`. It can be accessed via the `getImputedData` function:
 ```{r}
 MOFAobject <- imputeMissing(MOFAobject)
-nonImputedMethylation <- getTrainData(MOFAobject, view="Met CpG Islands")[[1]]
-imputedMethylation <- getImputedData(MOFAobject, view="Met CpG Islands")[[1]]
+nonImputedMethylation <- getTrainData(MOFAobject,
+                                      view="Met CpG Islands")[[1]]
+imputedMethylation <- getImputedData(MOFAobject,
+                                     view="Met CpG Islands")[[1]]
 
-nonImputedMethylation[1:5,1:5]
-imputedMethylation[1:5,1:5]
+# non-imputed data
+pheatmap::pheatmap(nonImputedMethylation[1:100,1:20],
+         cluster_rows = FALSE, cluster_cols = FALSE,
+         show_rownames = FALSE, show_colnames = FALSE)
+
+# imputed data
+pheatmap::pheatmap(imputedMethylation[1:100,1:20],
+         cluster_rows = FALSE, cluster_cols = FALSE,
+         show_rownames = FALSE, show_colnames = FALSE)
 ```
 
 ## Clustering of samples based on latent factors
 Samples can be clustered according to their values on the latent factors using the `clusterSamples` function.
 ```{r, message=FALSE}
-# Hierarchical clustering with K=2 using Factor 1
-h <- clusterSamples(MOFAobject, k=2, factors=1)
+# kmeans clustering with K=2 using Factor 1
+clusters <- clusterSamples(MOFAobject, k=2, factors=1)
 
-# Scatterplot colored by the predicted cluster labels and shaped by the true culture conditions
+# Scatterplot colored by the predicted cluster labels,
+# and shaped by the true culture conditions
 plotFactorScatter(
   object = MOFAobject,
   factors = 1:2,
-  color_by = h,
+  color_by = clusters,
   shape_by = "culture"
 )
 ```

@@ -225,9 +225,9 @@ plotDataHeatmap(
 ### Feature set enrichment analysis in the active views
 Sometimes looking at the loadings of single features can be challenging, and often the combination of signal from functionally related sets of features (i.e. gene ontologies) is required.  
 
-Here we implemented a function for feature set enrichment analysis method (`FeatureSetEnrichmentAnalysis`) derived from the [PCGSE package](https://cran.r-project.org/web/packages/PCGSE/index.html).  
+Here we implemented a function for feature set enrichment analysis method (`runEnrichmentAnalysis`) derived from the [PCGSE package](https://cran.r-project.org/web/packages/PCGSE/index.html).  
 
-The input of this function is a MOFA trained model (MOFAmodel), the factors for which to perform feature set enrichment (a character vector), the feature sets (a binary matrix) and a set of options regarding how the analysis should be performed, see also documentation of `FeatureSetEnrichmentAnalysis`
+The input of this function is a MOFA trained model (MOFAmodel), the factors for which to perform feature set enrichment (a character vector), the feature sets (a binary matrix) and a set of options regarding how the analysis should be performed, see also documentation of `runEnrichmentAnalysis`
 
 We illustrate the use of this function using the [reactome](http://reactome.org) annotations, which are contained in the package. Depending on your data other gene or feature sets might be useful and you can prepare your customized feature sets and specify it using the `feature.sets` argument of the function.
 ```{r}
@@ -236,7 +236,7 @@ We illustrate the use of this function using the [reactome](http://reactome.org)
 data("reactomeGS")
 
 # perform enrichment analysis
-fsea.out <- FeatureSetEnrichmentAnalysis(
+fsea.out <- runEnrichmentAnalysis(
   MOFAobject,
   view = "mRNA",
   feature.sets = reactomeGS,
@@ -248,7 +248,7 @@ The next step is to visualise the results of the Gene Set Enrichment Analysis. T
 
 (a) General Overview: Barplot with number of enriched gene sets per view
 ```{r}
-Barplot_FeatureSetEnrichmentAnalysis(fsea.out, alpha=0.01)
+plotEnrichmentBars(fsea.out, alpha=0.01)
 ```
 From this we find enriched at a FDR of 1% gene sets on Factors 3-6 and 8. To look into which gene sets these are we can choose a factor of interest and visualize the most enriched gene sets as follows:  
 
@@ -256,11 +256,11 @@ From this we find enriched at a FDR of 1% gene sets on Factors 3-6 and 8. To loo
 ```{r}
 interestingFactors <- 4:5
 for (factor in interestingFactors) {
-  lineplot <- LinePlot_FeatureSetEnrichmentAnalysis(MOFAobject,
-                                                    fsea.out,
-                                                    factor = factor,
-                                                    alpha = 0.01,
-                                                    max.pathways = 10)
+  lineplot <- plotEnrichment(MOFAobject,
+                             fsea.out,
+                             factor = factor,
+                             alpha = 0.01,
+                             max.pathways = 10)
   print(lineplot)
 }
 ```

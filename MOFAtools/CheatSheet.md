@@ -52,9 +52,9 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 * **plotDataScatter**: scatterplot of the data using only top features for a given factor  
 
 ## Feature set enrichment analysis
-* **FeatureSetEnrichmentAnalysis**: do feature set enrichment analysis. Takes a bit amount of options, check the example on the vignette  
-* **LinePlot_FeatureSetEnrichmentAnalysis**: plot the top most enriched feature sets per factor
-* **Barplot_FeatureSetEnrichmentAnalysis**: plot the number of enriched feature sets per factor as a barplot
+* **runEnrichmentAnalysis**: do feature set enrichment analysis. Takes a bit amount of options, check the example on the vignette
+* **plotEnrichment**: plot the top most enriched feature sets per factor
+* **plotEnrichmentBars**: plot the number of enriched feature sets per factor as a barplot
 
 ## Clustering
 * **clusterSamples**: k-means clustering of samples on the factor space

@@ -207,8 +207,8 @@ The data has to be input in two possible formats:
 * Base R approach: a list of matrices where features are rows and samples are columns. Examples are shown in the vignettes.
 
 **(Q) Does MOFA always converge to the same solutions?**  
-No, as occurs in most complex Bayesian models, they are not guaranteed to always converge to the smae (optimal) solution.
-In practice, however, we observed that the solutions are highly consistent, particularly for strong factors. However, one should always assess the robustness and do a proper model selection. We are currently preparing a vignette on this.
+No, as occurs in most complex Bayesian models, they are not guaranteed to always converge to the same (optimal) solution.
+In practice, however, we observed that the solutions are highly consistent, particularly for strong factors. However, one should always assess the robustness and do a proper model selection. For this we recommend to train the model multiple times and check the robustness of the factors across the different solutions. For downstream analysis a single model can be chosen based on the best value of the Evidence Lower Bound (ELBO). We provide functions for these two steps, which are explained in the vignette [Integration of simulated data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_simulated.html).
 
 
 ## Contact

@@ -160,6 +160,8 @@ compareFactors <- function(models, comparison = "all", show_rownames=FALSE, show
 #' @param models a list containing \code{\link{MOFAmodel}} objects.
 #' @param show_modelnames boolean, whether to indicate the name of each model instance
 #'  (names of the list in models) or not
+#' @return a ggplot showing the number of factors and
+#'   the ELBO statistics of the given models as a barplot
 #' @export
 #' @examples
 #' ### Example on simulated data
@@ -210,6 +212,7 @@ compareModels <- function(models, show_modelnames = FALSE) {
 #' @param models a list containing \code{\link{MOFAmodel}} objects.
 #' @param plotit show a plot of the characteristics of the compared
 #'   \code{\link{MOFAmodel}} objects (ELBO value and number of inferred factors)?
+#' @return a single \code{\link{MOFAmodel}} with the best ELBO statistics from the provided list 
 #' @export
 #' @examples
 #' ### Example on simulated data

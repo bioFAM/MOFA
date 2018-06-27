@@ -43,3 +43,10 @@ which can be used as final point estimates to analyse the results of the model. 
 The priors and variational distributions of each variable are extensively
  described in the supplementary methods of the original paper.
 }
+\examples{
+# load a trained MOFAmodel object
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFAobject <- loadModel(filepath)
+# get expectations of Alpha as matrix
+getExpectations(MOFAobject, variable="Alpha")
+}

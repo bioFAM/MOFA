@@ -20,3 +20,15 @@ TrainData(object)
 \value{
 list of numeric matrices that contain the training data
 }
+\description{
+Function to set and retrieve training data.
+}
+\examples{
+data("scMT_data")
+MOFAobject <- createMOFAobject(scMT_data)
+TrainData(MOFAobject)
+
+data("CLL_data")
+MOFAobject <- createMOFAobject(CLL_data)
+TrainData(MOFAobject)
+}

@@ -20,3 +20,13 @@ TrainOptions(object)
 \value{
 list of training options
 }
+\description{
+Function to set and retrieve training options.
+}
+\examples{
+# load existing object
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFAobject <- loadModel(filepath)
+# get TrainOptions
+TrainOptions(MOFAobject)
+}

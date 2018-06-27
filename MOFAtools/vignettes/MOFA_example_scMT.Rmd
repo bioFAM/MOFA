@@ -137,7 +137,7 @@ In this data set MOFA identified 3 Factors with a minimum variance of 2%. While 
 ```{r}
 # Calculate the variance explained (R2) per factor in each view 
 r2 <- calculateVarianceExplained(MOFAobject)
-head(r2$R2Total)
+r2$R2Total
 
 # Variance explained by each factor in each view
 head(r2$R2PerFactor)

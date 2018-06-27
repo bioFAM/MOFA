@@ -25,3 +25,11 @@ sampleNames(object) <- value
 \value{
 character vector with the sample names
 }
+\description{
+Function to set and retrieve sample names.
+}
+\examples{
+data("CLL_data")
+MOFAobject  <- createMOFAobject(CLL_data)
+head(sampleNames(MOFAobject))
+}

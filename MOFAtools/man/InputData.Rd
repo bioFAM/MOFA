@@ -6,8 +6,6 @@
 \alias{InputData}
 \alias{inputData<-}
 \alias{InputData}
-\alias{InputData}
-\alias{inputData<-}
 \title{Set and retrieve input data}
 \usage{
 InputData(object)
@@ -15,11 +13,19 @@ InputData(object)
 .InputData(object) <- value
 
 \S4method{InputData}{MOFAmodel}(object)
-
-\S4method{.InputData}{MOFAmodel,MultiAssayExperiment}(object) <- value
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
-
-\item{object}{a \code{\link{MOFAmodel}} object.}
+}
+\value{
+A MultiAssayExperiment object or a list of matrices, one per view,
+ containing the input data before beign parsed for training
+}
+\description{
+Function to set and retrieve input data.
+}
+\examples{
+data("scMT_data")
+MOFAobject <- createMOFAobject(scMT_data)
+InputData(MOFAobject)
 }

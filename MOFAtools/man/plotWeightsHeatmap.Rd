@@ -27,6 +27,9 @@ with a magnitude below this threshold (in all factors) are removed}
 
 \item{...}{extra arguments passed to \code{\link[pheatmap]{pheatmap}}.}
 }
+\value{
+produces a heatmap of feature weights for all factors
+}
 \description{
 Function to visualize the loadings for a given set of factors in a given view. \cr 
 This is useful to visualize the overall pattern of the weights

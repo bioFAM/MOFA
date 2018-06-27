@@ -12,6 +12,9 @@ subsetViews(object, views)
 \item{views}{character vector with the view names, numeric vector with the view indices
 or logical vector with the view to be kept as TRUE.}
 }
+\value{
+\code{\link{MOFAmodel}} object with a subset of views
+}
 \description{
 Method to subset (or sort) views.
 This function can remove entire views from the model. 

@@ -18,5 +18,18 @@ ImputedData(object)
 \item{object}{a \code{\link{MOFAmodel}} object.}
 }
 \value{
-list of numeric matrices that contain the training data
+list of numeric matrices that contain the imputed data
+}
+\description{
+Function to set and retrieve imputed data.
+}
+\examples{
+# load a trained MOFAmodel object
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFAobject <- loadModel(filepath)
+# impute missing values
+MOFAobject <- imputeMissing(MOFAobject)
+# get imputations for a single view
+imputedDrugs <-ImputedData(MOFAobject)$Drugs
+head(imputedDrugs)
 }

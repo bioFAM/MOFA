@@ -20,3 +20,18 @@ Expectations(object)
 \value{
 list of expectations
 }
+\description{
+Function to set and retrieve model expectations.
+}
+\examples{
+# load existing object
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFAobject <- loadModel(filepath)
+# get training statistics
+stats <- TrainStats(MOFAobject)
+# load a trained MOFAmodel object
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFAobject <- loadModel(filepath)
+# get expectations 
+expectations <- Expectations(MOFAobject)
+}

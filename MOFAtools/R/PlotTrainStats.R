@@ -14,9 +14,10 @@
 #' All training statistics, including the number of active factors, can be fetch from the
 #'  TrainStats slot of \code{\link{MOFAmodel}} .
 #' @param object a \code{\link{MOFAmodel}} object.
+#' @return plot of number of active factors during training
 #' @import ggplot2 scales
 #' @export
-#' @examples
+#' @examples 
 #' # Example on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 #' MOFA_CLL <- loadModel(filepath)
@@ -67,6 +68,7 @@ trainCurveFactors <- function(object) {
 #' @rdname trainCurveELBO
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param logScale boolean indicating whether to apply log transform
+#' @return plot of ELBO values during training
 #' @description MOFA inference is done using the variational Bayes algorithm,
 #'  which maximises a quantity called the Evidence Lower Bound (ELBO).
 #' The ELBO is supposed to increase monotonically up to convergence,
@@ -96,7 +98,9 @@ trainCurveELBO <- function(object, logScale = FALSE) {
   if (class(object) != "MOFAmodel") { 
     stop("'object' has to be an instance of MOFAmodel") 
     }
-  
+  if (object@Status != "trained") { 
+    stop("MOFAmodel is untrained. Use runMOFA to train it.") 
+  }
   # Fetch ELBO from TrainStats  
   idx = seq(1,length(object@TrainStats$elbo),object@TrainOptions$elbofreq)
   stat = object@TrainStats$elbo[idx]

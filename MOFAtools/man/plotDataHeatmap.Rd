@@ -30,6 +30,9 @@ Default is FALSE.}
 
 \item{...}{further arguments that can be passed to \code{\link[pheatmap]{pheatmap}}}
 }
+\value{
+plots a heatmap of the data for the top features for a given factor and views
+}
 \description{
 Function to plot a heatmap of the input data for relevant features, 
 usually the ones with highest loadings in a given factor.

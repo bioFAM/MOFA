@@ -33,3 +33,7 @@ The training options are the following: \cr
  \item{\strong{seed}:}{ random seed for reproducibility (default is NULL, which samples a random seed).}
 }
 }
+\examples{
+TrainOptions <- getDefaultTrainOptions()
+TrainOptions
+}

@@ -9,7 +9,17 @@
 #' @details K indicates the number of factors, D indicates the number of features, 
 #' N indicates the (total) number of samples and M indicates the number of views.
 #' @param object a \code{\link{MOFAmodel}} object.
+#' @return list with the relevant dimensionalities of the model.
+#'  N for the number of samples, M for the number of views, 
+#'  D for the number of features of each view and K for the number of infered latent factors.
 #' @export
+#' @examples
+#' # load a trained MOFAmodel object
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFAobject <- loadModel(filepath)
+#' # get dimensions 
+#' getDimensions(MOFAobject)
+
 getDimensions <- function(object) {
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
   return(object@Dimensions)
@@ -31,7 +41,15 @@ getDimensions <- function(object) {
 #' Alternatively, if \code{as.data.frame} is \code{TRUE},
 #'  returns a long-formatted data frame with columns (sample,factor,value).
 #' @export
-#' 
+#' @examples
+#' # load a trained MOFAmodel object
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFAobject <- loadModel(filepath)
+#' # get factors as matrix
+#' getFactors(MOFAobject, factors = 1:3)
+#' # get factors as data.frame
+#' head(getFactors(MOFAobject, factors = 1:5, as.data.frame = TRUE))
+
 getFactors <- function(object, factors = "all", as.data.frame = FALSE, include_intercept = TRUE) {
   
   # Sanity checks
@@ -82,7 +100,15 @@ getFactors <- function(object, factors = "all", as.data.frame = FALSE, include_i
 #' Alternatively, if \code{as.data.frame} is \code{TRUE},
 #'  returns a long-formatted data frame with columns (view,feature,factor,value).
 #' @export
-#' 
+#' @examples
+#' # load a trained MOFAmodel object
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFAobject <- loadModel(filepath)
+#' # get weights as a list of matrices
+#' weightList <- getWeights(MOFAobject, view = "all", factors = 1:4)
+#' # get weights as a data.frame
+#' head(getWeights(MOFAobject, view = "Mutations", as.data.frame = TRUE))
+
 getWeights <- function(object, views = "all", factors = "all", as.data.frame = FALSE) {
   
   # Sanity checks
@@ -127,12 +153,22 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
 #' Default is "all"
 #' @param as.data.frame logical indicating whether to return a long data frame instead of a list of matrices.
 #' Default is \code{FALSE}.
+#' @return A list with one numeric matrix per view, containing the parsed data used to fit the MOFA model.
 #' @details By default this function returns a list where each element
 #'  is a data matrix with dimensionality (D,N) 
 #' where D is the number of features and N is the number of samples. \cr
 #' Alternatively, if \code{as.data.frame} is \code{TRUE}, the function
 #'  returns a long-formatted data frame with columns (view,feature,sample,value).
 #' @export
+#' @examples 
+#' data("scMT_data")
+#' MOFAobject <- createMOFAobject(scMT_data)
+#' getTrainData(MOFAobject)
+#' 
+#' data("CLL_data")
+#' MOFAobject <- createMOFAobject(CLL_data)
+#' getTrainData(MOFAobject)
+
 getTrainData <- function(object, views = "all", features = "all", as.data.frame = FALSE) {
   
   # Sanity checks
@@ -191,6 +227,16 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
 #' Alternatively, if \code{as.data.frame} is \code{TRUE},
 #'  returns a long-formatted data frame with columns (view,feature,sample,value).
 #' @export
+#' @examples
+#' # load a trained MOFAmodel object
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFAobject <- loadModel(filepath)
+#' # impute missing values
+#' MOFAobject <- imputeMissing(MOFAobject)
+#' # get imputations for a single view
+#' imputedDrugs <- getImputedData(MOFAobject,view="Drugs")
+#' head(imputedDrugs)
+
 getImputedData <- function(object, views = "all", features = "all", as.data.frame = FALSE) {
   
   # Sanity checks
@@ -245,6 +291,7 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
 #'  your \code{\link{createMOFAobject}}, this function will not work.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param covariate names of the covariate
+#' @return a vector containing the covariate
 #' @import MultiAssayExperiment
 #' @importFrom Biobase phenoData
 #' @export
@@ -321,6 +368,13 @@ getCovariates <- function(object, covariate) {
 #'  \item{"Tau"}{}
 #' }
 #' @export
+#' @examples
+#' # load a trained MOFAmodel object
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFAobject <- loadModel(filepath)
+#' # get expectations of Alpha as matrix
+#' getExpectations(MOFAobject, variable="Alpha")
+
 getExpectations <- function(object, variable, as.data.frame = FALSE) {
   
   # Sanity checks
@@ -397,8 +451,16 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
 #' @description Extract the value of the ELBO statistics after model training.
 #'  This can be useful for model selection.
 #' @param object a \code{\link{MOFAmodel}} object.
+#' @return value of the ELBO statistic at end of training
 #' @importFrom utils tail
 #' @export
+#' @examples
+#' # load a trained MOFAmodel object
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' MOFAobject <- loadModel(filepath)
+#' # get ELBO statistic
+#' getELBO(MOFAobject)
+
 getELBO <- function(object) {
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
   return(tail(object@TrainStats$elbo,1))

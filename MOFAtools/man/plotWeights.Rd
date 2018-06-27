@@ -24,6 +24,9 @@ plotWeights(object, view, factor, nfeatures = 10, abs = FALSE,
 
 \item{scale}{logical indicating whether to scale all loadings from 0 to 1.}
 }
+\value{
+a plot of all feature loadings for the given factor
+}
 \description{
 An important step to annotate factors is to visualise the corresponding feature loadings. \cr
 This function plots all loadings for a given latent factor and view, labeling the top ones. \cr

@@ -9,6 +9,9 @@ trainCurveFactors(object)
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 }
+\value{
+plot of number of active factors during training
+}
 \description{
 the MOFA model starts with an initial number of factors and inactive factors
  can be dropped during training if they explain small amounts of variation 

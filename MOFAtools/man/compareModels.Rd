@@ -12,6 +12,10 @@ compareModels(models, show_modelnames = FALSE)
 \item{show_modelnames}{boolean, whether to indicate the name of each model instance
 (names of the list in models) or not}
 }
+\value{
+a ggplot showing the number of factors and
+  the ELBO statistics of the given models as a barplot
+}
 \description{
 Different objects of \code{\link{MOFAmodel}} are compared in terms
  of the final value of the ELBO statistics. 

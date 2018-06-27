@@ -23,6 +23,7 @@
 #' @param threshold threshold on absolute weight values, so that loadings
 #'  with a magnitude below this threshold (in all factors) are removed
 #' @param ... extra arguments passed to \code{\link[pheatmap]{pheatmap}}.
+#' @return produces a heatmap of feature weights for all factors
 #' @importFrom pheatmap pheatmap
 #' @export
 #' @examples
@@ -100,6 +101,7 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
 #' @param manual A nested list of character vectors with features to be manually labelled.
 #' @param color_manual a character vector with colors, one for each element of 'manual'
 #' @param scale logical indicating whether to scale all loadings from 0 to 1.
+#' @return a plot of all feature loadings for the given factor
 #' @details The weights of the features within a view are relative and
 #'  they should not be interpreted in an absolute scale.
 #' For interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.

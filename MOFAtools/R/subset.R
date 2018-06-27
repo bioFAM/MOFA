@@ -15,6 +15,7 @@
 #'  or numeric vector with the index of the factors.
 #' @param keep_intercept logical indicating whether the optional intercept factor
 #'  should be kept when subsetting (default TRUE).
+#' @return \code{\link{MOFAmodel}} object with a subset of factors
 #' @examples
 #' # Using an existing trained model on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
@@ -75,6 +76,7 @@ subsetFactors <- function(object, factors, keep_intercept=TRUE) {
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param samples character vector with the sample names, numeric vector with the sample indices or 
 #' logical vector with the samples to be kept as TRUE.
+#' @return \code{\link{MOFAmodel}} object with a subset of samples
 #' @export
 #' @examples
 #' # Using an existing trained model on the CLL data
@@ -132,6 +134,7 @@ subsetSamples <- function(object, samples) {
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param views character vector with the view names, numeric vector with the view indices
 #'  or logical vector with the view to be kept as TRUE.
+#' @return \code{\link{MOFAmodel}} object with a subset of views
 #' @export
 #' @examples
 #' # Using an existing trained model on the CLL data

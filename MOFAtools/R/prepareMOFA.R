@@ -17,6 +17,24 @@
 #' @return Returns an untrained \code{\link{MOFAmodel}} with specified data, model and training options.
 #' Next step is to train the model with \code{\link{runMOFA}}
 #' @export
+#' @examples 
+#' # load data
+#' data("CLL_Data")
+#' #create a MOFAmodel object
+#' MOFAobject <- createMOFAobject(CLL_data)
+#' # set options
+#' TrainOptions <- getDefaultTrainOptions()
+#' ModelOptions <- getDefaultModelOptions(MOFAobject)
+#' DataOptions <- getDefaultDataOptions()
+#' # prepare MOFAmodel object for training
+#' MOFAobject <- prepareMOFA(MOFAobject, 
+#' DataOptions = DataOptions,
+#' ModelOptions = ModelOptions,
+#' TrainOptions = TrainOptions
+#' )
+#' # as a next step runMOFA can be used to train the model (can take some time)
+#' # MOFAobject <- runMOFA(MOFAobject, outfile=tempfile())
+
 prepareMOFA <- function(object, DataOptions = NULL, ModelOptions = NULL, TrainOptions = NULL) {
   
   # Sanity checks
@@ -86,6 +104,10 @@ prepareMOFA <- function(object, DataOptions = NULL, ModelOptions = NULL, TrainOp
 #' @return Returns a list with default training options, which have to be passed
 #'as an argument to \code{\link{prepareMOFA}}
 #' @export
+#' @examples 
+#' TrainOptions <- getDefaultTrainOptions()
+#' TrainOptions
+
 getDefaultTrainOptions <- function() {
   TrainOptions <- list(
     maxiter = 5000,               # (numeric) Maximum number of iterations
@@ -115,6 +137,10 @@ getDefaultTrainOptions <- function() {
 #' @return Returns a list with the default data options, which have to be passed as
 #'  an argument to \code{\link{prepareMOFA}}
 #' @export
+#' @examples 
+#' DataOptions <- getDefaultDataOptions()
+#' DataOptions
+
 getDefaultDataOptions <- function() {
   DataOptions <- list(
     centerFeatures = TRUE,           # Center features to zero mean (does not apply to binary or count views)
@@ -146,6 +172,15 @@ getDefaultDataOptions <- function() {
 #' @return Returns a list with the default model options, which have to be passed as
 #'  an argument to \code{\link{prepareMOFA}}
 #' @export
+#' @examples 
+#' # load data
+#' data("CLL_Data")
+#' #create a MOFAmodel object
+#' MOFAobject <- createMOFAobject(CLL_data)
+#' # set model options
+#' ModelOptions <- getDefaultModelOptions(MOFAobject)
+#' ModelOptions
+
 getDefaultModelOptions <- function(object) {
   
   # Sanity checks

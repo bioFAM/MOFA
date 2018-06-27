@@ -21,6 +21,7 @@
 #' @param imputed logical indicating whether to plot the imputed data instead of the original data. 
 #' Default is FALSE.
 #' @param ... further arguments that can be passed to \code{\link[pheatmap]{pheatmap}}
+#' @return plots a heatmap of the data for the top features for a given factor and views
 #' @details One of the first steps for the annotation of a given factor
 #'  is to visualise the corresponding loadings, 
 #' using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}.
@@ -141,6 +142,7 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
 #' @param showMissing logical indicating whether to show samples
 #'  with missing values for the color or the shape.
 #' Default is TRUE.
+#' @return a scatterplot of featurea against a factor
 #' @details One of the first steps for the annotation of a given factor
 #'  is to visualise the corresponding loadings, 
 #' using for example \code{\link{plotWeights}} or \code{\link{plotTopWeights}}.
@@ -300,6 +302,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param colors a character vector specifying the colors per view.
 #'  NULL (default) uses an internal palette.
+#' @return a tile plot of the training data
 #' @details This function is helpful to get an overview of the dimensionality and
 #'  the missing value structure of the training data. \cr 
 #' It shows the number of samples, the number of views, the number of features,

@@ -142,7 +142,7 @@ runEnrichmentAnalysis <- function(object, view,
       W_null <- W[perm,]
       rownames(W_null) <- rownames(W); colnames(W_null) <- colnames(W)
       # Permute columns of the data matrix correspondingly (only matters for cor.adjusted test)
-	  data_null <- data[,perm]
+      data_null <- data[,perm]
       rownames(data_null) <- rownames(data)
       
       # Compute null statistic
@@ -171,9 +171,9 @@ runEnrichmentAnalysis <- function(object, view,
     warning("A large number of permutations is required for the permutation approach!")
     xx <- array(unlist(null_dist_tmp),
                 dim = c(nrow(null_dist_tmp[[1]]), ncol(null_dist_tmp[[1]]), length(null_dist_tmp)))
-	ll <- lapply(1:nperm, function(i) xx[,,i] > abs(s.true))
-	p.values <- Reduce("+",ll)/nperm
-	rownames(p.values) <- rownames(s.true); colnames(p.values) <- factors
+    ll <- lapply(1:nperm, function(i) xx[,,i] > abs(s.true))
+    values <- Reduce("+",ll)/nperm
+    rownames(p.values) <- rownames(s.true); colnames(p.values) <- factors
 
 # parametric version
   } else {
@@ -297,6 +297,7 @@ plotEnrichment <- function(object, fsea.out, factor, alpha=0.1, max.pathways=25,
 #'  not represented in the heatmap. Default is 0.05.
 #' @param logScale boolean indicating whether to plot the log of the p.values.
 #' @param ... extra arguments to be passed to \link{pheatmap} function
+#' @return produces a heatmap
 #' @import pheatmap
 #' @importFrom grDevices colorRampPalette
 #' @export

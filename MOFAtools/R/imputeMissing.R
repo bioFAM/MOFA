@@ -19,6 +19,7 @@
 #'   (Poisson and Bernoulli) to the next integer.
 #'  This is the default option.}
 #' }
+#' @return a \code{\link{MOFAmodel}} object with imputed data in the \code{ImputedData} slot
 #' @details Matrix factorization models generate a denoised and condensed low-dimensional representation 
 #' of the data which capture the main sources of heterogeneity of the data. 
 #' These representation can be used to do predictions via the equation \code{Y = WZ}. 

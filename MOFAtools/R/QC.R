@@ -3,8 +3,15 @@
 #' @description Function to do quality control on a \code{\link{MOFAmodel}} object.
 #' @param object a trained \code{\link{MOFAmodel}} object.
 #' @param verbose logical indicating whether to generate a verbose output.
+#' @return none
 #' @export
-#'
+#' @examples 
+#' # load a trained MOFAmodel object
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' MOFAobject <- loadModel(filepath)
+#' # do quality control
+#' qualityControl(MOFAobject, verbose=TRUE)
+
 qualityControl <- function(object, verbose = FALSE) {
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   if (object@Status != "trained") stop("This function only works in a trained MOFAmodel")

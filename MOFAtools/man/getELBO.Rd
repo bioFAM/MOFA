@@ -9,7 +9,17 @@ getELBO(object)
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 }
+\value{
+value of the ELBO statistic at end of training
+}
 \description{
 Extract the value of the ELBO statistics after model training.
  This can be useful for model selection.
+}
+\examples{
+# load a trained MOFAmodel object
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFAobject <- loadModel(filepath)
+# get ELBO statistic
+getELBO(MOFAobject)
 }

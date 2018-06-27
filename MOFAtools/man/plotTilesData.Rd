@@ -12,6 +12,9 @@ plotTilesData(object, colors = NULL)
 \item{colors}{a character vector specifying the colors per view.
 NULL (default) uses an internal palette.}
 }
+\value{
+a tile plot of the training data
+}
 \description{
 Function to do a tile plot showing the dimensionality and 
 the missing value structure of the multi-omics data.

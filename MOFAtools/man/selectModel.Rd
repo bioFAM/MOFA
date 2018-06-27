@@ -12,6 +12,9 @@ selectModel(models, plotit = TRUE)
 \item{plotit}{show a plot of the characteristics of the compared
 \code{\link{MOFAmodel}} objects (ELBO value and number of inferred factors)?}
 }
+\value{
+a single \code{\link{MOFAmodel}} with the best ELBO statistics from the provided list
+}
 \description{
 Different trained objects of \code{\link{MOFAmodel}} are compared
  in terms of the final value of the ELBO statistics 

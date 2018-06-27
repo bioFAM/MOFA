@@ -25,3 +25,18 @@ factorNames(object) <- value
 \value{
 character vector with the features names
 }
+\description{
+Function to set and retrieve factor names.
+}
+\examples{
+# load a trained MOFAmodel object
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFAobject <- loadModel(filepath)
+factorNames(MOFAobject)
+# load a trained MOFAmodel object
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFAobject <- loadModel(filepath)
+factorNames(MOFAobject)
+factorNames(MOFAobject) <- c("intercept",paste("Factor",1:3,sep="_"))
+factorNames(MOFAobject)
+}

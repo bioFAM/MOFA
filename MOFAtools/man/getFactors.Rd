@@ -28,3 +28,12 @@ Alternatively, if \code{as.data.frame} is \code{TRUE},
 \description{
 Extract the latent factors from the model.
 }
+\examples{
+# load a trained MOFAmodel object
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFAobject <- loadModel(filepath)
+# get factors as matrix
+getFactors(MOFAobject, factors = 1:3)
+# get factors as data.frame
+head(getFactors(MOFAobject, factors = 1:5, as.data.frame = TRUE))
+}

@@ -26,3 +26,7 @@ The data options are the following: \cr
    as the model can cope with samples having missing assays. Default is FALSE.}
 }
 }
+\examples{
+DataOptions <- getDefaultDataOptions()
+DataOptions
+}

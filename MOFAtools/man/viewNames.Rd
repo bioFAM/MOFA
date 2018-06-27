@@ -25,3 +25,16 @@ viewNames(object) <- value
 \value{
 character vector with the names for each view
 }
+\description{
+Function to set and retrieve view names.
+}
+\examples{
+data("CLL_data")
+MOFAobject  <- createMOFAobject(CLL_data)
+viewNames(MOFAobject)
+data("CLL_data")
+MOFAobject  <- createMOFAobject(CLL_data)
+viewNames(MOFAobject) 
+viewNames(MOFAobject) <- c("DrugResponses", viewNames(MOFAobject)[2:4])
+viewNames(MOFAobject) 
+}

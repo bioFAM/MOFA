@@ -12,6 +12,9 @@ subsetSamples(object, samples)
 \item{samples}{character vector with the sample names, numeric vector with the sample indices or 
 logical vector with the samples to be kept as TRUE.}
 }
+\value{
+\code{\link{MOFAmodel}} object with a subset of samples
+}
 \description{
 Method to subset (or sort) samples. \cr
 This function can remove samples from the model. For example,

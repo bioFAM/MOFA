@@ -11,6 +11,16 @@ qualityControl(object, verbose = FALSE)
 
 \item{verbose}{logical indicating whether to generate a verbose output.}
 }
+\value{
+none
+}
 \description{
 Function to do quality control on a \code{\link{MOFAmodel}} object.
+}
+\examples{
+# load a trained MOFAmodel object
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFAobject <- loadModel(filepath)
+# do quality control
+qualityControl(MOFAobject, verbose=TRUE)
 }

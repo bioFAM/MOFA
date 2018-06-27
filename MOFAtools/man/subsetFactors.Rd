@@ -15,6 +15,9 @@ or numeric vector with the index of the factors.}
 \item{keep_intercept}{logical indicating whether the optional intercept factor
 should be kept when subsetting (default TRUE).}
 }
+\value{
+\code{\link{MOFAmodel}} object with a subset of factors
+}
 \description{
 Method to subset (or sort) factors. \cr
 Some factors might not be interesting for the downstream analysis and the user can choose to remove them.

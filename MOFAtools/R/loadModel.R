@@ -18,6 +18,11 @@
 #' @return a \code{\link{MOFAmodel}} model.
 #' @importFrom rhdf5 h5read
 #' @export
+#' @examples 
+#' # path to the hdf5 file
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' # load the model
+#' MOFAobject <- loadModel(filepath)
 loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
   
   # message(paste0("Loading the following MOFA model: ", file))

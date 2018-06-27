@@ -27,3 +27,12 @@ Alternatively, if \code{as.data.frame} is \code{TRUE},
 \description{
 Extract the weights from the model.
 }
+\examples{
+# load a trained MOFAmodel object
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFAobject <- loadModel(filepath)
+# get weights as a list of matrices
+weightList <- getWeights(MOFAobject, view = "all", factors = 1:4)
+# get weights as a data.frame
+head(getWeights(MOFAobject, view = "Mutations", as.data.frame = TRUE))
+}

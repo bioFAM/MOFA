@@ -11,6 +11,9 @@ getCovariates(object, covariate)
 
 \item{covariate}{names of the covariate}
 }
+\value{
+a vector containing the covariate
+}
 \description{
 This function extracts covariates from the \code{colData}
  in the input \code{MultiAssayExperiment} object. \cr

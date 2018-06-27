@@ -20,3 +20,13 @@ TrainStats(object)
 \value{
 list of training statistics
 }
+\description{
+Function to set and retrieve training statistics
+}
+\examples{
+# load existing object
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFAobject <- loadModel(filepath)
+# get training statistics
+trainStats <- TrainStats(MOFAobject)
+}

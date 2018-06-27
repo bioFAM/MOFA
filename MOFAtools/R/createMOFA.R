@@ -40,8 +40,7 @@ createMOFAobject <- function(data) {
     message("Creating MOFA object from a MultiAssayExperiment object...")
     object <- .createMOFAobjectFromMAE(data)
   } else if (is(data,"list")) {
-    message("Creating MOFA object from list of matrices,\n
-            please make sure that samples are columns and features are rows...\n")
+    message("Creating MOFA object from list of matrices,\n please make sure that samples are columns and features are rows...\n")
     object <- .createMOFAobjectFromList(data)
   } else {
     stop("Error: input data has to be provided either as a list of matrices or as a MultiAssayExperiment object \n")
@@ -127,6 +126,7 @@ createMOFAobject <- function(data) {
   }
   
   object@TrainData <- lapply(data, function(view) .subset_augment(view, samples))
+  
   return(object)
 }
 

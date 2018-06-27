@@ -25,3 +25,12 @@ featureNames(object) <- value
 \value{
 list of character vectors with the feature names for each view
 }
+\description{
+Function to set and retrieve feature names.
+}
+\examples{
+data("CLL_data")
+MOFAobject  <- createMOFAobject(CLL_data)
+featureNames(MOFAobject)$Mutations
+head(featureNames(MOFAobject)$Drugs)
+}

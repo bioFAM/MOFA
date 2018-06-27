@@ -33,3 +33,12 @@ The model options are the following: \cr
  This is always recommended, as it will make the loadings more interpretable. Default is TRUE.}
 }
 }
+\examples{
+# load data
+data("CLL_Data")
+#create a MOFAmodel object
+MOFAobject <- createMOFAobject(CLL_data)
+# set model options
+ModelOptions <- getDefaultModelOptions(MOFAobject)
+ModelOptions
+}

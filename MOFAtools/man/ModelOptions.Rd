@@ -20,3 +20,13 @@ ModelOptions(object)
 \value{
 list of model options
 }
+\description{
+Function to set and retrieve model options.
+}
+\examples{
+# load existing object
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+MOFAobject <- loadModel(filepath)
+# get ModelOptions
+ModelOptions(MOFAobject)
+}

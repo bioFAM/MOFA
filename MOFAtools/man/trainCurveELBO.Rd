@@ -11,6 +11,9 @@ trainCurveELBO(object, logScale = FALSE)
 
 \item{logScale}{boolean indicating whether to apply log transform}
 }
+\value{
+plot of ELBO values during training
+}
 \description{
 MOFA inference is done using the variational Bayes algorithm,
  which maximises a quantity called the Evidence Lower Bound (ELBO).

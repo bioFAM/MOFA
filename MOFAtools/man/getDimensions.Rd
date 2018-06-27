@@ -9,10 +9,22 @@ getDimensions(object)
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 }
+\value{
+list with the relevant dimensionalities of the model.
+ N for the number of samples, M for the number of views, 
+ D for the number of features of each view and K for the number of infered latent factors.
+}
 \description{
 Extract dimensionalities from the model.
 }
 \details{
 K indicates the number of factors, D indicates the number of features, 
 N indicates the (total) number of samples and M indicates the number of views.
+}
+\examples{
+# load a trained MOFAmodel object
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+MOFAobject <- loadModel(filepath)
+# get dimensions 
+getDimensions(MOFAobject)
 }

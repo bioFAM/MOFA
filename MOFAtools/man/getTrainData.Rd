@@ -20,6 +20,9 @@ Default is "all"}
 \item{as.data.frame}{logical indicating whether to return a long data frame instead of a list of matrices.
 Default is \code{FALSE}.}
 }
+\value{
+A list with one numeric matrix per view, containing the parsed data used to fit the MOFA model.
+}
 \description{
 Fetch the training data
 }
@@ -29,4 +32,13 @@ By default this function returns a list where each element
 where D is the number of features and N is the number of samples. \cr
 Alternatively, if \code{as.data.frame} is \code{TRUE}, the function
  returns a long-formatted data frame with columns (view,feature,sample,value).
+}
+\examples{
+data("scMT_data")
+MOFAobject <- createMOFAobject(scMT_data)
+getTrainData(MOFAobject)
+
+data("CLL_data")
+MOFAobject <- createMOFAobject(CLL_data)
+getTrainData(MOFAobject)
 }

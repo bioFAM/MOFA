@@ -38,6 +38,9 @@ This can be either:
  with missing values for the color or the shape.
 Default is TRUE.}
 }
+\value{
+a scatterplot of featurea against a factor
+}
 \description{
 Function to do a scatterplot of the feature(s) values against the latent factor values.
 }

@@ -16,6 +16,9 @@ not represented in the heatmap. Default is 0.05.}
 
 \item{...}{extra arguments to be passed to \link{pheatmap} function}
 }
+\value{
+produces a heatmap
+}
 \description{
 This method generates a heatmap with the adjusted p.values that
  result from the the feature set enrichment analysis. Rows are feature sets and columns are factors.

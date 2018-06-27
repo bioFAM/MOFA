@@ -27,3 +27,21 @@ Next step is to train the model with \code{\link{runMOFA}}
 Function to prepare a \code{\link{MOFAmodel}} object for training.
 Here, data, input/output option are specified and data, model and training options can be set.
 }
+\examples{
+# load data
+data("CLL_Data")
+#create a MOFAmodel object
+MOFAobject <- createMOFAobject(CLL_data)
+# set options
+TrainOptions <- getDefaultTrainOptions()
+ModelOptions <- getDefaultModelOptions(MOFAobject)
+DataOptions <- getDefaultDataOptions()
+# prepare MOFAmodel object for training
+MOFAobject <- prepareMOFA(MOFAobject, 
+DataOptions = DataOptions,
+ModelOptions = ModelOptions,
+TrainOptions = TrainOptions
+)
+# as a next step runMOFA can be used to train the model (can take some time)
+# MOFAobject <- runMOFA(MOFAobject, outfile=tempfile())
+}

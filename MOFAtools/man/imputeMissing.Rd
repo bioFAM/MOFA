@@ -24,6 +24,9 @@ imputeMissing(object, views = "all", factors = "all", type = c("inRange",
  This is the default option.}
 }}
 }
+\value{
+a \code{\link{MOFAmodel}} object with imputed data in the \code{ImputedData} slot
+}
 \description{
 This function uses the latent factors and the loadings inferred
  in order to impute missing values.

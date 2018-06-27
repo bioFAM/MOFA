@@ -38,13 +38,13 @@ createMOFAobject <- function(data) {
   
   if (is(data,"MultiAssayExperiment")) {
     message("Creating MOFA object from a MultiAssayExperiment object...")
-    object <- .createMOFAobjectFromMAE(data)
   } else if (is(data,"list")) {
     message("Creating MOFA object from list of matrices,\n please make sure that samples are columns and features are rows...\n")
-    object <- .createMOFAobjectFromList(data)
+    data <- .createMAEobjectFromList(data)
   } else {
     stop("Error: input data has to be provided either as a list of matrices or as a MultiAssayExperiment object \n")
   }
+  object <- .createMOFAobjectFromMAE(data)
   
   # Set dimensionalities
   object@Dimensions[["M"]] <- length(object@TrainData)
@@ -103,19 +103,15 @@ createMOFAobject <- function(data) {
   return(object)
 }
 
-
-# (Hidden) function to initialise a MOFAmodel object using a list of matrices
-.createMOFAobjectFromList <- function(data) {
-  
-  # Initialise MOFA object
-  object <- new("MOFAmodel")
-  object@Status <- "untrained"
+#' @importFrom Biobase ExpressionSet
+#' @import MultiAssayExperiment
+.createMAEobjectFromList <- function(data) {
   
   # Fetch or assign sample names
   samples <- Reduce(union, lapply(data, colnames))
   if (is.null(samples)) {
     N <- unique(sapply(data,ncol))
-    if (length(N)>1) { 
+    if (length(N)>1) {
       stop("If the matrices have no column (samples) names that can be used to match the different views,
            all matrices must have the same number of columns")
     }
@@ -125,10 +121,44 @@ createMOFAobject <- function(data) {
     for (m in 1:length(data)) { colnames(data[[m]]) <- samples }
   }
   
-  object@TrainData <- lapply(data, function(view) .subset_augment(view, samples))
+  # Create ExpressionSet for each assay
+  expressionset_list <- list()
+  for (i in 1:length(data)) {
+    expressionset_list[[i]] <- ExpressionSet(assayData=data[[i]])
+  }
+  names(expressionset_list) <- names(data)
   
-  return(object)
+  # Create MultiAssayExperiment
+  MAE <- MultiAssayExperiment(
+    experiments = expressionset_list
+  )
 }
+  
+# (Hidden) function to initialise a MOFAmodel object using a list of matrices
+# .createMOFAobjectFromList <- function(data) {
+#   
+#   # Initialise MOFA object
+#   object <- new("MOFAmodel")
+#   object@Status <- "untrained"
+#   
+#   # Fetch or assign sample names
+#   samples <- Reduce(union, lapply(data, colnames))
+#   if (is.null(samples)) {
+#     N <- unique(sapply(data,ncol))
+#     if (length(N)>1) { 
+#       stop("If the matrices have no column (samples) names that can be used to match the different views,
+#            all matrices must have the same number of columns")
+#     }
+#     warning("Sample names are not specified, using default: sample_1,sample_2...
+#              Make sure the columns match between data matrices or provide sample names! \n")
+#     samples <- paste0("sample_",1:N)
+#     for (m in 1:length(data)) { colnames(data[[m]]) <- samples }
+#   }
+#   
+#   object@TrainData <- lapply(data, function(view) .subset_augment(view, samples))
+#   
+#   return(object)
+# }
 
 
 

@@ -212,7 +212,7 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
 #' @title getImputedData
 #' @name getImputedData
 #' @description Function to get the imputed data. It requires the previous use of the
-#'  \code{\link{imputeMissing}} method.
+#'  \code{\link{impute}} method.
 #' @param object a trained \code{\link{MOFAmodel}} object.
 #' @param views character vector with the view name(s), or numeric vector with the view index(es). 
 #' Default is "all".
@@ -232,7 +232,7 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 #' MOFAobject <- loadModel(filepath)
 #' # impute missing values
-#' MOFAobject <- imputeMissing(MOFAobject)
+#' MOFAobject <- impute(MOFAobject)
 #' # get imputations for a single view
 #' imputedDrugs <- getImputedData(MOFAobject,view="Drugs")
 #' head(imputedDrugs)
@@ -242,7 +242,7 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   if (length(object@ImputedData)==0) {
-    stop("No imputed data found. Please run imputeMissing(MOFAobject) first")
+    stop("No imputed data found. Please run impute(MOFAobject) first")
   }
   
   # Get views
@@ -295,6 +295,23 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
 #' @import MultiAssayExperiment
 #' @importFrom Biobase phenoData
 #' @export
+#' @examples
+#' # Example on the CLL data
+#' data("CLL_data")
+#' data("CLL_covariates")
+#' # Create MultiAssayExperiment object 
+#' mae_CLL <- MultiAssayExperiment(experiments = CLL_data, colData = CLL_covariates)
+#' MOFAobject  <- createMOFAobject(mae_CLL)
+#' # Extract covariates from the colData of a MultiAssayExperiment
+#' gender <- getCovariates(MOFAobject, "Gender")
+#' diagnosis <- getCovariates(MOFAobject, "Diagnosis")
+#' # Example on the scMT data
+#' data("scMT_data")
+#' MOFAobject  <- createMOFAobject(scMT_data)
+#' # Extract covariates from the colData of a MultiAssayExperiment
+#' culture <- getCovariates(MOFAobject, "culture")
+#' # Extract covariates from the phenoData of the RNA
+#' cdr <- getCovariates(MOFAobject, "cellular_detection_rate")
 getCovariates <- function(object, covariate) {
   
   # Sanity checks
@@ -314,7 +331,6 @@ getCovariates <- function(object, covariate) {
   # Extract the covariate from colData or in the phenoData of specific assays
   out <- list()
   if (covariate %in% colnames(colData(mae))) { 
-    covariate_in_coldata <- TRUE
     out[[covariate]] <- colData(mae)[,covariate]
     names(out[[covariate]]) <- sampleNames(object)
   } else {
@@ -329,7 +345,7 @@ getCovariates <- function(object, covariate) {
   
   # Final sanity check
   if (length(out) == 0) {
-      stop("Covariate not found in the MultiAssayExperiment object")    
+      stop("Covariate not found in the colData or phenoData of the MultiAssayExperiment object")    
   } else if (length(out)>1) {
       stop("Covariate ambiguously found in the phenoData of multiple assays. Please, extract it manually.")    
   } else {

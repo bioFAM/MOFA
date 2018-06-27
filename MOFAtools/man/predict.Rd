@@ -41,7 +41,7 @@ the denoised and condensed low-dimensional representation of the data
  captures the main sources of heterogeneity of the data. 
 These representation can be used to do predictions using the equation Y = WX. 
 This is the key step underlying imputation, 
-see \code{\link{imputeMissing}} and the Methods section of the article.
+see \code{\link{impute}} and the Methods section of the article.
 }
 \examples{
 # Example on the CLL data

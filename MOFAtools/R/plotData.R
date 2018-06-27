@@ -205,7 +205,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
     if (length(color_by) == 1 & is.character(color_by)) {
       if(name_color=="") name_color <- color_by
       TrainData <- getTrainData(object)
-      featureNames <- lapply(TrainData(object), rownames)
+      featureNames <- lapply(TrainData, rownames)
       if(color_by %in% Reduce(union,featureNames)) {
         viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
         color_by <- TrainData[[viewidx]][color_by,]
@@ -232,7 +232,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
     if (length(shape_by) == 1 & is.character(shape_by)) {
       if(name_shape=="") name_shape <- shape_by
       TrainData <- getTrainData(object)
-      featureNames <- lapply(TrainData(object), rownames)
+      featureNames <- lapply(TrainData, rownames)
       if (shape_by %in% Reduce(union,featureNames)) {
         viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
         shape_by <- TrainData[[viewidx]][shape_by,]

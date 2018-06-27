@@ -70,7 +70,7 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "",
     if (length(group_by) == 1 & is.character(group_by)) {
       if (group_names=="") group_names <- group_by
       TrainData <- getTrainData(object)
-      featureNames <- lapply(TrainData(object), rownames)
+      featureNames <- lapply(TrainData, rownames)
       if (group_by %in% Reduce(union,featureNames)) {
         viewidx <- which(sapply(featureNames, function(vnm) group_by %in% vnm))
         group_by <- TrainData[[viewidx]][group_by,]
@@ -196,7 +196,7 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
     if (length(color_by) == 1 & is.character(color_by)) {
       if(name_color=="") name_color <- color_by
       TrainData <- getTrainData(object)
-      featureNames <- lapply(TrainData(object), rownames)
+      featureNames <- lapply(TrainData, rownames)
       if(color_by %in% Reduce(union,featureNames)) {
         viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
         color_by <- TrainData[[viewidx]][color_by,]
@@ -226,7 +226,7 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
     if (length(shape_by) == 1 & is.character(shape_by)) {
       if(name_shape=="") name_shape <- shape_by
       TrainData <- getTrainData(object)
-      featureNames <- lapply(TrainData(object), rownames)
+      featureNames <- lapply(TrainData, rownames)
       if(shape_by %in% Reduce(union,featureNames)) {
         viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
         shape_by <- TrainData[[viewidx]][shape_by,]
@@ -378,7 +378,7 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
     if (length(color_by) == 1 & is.character(color_by)) {
       if(name_color=="") name_color <- color_by
       TrainData <- getTrainData(object)
-      featureNames <- lapply(TrainData(object), rownames)
+      featureNames <- lapply(TrainData, rownames)
       if(color_by %in% Reduce(union,featureNames)) {
         viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
         color_by <- TrainData[[viewidx]][color_by,]
@@ -407,7 +407,7 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
     if (length(shape_by) == 1 & is.character(shape_by)) {
       if(name_shape=="") name_shape <- shape_by
       TrainData <- getTrainData(object)
-      featureNames <- lapply(TrainData(object), rownames)
+      featureNames <- lapply(TrainData, rownames)
       if(shape_by %in% Reduce(union,featureNames)) {
         viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
         shape_by <- TrainData[[viewidx]][shape_by,]
@@ -551,7 +551,7 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
     if (length(color_by) == 1 & is.character(color_by)) {
       if(name_color=="") name_color <- color_by
       TrainData <- getTrainData(object)
-      featureNames <- lapply(TrainData(object), rownames)
+      featureNames <- lapply(TrainData, rownames)
       if(color_by %in% Reduce(union,featureNames)) {
         viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
         color_by <- TrainData[[viewidx]][color_by,]
@@ -578,7 +578,7 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
     if (length(shape_by) == 1 & is.character(shape_by)) {
       if(name_shape=="") name_shape <- shape_by
       TrainData <- getTrainData(object)
-      featureNames <- lapply(TrainData(object), rownames)
+      featureNames <- lapply(TrainData, rownames)
       if (shape_by %in% Reduce(union,featureNames)) {
         viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
         shape_by <- TrainData[[viewidx]][shape_by,]

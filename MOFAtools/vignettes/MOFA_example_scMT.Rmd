@@ -174,12 +174,13 @@ plotTopWeights(
 
 Also, instead of looking at the "abstract" weights, it is useful to observe, in the original data, the heterogeneity captured by a Factor. This can be done using the `plotDataHeatmap` function.
 ```{r}
+# TO-DO: USE GET-COVARIATES INSTEAD OF INPUTDATA
 # Add metadata to the plot
 factor1 <- sort(getFactors(MOFAobject,"LF1")[,1])
 order_samples <- names(factor1)
 df <- data.frame(
   row.names = order_samples,
-  culture = InputData(MOFAobject)[,order_samples]$culture,
+  culture = MOFAobject@InputData[,order_samples]$culture,
   factor = factor1
 )
 
@@ -257,11 +258,12 @@ plotWeights(
 ```
 
 ```{r, message=FALSE}
+# TO-DO: USE GET-COVARIATES INSTEAD OF INPUTDATA
 factor2 <- sort(getFactors(MOFAobject,"LF2")[,1])
 order_samples <- names(factor2)
 df <- data.frame(
   row.names = order_samples,
-  culture =  InputData(MOFAobject)[,order_samples]$culture,
+  culture =  MOFAobject@InputData[,order_samples]$culture,
   factor = factor2
 )
 plotDataHeatmap(
@@ -302,7 +304,7 @@ plotFactorBeeswarm(
 ## Customized analysis
 For customized exploration of weights and factors, you can directly fetch the variables from the `MOFAobject using 'get' functions: `getWeights`, `getFactors` and `getTrainData`. As an example, here we do a scatterplot between Factor 3 and the true Cellular Detection Rate values
 ```{r, message=FALSE}
-cdr <- colMeans(TrainData(MOFAobject)$`RNA expression`>0,na.rm=TRUE)
+cdr <- colMeans(getTrainData(MOFAobject)$`RNA expression`>0,na.rm=TRUE)
 factor3 <- getFactors(MOFAobject,
                       factors=3,
                       include_intercept = FALSE)[,1]
@@ -319,9 +321,9 @@ ggplot(foo, aes_string(x = "factor", y = "cdr")) +
 # Further functionalities 
 
 ## Imputation of missing observations
-The factors can be used to impute missing data (see Methods of the publication). This is done using the `imputeMissing` function, which stores the imputed data in the `ImputedData` slot of the `MOFAobject`. It can be accessed via the `getImputedData` function:
+The factors can be used to impute missing data (see Methods of the publication). This is done using the `impute` function, which stores the imputed data in the `ImputedData` slot of the `MOFAobject`. It can be accessed via the `getImputedData` function:
 ```{r}
-MOFAobject <- imputeMissing(MOFAobject)
+MOFAobject <- impute(MOFAobject)
 nonImputedMethylation <- getTrainData(MOFAobject,
                                       view="Met CpG Islands")[[1]]
 imputedMethylation <- getImputedData(MOFAobject,

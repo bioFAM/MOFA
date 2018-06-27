@@ -36,5 +36,4 @@ data("CLL_data")
 MOFAobject  <- createMOFAobject(CLL_data)
 viewNames(MOFAobject) 
 viewNames(MOFAobject) <- c("DrugResponses", viewNames(MOFAobject)[2:4])
-viewNames(MOFAobject) 
 }

@@ -73,6 +73,5 @@ makeExampleData <- function(n_views=3, n_features=100, n_samples = 50,
   })
   names(data) <- paste0("view_", 1:n_views)
   
-  object <- createMOFAobject(data)
-  return(object)
+  return(data)
 }

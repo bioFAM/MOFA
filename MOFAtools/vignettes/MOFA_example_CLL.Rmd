@@ -333,9 +333,9 @@ predictedDrugs <- predict(MOFAobject,
 ```
 
 ## Imputation of missing observations
-With the `imputeMissing` function all missing values are imputed based on the MOFA model. The imputed data is then stored in the `ImputedData slot` of the MOFAobject and can be accessed via the `getImputedData` function.
+With the `impute` function all missing values are imputed based on the MOFA model. The imputed data is then stored in the `ImputedData slot` of the MOFAobject and can be accessed via the `getImputedData` function.
 ```{r}
-MOFAobject <- imputeMissing(MOFAobject)
+MOFAobject <- impute(MOFAobject)
 
 imputedDrugs <- getImputedData(MOFAobject,
                                view="Drugs")

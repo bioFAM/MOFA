@@ -29,14 +29,14 @@ Alternatively, if \code{as.data.frame} is \code{TRUE},
 }
 \description{
 Function to get the imputed data. It requires the previous use of the
- \code{\link{imputeMissing}} method.
+ \code{\link{impute}} method.
 }
 \examples{
 # load a trained MOFAmodel object
 filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 MOFAobject <- loadModel(filepath)
 # impute missing values
-MOFAobject <- imputeMissing(MOFAobject)
+MOFAobject <- impute(MOFAobject)
 # get imputations for a single view
 imputedDrugs <- getImputedData(MOFAobject,view="Drugs")
 head(imputedDrugs)

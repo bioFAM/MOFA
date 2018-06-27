@@ -120,7 +120,6 @@ setReplaceMethod("factorNames", signature(object="MOFAmodel", value="vector"),
 #' data("CLL_data")
 #' MOFAobject  <- createMOFAobject(CLL_data)
 #' head(sampleNames(MOFAobject))
-
 setMethod("sampleNames", signature(object="MOFAmodel"), function(object) { colnames(object@TrainData[[1]]) } )
 
 #' @rdname sampleNames
@@ -212,8 +211,6 @@ setMethod("viewNames", signature(object="MOFAmodel"), function(object) { names(o
 #' MOFAobject  <- createMOFAobject(CLL_data)
 #' viewNames(MOFAobject) 
 #' viewNames(MOFAobject) <- c("DrugResponses", viewNames(MOFAobject)[2:4])
-#' viewNames(MOFAobject) 
-
 setMethod("viewNames<-", signature(object="MOFAmodel", value="character"), 
   function(object,value) {
     if (!methods::.hasSlot(object,"TrainData") | length(object@TrainData) == 0)
@@ -224,7 +221,6 @@ setMethod("viewNames<-", signature(object="MOFAmodel", value="character"),
     if (length(value)!=length(object@TrainData))
       stop("view names do not match the number of views in the training data")
     
-    # We have to modify this
     if (object@Status == "trained"){
       multiview_nodes <- c("Alpha","W","Tau","Theta","Y")
       for (node in multiview_nodes) { 
@@ -236,196 +232,4 @@ setMethod("viewNames<-", signature(object="MOFAmodel", value="character"),
     names(object@Dimensions$D) <- value
     
     return(object)
-})
-
-#################################
-## Set and retrieve input data ##
-#################################
-
-#' @title Set and retrieve input data
-#' @name InputData
-#' @description Function to set and retrieve input data.
-#' @param object a \code{\link{MOFAmodel}} object.
-#' @return A MultiAssayExperiment object or a list of matrices, one per view,
-#'  containing the input data before beign parsed for training
-#' @rdname InputData
-#' @export
-#' @examples
-#' data("scMT_data")
-#' MOFAobject <- createMOFAobject(scMT_data)
-#' InputData(MOFAobject)
-
-setMethod("InputData", signature(object="MOFAmodel"), function(object) { object@InputData } )
-
-setMethod(".InputData<-", signature(object="MOFAmodel", value="MultiAssayExperiment"),
-          function(object,value) {
-            object@InputData <- value
-            object
-          })
-
-####################################
-## Set and retrieve training data ##
-####################################
-
-#' @rdname TrainData
-#' @description Function to set and retrieve training data.
-#' @param object a \code{\link{MOFAmodel}} object.
-#' @return list of numeric matrices that contain the training data
-#' @rdname TrainData
-#' @export
-#' @examples 
-#' data("scMT_data")
-#' MOFAobject <- createMOFAobject(scMT_data)
-#' TrainData(MOFAobject)
-#' 
-#' data("CLL_data")
-#' MOFAobject <- createMOFAobject(CLL_data)
-#' TrainData(MOFAobject)
-
-setMethod("TrainData", signature(object="MOFAmodel"), function(object) { object@TrainData } )
-
-#' @import methods
-setMethod(".TrainData<-", signature(object="MOFAmodel", value="list"),
-  function(object,value) {
-    # N <- unique(sapply(value,nrow))
-    # if (length(N) > 1) 
-    #   stop("Views do not have the same number of samples (rows)")
-    # if (methods::.hasSlot(object,"Dimensions")) {
-    #   if (object@Dimensions["M"] != length(value))
-    #     if (object@Dimensions["N"] != N)
-    #       stop("Number of samples in the data do not match the specified dimensionality of the model")
-    #   if (all(object@Dimensions["D"] != sapply(value,ncol)))
-    #     stop("Number of features in the data do not match the specified dimensionality of the model")
-    # }
-    object@TrainData <- value
-    object
-})
-
-####################################
-## Set and retrieve imputed data ##
-####################################
-
-#' @rdname ImputedData
-#' @description Function to set and retrieve imputed data.
-#' @param object a \code{\link{MOFAmodel}} object.
-#' @return list of numeric matrices that contain the imputed data
-#' @rdname ImputedData
-#' @export
-#' @examples
-#' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
-#' MOFAobject <- loadModel(filepath)
-#' # impute missing values
-#' MOFAobject <- imputeMissing(MOFAobject)
-#' # get imputations for a single view
-#' imputedDrugs <-ImputedData(MOFAobject)$Drugs
-#' head(imputedDrugs)
-setMethod("ImputedData", signature(object="MOFAmodel"), function(object) { object@ImputedData } )
-
-
-#' @import methods
-setMethod(".ImputedData<-", signature(object="MOFAmodel", value="list"),
-          function(object,value) {
-            # to do sanity checks
-            object@ImputedData <- value
-            object
-          })
-
-#######################################
-## Set and retrieve training options ##
-#######################################
-
-#' @rdname TrainOptions
-#' @description Function to set and retrieve training options.
-#' @param object a \code{\link{MOFAmodel}} object.
-#' @rdname TrainOptions
-#' @return list of training options
-#' @export
-#' @examples 
-#' # load existing object
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
-#' MOFAobject <- loadModel(filepath)
-#' # get TrainOptions
-#' TrainOptions(MOFAobject)
-setMethod("TrainOptions", "MOFAmodel", function(object) { object@TrainOptions } )
-setMethod(".TrainOptions<-", signature(object="MOFAmodel", value="list"),
-          function(object,value) {
-            object@TrainOptions <- value
-            object
-          })
-
-#######################################
-## Set and retrieve model options ##
-#######################################
-
-#' @rdname ModelOptions
-#' @description Function to set and retrieve model options.
-#' @param object a \code{\link{MOFAmodel}} object.
-#' @rdname ModelOptions
-#' @return list of model options
-#' @export
-#' @examples 
-#' # load existing object
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
-#' MOFAobject <- loadModel(filepath)
-#' # get ModelOptions
-#' ModelOptions(MOFAobject)
-
-setMethod("ModelOptions", "MOFAmodel", function(object) { object@ModelOptions } )
-setMethod(".ModelOptions<-", signature(object="MOFAmodel", value="list"),
-          function(object,value) {
-            object@ModelOptions <- value
-            object
-          })
-
-##########################################
-## Set and retrieve training statistics ##
-##########################################
-
-#' @rdname TrainStats
-#' @description Function to set and retrieve training statistics
-#' @param object a \code{\link{MOFAmodel}} object.
-#' @return list of training statistics
-#' @export
-#' @examples
-#' # load existing object
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
-#' MOFAobject <- loadModel(filepath)
-#' # get training statistics
-#' trainStats <- TrainStats(MOFAobject)
-
-setMethod("TrainStats", "MOFAmodel", function(object) { object@TrainStats } )
-setMethod(".TrainStats<-", signature(object="MOFAmodel", value="list"),
-  function(object,value) {
-    object@TrainStats <- value
-    object
-})
-#' @examples 
-#' # load existing object
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
-#' MOFAobject <- loadModel(filepath)
-#' # get training statistics
-#' stats <- TrainStats(MOFAobject)
-
-###################################
-## Set and retrieve expectations ##
-###################################
-
-#' @rdname Expectations
-#' @description Function to set and retrieve model expectations.
-#' @param object a \code{\link{MOFAmodel}} object.
-#' @rdname Expectations
-#' @return list of expectations
-#' @export
-#' @examples
-#' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
-#' MOFAobject <- loadModel(filepath)
-#' # get expectations 
-#' expectations <- Expectations(MOFAobject)
-setMethod("Expectations", "MOFAmodel", function(object) { object@Expectations } )
-setMethod(".Expectations<-", signature(object="MOFAmodel", value="list"),
-  function(object,value) {
-    object@Expectations <- value
-    object
 })

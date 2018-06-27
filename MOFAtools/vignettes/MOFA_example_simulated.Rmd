@@ -18,7 +18,8 @@ library(MOFAtools)
 # Simulate an example data set
 To illustrate the MOFA workflow we simulate a small example data set with 3 different views. `makeExampleData` generates an untrained MOFAobject containing the simulated data. If you work on your own data use `createMOFAobject` to create the untrained MOFA object (see our vignettes for CLL and scMT data).
 ```{r}
-MOFAobject <- makeExampleData()
+data <- makeExampleData()
+MOFAobject <- createMOFAobject(data)
 MOFAobject
 ```
 

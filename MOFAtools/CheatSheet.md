@@ -9,7 +9,7 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 * **Expectations**: expectations of the different random variables
 * **Status**: trained/untrained
 * **Dimensions**: Number of views (M), samples (N), features per view (D) and factors (K)
-* **ImputedData**: imputed data (filled by running imputeMissing on the object)
+* **ImputedData**: imputed data (filled by running impute on the object)
 
 
 # List of relevant functions
@@ -66,7 +66,7 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 
 ## Predictions and imputation
 * **prediction**: predict observations
-* **imputeMissing**: impute missing data
+* **impute**: impute missing data
 
 ## Subset
 * **subsetSamples**: subset samples

@@ -4,7 +4,7 @@
 #######################################################
 
 #' @title Impute missing values from a fitted MOFA model
-#' @name imputeMissing
+#' @name impute
 #' @description This function uses the latent factors and the loadings inferred
 #'  in order to impute missing values.
 #' @param object a \code{\link{MOFAmodel}} object.
@@ -32,15 +32,15 @@
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
 #' MOFA_CLL <- loadModel(filepath)
 #' # impute missing data in all views using all factors
-#' MOFA_CLL <- imputeMissing(MOFA_CLL)
+#' MOFA_CLL <- impute(MOFA_CLL)
 #' 
 #' # Load scMT data
 #' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
 #' MOFA_scMT <- loadModel(filepath)
 #' # impute missing data in the RNA view using Factor 1
-#' MOFA_scMT <- imputeMissing(MOFA_scMT, views="RNA expression", factors="LF1")
+#' MOFA_scMT <- impute(MOFA_scMT, views="RNA expression", factors="LF1")
 
-imputeMissing <- function(object, views = "all", factors = "all", type = c("inRange","response", "link")) {
+impute <- function(object, views = "all", factors = "all", type = c("inRange","response", "link")) {
   
   # Get views  
   if (paste0(views,sep="",collapse="") =="all") { 

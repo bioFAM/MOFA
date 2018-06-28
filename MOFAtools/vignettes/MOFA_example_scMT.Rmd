@@ -174,13 +174,12 @@ plotTopWeights(
 
 Also, instead of looking at the "abstract" weights, it is useful to observe, in the original data, the heterogeneity captured by a Factor. This can be done using the `plotDataHeatmap` function.
 ```{r}
-# TO-DO: USE GET-COVARIATES INSTEAD OF INPUTDATA
 # Add metadata to the plot
 factor1 <- sort(getFactors(MOFAobject,"LF1")[,1])
 order_samples <- names(factor1)
 df <- data.frame(
   row.names = order_samples,
-  culture = MOFAobject@InputData[,order_samples]$culture,
+  culture = getCovariates(MOFAobject, "culture")[order_samples],
   factor = factor1
 )
 
@@ -258,12 +257,11 @@ plotWeights(
 ```
 
 ```{r, message=FALSE}
-# TO-DO: USE GET-COVARIATES INSTEAD OF INPUTDATA
 factor2 <- sort(getFactors(MOFAobject,"LF2")[,1])
 order_samples <- names(factor2)
 df <- data.frame(
   row.names = order_samples,
-  culture =  MOFAobject@InputData[,order_samples]$culture,
+  culture =  getCovariates(MOFAobject, "culture")[order_samples],
   factor = factor2
 )
 plotDataHeatmap(

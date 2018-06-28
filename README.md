@@ -167,30 +167,22 @@ use_python("YOUR_PYTHON_PATH", required=TRUE)
 ```
 You can also use `use_conda` instead of `use_python` if you work with conda environments. Read more about the [reticulate](https://rstudio.github.io/reticulate/) package and [how it integrates Python and R](https://rstudio.github.io/reticulate/articles/versions.html)
 
-
 **(Q) I hate R, can I do MOFA only with Python?**  
 Yes you can, and we recommend this for training, as it will be slightly faster. See [this template script](https://github.com/bioFAM/MOFA/blob/master/mofa/run/python_template.py). However, we do not provide downstream analysis functions with Python.
-
 
 **(Q) How many factors should I use?**  
 Similar to other Factor Analysis models, this is a hard question to answer. It depends depends on the data set and the aim of the analysis. As a general rule, the bigger the data set, the higher the number of factors that you will likely retrieve, and the less the variance that will be explained per factor.
 If you want to get an overview on the major sources of variability then use a small number of factors (K<=15). If you want to capture small sources of variability, for example to improve imputation performance or for eQTL mapping, then go for a large number of factors (K>=50)
 
-
-**(Q) How does MOFA handle missing values?**  
-It simpy ignores them, there is no a priori imputation step required. In fact, matrix factorisation models are known to be very robust to the presence of large amounts of missing values. 
+**(Q) Can MOFA automatically learn the number of factors?**  
+Yes, MOFA can automatically learn the number of factors, but a hyperparameter needs to be provided. The user needs to specify a minimum value of fraction of variance explained that is considered meaningful. Then, MOFA will actively remove factors (during training) that explain less than the specified amount of variance.
+If you have no idea on what to expect, it is better to start with a fixed number of factors.
 
 **(Q) Should I do any filtering to the input data?**  
 It is not mandatory, but it is highly recommended to filter lowly variable features. It makes the model more robust and speeds up the training.
 
 **(Q) My data sets have different dimensionalities, does this matter?**  
 Yes, this is important. Bigger data modalities will tend to be overrepresent in the MOFA model. It is good practice to filter features (based for example on variance) in order to have the different dimensionalities within the same order of magnitudes. If this is unavoidable, take into account that the model has the risk of missing (small) sources of variation unique to the small data set.
-
-
-**(Q) Can MOFA automatically learn the number of factors?**  
-Yes, MOFA can automatically learn the number of factors, but a hyperparameter needs to be provided. The user needs to specify a minimum value of fraction of variance explained that is considered meaningful. Then, MOFA will actively remove factors (during training) that explain less than the specified amount of variance.
-If you have no idea on what to expect, it is better to start with a fixed number of factors.
-
 
 **(Q) What data modalities can MOFA cope with?**  
 * Continuous data: should be modelled using a gaussian likelihood. For example, log normalised RNA-seq data or M-values of bulk methylation data
@@ -201,6 +193,10 @@ The use of non-gaussian likelihoods require further approximations and are not a
 **(Q) How do I assess convergence?**  
 MOFA is trained using variational bayes, a fast inference framework that consists on optimising a statistica called the Evidence Lower Bound (ELBO). The model uses the change in ELBO (deltaELBO) to assess convergence. A model is defined to be converged when deltaELBO is close to 0. For a quick exploratory analysis, we suggest a convergence threshold between 1 to 10.
 
+**(Q) The model does not converge smoothly, and it oscillates between positive and negative deltaELBO values**
+First, check that you are using the right likelihood model (see above). Second, make sure that you don't have features or samples that are full of missing values.
+If the problem does not disappear, please contact us via mail or the Slack group (preferibly), we will provide (quick!) help.
+
 **(Q) What input formats are allowed?**  
 The data has to be input in two possible formats: 
 * Bioconductor: a [MultiAssayExperiment](https://bioconductor.org/packages/release/bioc/html/MultiAssayExperiment.html) object
@@ -209,6 +205,9 @@ The data has to be input in two possible formats:
 **(Q) Does MOFA always converge to the same solutions?**  
 No, as occurs in most complex Bayesian models, they are not guaranteed to always converge to the same (optimal) solution.
 In practice, however, we observed that the solutions are highly consistent, particularly for strong factors. However, one should always assess the robustness and do a proper model selection. For this we recommend to train the model multiple times and check the robustness of the factors across the different solutions. For downstream analysis a single model can be chosen based on the best value of the Evidence Lower Bound (ELBO). We provide functions for these two steps, which are explained in the vignette [Integration of simulated data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_simulated.html).
+
+**(Q) How does MOFA handle missing values?**  
+It simpy ignores them, there is no a priori imputation step required. In fact, matrix factorisation models are known to be very robust to the presence of large amounts of missing values. 
 
 
 ## Contact

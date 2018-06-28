@@ -274,7 +274,7 @@ class initModel(object):
         # Method to initialise a constant theta node
         Theta_list = [None] * self.M
         for m in range(self.M):
-            Theta_list[m] = Theta_Constant_Node(dim=(self.D[m],self.K,), value=value[m], N_cells=1.)
+            Theta_list[m] = Theta_Constant_Node(dim=(self.K,), value=value[m])
         self.Theta = Multiview_Constant_Node(self.M, *Theta_list)
         self.nodes["Theta"] = self.Theta
 

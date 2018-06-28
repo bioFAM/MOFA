@@ -20,3 +20,22 @@ This function extracts covariates from the \code{colData}
 Note that if you did not use \code{MultiAssayExperiment} to create
  your \code{\link{createMOFAobject}}, this function will not work.
 }
+\examples{
+# Example on the CLL data
+library(MultiAssayExperiment)
+data("CLL_data")
+data("CLL_covariates")
+# Create MultiAssayExperiment object 
+mae_CLL <- MultiAssayExperiment(CLL_data, colData=CLL_covariates)
+MOFAobject  <- createMOFAobject(mae_CLL)
+# Extract covariates from the colData of a MultiAssayExperiment
+gender <- getCovariates(MOFAobject, "Gender")
+diagnosis <- getCovariates(MOFAobject, "Diagnosis")
+# Example on the scMT data
+data("scMT_data")
+MOFAobject  <- createMOFAobject(scMT_data)
+# Extract covariates from the colData of a MultiAssayExperiment
+culture <- getCovariates(MOFAobject, "culture")
+# Extract covariates from the phenoData of the RNA assay
+cdr <- getCovariates(MOFAobject, "cellular_detection_rate")
+}

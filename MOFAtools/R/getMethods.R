@@ -297,10 +297,11 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
 #' @export
 #' @examples
 #' # Example on the CLL data
+#' library(MultiAssayExperiment)
 #' data("CLL_data")
 #' data("CLL_covariates")
 #' # Create MultiAssayExperiment object 
-#' mae_CLL <- MultiAssayExperiment(experiments = CLL_data, colData = CLL_covariates)
+#' mae_CLL <- MultiAssayExperiment(CLL_data, colData=CLL_covariates)
 #' MOFAobject  <- createMOFAobject(mae_CLL)
 #' # Extract covariates from the colData of a MultiAssayExperiment
 #' gender <- getCovariates(MOFAobject, "Gender")
@@ -310,7 +311,7 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
 #' MOFAobject  <- createMOFAobject(scMT_data)
 #' # Extract covariates from the colData of a MultiAssayExperiment
 #' culture <- getCovariates(MOFAobject, "culture")
-#' # Extract covariates from the phenoData of the RNA
+#' # Extract covariates from the phenoData of the RNA assay
 #' cdr <- getCovariates(MOFAobject, "cellular_detection_rate")
 getCovariates <- function(object, covariate) {
   

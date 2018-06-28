@@ -31,25 +31,17 @@
 #' @importFrom pheatmap pheatmap
 #' @importFrom grDevices colorRampPalette
 #' @export
-
 #' @examples
-
 #' ### Example on simulated data
-#' #Simulate Data
-#' MOFAobject <- makeExampleData()
-#' 
-#' # Prepare MOFA
-#' TrainOptions <- getDefaultTrainOptions()
-#' ModelOptions <- getDefaultModelOptions(MOFAobject)
-#' DataOptions <- getDefaultDataOptions()
-#' MOFAobject <- prepareMOFA(MOFAobject,
-#'  DataOptions = DataOptions,
-#'  ModelOptions = ModelOptions,
-#'  TrainOptions = TrainOptions)
-#' 
-#' # Train MOFA multiple times
+#' # Simulate Data
+#' data <- makeExampleData()
+#' # Create MOFA model
+#' MOFAobject <- createMOFAobject(data)
+#' # Prepare MOFA model
+#' MOFAobject <- prepareMOFA(MOFAobject)
+#' # Train several instances of MOFA models
 #' n_inits <- 3 
-#' MOFAlist <- lapply(1:n_inits, function(it) runMOFA(MOFAobject, outfile=tempfile()))
+#' MOFAlist <- lapply(1:n_inits, function(i) runMOFA(MOFAobject, outfile=tempfile()))
 #' compareFactors(MOFAlist, comparison="all")
 #' compareFactors(MOFAlist, comparison="pairwise")
 
@@ -165,21 +157,15 @@ compareFactors <- function(models, comparison = "all", show_rownames=FALSE, show
 #' @export
 #' @examples
 #' ### Example on simulated data
-#' #Simulate Data
-#' MOFAobject <- makeExampleData()
-#' 
-#' # Prepare MOFA
-#' TrainOptions <- getDefaultTrainOptions()
-#' ModelOptions <- getDefaultModelOptions(MOFAobject)
-#' DataOptions <- getDefaultDataOptions()
-#' MOFAobject <- prepareMOFA(MOFAobject,
-#'  DataOptions = DataOptions,
-#'  ModelOptions = ModelOptions,
-#'   TrainOptions = TrainOptions)
-#' 
-#' # Train MOFA multiple times
+#' # Simulate Data
+#' data <- makeExampleData()
+#' # Create MOFA model
+#' MOFAobject <- createMOFAobject(data)
+#' # Prepare MOFA model
+#' MOFAobject <- prepareMOFA(MOFAobject)
+#' # Train several instances of MOFA models
 #' n_inits <- 3 
-#' MOFAlist <- lapply(1:n_inits, function(it) runMOFA(MOFAobject, outfile=tempfile()))
+#' MOFAlist <- lapply(1:n_inits, function(i) runMOFA(MOFAobject, outfile=tempfile()))
 #' compareModels(MOFAlist)
 
 compareModels <- function(models, show_modelnames = FALSE) {
@@ -215,22 +201,15 @@ compareModels <- function(models, show_modelnames = FALSE) {
 #' @return a single \code{\link{MOFAmodel}} with the best ELBO statistics from the provided list 
 #' @export
 #' @examples
-#' ### Example on simulated data
-#' #Simulate Data
-#' MOFAobject <- makeExampleData()
-#' 
-#' # Prepare MOFA
-#' TrainOptions <- getDefaultTrainOptions()
-#' ModelOptions <- getDefaultModelOptions(MOFAobject)
-#' DataOptions <- getDefaultDataOptions()
-#' MOFAobject <- prepareMOFA(MOFAobject,
-#'  DataOptions = DataOptions,
-#'  ModelOptions = ModelOptions,
-#'  TrainOptions = TrainOptions)
-#' 
-#' # Train MOFA multiple times
+#' # Simulate Data
+#' data <- makeExampleData()
+#' # Create MOFA model
+#' MOFAobject <- createMOFAobject(data)
+#' # Prepare MOFA model
+#' MOFAobject <- prepareMOFA(MOFAobject)
+#' # Train several instances of MOFA models
 #' n_inits <- 3 
-#' MOFAlist <- lapply(1:n_inits, function(it) runMOFA(MOFAobject, outfile=tempfile()))
+#' MOFAlist <- lapply(1:n_inits, function(i) runMOFA(MOFAobject, outfile=tempfile()))
 #' selectModel(MOFAlist)
 
 selectModel <- function(models, plotit =TRUE) {

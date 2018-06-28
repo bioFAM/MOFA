@@ -130,6 +130,8 @@ class entry_point():
 
     # Iteration to activate spike and slab sparsity
     self.train_opts['startSparsity'] = int(startSparsity)
+    if hasattr(self, 'model_opts'):
+      if self.model_opts["sparsity"] is False:  self.train_opts['startSparsity'] = 999999999
 
     # Define schedule of updates
     self.train_opts['schedule'] = ( "Y", "SW", "Z", "Alpha", "Theta", "Tau" )
@@ -180,6 +182,7 @@ class entry_point():
       self.model_opts['sparsity_bool'] = False
       print("\nWarning... sparsity is desactivated, we recommend using it\n")
       self.model_opts['sparsity'] = [s.zeros(K) for m in range(M)]
+      if hasattr(self, 'train_opts'): self.train_opts['startSparsity'] = 999999999
 
   def set_data_options(self, view_names=None, center_features=False, scale_features=False, scale_views=False, 
     maskAtRandom=None, maskNSamples=None, RemoveIncompleteSamples=False

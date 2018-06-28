@@ -179,7 +179,7 @@ Yes, MOFA can automatically learn the number of factors, but a hyperparameter ne
 If you have no idea on what to expect, it is better to start with a fixed number of factors.
 
 **(Q) Should I do any filtering to the input data?**  
-It is not mandatory, but it is highly recommended to filter lowly variable features. It makes the model more robust and speeds up the training.
+You must remove features with zero variance and ideally also features with low variance, as they can cause numerical issues in the model. In practice we generally select the top N most variable features per assay
 
 **(Q) My data sets have different dimensionalities, does this matter?**  
 Yes, this is important. Bigger data modalities will tend to be overrepresent in the MOFA model. It is good practice to filter features (based for example on variance) in order to have the different dimensionalities within the same order of magnitudes. If this is unavoidable, take into account that the model has the risk of missing (small) sources of variation unique to the small data set.
@@ -194,8 +194,7 @@ The use of non-gaussian likelihoods require further approximations and are not a
 MOFA is trained using variational bayes, a fast inference framework that consists on optimising a statistica called the Evidence Lower Bound (ELBO). The model uses the change in ELBO (deltaELBO) to assess convergence. A model is defined to be converged when deltaELBO is close to 0. For a quick exploratory analysis, we suggest a convergence threshold between 1 to 10.
 
 **(Q) The model does not converge smoothly, and it oscillates between positive and negative deltaELBO values**
-First, check that you are using the right likelihood model (see above). Second, make sure that you don't have features or samples that are full of missing values.
-If the problem does not disappear, please contact us via mail or the Slack group (preferibly), we will provide (quick!) help.
+First, check that you are using the right likelihood model (see above). Second, make sure that you have no features or samples that are full of missing values. Third, check that you have no features with zero (or very little) variance. If the problem does not disappear, please contact us via mail or the Slack group (preferibly), we will provide (quick!) help.
 
 **(Q) What input formats are allowed?**  
 The data has to be input in two possible formats: 

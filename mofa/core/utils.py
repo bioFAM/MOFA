@@ -158,13 +158,12 @@ def qcData(data):
             print("Error: %d features(s) on view %d have missing values in all samples, please remove them before running the model." % ( (nas==1.).sum(), m) )
             sys.stdout.flush()
             exit()
-            # data[m].drop(data[m].columns[np.where(nas==1.)], axis=1, inplace=True)
 
         # Detect features with no variance
         var = data[m].std(axis=0) 
         if np.any(var==0.):
-            print("Warning: %d features(s) on view %d have zero variance, consider removing them..." % ( (var==0.).sum(),m) )
-            # data[m].drop(data[m].columns[np.where(var==0.)], axis=1, inplace=True)
+            print("Warning: %d features(s) on view %d have zero variance. Please, remove lowly variable features, they can cause numerical issues." % ( (var==0.).sum(),m) )
+            exit()
 
     return data
 

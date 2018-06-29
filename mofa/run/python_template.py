@@ -25,7 +25,7 @@ ep.set_data(data)
 # 	However, if you have non-gaussian likelihoods, learning an intercept factor is important
 # sparsity: boolean indicating whether to use sparsity. 
 # 	This is always recommended, as it will make the loadings more interpretable.
-ep.set_model_options(factors=25, likelihoods=["gaussian","bernoulli","poisson"], learnIntercept=True, sparsity=True)
+ep.set_model_options(factors=25, likelihoods=["gaussian","bernoulli","poisson"], learnIntercept=False, sparsity=True)
 
 ## Set data options ##
 

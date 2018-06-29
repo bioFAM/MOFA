@@ -439,6 +439,11 @@ def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_na
     feature_names: list with feature names as characters. If None, no feature names will be saved
     """
     data = model.getTrainingData()
+
+    # Make sure that missing values are masked
+    for i in range(len(data)):
+        data[i].data[data[i].mask] = np.nan
+
     data_grp = hdf5.create_group("data")
     featuredata_grp = hdf5.create_group("features")
 

@@ -236,6 +236,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         Qmean_S1, Qvar_S1, Qtheta = Q['mean_S1'], Q['var_S1'], Q['theta']
 
         # Mask matrices
+        # Ymean = Y.mean(axis=0)
         Y = Y.data
         Y[mask] = 0.
         tau[mask] = 0.
@@ -243,9 +244,7 @@ class SW_Node(BernoulliGaussian_Unobserved_Variational_Node):
         # precompute terms used for all factors
         tauYT = (tau*Y).T
 
-        # Update each latent variable in turn
         for k in range(self.dim[1]):
-
             # Calculate intermediate steps
             term1 = (theta_lnE-theta_lnEInv)[k]
             term2 = 0.5*s.log(alpha[k])

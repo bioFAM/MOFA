@@ -202,7 +202,7 @@ Features with large (absolute) weight on a given factor follow the pattern of co
 If you are only interested in looking at only the top features you can use the `plotTopWeights` function.  
 For example, here we plot the mutations with largest loadings on Factor 1. The sign on the right indicates the direction of the loading (positive/negative).
 ```{r}
-plotTopWeights(MOFAobject, "Mutations", 1)
+plotTopWeights(MOFAobject, "Mutations", 2)
 ```
 Again, features with large weight in a given factor means that they follow the pattern of covariation associated with the factor. For example, here the factor is associated with the B-cell of tumour's origin, consistent with a large weight on the IGHV status (see our manuscript for more details).  
 

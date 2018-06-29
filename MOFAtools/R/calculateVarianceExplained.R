@@ -80,9 +80,10 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all", i
     Y <- lapply(views, function(m) sweep(Y[[m]],2,intercept[[m]],"-"))
     names(Y) <- views
   }
+  # Y <- sapply(views, function(m) scale(Y[[m]],center=TRUE, scale=FALSE))
   
   # Calculate coefficient of determination per view
-  tmp <- sapply(views, function(m) sum(scale(Y[[m]],center=TRUE, scale=FALSE)**2, na.rm=TRUE))
+  tmp <- sapply(views, function(m) sum(Y[[m]]**2, na.rm=TRUE))
   fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-tcrossprod(Z,W[[m]]))**2, na.rm=TRUE) / tmp[m])
   names(fvar_m) <- views
   

@@ -85,25 +85,25 @@ class BayesNet(object):
                     initial_k = 1
 
                 # Subtract mean and compute sum of squares (denominator)
-                # Ym -= s.nanmean(Ym, axis=0)
+                # Ym[mask] = 0.
+                # Ym -= s.mean(Ym, axis=0)
+                # Ym[mask] = 0.
 
-                Ym[mask] = 0.
-                SS = (Ym**2).sum()
 
                 # Compute R2
+                SS = (Ym**2.).sum()
                 for k in range(initial_k,self.dim['K']):
                     Ypred_mk = s.outer(Z[:,k], W[m][:,k])
                     Ypred_mk[mask] = 0.
                     Res = ((Ym - Ypred_mk)**2.).sum()
                     all_r2[m,k] = 1. - Res/SS
-            # print(all_r2)
 
             # Select factor to remove. If multiple, then just pick one at random.
             drop_dic["by_r2"] = s.where( (all_r2>by_r2).sum(axis=0) == 0)[0] 
             # drop_dic["by_r2"] = s.where( ((all_r2)>by_r2+1e-16).sum(axis=0) == 0)[0] 
-            if len(drop_dic["by_r2"]) > 0: # drop one factor at a time
+            if len(drop_dic["by_r2"]) > 0: 
                 print("\n...A Factor explains less than {0}% of variance, dropping it and recomputing ELBO...\n".format(by_r2*100))
-                drop_dic["by_r2"] = [ s.random.choice(drop_dic["by_r2"]) ]
+                drop_dic["by_r2"] = [ s.random.choice(drop_dic["by_r2"]) ] # drop one factor at a time
 
         # Drop the factors
         drop = s.unique(s.concatenate(list(drop_dic.values())))
@@ -112,6 +112,7 @@ class BayesNet(object):
                 self.nodes[node].removeFactors(drop)
             self.dim['K'] -= len(drop)
 
+        # TO-DO: THIS ALSO COUNTS COVARIATES
         if self.dim['K']==0:
             print("Shut down all components, no structure found in the data.")
             exit()
@@ -129,7 +130,7 @@ class BayesNet(object):
         # Precompute updates
         for n in self.nodes:
             self.nodes[n].precompute()
-        
+
         # Start training
         for i in range(self.options['maxiter']):
             t = time();
@@ -146,7 +147,7 @@ class BayesNet(object):
                 self.nodes[node].update()
 
             if i==self.options['startSparsity']:
-                print("...Activating sparsity, recomputing ELBO...\n")
+                print("\n...Activating sparsity, recomputing ELBO...\n")
 
             # Calculate Evidence Lower Bound
             if (i+1) % self.options['elbofreq'] == 0 and activeK[i]==activeK[i-1] and i!=self.options['startSparsity']:

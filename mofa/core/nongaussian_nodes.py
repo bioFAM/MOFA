@@ -366,6 +366,9 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY):
 
     def updateExpectations(self):
         self.E = (2.*self.obs - 1.) / (4.*lambdafn(self.params["zeta"]))
+        # IS THIS VALID?
+        self.E -= self.E.mean(axis=0)
+
 
     def updateParameters(self):
         Z = self.markov_blanket["Z"].getExpectations()

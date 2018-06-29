@@ -365,7 +365,7 @@ class entry_point():
     # If we want to learn the intercept, we add a constant covariate of 1s
     if self.model_opts['learnIntercept']:
       if self.data_opts['covariates'] is not None:
-        self.data_opts['covariates'] = s.insert(self.data_opts['covariates'], obj=0, values=1, axis=1)
+        self.data_opts['covariates'] = s.insert(self.data_opts['covariates'], obj=0, values=1., axis=1)
         self.data_opts['scale_covariates'].insert(0,False)
       else:
         self.data_opts['covariates'] = s.ones((N,1))
@@ -383,9 +383,9 @@ class entry_point():
       for m in range(M):
 
         # Weights
-        if self.model_opts["likelihoods"][m]=="gaussian":
-          self.model_opts["initSW"]["mean_S1"][m][:,0] = self.data[m].mean(axis=0)
-          self.model_opts["initSW"]["var_S1"][m][:,0] = 1e-5
+        # if self.model_opts["likelihoods"][m]=="gaussian":
+        self.model_opts["initSW"]["mean_S1"][m][:,0] = s.nanmean(self.data[m], axis=0)
+        self.model_opts["initSW"]["var_S1"][m][:,0] = 1e-10
 
         # Theta
         self.model_opts['sparsity'][m][0] = 0.

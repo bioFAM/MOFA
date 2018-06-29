@@ -162,12 +162,11 @@ getDefaultDataOptions <- function() {
 #'  \item{\strong{numFactors}:}{ numeric value indicating the initial number of factors. 
 #'  If you want to learn the number of factors automatically we recommend
 #'   setting this to a large value, default is 25.}
-#'  \item{\strong{learnIntercept}:}{ logical indicating whether to learn an intercept
-#'   term to capture differences in feature means.
-#'  If you are using gaussian likelihoods, we recommend centering and setting learnIntercept to FALSE.
-#'  However, if you have non-gaussian likelihoods, learning an intercept factor is important. Default is TRUE.}
 #'  \item{\strong{sparsity}:}{ logical indicating whether to use sparsity.
 #'  This is always recommended, as it will make the loadings more interpretable. Default is TRUE.}
+#'  \item{\strong{learnIntercept}:}{ logical indicating whether to learn an intercept
+#'   term to capture differences in feature means. This is currently not functional. Therefore, we ask you to always center
+#'    the data if it is gaussian (do not worry about the non-gaussian) and set learnIntercept to FALSE.}
 #' }
 #' @return Returns a list with the default model options, which have to be passed as
 #'  an argument to \code{\link{prepareMOFA}}

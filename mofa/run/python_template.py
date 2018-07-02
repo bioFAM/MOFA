@@ -36,7 +36,7 @@ ep.set_model_options(factors=25, likelihoods=["gaussian","bernoulli","poisson"],
 # 	As long as the scale differences between the data sets is not too high, this is not required. Default is False.
 # removeIncompleteSamples: boolean indicating whether to remove samples that are not profiled in all omics. 
 # 	We recommend this only for testing, as the model can cope with samples having missing assays. Default is False.
-ep.set_data_options(center_features=True, scale_views=False, removeIncompleteSamples=False)
+ep.set_data_options(center_features=True, scale_views=False, RemoveIncompleteSamples=False)
 
 # Parse the data (optionally center or scale, do some QC, etc.)
 ep.parse_data()

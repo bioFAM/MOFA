@@ -166,7 +166,7 @@ getDefaultDataOptions <- function() {
 #'  This is always recommended, as it will make the loadings more interpretable. Default is TRUE.}
 #'  \item{\strong{learnIntercept}:}{ logical indicating whether to learn an intercept
 #'   term to capture differences in feature means. This is currently not functional. Therefore, we ask you to always center
-#'    the data if it is gaussian (do not worry about the non-gaussian) and set learnIntercept to FALSE.}
+#'    the data if it is gaussian (do not worry about the non-gaussian views) and keep learnIntercept to FALSE.}
 #' }
 #' @return Returns a list with the default model options, which have to be passed as
 #'  an argument to \code{\link{prepareMOFA}}
@@ -197,7 +197,7 @@ getDefaultModelOptions <- function(object) {
   # Define default model options
   ModelOptions <- list(
     likelihood = likelihood,    # (character vector) likelihood per view [gaussian/bernoulli/poisson]
-    learnIntercept = TRUE,      # (bool) include a constant factor of 1s to learn the mean of features (intercept)?
+    learnIntercept = FALSE,      # (bool) include a constant factor of 1s to learn the mean of features (intercept)?
     numFactors = 25,            # (numeric) initial number of latent factors
     sparsity = TRUE             # (logical) use feature-wise sparsity?
   )

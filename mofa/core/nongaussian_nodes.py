@@ -360,8 +360,6 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY):
     """
     def __init__(self, dim, obs, params=None, E=None):
         PseudoY.__init__(self, dim=dim, obs=obs, params=params, E=E)
-        print(self.obs)
-        exit()
         # Initialise the observed data
         assert s.all( (self.obs==0) | (self.obs==1) ), "Data modelled using bernoulli likelihood must be binary, encoded as 0s or 1s"
 

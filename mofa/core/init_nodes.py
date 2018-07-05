@@ -218,9 +218,9 @@ class initModel(object):
                 # tmp = stats.norm.rvs(loc=0, scale=1, size=(self.N,self.D[m]))
                 Y_list[m] = Poisson_PseudoY_Seeger(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
             elif self.lik[m]=="bernoulli":
-                # Seeger
+                # Seeger lower bound
                 # Y_list[m] = Bernoulli_PseudoY_Seeger(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
-                # Jaakkola
+                # Jaakkola lower bound
                 Y_list[m] =  Bernoulli_PseudoY_Jaakkola(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
         self.Y = Multiview_Mixed_Node(self.M, *Y_list)
         self.nodes["Y"] = self.Y

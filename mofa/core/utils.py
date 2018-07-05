@@ -26,7 +26,7 @@ def removeIncompleteSamples(data):
     ----------
     data: list  
     """
-    print("Removing incomplete samples...")
+    print("\nRemoving incomplete samples...")
 
     M = len(data)
     N = data[0].shape[0]

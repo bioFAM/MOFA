@@ -186,7 +186,7 @@ class Poisson_PseudoY_Seeger(PseudoY_Seeger):
     def updateExpectations(self):
         # Update the pseudodata
         tau = self.markov_blanket["Tau"].getValue()
-        self.E = self.params["zeta"] - sigmoid(self.params["zeta"])*(1.-self.obs/self.ratefn(self.params["zeta"]))/tau[None,:]
+        self.E = self.params["zeta"] - sigmoid(self.params["zeta"])*(1.-self.obs/self.ratefn(self.params["zeta"])) / tau
 
     def calculateELBO(self):
         # Compute Lower Bound using the Poisson likelihood with observed data

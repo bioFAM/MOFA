@@ -26,11 +26,22 @@
 #' # MOFAobject <- runMOFA(MOFAobject)
 #' }
 
-runMOFA <- function(object, outfile) {
+runMOFA <- function(object, outfile=NULL) {
   
-  # Sanity checks
+  # Sanity checks on the model
   if (!is(object, "MOFAmodel")) 
     stop("'object' has to be an instance of MOFAmodel")
+  
+  # Sanity checks on the output file
+  if (is.null(outfile)) {
+    print("No output file provided, using a temporary file...")
+    outfile <- tempfile()
+  } else {
+    if (!dir.exists(dirname(outfile))) {
+      print("Output directory not found, creating it...")
+      dir.create(dirname(outfile), recursive = T, showWarnings = T)
+    }
+  }
     
   if (object@Status=="trained") 
     stop("The model is already trained!
@@ -41,7 +52,7 @@ runMOFA <- function(object, outfile) {
   mofa_entrypoint <- mofa$core.entry_point$entry_point()
   
   # Pass data
-  mofa_entrypoint$set_data(data=lapply(object@TrainData, function(x) r_to_py(t(x))))
+  mofa_entrypoint$set_data(data=unname(lapply(object@TrainData, function(x) r_to_py(t(x)))))
   
   # Pass model options 
   mofa_entrypoint$set_model_options(

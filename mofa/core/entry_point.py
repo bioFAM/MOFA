@@ -98,6 +98,7 @@ class entry_point():
     # Remove samples with missing views
     if self.data_opts['RemoveIncompleteSamples']:
       self.data = removeIncompleteSamples(self.data)
+      self.dimensionalities["N"] = self.data[0].shape[0] # Update dimensionalities
 
   def set_train_options(self, iter=5000, elbofreq=1, startSparsity=100, tolerance=0.01, 
     startDrop=1, freqDrop=1, endDrop=9999, dropR2=0, nostop=False, verbose=False, seed=None
@@ -184,7 +185,7 @@ class entry_point():
       self.model_opts['sparsity'] = [s.zeros(K) for m in range(M)]
       if hasattr(self, 'train_opts'): self.train_opts['startSparsity'] = 999999999
 
-  def set_data_options(self, view_names=None, center_features=False, scale_features=False, scale_views=False, 
+  def set_data_options(self, view_names=None, center_features=True, scale_features=False, scale_views=False, 
     maskAtRandom=None, maskNSamples=None, RemoveIncompleteSamples=False
     ):
 
@@ -205,7 +206,6 @@ class entry_point():
         RemoveIncompleteSamples: bool
           Remove samples that are not profiled for all omics
     """
-
     # Sanity checks
     assert "likelihoods" in self.model_opts, "Likelihoods not found in model options"
 
@@ -402,6 +402,10 @@ class entry_point():
     # Sanity checks
     # TO-DO: CHECK THAT DATA_OPTS, TRAIN_OPTS AND MODEL_OPTS ARE PROPERLY DEFINED
     assert hasattr(self, 'data'), "Data has to be defined before training the model"
+
+    print("\nLikelihoods are defined as:")
+    for a,b in zip(self.data_opts['view_names'], self.model_opts['likelihoods']):
+      print("\t%s: %s" % (a,b))
 
     sys.stdout.flush()
     self.model = runMOFA(self.data, self.data_opts, self.model_opts, self.train_opts, self.train_opts['seed'])

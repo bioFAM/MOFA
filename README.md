@@ -168,21 +168,28 @@ use_python("YOUR_PYTHON_PATH", required=TRUE)
 You can also use `use_conda` instead of `use_python` if you work with conda environments. Read more about the [reticulate](https://rstudio.github.io/reticulate/) package and [how it integrates Python and R](https://rstudio.github.io/reticulate/articles/versions.html)
 
 **(Q) I hate R, can I do MOFA only with Python?**  
-Yes you can, and we recommend this for training, as it will be slightly faster. See [this template script](https://github.com/bioFAM/MOFA/blob/master/mofa/run/python_template.py). However, we do not provide downstream analysis functions with Python.
+Only half of the way. You can use Python to train the model. See [this template script](https://github.com/bioFAM/MOFA/blob/master/mofa/run/python_template.py). However, we currently do not provide downstream analysis functions in Python. We strongly recommend that you use our MOFAtools R package for this.
 
 **(Q) How many factors should I use?**  
-Similar to other Factor Analysis models, this is a hard question to answer. It depends depends on the data set and the aim of the analysis. As a general rule, the bigger the data set, the higher the number of factors that you will likely retrieve, and the less the variance that will be explained per factor.
+Similar to Principal Component Analysis and other factor models, this is a hard question to answer. It depends on the data set and the aim of the analysis. As a general rule, the bigger the data set, the higher the number of factors that you will retrieve, and the less the variance that will be explained per factor.
 If you want to get an overview on the major sources of variability then use a small number of factors (K<=15). If you want to capture small sources of variability, for example to improve imputation performance or for eQTL mapping, then go for a large number of factors (K>=50)
 
 **(Q) Can MOFA automatically learn the number of factors?**  
-Yes, MOFA can automatically learn the number of factors, but a hyperparameter needs to be provided. The user needs to specify a minimum value of fraction of variance explained that is considered meaningful. Then, MOFA will actively remove factors (during training) that explain less than the specified amount of variance.
+Yes, but a hyperparameter needs to be provided. The user needs to specify a minimum value of fraction of variance explained that is considered meaningful. Then, MOFA will actively remove factors (during training) that explain less than the specified amount of variance.
 If you have no idea on what to expect, it is better to start with a fixed number of factors.
+
+**(Q) Can I put known covariates in the model?**  
+Combining unknown factors learnt by the model with known covariates is technically possible, but we extensively tested this functionality and it was not yielding good results. The reason is that covariates are usually discrete labels that do not reflect the underlying continuous biology. In addition, some samples might have wrong or imperfect annotations. This could completely mess up the model. What we recommend is that you learn the factors and then relate them to the covariates via visualisation or via a simple correlation analysis. If your covariate of interest is indeed an important driver of variability, do not worry, MOFA will find it!
+
 
 **(Q) Should I do any filtering to the input data?**  
 You must remove features with zero variance and ideally also features with low variance, as they can cause numerical issues in the model. In practice we generally select the top N most variable features per assay
 
 **(Q) My data sets have different dimensionalities, does this matter?**  
-Yes, this is important. Bigger data modalities will tend to be overrepresent in the MOFA model. It is good practice to filter features (based for example on variance) in order to have the different dimensionalities within the same order of magnitudes. If this is unavoidable, take into account that the model has the risk of missing (small) sources of variation unique to the small data set.
+Yes, this is important. Bigger data modalities will tend to be overrepresent in the MOFA model. It is good practice to filter features (based for example on variance, as lowly variable features provide little information) in order to have the different dimensionalities within the same order of magnitudes. If this is unavoidable, take into account that the model has the risk of missing (small) sources of variation unique to the small data set.
+
+**(Q) The values of the weights change in sign as well as absolute value between runs. Is this expected?**  
+This is normal and is attributed to two reasons. The first one is that the model does not always converge to the same exact solution (see below in the FAQ). the second is that factor analysis models are rotational invariant. This means that you can rotate your factors and your weights and still find the same solution. This implies that the signs of the weight or the factors can not be compared across trials, only WITHIN a trial. For example, genes that have positive weight for the same factor means that they are coordinated (they covary with the factor), and the magnitude of the weight tells you how strong this covariation is.
 
 **(Q) What data modalities can MOFA cope with?**  
 * Continuous data: should be modelled using a gaussian likelihood. For example, log normalised RNA-seq data or M-values of bulk methylation data

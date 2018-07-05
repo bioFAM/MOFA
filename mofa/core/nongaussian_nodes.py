@@ -187,14 +187,20 @@ class Poisson_PseudoY_Seeger(PseudoY_Seeger):
         # Update the pseudodata
         tau = self.markov_blanket["Tau"].getValue()
         self.E = self.params["zeta"] - sigmoid(self.params["zeta"])*(1.-self.obs/self.ratefn(self.params["zeta"])) / tau
+        # mask = self.getMask()
+        # self.E[mask] = s.nan
 
     def calculateELBO(self):
         # Compute Lower Bound using the Poisson likelihood with observed data
         Z = self.markov_blanket["Z"].getExpectation()
         SW = self.markov_blanket["SW"].getExpectation()
+        mask = self.getMask()
         tmp = self.ratefn(s.dot(Z,SW.T))
-        lb = ma.masked_invalid(self.obs*s.log(tmp) - tmp).sum()
-        return lb
+        lb = self.obs.data*s.log(tmp) - tmp
+        lb[mask] = 0.
+
+        return lb.sum()
+
 class Bernoulli_PseudoY_Seeger(PseudoY_Seeger):
     """
     Class for a Bernoulli pseudodata node used to model binary data

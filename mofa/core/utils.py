@@ -3,7 +3,6 @@ from time import sleep
 from copy import deepcopy
 
 import numpy as np
-import pandas as pd
 import numpy.ma as ma
 import os
 import h5py
@@ -33,7 +32,7 @@ def removeIncompleteSamples(data):
     samples_to_remove = []
     for n in range(N):
         for m in range(M):
-            if pd.isnull(data[m].iloc[n][0]):
+            if np.all(np.isnan(data[m][n,:])):
                 samples_to_remove.append(n)
                 break
 
@@ -43,7 +42,7 @@ def removeIncompleteSamples(data):
     data_filt = [None]*M
     samples_to_keep = np.setdiff1d(range(N),samples_to_remove)
     for m in range(M):
-        data_filt[m] = data[m].iloc[samples_to_keep]
+        data_filt[m] = data[m][samples_to_keep,:]
 
     return data_filt
 
@@ -61,6 +60,8 @@ def maskData(data, data_opts):
     print("full cases:")
     print(data_opts['maskNSamples'])
 
+    print("Not functional")
+    exit()
     for m in range(len(data)):
 
         # Mask values at random
@@ -99,7 +100,8 @@ def parseData(data, data_opts):
     parsed_data = deepcopy(data)
     for m in range(M):
         # Convert to float32
-        parsed_data[m] = parsed_data[m].astype(pd.np.float32)
+        # parsed_data[m] = parsed_data[m].astype(pd.np.float32)
+        parsed_data[m] = parsed_data[m].astype(np.float32)
 
         # For some reason, reticulate stores missing values in integer matrices as -2147483648
         parsed_data[m][parsed_data[m] == -2147483648] = np.nan
@@ -164,38 +166,6 @@ def qcData(data):
         if np.any(var==0.):
             print("Warning: %d features(s) on view %d have zero variance. Please, remove lowly variable features, they can cause numerical issues." % ( (var==0.).sum(),m) )
             exit()
-
-    return data
-
-def loadData(data_opts):
-    """ Method to load the data
-    
-    PARAMETERS
-    ----------
-    data_opts: dic
-    verbose: boolean
-    """
-    
-    print("Depreciated")
-    exit()
-
-    print ("\n")
-    print ("#"*18)
-    print ("## Loading data ##")
-    print ("#"*18)
-    print ("\n")
-
-    M = len(data_opts['input_files'])
-
-    data =  [None]*M
-    for m in range(M):
-
-        # Read file
-        file = data_opts['input_files'][m]
-        data[m] = pd.read_csv(file, delimiter=data_opts["delimiter"], header=data_opts["colnames"], index_col=data_opts["rownames"]).astype(pd.np.float32)
-
-        # data[m] = pd.read_csv(file, delimiter=data_opts["delimiter"])
-        print("Loaded %s with %d samples and %d features..." % (file, data[m].shape[0], data[m].shape[1]))
 
     return data
 

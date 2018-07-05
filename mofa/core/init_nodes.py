@@ -190,8 +190,7 @@ class initModel(object):
         tau_list = [None]*self.M
         for m in range(self.M):
             if self.lik[m] == "poisson":
-                tmp = 0.25 + 0.17*s.amax(self.data[m],axis=0)
-                # tau_list[m] = Constant_Node(dim=(self.D[m],), value=tmp)
+                tmp = 0.25 + 0.17*s.nanmax(self.data[m],axis=0)
                 tau_list[m] = Constant_Node(dim=((self.N,self.D[m])), value=s.repeat(tmp[None,:],self.N,0))
 
             elif self.lik[m] == "bernoulli":
@@ -215,7 +214,7 @@ class initModel(object):
             if self.lik[m]=="gaussian":
                 Y_list[m] = Y_Node(dim=(self.N,self.D[m]), value=self.data[m])
             elif self.lik[m]=="poisson":
-                # tmp = stats.norm.rvs(loc=0, scale=1, size=(self.N,self.D[m]))
+                # What is the best way to initialise the pseudodata??
                 Y_list[m] = Poisson_PseudoY_Seeger(dim=(self.N,self.D[m]), obs=self.data[m], E=None)
             elif self.lik[m]=="bernoulli":
                 # Seeger lower bound

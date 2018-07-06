@@ -113,7 +113,7 @@ def parseData(data, data_opts):
         # Scale the views to unit variance
         if data_opts['scale_views'][m]:
             print("Scaling view " + str(m) + " to unit variance...")
-            parsed_data[m] = parsed_data[m] / np.nanstd(parsed_data[m].as_matrix())
+            parsed_data[m] = parsed_data[m] / np.nanstd(parsed_data[m])
 
         # Scale the features to unit variance
         if data_opts['scale_features'][m]:

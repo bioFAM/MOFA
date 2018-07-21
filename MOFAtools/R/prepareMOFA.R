@@ -75,6 +75,16 @@ prepareMOFA <- function(object, DataOptions = NULL, ModelOptions = NULL, TrainOp
     object@ModelOptions <- ModelOptions
   }
   
+  # Convert binary data to numeric
+  idx <- names(which(object@ModelOptions$likelihood == "bernoulli"))
+  if (length(idx)>0) {
+    for (i in idx) {
+      foo <- object@TrainData[[i]]
+      object@TrainData[[i]] <- as.numeric(object@TrainData[[i]])
+      dim(object@TrainData[[i]]) <- dim(foo)
+    }
+  } 
+  
   return(object)
 }
 

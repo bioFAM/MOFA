@@ -91,8 +91,7 @@ subsetSamples <- function(object, samples) {
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(samples) <= object@Dimensions[["N"]])
-  warning("Removing samples is fine for an exploratory analysis,\n
-          but we recommend removing them before training!\n")
+  # warning("Warning: removing samples is fine for an exploratory analysis...\nbut we recommend removing them before training!\n")
   
   # Get samples
   if (is.character(samples)) {

@@ -44,8 +44,7 @@ runMOFA <- function(object, outfile=NULL) {
   }
     
   if (object@Status=="trained") 
-    stop("The model is already trained!
-         If you want to retrain, create a new untrained MOFAmodel")
+    stop("The model is already trained! If you want to retrain, create a new untrained MOFAmodel")
   
   # Initiate reticulate
   mofa <- import("mofa")

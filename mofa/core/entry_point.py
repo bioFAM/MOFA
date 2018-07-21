@@ -101,7 +101,7 @@ class entry_point():
       self.dimensionalities["N"] = self.data[0].shape[0] # Update dimensionalities
 
   def set_train_options(self, iter=5000, elbofreq=1, startSparsity=100, tolerance=0.01, 
-    startDrop=1, freqDrop=1, endDrop=9999, dropR2=0, nostop=False, verbose=False, seed=None
+    startDrop=5, freqDrop=1, endDrop=9999, dropR2=0, nostop=False, verbose=False, seed=None
     ):
     """ Set training options """
 

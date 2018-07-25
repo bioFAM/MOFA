@@ -146,8 +146,8 @@ class BayesNet(object):
                     continue
                 self.nodes[node].update()
 
-            if i==self.options['startSparsity']:
-                print("\n...Activating sparsity, recomputing ELBO...\n")
+            # if i==self.options['startSparsity'] and "Theta" in self.options["schedule"]:
+            #     print("\n...Activating sparsity, recomputing ELBO...\n")
 
             # Calculate Evidence Lower Bound
             if (i+1) % self.options['elbofreq'] == 0 and activeK[i]==activeK[i-1] and i!=self.options['startSparsity']:

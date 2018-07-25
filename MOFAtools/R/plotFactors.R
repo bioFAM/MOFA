@@ -442,22 +442,23 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
   ylabel <- factors[2]
                                 
   p <- ggplot(df, aes_string(x = "x", y = "y")) + 
-      geom_point(aes_string(color = "color_by", shape = "shape_by")) + xlab(xlabel) + ylab(ylabel) +
-      # scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))]) +
-      theme(plot.margin = margin(20, 20, 10, 10), 
-            axis.text = element_text(size = rel(1), color = "black"), 
-            axis.title = element_text(size = 16), 
-            axis.title.y = element_text(size = rel(1.1), margin = margin(0, 10, 0, 0)), 
-            axis.title.x = element_text(size = rel(1.1), margin = margin(10, 0, 0, 0)), 
-            axis.line = element_line(color = "black", size = 0.5), 
-            axis.ticks = element_line(color = "black", size = 0.5),
-            panel.border = element_blank(), 
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank(), 
-            panel.background = element_blank(),
-            legend.key = element_rect(fill = "white"),
-            legend.text = element_text(size = 16),
-            legend.title = element_text(size =16)
+    geom_point(aes_string(color = "color_by", shape = "shape_by")) + 
+    xlab(xlabel) + ylab(ylabel) +
+    # scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))]) +
+    theme(plot.margin = margin(20, 20, 10, 10), 
+          axis.text = element_text(size = rel(1), color = "black"), 
+          axis.title = element_text(size = 16), 
+          axis.title.y = element_text(size = rel(1.1), margin = margin(0, 10, 0, 0)), 
+          axis.title.x = element_text(size = rel(1.1), margin = margin(10, 0, 0, 0)), 
+          axis.line = element_line(color = "black", size = 0.5), 
+          axis.ticks = element_line(color = "black", size = 0.5),
+          panel.border = element_blank(), 
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(), 
+          panel.background = element_blank(),
+          legend.key = element_rect(fill = "white"),
+          legend.text = element_text(size = 16),
+          legend.title = element_text(size =16)
             )
   if (colorLegend) { p <- p + labs(color = name_color) } else { p <- p + guides(color = FALSE) }
   if (shapeLegend) { p <- p + labs(shape = name_shape) }  else { p <- p + guides(shape = FALSE) }

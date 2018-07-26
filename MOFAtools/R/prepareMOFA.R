@@ -82,6 +82,8 @@ prepareMOFA <- function(object, DataOptions = NULL, ModelOptions = NULL, TrainOp
       foo <- object@TrainData[[i]]
       object@TrainData[[i]] <- as.numeric(object@TrainData[[i]])
       dim(object@TrainData[[i]]) <- dim(foo)
+      rownames(object@TrainData[[i]]) <- rownames(foo)
+      colnames(object@TrainData[[i]]) <- colnames(foo)
     }
   } 
   

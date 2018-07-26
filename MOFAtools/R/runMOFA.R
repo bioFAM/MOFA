@@ -97,9 +97,9 @@ runMOFA <- function(object, outfile=NULL) {
   # Save the model
   sample_names <- colnames(object@TrainData[[1]])
   feature_names <- unname(lapply(object@TrainData,rownames))
-  mofa_entrypoint$save_model(outfile,
-                             sample_names=sample_names,
-                             feature_names=feature_names)
+  mofa_entrypoint$save_model(
+    outfile, sample_names=sample_names, feature_names=feature_names
+  )
   
   # Load the model back into R
   object <- loadModel(outfile, object)

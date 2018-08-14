@@ -53,15 +53,19 @@ def maskData(data, data_opts):
     PARAMETERS
     ----------
     data_opts: dic
+    
     """
+    print("Not functional")
+    sys.stdout.flush()
+    exit()
+
     print("Masking data with the following options:")
     print("at random:")
     print(data_opts['maskAtRandom'])
     print("full cases:")
     print(data_opts['maskNSamples'])
 
-    print("Not functional")
-    exit()
+
     for m in range(len(data)):
 
         # Mask values at random
@@ -164,7 +168,8 @@ def qcData(data):
         # Detect features with no variance
         var = data[m].std(axis=0) 
         if np.any(var==0.):
-            print("Warning: %d features(s) on view %d have zero variance. Please, remove lowly variable features, they can cause numerical issues." % ( (var==0.).sum(),m) )
+            print("Warning: %d features(s) on view %d have zero variance. Please, remove lowly variable features for each omic separately, they can cause numerical issues." % ( (var==0.).sum(),m) )
+            sys.stdout.flush()
             exit()
 
     return data

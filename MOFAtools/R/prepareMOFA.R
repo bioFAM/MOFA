@@ -206,12 +206,15 @@ getDefaultModelOptions <- function(object) {
   # Guess likelihood type
   likelihood <- .inferLikelihoods(object)
   
+  nsamples <- getDimensions(object)[["N"]]
+  if (nsamples<10) print("Warning: too few samples for MOFA to be useful...")
+  
   # Define default model options
   ModelOptions <- list(
-    likelihood = likelihood,    # (character vector) likelihood per view [gaussian/bernoulli/poisson]
-    learnIntercept = FALSE,      # (bool) include a constant factor of 1s to learn the mean of features (intercept)?
-    numFactors = 25,            # (numeric) initial number of latent factors
-    sparsity = TRUE             # (logical) use feature-wise sparsity?
+    likelihood = likelihood,          # (character vector) likelihood per view [gaussian/bernoulli/poisson]
+    learnIntercept = FALSE,           # (bool) include a constant factor of 1s to learn the mean of features (intercept)?
+    numFactors = ceiling(nsamples/2), # (numeric) initial number of latent factors
+    sparsity = TRUE                   # (logical) use feature-wise sparsity?
   )
   
   return(ModelOptions)

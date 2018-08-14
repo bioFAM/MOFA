@@ -115,6 +115,7 @@ class BayesNet(object):
         # TO-DO: THIS ALSO COUNTS COVARIATES
         if self.dim['K']==0:
             print("Shut down all components, no structure found in the data.")
+            sys.stdout.flush()
             exit()
 
         pass

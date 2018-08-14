@@ -135,7 +135,7 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
   }
   
   # Remove zero factors
-  nonzero_factors <- which(apply(object@Expectations$Z[,factorNames(object)!="intercept"], 2,
+  nonzero_factors <- which(apply(object@Expectations$Z[,factorNames(object)!="intercept",drop=F], 2,
                                  function(z) !all(z==0)))
   if (length(nonzero_factors) < sum(factorNames(object)!="intercept")) 
     message("Removing ", sum(factorNames(object)!="intercept") - length(nonzero_factors),

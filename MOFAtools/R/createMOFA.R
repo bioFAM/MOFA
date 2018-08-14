@@ -36,6 +36,12 @@
 
 createMOFAobject <- function(data) {
   
+  # Set view names
+  if(!is.null(names(data))) {
+    warning(paste0("View names are not specified in the data, renaming them to: ", paste0("view_",1:length(data), collapse=", "), "\n"))
+    names(data) <- paste("view",1:length(data), sep="_")
+  }
+  
   if (is(data,"MultiAssayExperiment")) {
     message("Creating MOFA object from a MultiAssayExperiment object...")
   } else if (is(data,"list")) {
@@ -53,13 +59,7 @@ createMOFAobject <- function(data) {
   object@Dimensions[["K"]] <- 0
   
   # Set view names
-  if(!is.null(names(data))) {
-    viewNames(object) <- names(data) 
-  } else { 
-    viewNames(object) <- paste("view",1:length(object@TrainData), sep="_")
-    warning(paste0("View names are not specified in the data, renaming them to: ",
-                   paste0("view_",1:length(object@TrainData), collapse=", "), "\n"))
-  }
+  # viewNames(object) <- names(data)
   
   # Set feature names
   for (m in 1:object@Dimensions[["M"]]) {
@@ -124,7 +124,7 @@ createMOFAobject <- function(data) {
   # Create ExpressionSet for each assay
   expressionset_list <- list()
   for (i in 1:length(data)) {
-    expressionset_list[[i]] <- ExpressionSet(assayData=data[[i]])
+    expressionset_list[[i]] <- ExpressionSet(assayData=as.matrix(data[[i]]))
   }
   names(expressionset_list) <- names(data)
   

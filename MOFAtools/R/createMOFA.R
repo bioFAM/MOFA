@@ -59,7 +59,7 @@ createMOFAobject <- function(data) {
   object@Dimensions[["K"]] <- 0
   
   # Set view names
-  # viewNames(object) <- names(data)
+  viewNames(object) <- names(data)
   
   # Set feature names
   for (m in 1:object@Dimensions[["M"]]) {

@@ -200,13 +200,14 @@ The use of non-gaussian likelihoods require further approximations and are not a
 **(Q) How do I assess convergence?**  
 MOFA is trained using variational bayes, a fast inference framework that consists on optimising a statistica called the Evidence Lower Bound (ELBO). The model uses the change in ELBO (deltaELBO) to assess convergence. A model is defined to be converged when deltaELBO is close to 0. For a quick exploratory analysis, we suggest a convergence threshold between 1 to 10.
 
-**(Q) The model does not converge smoothly, and it oscillates between positive and negative deltaELBO values**
-First, check that you are using the right likelihood model (see above). Second, make sure that you have no features or samples that are full of missing values. Third, check that you have no features with zero (or very little) variance. If the problem does not disappear, please contact us via mail or the Slack group (preferibly), we will provide (quick!) help.
+**(Q) The model does not converge smoothly, and it oscillates between positive and negative deltaELBO values**  
+First, check that you are using the right likelihood model (see above). Second, make sure that you have no features or samples that are full of missing values. Third, check that you have no features with zero (or very little) variance. If the problem does not disappear, please contact us via mail or the Slack group, we will provide (quick!) help.
 
 **(Q) What input formats are allowed?**  
 The data has to be input in two possible formats: 
-* Bioconductor: a [MultiAssayExperiment](https://bioconductor.org/packages/release/bioc/html/MultiAssayExperiment.html) object
-* Base R approach: a list of matrices where features are rows and samples are columns. Examples are shown in the vignettes.
+* Bioconductor approach: a [MultiAssayExperiment](https://bioconductor.org/packages/release/bioc/html/MultiAssayExperiment.html) object
+* Base R approach: a list of matrices where features are rows and samples are columns.
+Examples of both are shown in the vignettes.
 
 **(Q) Does MOFA always converge to the same solutions?**  
 No, as occurs in most complex Bayesian models, they are not guaranteed to always converge to the same (optimal) solution.

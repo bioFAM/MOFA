@@ -52,6 +52,13 @@
   }
   object@ModelOptions$learnIntercept <- as.logical(object@ModelOptions$learnIntercept)
   
+  # Add featureMeans
+  if (length(object@FeatureMeans)==0) 
+    object@FeatureMeans <- lapply(object@TrainData,rowMeans,na.rm=T)
+  
+  # Add DataOptions
+  if (length(object@DataOptions)==0)
+    object@DataOptions <- list(centerFeatures = FALSE, scaleViews = FALSE, removeIncompleteSamples = FALSE)
   
   return(object)
 }

@@ -26,6 +26,8 @@
 #'  maximum number of iterations, tolerance for convergence, etc.
 #' @slot ModelOptions list with the model options such as
 #'  likelihoods, whether an intercept factors was learnt, etc.
+#' @slot FeatureMeans list with the feature-wise means, extracted from the training data. 
+#' Only used internally.
 #' @slot Dimensions list with the relevant dimensionalities of the model.
 #'  N for the number of samples, M for the number of views, 
 #'  D for the number of features of each view and K for the number of infered latent factors.
@@ -37,7 +39,7 @@
 setClass("MOFAmodel", slots=c(
   InputData = "MultiAssayExperiment", TrainData = "list", ImputedData = "list",
   Expectations = "list", TrainStats = "list", Dimensions = "list",
-  DataOptions = "list", TrainOptions = "list", ModelOptions = "list",
+  DataOptions = "list", TrainOptions = "list", ModelOptions = "list", FeatureMeans = "list",
   Status = "character")
 )
 

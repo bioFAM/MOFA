@@ -75,12 +75,21 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
   Z <- Z[!is.na(Z)]
   
   if (imputed==TRUE) {
-    data <- getImputedData(object, view)[[1]][,names(Z)]
+    data <- getImputedData(object, view)[[1]]
   } else {
-    data <- getTrainData(object, view)[[1]][,names(Z)]
+    data <- getTrainData(object, view)[[1]]
+  }
+  
+  # Add feature-wise means to the data
+  if (object@DataOptions$centerFeatures) {
+    if (length(object@FeatureMeans)>=1) {
+      if (object@ModelOptions$likelihood[[view]] == "gaussian")
+        data <- data + object@FeatureMeans[[view]]
+    }
   }
   
   # Ignore samples with full missing views
+  data <- data[,names(Z)]
   data <- data[,apply(data, 2, function(x) !all(is.na(x)))]
   
   # Define features
@@ -184,6 +193,14 @@ plotDataScatter <- function(object, view, factor, features = 10,
   Z <- getFactors(object)[,factor]
   W <- getWeights(object, views=view, factors=factor)[[1]][,1]
   Y <- object@TrainData[[view]]
+  
+  # Add feature-wise means to the data
+  if (object@DataOptions$centerFeatures) {
+    if (length(object@FeatureMeans)>=1) {
+      if (object@ModelOptions$likelihood[[view]] == "gaussian")
+        Y <- Y + object@FeatureMeans[[view]]
+    }
+  }
   
   # Get features
   if (class(features) == "numeric") {

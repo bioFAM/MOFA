@@ -90,7 +90,6 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
     }
   }
   
-  
   # Update old models
   object <- .updateOldModel(object)
   
@@ -99,7 +98,6 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
   object@Dimensions[["N"]] <- ncol(object@TrainData[[1]])
   object@Dimensions[["D"]] <- sapply(object@TrainData,nrow)
   object@Dimensions[["K"]] <- ncol(object@Expectations$Z)
-  
   
   # Set view, sample, feature and factor names
   viewNames(object) <- as.character(names(object@TrainData))

@@ -85,7 +85,10 @@ prepareMOFA <- function(object, DataOptions = NULL, ModelOptions = NULL, TrainOp
       rownames(object@TrainData[[i]]) <- rownames(foo)
       colnames(object@TrainData[[i]]) <- colnames(foo)
     }
-  } 
+  }
+  
+  # Store feature-wise means
+  object@FeatureMeans <- lapply(object@TrainData,rowMeans,na.rm=T)
   
   return(object)
 }

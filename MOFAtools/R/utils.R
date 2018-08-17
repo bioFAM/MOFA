@@ -58,7 +58,7 @@
   
   # Add DataOptions
   if (length(object@DataOptions)==0)
-    object@DataOptions <- list(centerFeatures = FALSE, scaleViews = FALSE, removeIncompleteSamples = FALSE)
+    object@DataOptions <- list(scaleViews = FALSE, removeIncompleteSamples = FALSE)
   
   return(object)
 }

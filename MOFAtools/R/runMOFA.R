@@ -64,7 +64,7 @@ runMOFA <- function(object, outfile=NULL) {
   # Pass data processing options
   mofa_entrypoint$set_data_options(
     view_names              = viewNames(object), 
-    center_features         = object@DataOptions$centerFeatures,
+    center_features         = TRUE,
     scale_views             = object@DataOptions$scaleViews,
     RemoveIncompleteSamples = object@DataOptions$removeIncompleteSamples
   )

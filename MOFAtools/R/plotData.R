@@ -81,11 +81,9 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
   }
   
   # Add feature-wise means to the data
-  if (object@DataOptions$centerFeatures) {
-    if (length(object@FeatureMeans)>=1) {
-      if (object@ModelOptions$likelihood[[view]] == "gaussian")
-        data <- data + object@FeatureMeans[[view]]
-    }
+  if (length(object@FeatureMeans)>=1) {
+    if (object@ModelOptions$likelihood[[view]] == "gaussian")
+      data <- data + object@FeatureMeans[[view]]
   }
   
   # Ignore samples with full missing views
@@ -195,11 +193,9 @@ plotDataScatter <- function(object, view, factor, features = 10,
   Y <- object@TrainData[[view]]
   
   # Add feature-wise means to the data
-  if (object@DataOptions$centerFeatures) {
-    if (length(object@FeatureMeans)>=1) {
-      if (object@ModelOptions$likelihood[[view]] == "gaussian")
-        Y <- Y + object@FeatureMeans[[view]]
-    }
+  if (length(object@FeatureMeans)>=1) {
+    if (object@ModelOptions$likelihood[[view]] == "gaussian")
+      Y <- Y + object@FeatureMeans[[view]]
   }
   
   # Get features

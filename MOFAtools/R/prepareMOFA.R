@@ -140,8 +140,6 @@ getDefaultTrainOptions <- function() {
 #' @description Function to obtain the default data options.
 #' @details The data options are the following: \cr
 #' \itemize{
-#'  \item{\strong{centerFeatures}:}{ logical indicating whether to center the features to zero mean. 
-#'  This only works for gaussian data. Default is TRUE.}
 #'  \item{\strong{scaleViews}:}{ logical indicating whether to scale views to have the same unit variance. 
 #'  As long as the scale differences between the data sets is not too high, this is not required.
 #'   Default is FALSE.}
@@ -158,7 +156,6 @@ getDefaultTrainOptions <- function() {
 
 getDefaultDataOptions <- function() {
   DataOptions <- list(
-    centerFeatures = TRUE,           # Center features to zero mean (does not apply to binary or count views)
     scaleViews = FALSE,              # Scale views to unit variance (does not apply to binary or count views)
     removeIncompleteSamples = FALSE  # Remove incomplete samples that are not profiled in all omics?
   )

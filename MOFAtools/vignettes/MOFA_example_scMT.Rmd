@@ -49,9 +49,10 @@ The next step is to train the model. Internally, this is done via Python, so mak
 ### Define data options
 Next, we define data options. The most important are:  
 
-* **centerFeatures**:  logical indicating whether to learn the intercept (the means) in a per feature basis. This prevents you from having to center the data, so this option is always recommended (Default is `TRUE`). Only works for Gaussian views.  
+* **scaleViews**: logical indicating whether to scale views to have unit variance. As long as the scale of the different data sets is not too high, this is not required. Default is `FALSE`.
 
-* **removeIncompleteSamples**: logical indicating whether to remove samples that are not profiled in all omics (Default is `FALSE`)  
+* **removeIncompleteSamples**: logical indicating whether to remove samples that are not profiled in all omics. The model can cope with missing assays, so this option is not required. Default is `FALSE`. 
+
 ```{r}
 DataOptions <- getDefaultDataOptions()
 DataOptions$centerFeatures <- TRUE

@@ -75,8 +75,6 @@ This part of the pipeline is implemented in Python, so first of all make sure yo
 ### Define data options
 The most important options the user needs to define are:  
 
-* **centerFeatures**: logical indicating whether to center the features to zero mean. This is optional, as the model can learn the feature-wise intercepts by setting `ModelOptions$learnIntercept` to `TRUE`. However, centered data is always recommended, so default is `TRUE`. Note that this only applies to continuous data that is modelled with a gaussian likelihood. Binary or count data are not centered.  
-
 * **scaleViews**: logical indicating whether to scale views to have unit variance. As long as the scale of the different data sets is not too high, this is not required. Default is `FALSE`.  
 
 * **removeIncompleteSamples**: logical indicating whether to remove samples that are not profiled in all omics. The model can cope with missing assays, so this option is not required. Default is `FALSE`.  

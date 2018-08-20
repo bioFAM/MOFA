@@ -34,7 +34,7 @@ python setup.py install
 ### R package
 The easier way to install the R package is via github:
 ```r
-devtools::install_github("bioFAM/MOFA", subdir="MOFAtools")
+devtools::install_github("bioFAM/MOFA", subdir="MOFAtools", build_vignettes = TRUE)
 ```
 
 Alternatively, you can clone the repository and install locally:

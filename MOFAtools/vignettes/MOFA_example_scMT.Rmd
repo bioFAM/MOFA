@@ -45,8 +45,6 @@ The next step is to train the model. Internally, this is done via Python, so mak
 
 ## Define options
 
-### Define I/O options
-
 ### Define data options
 Next, we define data options. The most important are:  
 

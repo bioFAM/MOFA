@@ -32,6 +32,7 @@ scMT_data
 First, we create the MOFA object:
 ```{r}
 MOFAobject <- createMOFAobject(scMT_data)
+MOFAobject
 ```
 
 The function `plotTilesData` can be used to obtain an overview of the structure of the data:
@@ -151,7 +152,7 @@ plotVarianceExplained(MOFAobject)
 ## Characterisation of individual factors
 
 ### Inspection of loadings for Factor 1
-Plotting the RNA expression gene loadings for *Factor 1*, we can see that it is enriched for naive pluripotency marker genes such as Rex1/Zpf42, Tbx3, Fbxo15 and Essrb. Hence, based on previous studies (Mohammed et al, 2016) we can hypothetise that *Factor 1* captures a transition from a naive pluripotent state to a primed pluripotent states.
+Plotting the RNA expression gene loadings for *Factor 1*, we can see that it is enriched for naive pluripotency marker genes such as Rex1/Zpf42, Tbx3, Fbxo15 and Essrb. Hence, based on previous studies (Mohammed et al, 2016) we can hypothesise that *Factor 1* captures a transition from a naive pluripotent state to a primed pluripotent states.
 ```{r}
 # Plot all weights and highlight specific gene markers
 plotWeights(
@@ -342,8 +343,8 @@ pheatmap::pheatmap(imputedMethylation[1:100,1:20],
 ## Clustering of samples based on latent factors
 Samples can be clustered according to their values on the latent factors using the `clusterSamples` function.
 ```{r, message=FALSE}
-# kmeans clustering with K=2 using Factor 1
-clusters <- clusterSamples(MOFAobject, k=2, factors=1)
+# kmeans clustering with K=3 using Factor 1
+clusters <- clusterSamples(MOFAobject, k=3, factors=1)
 
 # Scatterplot colored by the predicted cluster labels,
 # and shaped by the true culture conditions

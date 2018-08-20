@@ -43,7 +43,7 @@ MOFAobject <- prepareMOFA(
 ```
 
 # Run MOFA
-Once the MOFAobject is set up we can use `runMOFA` to train the model. As depending on the random initilization the results might differ, we recommend to use runMOFA multiple times (e.g. ten times, here we use a smaller number for illustration as the model training can take some time). As a next step we will ccompare the different fits and select the best model for downstream analyses.
+Once the MOFAobject is set up we can use `runMOFA` to train the model. As depending on the random initilization the results might differ, we recommend to use runMOFA multiple times (e.g. ten times, here we use a smaller number for illustration as the model training can take some time). As a next step we will compare the different fits and select the best model for downstream analyses.
 ```{r}
 n_inits <- 3
 MOFAlist <- lapply(1:n_inits, function(it) {

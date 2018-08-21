@@ -44,10 +44,17 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
   if (is.numeric(view)) view <- viewNames(object)[view]
   stopifnot(all(view %in% viewNames(object)))  
   
+  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
+  if(is.null(object@ModelOptions$learnIntercept)) {
+    learnIntercept <- FALSE
+  } else {
+    learnIntercept <- object@ModelOptions$learnIntercept
+  }  
+  
   # Get factors
   if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } 
     else if(is.numeric(factors)) {
-      if (object@ModelOptions$learnIntercept == TRUE) { 
+      if (learnIntercept) { 
         factors <- factorNames(object)[factors+1]
       } else {
         factors <- factorNames(object)[factors]
@@ -128,9 +135,16 @@ plotWeights <- function(object, view, factor, nfeatures=10,
   if (is.numeric(view)) view <- viewNames(object)[view]
   stopifnot(all(view %in% viewNames(object))) 
 
+  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
+  if(is.null(object@ModelOptions$learnIntercept)) {
+    learnIntercept <- FALSE
+  } else {
+    learnIntercept <- object@ModelOptions$learnIntercept
+  }  
+  
   # Get factor
   if (is.numeric(factor)) {
-    if (object@ModelOptions$learnIntercept == TRUE) {
+    if (learnIntercept == TRUE) {
       factor <- factorNames(object)[factor+1]
     } else {
       factor <- factorNames(object)[factor]

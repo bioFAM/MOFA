@@ -61,6 +61,8 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
   tryCatch(object@ModelOptions <- as.list(h5read(file, 'model_opts',read.attributes=TRUE)),
            error = function(x) { print("Model opts not found, not loading it...") })
   object@ModelOptions$sparsity <- as.logical(object@ModelOptions$sparsity)
+  # remove learnIntercept option in new objects
+  if("FeatureMeans" %in% slotNames(object)) object@ModelOptions$learnIntercept <- NULL
   
   
   # Load training data
@@ -107,23 +109,16 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
   
   # Add names to likelihood vector
   names(object@ModelOptions$likelihood) <- viewNames(object)
-  
-  # Rename covariates, including intercept
-  # if (object@ModelOptions$learnIntercept == TRUE) 
-  #   factorNames(object) <- c("intercept",as.character(1:(object@Dimensions[["K"]]-1)))
-  # if (!is.null(object@ModelOptions$covariates)) {
-  #   if (object@ModelOptions$learnIntercept == TRUE) {
-  #     factorNames(object) <- c("intercept", colnames(object@ModelOptions$covariates),
-  #                              as.character((ncol(object@ModelOptions$covariates)+1:(object@Dimensions[["K"]]-1-ncol(object@ModelOptions$covariates)))))
-  #   } else {
-  #     factorNames(object) <- c(colnames(object@ModelOptions$covariates),
-  #                              as.character((ncol(object@ModelOptions$covariates)+1:(object@Dimensions[["K"]]-1))))
-  #   }
-  # }
-  
+
+  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
+  if(is.null(object@ModelOptions$learnIntercept)) {
+    learnIntercept <- FALSE
+  } else {
+    learnIntercept <- object@ModelOptions$learnIntercept
+  }  
   
   # Rename factors if intercept is included
-  if (object@ModelOptions$learnIntercept) {
+  if (learnIntercept) {
     intercept_idx <- apply(object@Expectations$Z==1,2,all)
     nonconst_idx <- which(!intercept_idx)
     factornames <- factorNames(object)
@@ -151,7 +146,7 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
     r2 <- rowSums(calculateVarianceExplained(object)$R2PerFactor)
     order_factors <- order(r2, decreasing = TRUE)
     object <- subsetFactors(object,order_factors)
-    if (object@ModelOptions$learnIntercept==TRUE) { 
+    if (learnIntercept==TRUE) { 
       factorNames(object) <- c("intercept",paste0("LF",1:(object@Dimensions$K-1)))
     } else {
       factorNames(object) <- paste0("LF",c(1:object@Dimensions$K) )

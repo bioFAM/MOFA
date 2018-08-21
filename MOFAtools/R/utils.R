@@ -50,7 +50,8 @@
     tmp[tmp=="learnMean"] <- "learnIntercept"
     names(object@ModelOptions) <- tmp
   }
-  object@ModelOptions$learnIntercept <- as.logical(object@ModelOptions$learnIntercept)
+  if(!is.null(object@ModelOptions$learnIntercept))
+    object@ModelOptions$learnIntercept <- as.logical(object@ModelOptions$learnIntercept)
   
   # Add featureMeans
   if (length(object@FeatureMeans)==0) 

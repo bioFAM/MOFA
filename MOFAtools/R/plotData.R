@@ -53,6 +53,13 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   
+  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
+  if(is.null(object@ModelOptions$learnIntercept)) {
+    learnIntercept <- FALSE
+  } else {
+    learnIntercept <- object@ModelOptions$learnIntercept
+  }  
+  
   # Get views
   if (is.numeric(view)) view <- viewNames(object)[view]
   stopifnot(view %in% viewNames(object))
@@ -60,7 +67,7 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
 
   # Get factors
   if (is.numeric(factor)) {
-    if (object@ModelOptions$learnIntercept == TRUE) {
+    if (learnIntercept) {
       factor <- factorNames(object)[factor+1]
     } else {
       factor <- factorNames(object)[factor]
@@ -180,9 +187,16 @@ plotDataScatter <- function(object, view, factor, features = 10,
   stopifnot(length(factor)==1)
   stopifnot(length(view)==1)
   if (!view %in% viewNames(object)) stop(sprintf("The view %s is not present in the object",view))
-
+  
+  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
+  if(is.null(object@ModelOptions$learnIntercept)) {
+    learnIntercept <- FALSE
+  } else {
+    learnIntercept <- object@ModelOptions$learnIntercept
+  }  
+  
   if(is.numeric(factor)) {
-      if (object@ModelOptions$learnIntercept) factor <- factorNames(object)[factor+1]
+      if (learnIntercept) factor <- factorNames(object)[factor+1]
       else factor <- factorNames(object)[factor]
     } else{ stopifnot(factor %in% factorNames(object)) }
       

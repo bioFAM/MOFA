@@ -111,17 +111,17 @@ def parseData(data, data_opts):
         parsed_data[m][parsed_data[m] == -2147483648] = np.nan
         # Center the features
         if data_opts['center_features'][m]:
-            print("Centering features for view " + str(m) + "...")
+            print("Centering features for view " + data_opts["view_names"][m] + "...")
             parsed_data[m] = parsed_data[m] - np.nanmean(parsed_data[m],axis=0)
 
         # Scale the views to unit variance
         if data_opts['scale_views'][m]:
-            print("Scaling view " + str(m) + " to unit variance...")
+            print("Scaling view " + data_opts["view_names"][m] + " to unit variance...")
             parsed_data[m] = parsed_data[m] / np.nanstd(parsed_data[m])
 
         # Scale the features to unit variance
         if data_opts['scale_features'][m]:
-            print("Scaling features for view " + str(m) + " to unit variance...")
+            print("Scaling features for view " + data_opts["view_names"][m] + " to unit variance...")
             parsed_data[m] = parsed_data[m] / np.nanstd(parsed_data[m], axis=0, )
 
     print("\nAfter parsing the data:")

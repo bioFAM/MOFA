@@ -187,6 +187,8 @@ class Poisson_PseudoY_Seeger(PseudoY_Seeger):
         # Update the pseudodata
         tau = self.markov_blanket["Tau"].getValue()
         self.E = self.params["zeta"] - sigmoid(self.params["zeta"])*(1.-self.obs/self.ratefn(self.params["zeta"])) / tau
+        self.means = self.E.mean(axis=0).data
+        self.E -= self.means
         # mask = self.getMask()
         # self.E[mask] = s.nan
 
@@ -234,7 +236,9 @@ class Bernoulli_PseudoY_Seeger(PseudoY_Seeger):
     def updateExpectations(self):
         # Update the pseudodata
         self.E = self.params["zeta"] - 4.*(sigmoid(self.params["zeta"]) - self.obs)
-
+        self.means = self.E.mean(axis=0).data
+        self.E -= self.means
+        
     def calculateELBO(self):
         Z = self.markov_blanket["Z"].getExpectation()
         W = self.markov_blanket["SW"].getExpectation()

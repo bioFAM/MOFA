@@ -86,7 +86,7 @@ class PseudoY(Unobserved_Variational_Node):
         return ma.getmask(self.obs)
 
     def updateExpectations(self):
-        print("Error: expectation updates for pseudodata node depend on the type of likelihood. They have to be specified in a new class.")
+        print("Error: expectation updates for pseudodata node depend on the type of likelihood. They have to be specified in a suclass.")
         exit()
 
     def getExpectation(self):
@@ -371,8 +371,8 @@ class Bernoulli_PseudoY_Jaakkola(PseudoY):
 
     def updateExpectations(self):
         self.E = (2.*self.obs - 1.) / (4.*lambdafn(self.params["zeta"]))
-        # IS THIS VALID?
-        self.E -= self.E.mean(axis=0)
+        self.means = self.E.mean(axis=0).data
+        self.E -= self.means
 
 
     def updateParameters(self):

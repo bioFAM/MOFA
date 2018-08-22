@@ -35,8 +35,9 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
   
   # Load expectations
   object@Expectations <- h5read(file,"expectations")
-  object@Status <- "trained"
   
+  # Change model status from "untrained" to "trained"
+  object@Status <- "trained"
   
   # Load training statistics
   tryCatch( {
@@ -66,15 +67,34 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
   # Load training data
   tryCatch( {
     TrainData <- h5read(file,"data")
-    featureData <- h5read(file,"features")
-    sampleData <- h5read(file,"samples")
-    for (m in names(TrainData)) {
-      rownames(TrainData[[m]]) <- sampleData
-      colnames(TrainData[[m]]) <- featureData[[m]]
+    features <- h5read(file,"features")
+    samples <- h5read(file,"samples")
+    
+    # Add feature names
+    if (length(features)>0) {
+      for (m in names(TrainData)) 
+        colnames(TrainData[[m]]) <- features[[m]]
+    } else {
+      for (m in names(TrainData))
+        colnames(TrainData[[m]]) <- paste0("feature_",1:ncol(TrainData[[m]]),"_",m )
     }
+    
+    # Add sample names
+    if (length(samples)>0) {
+      for (m in names(TrainData)) 
+        rownames(TrainData[[m]]) <- samples[[1]]
+    } else {
+      for (m in names(TrainData))
+        rownames(TrainData[[m]]) <- paste0("sample_",1:nrow(TrainData[[m]]))
+    }
+    
+    # Transpose the data so that rows are features and columns are samples
     TrainData <- lapply(TrainData, t)
+    
+    # Store training data in the corresponding slot
     object@TrainData <- TrainData
-    }, error = function(x) { print("Error loading the training data...") })
+    
+  }, error = function(x) { print("Error loading the training data...") })
   
   # Replace NaN by NA in the training data
   for (m in names(TrainData)) {
@@ -135,9 +155,10 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
   # Remove zero factors
   nonzero_factors <- which(apply(object@Expectations$Z[,factorNames(object)!="intercept",drop=F], 2,
                                  function(z) !all(z==0)))
-  if (length(nonzero_factors) < sum(factorNames(object)!="intercept")) 
+  if (length(nonzero_factors) < sum(factorNames(object)!="intercept")) {
     message("Removing ", sum(factorNames(object)!="intercept") - length(nonzero_factors),
             " factors that are constant zero from the model...")
+  }
   object <- subsetFactors(object, nonzero_factors, keep_intercept = TRUE)
   factorNames(object)[factorNames(object)!="intercept"] <- paste0("LF",as.character(1:length(nonzero_factors)))
   
@@ -155,6 +176,14 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
       factorNames(object) <- c("intercept",paste0("LF",1:(object@Dimensions$K-1)))
     } else {
       factorNames(object) <- paste0("LF",c(1:object@Dimensions$K) )
+    }
+  }
+  
+  # Add feature-wise means
+  FeatureMeans <- h5read(file,"intercept")
+  for (m in names(TrainData)) {
+    if (object@ModelOptions$likelihood[m] != "gaussian") {
+      object@FeatureMeans[[m]] <- FeatureMeans[[m]]
     }
   }
   

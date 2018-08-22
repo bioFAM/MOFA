@@ -212,7 +212,7 @@ class entry_point():
     # Sanity checks
     M = self.dimensionalities["M"]
     if view_names is None:
-      self.data_opts['view_names'] = ["view_%d" % m for m in range(M)] 
+      self.data_opts['view_names'] = ["view_%d" % m for m in range(1,M+1)] 
     else:
       if isinstance(view_names,str): view_names = [ view_names ]
       assert len(view_names)==M, "Length of view names and number of views do not match"

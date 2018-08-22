@@ -32,7 +32,7 @@ getDimensions <- function(object) {
 #' @param object a trained \code{\link{MOFAmodel}} object.
 #' @param factors character vector with the factor name(s), or numeric vector with the factor index(es).
 #' Default is "all".
-#' @param include_intercept logical indicating where to include the intercept term of the model, if present. 
+#' @param include_intercept logical indicating where to include the intercept term of the model, if present (depreciated, kept for compatibility with older models). 
 #' Default is \code{TRUE}.
 #' @param as.data.frame logical indicating whether to return a long data frame instead of a matrix.
 #' Default is \code{FALSE}.
@@ -55,11 +55,18 @@ getFactors <- function(object, factors = "all", as.data.frame = FALSE, include_i
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   
+  # check whether the intercept was learned (depricated, included for compatibility with old models)
+  if(is.null(object@ModelOptions$learnIntercept)) {
+    learnIntercept <- FALSE
+  } else {
+    learnIntercept <- object@ModelOptions$learnIntercept
+  }  
+  
   # Get factors
   if (paste0(factors,collapse="") == "all") { 
     factors <- factorNames(object) 
   } else if (is.numeric(factors)) {
-      if (object@ModelOptions$learnIntercept == TRUE) factors <- factorNames(object)[factors+1]
+      if (learnIntercept) factors <- factorNames(object)[factors+1]
       else factors <- factorNames(object)[factors]
   } else { 
     stopifnot(all(factors %in% factorNames(object))) 
@@ -113,6 +120,13 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
+
+  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
+  if(is.null(object@ModelOptions$learnIntercept)) {
+    learnIntercept <- FALSE
+  } else {
+    learnIntercept <- object@ModelOptions$learnIntercept
+  }  
   
   # Get views and factors
   if (paste0(views,collapse="") == "all") { views <- viewNames(object) 
@@ -122,7 +136,7 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
   if (paste0(factors,collapse="") == "all") { 
     factors <- factorNames(object) 
   } else if (is.numeric(factors)) {
-      if (object@ModelOptions$learnIntercept == TRUE) {
+      if (learnIntercept) {
         factors <- factorNames(object)[factors+1]
       } else {
         factors <- factorNames(object)[factors]

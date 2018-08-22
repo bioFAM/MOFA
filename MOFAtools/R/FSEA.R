@@ -70,11 +70,17 @@ runEnrichmentAnalysis <- function(object, view,
   global.statistic <- match.arg(global.statistic)
   statistical.test <- match.arg(statistical.test)
 
-
+  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
+  if(is.null(object@ModelOptions$learnIntercept)) {
+    learnIntercept <- FALSE
+  } else {
+    learnIntercept <- object@ModelOptions$learnIntercept
+  }  
+  
   # Define factors
   if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } 
     else if(is.numeric(factors)) {
-      if (object@ModelOptions$learnIntercept == TRUE) 
+      if (learnIntercept) 
         factors <- factorNames(object)[factors+1]
       else factors <- factorNames(object)[factors]
     }

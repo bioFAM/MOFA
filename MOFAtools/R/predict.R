@@ -21,7 +21,7 @@
 #'  This is the default option.}
 #' }
 #' @param include_intercept logical indicating whether
-#'  to include the optional intercept factor for the prediction.
+#'  to include the optional intercept factor for the prediction (depreciated, kept only for compatibility with old models).
 #' Default is TRUE.
 #' @details the denoised and condensed low-dimensional representation of the data
 #'  captures the main sources of heterogeneity of the data. 
@@ -56,6 +56,13 @@ predict <- function(object, views = "all", factors = "all",
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   
+  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
+  if(is.null(object@ModelOptions$learnIntercept)) {
+    learnIntercept <- FALSE
+  } else {
+    learnIntercept <- object@ModelOptions$learnIntercept
+  }  
+  
   # Get views  
   if (is.numeric(views)) {
     stopifnot(all(views<=object@Dimensions$M))
@@ -72,7 +79,7 @@ predict <- function(object, views = "all", factors = "all",
   if (paste0(factors,collapse="") == "all") { 
     factors <- factorNames(object) 
   } else if(is.numeric(factors)) {
-      if (object@ModelOptions$learnIntercept) 
+      if (learnIntercept) 
         factors <- factorNames(object)[factors+1]
       else factors <- factorNames(object)[factors]
   } else { 
@@ -80,7 +87,7 @@ predict <- function(object, views = "all", factors = "all",
   }
 
   # add intercept factor for prediction
-  if(!"intercept" %in% factors & object@ModelOptions$learnIntercept & include_intercept) 
+  if(!"intercept" %in% factors & learnIntercept & include_intercept) 
     factors <- c("intercept", factors)  
   if(!include_intercept & "intercept" %in% factors) 
     factors <- factors[factors!="intercept"]
@@ -114,7 +121,6 @@ predict <- function(object, views = "all", factors = "all",
         predictedView <- (exp(predictedView)/(1+exp(predictedView)))
         if (type=="inRange") predictedView <- round(predictedView)
       } else if (lk == "poisson") { 
-        # predictedView <- (exp(predictedView))
         predictedView <- log(1 + exp(predictedView))
         if(type=="inRange") predictedView <- round(predictedView)
       }

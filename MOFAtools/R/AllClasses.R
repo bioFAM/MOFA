@@ -25,7 +25,7 @@
 #' @slot TrainOptions list with the training options such as
 #'  maximum number of iterations, tolerance for convergence, etc.
 #' @slot ModelOptions list with the model options such as
-#'  likelihoods, whether an intercept factors was learnt, etc.
+#'  likelihoods, number of factors, etc.
 #' @slot FeatureMeans list with the feature-wise means, extracted from the training data. 
 #' Only used internally.
 #' @slot Dimensions list with the relevant dimensionalities of the model.
@@ -52,8 +52,14 @@ setMethod("show", "MOFAmodel", function(object) {
     stop("Error: Status not defined")
   
   if (object@Status == "trained") {
+    # check whether the intercept was learnt (depreciated, included for compatibility with old models)
+    if(is.null(object@ModelOptions$learnIntercept)) {
+      learnIntercept <- FALSE
+      } else {
+        learnIntercept <- object@ModelOptions$learnIntercept
+      }
     nfactors <- object@Dimensions[["K"]]
-    if (object@ModelOptions$learnIntercept==TRUE) { nfactors <- nfactors-1 }
+    if (learnIntercept) { nfactors <- nfactors-1 }
     cat(sprintf("Trained MOFA model with the following characteristics:
   Number of views: %d \n View names: %s 
   Number of features per view: %s 

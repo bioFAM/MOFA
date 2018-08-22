@@ -32,6 +32,7 @@ scMT_data
 First, we create the MOFA object:
 ```{r}
 MOFAobject <- createMOFAobject(scMT_data)
+MOFAobject
 ```
 
 The function `plotTilesData` can be used to obtain an overview of the structure of the data:
@@ -44,8 +45,6 @@ The next step is to train the model. Internally, this is done via Python, so mak
 
 ## Define options
 
-### Define I/O options
-
 ### Define data options
 Next, we define data options. The most important are:  
 
@@ -55,7 +54,6 @@ Next, we define data options. The most important are:
 
 ```{r}
 DataOptions <- getDefaultDataOptions()
-DataOptions$centerFeatures <- TRUE
 DataOptions
 ```
 
@@ -63,11 +61,12 @@ DataOptions
 ### Define model options
 Next, we define model options. The most important are:  
 
-* **numFactors**: number of factors (default is 25). By default, the model will only remove a factor if it explains exactly zero variance in the data. You can increase this threshold on minimum variance explained by setting `TrainOptions$dropFactorThreshold` to a value higher than zero.  
+* **numFactors**: number of factors (default is 0.5 times the number of samples). By default, the model will only remove a factor if it explains exactly zero variance in the data. You can increase this threshold on minimum variance explained by setting `TrainOptions$dropFactorThreshold` to a value higher than zero.  
 
 * **likelihoods**: likelihood for each view. Usually we recommend gaussian for continuous data, bernoulli for binary data and poisson for count data. By default, the model tries to guess it from the data.  
 
 * **sparsity**: do you want to use sparsity? This makes the interpretation easier so it is recommended (Default is `TRUE`).  
+
 ```{r}
 ModelOptions <- getDefaultModelOptions(MOFAobject)
 ModelOptions
@@ -80,12 +79,12 @@ Next, we define training options. The most important are:
 
 * **tolerance**: convergence threshold based on change in the evidence lower bound. For an exploratory run you can use a value between 1.0 and 0.1, but for a "final" model we recommend a value of 0.01.  
 
-* **DropFactorThreshold**: hyperparameter to automatically learn the number of factors based on a minimum variance explained criteria. Factors explaining less than 'DropFactorThreshold' fraction of variation in all views will be removed. For example, a value of 0.01 means that factors that explain less than 1\% of variance in all views will be discarded. By default this it zero, meaning that all factors are kept unless they explain no variance at all. Here we use a threshold of 2%. 
+* **DropFactorThreshold**: hyperparameter to automatically learn the number of factors based on a minimum variance explained criteria. Factors explaining less than 'DropFactorThreshold' fraction of variation in all views will be removed. For example, a value of 0.01 means that factors that explain less than 1\% of variance in all views will be discarded. By default this it zero, meaning that all factors are kept unless they explain no variance at all. Here we use a threshold of 1%. 
 ```{r}
 TrainOptions <- getDefaultTrainOptions()
 TrainOptions$seed <- 2017
 
-# Automatically drop factors that explain less than 2% of variance in all omics
+# Automatically drop factors that explain less than 1% of variance in all omics
 TrainOptions$DropFactorThreshold <- 0.01
 
 TrainOptions
@@ -103,7 +102,7 @@ MOFAobject <- prepareMOFA(
 ```
 
 ## Run MOFA
-Now we are ready to train the `MOFAobject`, which is done with the function `runMOFA`. This step can take some time (around 15 min with default parameters). For illustration we provide an existing trained `MOFAobject`
+Now we are ready to train the `MOFAobject`, which is done with the function `runMOFA`. This step can take some time (around 5 min with default parameters for a single trial). For illustration we provide an existing trained `MOFAobject`
 ```{r, eval=FALSE}
 MOFAobject <- runMOFA(MOFAobject, outfile=tempfile())
 ```
@@ -134,7 +133,7 @@ Other analysis, including imputation of missing values and prediction of clinica
 This is done by `calculateVarianceExplained` (to get the numerical values) and `plotVarianceExplained` (to get the plot).  
 The resulting figure gives an overview of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of different data modalities.  
 
-In this data set MOFA identified 3 Factors with a minimum variance of 2%. While *Factor 1* is shared across all data modalities (7% variance explained in the RNA data and between 53% and 72% in the methylation data sets), Factors 2 and 3 are active primarily in the RNA data
+In this data set MOFA identified 3 Factors with a minimum variance of 1%. While *Factor 1* is shared across all data modalities (7% variance explained in the RNA data and between 53% and 72% in the methylation data sets), Factors 2 and 3 are active primarily in the RNA data
 ```{r}
 # Calculate the variance explained (R2) per factor in each view 
 r2 <- calculateVarianceExplained(MOFAobject)
@@ -151,7 +150,7 @@ plotVarianceExplained(MOFAobject)
 ## Characterisation of individual factors
 
 ### Inspection of loadings for Factor 1
-Plotting the RNA expression gene loadings for *Factor 1*, we can see that it is enriched for naive pluripotency marker genes such as Rex1/Zpf42, Tbx3, Fbxo15 and Essrb. Hence, based on previous studies (Mohammed et al, 2016) we can hypothetise that *Factor 1* captures a transition from a naive pluripotent state to a primed pluripotent states.
+Plotting the RNA expression gene loadings for *Factor 1*, we can see that it is enriched for naive pluripotency marker genes such as Rex1/Zpf42, Tbx3, Fbxo15 and Essrb. Hence, based on previous studies (Mohammed et al, 2016) we can hypothesise that *Factor 1* captures a transition from a naive pluripotent state to a primed pluripotent states.
 ```{r}
 # Plot all weights and highlight specific gene markers
 plotWeights(
@@ -342,8 +341,8 @@ pheatmap::pheatmap(imputedMethylation[1:100,1:20],
 ## Clustering of samples based on latent factors
 Samples can be clustered according to their values on the latent factors using the `clusterSamples` function.
 ```{r, message=FALSE}
-# kmeans clustering with K=2 using Factor 1
-clusters <- clusterSamples(MOFAobject, k=2, factors=1)
+# kmeans clustering with K=3 using Factor 1
+clusters <- clusterSamples(MOFAobject, k=3, factors=1)
 
 # Scatterplot colored by the predicted cluster labels,
 # and shaped by the true culture conditions

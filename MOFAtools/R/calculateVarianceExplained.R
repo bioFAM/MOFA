@@ -11,8 +11,6 @@
 #'  Default is 'all'
 #' @param factors character vector with the factor names,
 #'  or numeric vector with the factor indexes. Default is 'all'
-#' @param include_intercept include the intercept factor for calculation of variance explained
-#'  (only used when an intercept was learned)
 #' @details This function takes a trained MOFA model as input and calculates
 #'  for each view the coefficient of determination (R2),
 #' i.e. the proportion of variance in the data explained by the MOFA factor(s) 
@@ -32,15 +30,20 @@
 #' MOFA_scMT <- loadModel(filepath)
 #' plotVarianceExplained(MOFA_scMT)
 
-calculateVarianceExplained <- function(object, views = "all", factors = "all", include_intercept = TRUE) {
+calculateVarianceExplained <- function(object, views = "all", factors = "all") {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   
-  # check whether the intercept was learned
-  if(!object@ModelOptions$learnIntercept==TRUE & include_intercept==TRUE) {
+  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
+  if(is.null(object@ModelOptions$learnIntercept)) {
+    learnIntercept <- FALSE
+  } else {
+    learnIntercept <- object@ModelOptions$learnIntercept
+  }
+  
+  if(!learnIntercept) {
     include_intercept <- FALSE
-    # warning("No intercept was learned in MOFA.\n Intercept is not included in the model prediction.")
   }
   
   # Define views

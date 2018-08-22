@@ -57,7 +57,7 @@ runMOFA <- function(object, outfile=NULL) {
   mofa_entrypoint$set_model_options(
     factors        = object@ModelOptions$numFactors,
     likelihoods    = unname(object@ModelOptions$likelihood),
-    learnIntercept = object@ModelOptions$learnIntercept,
+    learnIntercept = FALSE,
     sparsity       = object@ModelOptions$sparsity
   )
   

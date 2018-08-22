@@ -87,13 +87,14 @@ DataOptions
 ### Define model options
 Next, we define model options. The most important are:  
 
-* **numFactors**: number of factors (default is 25). By default, the model will only remove a factor if it explains exactly zero variance in the data. You can increase this threshold on minimum variance explained by setting `TrainOptions$dropFactorThreshold` to a value higher than zero.  
+* **numFactors**: number of factors (default is 0.5 times the number of samples). By default, the model will only remove a factor if it explains exactly zero variance in the data. You can increase this threshold on minimum variance explained by setting `TrainOptions$dropFactorThreshold` to a value higher than zero.  
 
 * **likelihoods**: likelihood for each view. Usually we recommend gaussian for continuous data, bernoulli for binary data and poisson for count data. By default, the model tries to guess it from the data.  
 
 * **sparsity**: do you want to use sparsity? This makes the interpretation easier so it is recommended (Default is `TRUE`).  
 ```{r}
 ModelOptions <- getDefaultModelOptions(MOFAobject)
+ModelOptions$numFactors <- 25
 ModelOptions
 ```
 

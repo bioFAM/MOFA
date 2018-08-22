@@ -89,6 +89,7 @@ setMethod("factorNames", signature(object="MOFAmodel"), function(object) { colna
 #' factorNames(MOFAobject)
 #' factorNames(MOFAobject) <- c("intercept",paste("Factor",1:3,sep="_"))
 #' factorNames(MOFAobject)
+#' # note that the intercept factor is depreciated in the current MOFA version.
 
 setReplaceMethod("factorNames", signature(object="MOFAmodel", value="vector"), 
   function(object,value) {

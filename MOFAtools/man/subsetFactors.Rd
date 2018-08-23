@@ -4,16 +4,13 @@
 \alias{subsetFactors}
 \title{Subset factors}
 \usage{
-subsetFactors(object, factors, keep_intercept = TRUE)
+subsetFactors(object, factors)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
 \item{factors}{character vector with the factor names (LF1,LF2,...),
 or numeric vector with the index of the factors.}
-
-\item{keep_intercept}{logical indicating whether the optional intercept factor
-should be kept when subsetting (default TRUE).}
 }
 \value{
 \code{\link{MOFAmodel}} object with a subset of factors

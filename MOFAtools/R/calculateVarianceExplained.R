@@ -35,17 +35,6 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all") {
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   
-  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
-  if(is.null(object@ModelOptions$learnIntercept)) {
-    learnIntercept <- FALSE
-  } else {
-    learnIntercept <- object@ModelOptions$learnIntercept
-  }
-  
-  if(!learnIntercept) {
-    include_intercept <- FALSE
-  }
-  
   # Define views
   if (paste0(views,sep="",collapse="") =="all") { 
     views <- viewNames(object) 
@@ -58,32 +47,19 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all") {
   if (paste0(factors,collapse="") == "all") { 
     factors <- factorNames(object) 
   } else if (is.numeric(factors)) {
-    if (include_intercept == TRUE) {
-      factors <- factorNames(object)[factors+1] 
-    } else {
       factors <- factorNames(object)[factors]
-    }
   } else { 
     stopifnot(all(factors %in% factorNames(object))) 
   }
-  factors <- factors[factors!="intercept"]
   K <- length(factors)
   
   # Collect relevant expectations
   W <- getWeights(object,views,factors)
   Z <- getFactors(object, factors)
-  Y <- getExpectations(object,"Y") # for non-Gaussian likelihoods the pseudodata is considered
+  Y <- getExpectations(object,"Y") # for non-Gaussian likelihoods the pseudodata is considered, intercept is subtracted on loading the model (older models) or while training (newer models)
   
   # replace masked values on Z by 0 (so that they do not contribute to predictions)
   Z[is.na(Z)] <- 0 
-  
-  # If an intercept is included, regress out the intercept from the data
-  if (include_intercept) {
-    intercept <- getWeights(object,views,"intercept")
-    Y <- lapply(views, function(m) sweep(Y[[m]],2,intercept[[m]],"-"))
-    names(Y) <- views
-  }
-  # Y <- sapply(views, function(m) scale(Y[[m]],center=TRUE, scale=FALSE))
   
   # Calculate coefficient of determination per view
   tmp <- sapply(views, function(m) sum(Y[[m]]**2, na.rm=TRUE))

@@ -61,6 +61,9 @@ runMOFA <- function(object, outfile=NULL) {
     sparsity       = object@ModelOptions$sparsity
   )
   
+  #TO BE FIXED: This should also be saved along with ModelOptions.
+  numFactors <- object@ModelOptions$numFactors
+  
   # Pass data processing options
   mofa_entrypoint$set_data_options(
     view_names              = viewNames(object), 
@@ -103,6 +106,9 @@ runMOFA <- function(object, outfile=NULL) {
   
   # Load the model back into R
   object <- loadModel(outfile, object)
+  
+  #TO BE FIXED: Workaround as numFactors is not saved in ModelOpts
+  object@ModelOptions$numFactors <- numFactors
   
   return(object)
 }

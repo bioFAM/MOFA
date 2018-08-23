@@ -113,6 +113,8 @@ TrainOptions <- getDefaultTrainOptions()
 # Automatically drop factors that explain less than 2% of variance in all omics
 TrainOptions$DropFactorThreshold <- 0.02
 
+TrainOptions$seed <- 2017
+
 TrainOptions
 ```
 
@@ -128,9 +130,9 @@ MOFAobject <- prepareMOFA(
 ```
 
 ## Run MOFA
-Now we are ready to train the `MOFAobject`, which is done with the function `runMOFA`. This step can take some time (around 15 min with default parameters). For illustration we provide an existing trained `MOFAobject`
+Now we are ready to train the `MOFAobject`, which is done with the function `runMOFA`. This step can take some time (around 15 min with default parameters). For illustration we provide an existing trained `MOFAobject`.
 ```{r, eval=FALSE}
-MOFAobject <- runMOFA(MOFAobject, outfile = paste0(tempfile(),".hdf5"))
+MOFAobject <- runMOFA(MOFAobject)
 ```
 
 

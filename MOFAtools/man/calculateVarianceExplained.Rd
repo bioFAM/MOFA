@@ -4,8 +4,7 @@
 \alias{calculateVarianceExplained}
 \title{Calculate variance explained by the model}
 \usage{
-calculateVarianceExplained(object, views = "all", factors = "all",
-  include_intercept = TRUE)
+calculateVarianceExplained(object, views = "all", factors = "all")
 }
 \arguments{
 \item{object}{a trained \code{\link{MOFAmodel}} object.}
@@ -15,9 +14,6 @@ Default is 'all'}
 
 \item{factors}{character vector with the factor names,
 or numeric vector with the factor indexes. Default is 'all'}
-
-\item{include_intercept}{include the intercept factor for calculation of variance explained
-(only used when an intercept was learned)}
 }
 \value{
 a list with matrices with the amount of variation explained 

@@ -13,8 +13,6 @@
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param factors character vector with the factor names (LF1,LF2,...),
 #'  or numeric vector with the index of the factors.
-#' @param keep_intercept logical indicating whether the optional intercept factor
-#'  should be kept when subsetting (default TRUE) (depreciated, kept only for compatibility with older MOFA versions).
 #' @return \code{\link{MOFAmodel}} object with a subset of factors
 #' @examples
 #' # Using an existing trained model on the CLL data
@@ -23,30 +21,18 @@
 #' MOFA_CLL_small <- subsetFactors(MOFA_CLL, factors=c(1,2,3))
 #' MOFA_CLL_small <- subsetFactors(MOFA_CLL, factors=c("LF1","LF2","LF3"))
 #' @export
-subsetFactors <- function(object, factors, keep_intercept=TRUE) {
+subsetFactors <- function(object, factors) {
   
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(factors) <= object@Dimensions[["K"]])
 
-  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
-  if(is.null(object@ModelOptions$learnIntercept)) {
-    learnIntercept <- FALSE
-  } else {
-    learnIntercept <- object@ModelOptions$learnIntercept
-  }  
-  
     # Get factors
    if(is.numeric(factors)) {
-      if (learnIntercept) factors <- factorNames(object)[factors+1]
-      else factors <- factorNames(object)[factors]
+      factors <- factorNames(object)[factors]
     }
       else{ stopifnot(all(factors %in% factorNames(object))) }
 
-  if (keep_intercept & learnIntercept & !"intercept" %in% factors) {
-    factors <- c("intercept", factors)
-  }
-  
   # Subset relevant slots
   object@Expectations$Z <- object@Expectations$Z[,factors, drop=FALSE]
   object@Expectations$Alpha <- sapply(object@Expectations$Alpha,

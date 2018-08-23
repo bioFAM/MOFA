@@ -44,21 +44,10 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
   if (is.numeric(view)) view <- viewNames(object)[view]
   stopifnot(all(view %in% viewNames(object)))  
   
-  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
-  if(is.null(object@ModelOptions$learnIntercept)) {
-    learnIntercept <- FALSE
-  } else {
-    learnIntercept <- object@ModelOptions$learnIntercept
-  }  
-  
   # Get factors
   if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } 
     else if(is.numeric(factors)) {
-      if (learnIntercept) { 
-        factors <- factorNames(object)[factors+1]
-      } else {
         factors <- factorNames(object)[factors]
-      }
     } else { 
       stopifnot(all(factors %in% factorNames(object))) 
     }
@@ -134,21 +123,10 @@ plotWeights <- function(object, view, factor, nfeatures=10,
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   if (is.numeric(view)) view <- viewNames(object)[view]
   stopifnot(all(view %in% viewNames(object))) 
-
-  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
-  if(is.null(object@ModelOptions$learnIntercept)) {
-    learnIntercept <- FALSE
-  } else {
-    learnIntercept <- object@ModelOptions$learnIntercept
-  }  
   
   # Get factor
   if (is.numeric(factor)) {
-    if (learnIntercept == TRUE) {
-      factor <- factorNames(object)[factor+1]
-    } else {
       factor <- factorNames(object)[factor]
-    }
   } else { 
     stopifnot(factor %in% factorNames(object)) 
   }

@@ -82,7 +82,7 @@ Next, we define training options. The most important are:
 * **DropFactorThreshold**: hyperparameter to automatically learn the number of factors based on a minimum variance explained criteria. Factors explaining less than 'DropFactorThreshold' fraction of variation in all views will be removed. For example, a value of 0.01 means that factors that explain less than 1\% of variance in all views will be discarded. By default this it zero, meaning that all factors are kept unless they explain no variance at all. Here we use a threshold of 1%. 
 ```{r}
 TrainOptions <- getDefaultTrainOptions()
-TrainOptions$seed <- 2017
+TrainOptions$seed <- 2018
 
 # Automatically drop factors that explain less than 1% of variance in all omics
 TrainOptions$DropFactorThreshold <- 0.01
@@ -104,7 +104,7 @@ MOFAobject <- prepareMOFA(
 ## Run MOFA
 Now we are ready to train the `MOFAobject`, which is done with the function `runMOFA`. This step can take some time (around 5 min with default parameters for a single trial). For illustration we provide an existing trained `MOFAobject`
 ```{r, eval=FALSE}
-MOFAobject <- runMOFA(MOFAobject, outfile=tempfile())
+MOFAobject <- runMOFA(MOFAobject)
 ```
 
 ```{r}
@@ -133,7 +133,7 @@ Other analysis, including imputation of missing values and prediction of clinica
 This is done by `calculateVarianceExplained` (to get the numerical values) and `plotVarianceExplained` (to get the plot).  
 The resulting figure gives an overview of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of different data modalities.  
 
-In this data set MOFA identified 3 Factors with a minimum variance of 1%. While *Factor 1* is shared across all data modalities (7% variance explained in the RNA data and between 53% and 72% in the methylation data sets), Factors 2 and 3 are active primarily in the RNA data
+In this data set MOFA identified 3 Factors with a minimum variance of 1%. While *Factor 1* is shared across all data modalities (12% variance explained in the RNA data and between 53% and 72% in the methylation data sets), Factors 2 and 3 are active primarily in the RNA data
 ```{r}
 # Calculate the variance explained (R2) per factor in each view 
 r2 <- calculateVarianceExplained(MOFAobject)
@@ -304,10 +304,9 @@ For customized exploration of weights and factors, you can directly fetch the va
 ```{r, message=FALSE}
 cdr <- colMeans(getTrainData(MOFAobject)$`RNA expression`>0,na.rm=TRUE)
 factor3 <- getFactors(MOFAobject,
-                      factors=3,
-                      include_intercept = FALSE)[,1]
+                      factors=3)
 
-foo <- data.frame(factor = factor3, cdr = cdr)
+foo <- data.frame(factor = as.numeric(factor3), cdr = cdr)
 ggplot(foo, aes_string(x = "factor", y = "cdr")) + 
   geom_point() + xlab("Factor 3") +
   ylab("Cellular Detection Rate") +

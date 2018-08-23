@@ -18,6 +18,7 @@ library(MOFAtools)
 # Simulate an example data set
 To illustrate the MOFA workflow we simulate a small example data set with 3 different views. `makeExampleData` generates an untrained MOFAobject containing the simulated data. If you work on your own data use `createMOFAobject` to create the untrained MOFA object (see our vignettes for CLL and scMT data).
 ```{r}
+set.seed(1234)
 data <- makeExampleData()
 MOFAobject <- createMOFAobject(data)
 MOFAobject
@@ -33,13 +34,6 @@ ModelOptions <- getDefaultModelOptions(MOFAobject)
 DataOptions <- getDefaultDataOptions()
 
 TrainOptions$DropFactorThreshold <- 0.01
-
-MOFAobject <- prepareMOFA(
-  MOFAobject, 
-  DataOptions = DataOptions,
-  ModelOptions = ModelOptions,
-  TrainOptions = TrainOptions
-)
 ```
 
 # Run MOFA
@@ -47,7 +41,17 @@ Once the MOFAobject is set up we can use `runMOFA` to train the model. As depend
 ```{r}
 n_inits <- 3
 MOFAlist <- lapply(1:n_inits, function(it) {
-  runMOFA(MOFAobject, outfile=tempfile())
+  
+  TrainOptions$seed <- 2018 + it
+  
+  MOFAobject <- prepareMOFA(
+  MOFAobject, 
+  DataOptions = DataOptions,
+  ModelOptions = ModelOptions,
+  TrainOptions = TrainOptions
+)
+  
+  runMOFA(MOFAobject)
 })
 ```
 

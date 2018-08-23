@@ -36,7 +36,10 @@ whether to center or scale the data.}
 maximum number of iterations, tolerance for convergence, etc.}
 
 \item{\code{ModelOptions}}{list with the model options such as
-likelihoods, whether an intercept factors was learnt, etc.}
+likelihoods, number of factors, etc.}
+
+\item{\code{FeatureIntercepts}}{list with the feature-wise intercepts. 
+Only used internally.}
 
 \item{\code{Dimensions}}{list with the relevant dimensionalities of the model.
 N for the number of samples, M for the number of views, 

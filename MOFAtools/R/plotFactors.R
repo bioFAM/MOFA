@@ -48,23 +48,12 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "",
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   if(length(factor)>1)  stop("Please specify a single factor!")
   
-  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
-  if(is.null(object@ModelOptions$learnIntercept)) {
-    learnIntercept <- FALSE
-  } else {
-    learnIntercept <- object@ModelOptions$learnIntercept
-  }  
-  
   # Collect relevant data
   Z <- getFactors(object, factors = factor, as.data.frame = TRUE)
   
   # Get factors
   if (is.numeric(factor)) {
-    if (learnIntercept) {
-      factor <- factorNames(object)[factor+1]
-    } else {
       factor <- factorNames(object)[factor]
-    }
   } else { 
     stopifnot(factor %in% factorNames(object)) 
   }
@@ -178,21 +167,10 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
 
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
-
-  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
-  if(is.null(object@ModelOptions$learnIntercept)) {
-    learnIntercept <- FALSE
-  } else {
-    learnIntercept <- object@ModelOptions$learnIntercept
-  }  
   
   # Get factors
   if (is.numeric(factors)) {
-    if (learnIntercept) {
-      factors <- factorNames(object)[factors+1]
-    } else {
       factors <- factorNames(object)[factors]
-    }
   } else { 
     if (paste0(factors,collapse="") == "all") { 
       factors <- factorNames(object) 
@@ -200,7 +178,7 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
       stopifnot(all(factors %in% factorNames(object)))  
     }
   }
-  Z <- getFactors(object, factors=factors, include_intercept=FALSE, as.data.frame=TRUE)
+  Z <- getFactors(object, factors=factors, as.data.frame=TRUE)
   Z$factor <- as.factor(Z$factor)
   
   # Set color
@@ -365,20 +343,9 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(factors)==2)
   
-  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
-  if(is.null(object@ModelOptions$learnIntercept)) {
-    learnIntercept <- FALSE
-  } else {
-    learnIntercept <- object@ModelOptions$learnIntercept
-  }  
-  
   # Get factors
   if (is.numeric(factors)) {
-    if (learnIntercept) {
-      factors <- factorNames(object)[factors+1]
-    } else {
       factors <- factorNames(object)[factors]
-    }
   } else { 
     if (paste0(factors,collapse="") == "all") { 
       factors <- factorNames(object) 
@@ -538,13 +505,6 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
 
-  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
-  if(is.null(object@ModelOptions$learnIntercept)) {
-    learnIntercept <- FALSE
-  } else {
-    learnIntercept <- object@ModelOptions$learnIntercept
-  }  
-  
   # Collect relevant data
   N <- object@Dimensions[["N"]]
   Z <- getFactors(object, factors = factors)
@@ -552,11 +512,7 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
   
   # Get factors
   if (is.numeric(factors)) {
-    if (learnIntercept) {
-      factors <- factorNames(object)[factors+1]
-    } else {
       factors <- factorNames(object)[factors]
-    }
   } else { 
     if (paste0(factors,collapse="") == "all") { 
       factors <- factorNames(object) 
@@ -732,9 +688,6 @@ plotFactorCor <- function(object, method = "pearson", ...) {
   
   # Fetch factors
   Z <- getFactors(object)
-  
-  # Remove intercept
-  Z <- Z[,colnames(Z)!="intercept"]
   
   # Compute and plot correlation
   rownames(Z) <- paste0("LF",1:nrow(Z))

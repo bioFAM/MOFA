@@ -70,24 +70,12 @@ runEnrichmentAnalysis <- function(object, view,
   global.statistic <- match.arg(global.statistic)
   statistical.test <- match.arg(statistical.test)
 
-  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
-  if(is.null(object@ModelOptions$learnIntercept)) {
-    learnIntercept <- FALSE
-  } else {
-    learnIntercept <- object@ModelOptions$learnIntercept
-  }  
-  
   # Define factors
   if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } 
     else if(is.numeric(factors)) {
-      if (learnIntercept) 
-        factors <- factorNames(object)[factors+1]
-      else factors <- factorNames(object)[factors]
+      factors <- factorNames(object)[factors]
     }
       else{ stopifnot(all(factors %in% factorNames(object))) }
-
-  # remove intercept factors
-  factors <- factors[factors!="intercept"]
   
   # Collect observed data
   data <- object@TrainData[[view]]
@@ -239,7 +227,7 @@ plotEnrichment <- function(object, fsea.out, factor, alpha=0.1, max.pathways=25,
   
   # Sanity checks
   stopifnot(length(factor)==1) 
-  if(is.numeric(factor)) factor <- factorNames(object)[factorNames(object)!="intercept"][factor]
+  if(is.numeric(factor)) factor <- factorNames(object)[factor]
   if(!factor %in% colnames(fsea.out$pval)) 
     stop(paste0("No feature set enrichment calculated for factor ", factor, ".\n
                 Use runEnrichmentAnalysis first."))

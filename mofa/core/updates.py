@@ -44,6 +44,7 @@ class Y_Node(Constant_Variational_Node):
         # Precompute some terms to speed up the calculations
         self.N = self.dim[0] - ma.getmask(self.value).sum(axis=0)
         self.likconst = -0.5*s.sum(self.N)*s.log(2.*s.pi)
+        self.means = self.value.mean(axis=0).data
 
     def mask(self):
         # Mask the observations if they have missing values

@@ -5,7 +5,7 @@
 \title{Do predictions using a fitted MOFA model}
 \usage{
 predict(object, views = "all", factors = "all", type = c("inRange",
-  "response", "link"), include_intercept = TRUE)
+  "response", "link"))
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
@@ -25,10 +25,6 @@ Default is "all".}
  (Poisson and Bernoulli) to the next integer.
  This is the default option.}
 }}
-
-\item{include_intercept}{logical indicating whether
- to include the optional intercept factor for the prediction.
-Default is TRUE.}
 }
 \value{
 Returns a list with data predictions.

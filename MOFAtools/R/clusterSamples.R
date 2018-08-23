@@ -57,23 +57,15 @@ clusterSamples <- function(object, k, factors = "all", ...) {
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   
-  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
-  if(is.null(object@ModelOptions$learnIntercept)) {
-    learnIntercept <- FALSE
-  } else {
-    learnIntercept <- object@ModelOptions$learnIntercept
-  }  
-
   # Define factors
   if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } 
     else if(is.numeric(factors)) {
-      if (learnIntercept) factors <- factorNames(object)[factors+1]
-      else factors <- factorNames(object)[factors]
+      factors <- factorNames(object)[factors]
     }
       else{ stopifnot(all(factors %in% factorNames(object))) }
   
   # Collect relevant data
-  Z <- getFactors(object, factors=factors, include_intercept=FALSE)
+  Z <- getFactors(object, factors=factors)
   N <- getDimensions(object)[["N"]]
   
   # For now remove sample with missing values on factors

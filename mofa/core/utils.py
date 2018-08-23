@@ -111,17 +111,17 @@ def parseData(data, data_opts):
         parsed_data[m][parsed_data[m] == -2147483648] = np.nan
         # Center the features
         if data_opts['center_features'][m]:
-            print("Centering features for view " + str(m) + "...")
+            print("Centering features for view " + data_opts["view_names"][m] + "...")
             parsed_data[m] = parsed_data[m] - np.nanmean(parsed_data[m],axis=0)
 
         # Scale the views to unit variance
         if data_opts['scale_views'][m]:
-            print("Scaling view " + str(m) + " to unit variance...")
+            print("Scaling view " + data_opts["view_names"][m] + " to unit variance...")
             parsed_data[m] = parsed_data[m] / np.nanstd(parsed_data[m])
 
         # Scale the features to unit variance
         if data_opts['scale_features'][m]:
-            print("Scaling features for view " + str(m) + " to unit variance...")
+            print("Scaling features for view " + data_opts["view_names"][m] + " to unit variance...")
             parsed_data[m] = parsed_data[m] / np.nanstd(parsed_data[m], axis=0, )
 
     print("\nAfter parsing the data:")
@@ -420,10 +420,12 @@ def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_na
         data[i].data[data[i].mask] = np.nan
 
     data_grp = hdf5.create_group("data")
-    featuredata_grp = hdf5.create_group("features")
+    samples_grp = hdf5.create_group("samples")
+    features_grp = hdf5.create_group("features")
+    intercept_grp = hdf5.create_group("intercept")
 
     if sample_names is not None:
-        hdf5.create_dataset("samples", data=np.array(sample_names, dtype='S50'))
+        samples_grp.create_dataset("samples", data=np.array(sample_names, dtype='S50'))
 
     # if likelihoods is not None:
     #     data_grp.attrs['likelihood'] = np.array(likelihoods, dtype='S50')
@@ -431,8 +433,9 @@ def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_na
     for m in range(len(data)):
         view = view_names[m] if view_names is not None else str(m)
         data_grp.create_dataset(view, data=data[m].data.T)
+        intercept_grp.create_dataset(view, data=model.getNodes()["Y"].nodes[m].means)
         if feature_names is not None:
-            featuredata_grp.create_dataset(view, data=np.array(feature_names[m], dtype='S50'))
+            features_grp.create_dataset(view, data=np.array(feature_names[m], dtype='S50'))
         
 
 def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_names=None, feature_names=None):

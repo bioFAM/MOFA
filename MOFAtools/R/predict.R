@@ -20,9 +20,6 @@
 #'  (Poisson and Bernoulli) to the next integer.
 #'  This is the default option.}
 #' }
-#' @param include_intercept logical indicating whether
-#'  to include the optional intercept factor for the prediction (depreciated, kept only for compatibility with old models).
-#' Default is TRUE.
 #' @details the denoised and condensed low-dimensional representation of the data
 #'  captures the main sources of heterogeneity of the data. 
 #' These representation can be used to do predictions using the equation Y = WX. 
@@ -50,18 +47,10 @@
 #' predict(MOFA_scMT)
 #' 
 predict <- function(object, views = "all", factors = "all", 
-                    type = c("inRange","response", "link"), 
-                    include_intercept = TRUE) {
+                    type = c("inRange","response", "link")) {
 
   # Sanity checks
   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
-  
-  # check whether the intercept was learnt (depreciated, included for compatibility with old models)
-  if(is.null(object@ModelOptions$learnIntercept)) {
-    learnIntercept <- FALSE
-  } else {
-    learnIntercept <- object@ModelOptions$learnIntercept
-  }  
   
   # Get views  
   if (is.numeric(views)) {
@@ -79,19 +68,12 @@ predict <- function(object, views = "all", factors = "all",
   if (paste0(factors,collapse="") == "all") { 
     factors <- factorNames(object) 
   } else if(is.numeric(factors)) {
-      if (learnIntercept) 
-        factors <- factorNames(object)[factors+1]
-      else factors <- factorNames(object)[factors]
+      factors <- factorNames(object)[factors]
   } else { 
     stopifnot(all(factors %in% factorNames(object))) 
   }
 
-  # add intercept factor for prediction
-  if(!"intercept" %in% factors & learnIntercept & include_intercept) 
-    factors <- c("intercept", factors)  
-  if(!include_intercept & "intercept" %in% factors) 
-    factors <- factors[factors!="intercept"]
-  
+
   # Get type of predictions wanted 
   type = match.arg(type)
   
@@ -107,7 +89,7 @@ predict <- function(object, views = "all", factors = "all",
   predictedData <- lapply(views, function(i){
     
     # calculate terms based on linear model
-    predictedView <- t(Z%*% t(W[[i]])) 
+    predictedView <- sweep(t(Z%*% t(W[[i]])),1, -object@FeatureIntercepts[[i]]) # add intercept row-wise
     
     # make predicitons based on underlying likelihood
     lks <- object@ModelOptions$likelihood

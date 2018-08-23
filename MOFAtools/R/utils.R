@@ -44,46 +44,83 @@
     }
   }
   
+  # update model dimensions
+  object@Dimensions[["K"]] <- ncol(object@Expectations$Z)
+  
   # update learnMean to learnIntercept
   if ("learnMean" %in% names(object@ModelOptions)) {
     tmp <- names(object@ModelOptions)
     tmp[tmp=="learnMean"] <- "learnIntercept"
     names(object@ModelOptions) <- tmp
   }
-  if(!is.null(object@ModelOptions$learnIntercept))
+  # update intercept to new model structure and remove intercept from pseudodata
+  if(!is.null(object@ModelOptions$learnIntercept)){
     object@ModelOptions$learnIntercept <- as.logical(object@ModelOptions$learnIntercept)
-  
-  # Add featureMeans
-  if (length(object@FeatureMeans)==0) 
-    object@FeatureMeans <- lapply(object@TrainData,rowMeans,na.rm=T)
-  
+    if(object@ModelOptions$learnIntercept){
+      nonintercept_idx <- which(!apply(object@Expectations$Z==1,2,all))
+      intercept_idx <- which(apply(object@Expectations$Z==1,2,all))
+      if(length(intercept_idx)!=1) stop("No or multiple intercepts were learn despite using learnIntercept.")
+      # save intercepts in FeatureIntercepts slot
+      object@FeatureIntercepts  <- lapply(object@Expectations$W, function(w) w[,intercept_idx])
+
+      #remove intercept form factors and weights
+      object@Expectations$Z <- object@Expectations$Z[,nonintercept_idx, drop=FALSE]
+      object@Expectations$Alpha <- sapply(object@Expectations$Alpha,
+                                          function(x) x[nonintercept_idx],
+                                          simplify = FALSE, USE.NAMES = TRUE)
+      object@Expectations$W <- sapply(object@Expectations$W,
+                                      function(x) x[,nonintercept_idx, drop=FALSE],
+                                      simplify = FALSE, USE.NAMES = TRUE)
+      object@Expectations$Theta <- sapply(object@Expectations$Theta,
+                                          function(x) x[nonintercept_idx],
+                                          simplify = FALSE, USE.NAMES = TRUE)
+      
+      # sweep out intercept from pseudodata
+      for(m in seq_along(object@Expectations$Y)) 
+        object@Expectations$Y[[m]] <- sweep(object@Expectations$Y[[m]],2, object@FeatureIntercepts[[m]])
+      
+    } else object@FeatureIntercepts  <- lapply(object@Dimensions$D, function(d) rep(0,d))
+    object@ModelOptions$learnIntercept <- NULL
+  }
+
   # Add DataOptions
   if (length(object@DataOptions)==0)
     object@DataOptions <- list(scaleViews = FALSE, removeIncompleteSamples = FALSE)
   
+  # Remove depreciated and detailed model and training options
+  object@TrainOptions <- list(maxiter = object@TrainOptions$maxiter,
+                              tolerance = object@TrainOptions$tolerance,
+                              DropFactorThreshold = object@TrainOptions$DropFactorThreshold,
+                              verbose = object@TrainOptions$verbose,
+                              seed = object@TrainOptions$seed)
+  
+  object@ModelOptions <- list(likelihood = object@ModelOptions$likelihood,
+                              numFactors = object@ModelOptions$numFactors,
+                              sparsity = object@ModelOptions$sparsity)
+  
   return(object)
 }
 
-# Function to find factors that act as an intercept term for the samples,
-.detectInterceptFactors <- function(object, cor_threshold = 0.75) {
-  
-  # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
-  
-  # Fetch data
-  data <- getTrainData(object)
-  factors <- getFactors(object, include_intercept = FALSE)
-  
-  # Correlate the factors with global means per sample
-  r <- lapply(data, function(x) abs(cor(apply(x,2,mean),factors, use="complete.obs")))
-  for (i in names(r)) {
-    if (any(r[[i]]>cor_threshold)) {
-      message(paste0("Factor ",which(r[[i]]>cor_threshold)," is capturing an intercept effect in ",i,"\n"))
-      message("Intercept factors arise from global differences between the samples,
-          which could be different library size, mean methylation rates, etc.")
-    }
-  }
-}
+# # Function to find factors that act as an intercept term for the samples,
+# .detectInterceptFactors <- function(object, cor_threshold = 0.75) {
+#   
+#   # Sanity checks
+#   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
+#   
+#   # Fetch data
+#   data <- getTrainData(object)
+#   factors <- getFactors(object, include_intercept = FALSE)
+#   
+#   # Correlate the factors with global means per sample
+#   r <- lapply(data, function(x) abs(cor(apply(x,2,mean),factors, use="complete.obs")))
+#   for (i in names(r)) {
+#     if (any(r[[i]]>cor_threshold)) {
+#       message(paste0("Factor ",which(r[[i]]>cor_threshold)," is capturing an intercept effect in ",i,"\n"))
+#       message("Intercept factors arise from global differences between the samples,
+#           which could be different library size, mean methylation rates, etc.")
+#     }
+#   }
+# }
 
 
 subset_augment <- function(mat, pats) {

@@ -88,7 +88,7 @@ prepareMOFA <- function(object, DataOptions = NULL, ModelOptions = NULL, TrainOp
   }
   
   # Store feature-wise means
-  object@FeatureMeans <- lapply(object@TrainData,rowMeans,na.rm=T)
+  object@FeatureIntercepts <- lapply(object@TrainData,rowMeans,na.rm=T)
   
   return(object)
 }

@@ -25,10 +25,6 @@ The model options are the following: \cr
  \item{\strong{numFactors}:}{ numeric value indicating the initial number of factors. 
  If you want to learn the number of factors automatically we recommend
   setting this to a large value, default is 25.}
- \item{\strong{learnIntercept}:}{ logical indicating whether to learn an intercept
-  term to capture differences in feature means.
- If you are using gaussian likelihoods, we recommend centering and setting learnIntercept to FALSE.
- However, if you have non-gaussian likelihoods, learning an intercept factor is important. Default is TRUE.}
  \item{\strong{sparsity}:}{ logical indicating whether to use sparsity.
  This is always recommended, as it will make the loadings more interpretable. Default is TRUE.}
 }

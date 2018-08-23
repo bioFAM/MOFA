@@ -125,7 +125,7 @@ def parseData(data, data_opts):
             parsed_data[m] = parsed_data[m] / np.nanstd(parsed_data[m], axis=0, )
 
     print("\nAfter parsing the data:")
-    for m in range(M): print("view %d has %d samples and %d features..." % (m, parsed_data[m].shape[0], parsed_data[m].shape[1]))
+    for m in range(M): print("view %s has %d samples and %d features..." % (data_opts["view_names"][m], parsed_data[m].shape[0], parsed_data[m].shape[1]))
 
     return parsed_data
 

@@ -186,6 +186,7 @@ plotWeights <- function(object, view, factor, nfeatures=10,
   gg_W <- ggplot(W, aes_string(x="feature", y="value", col="group")) + 
     # scale_y_continuous(expand = c(0.01,0.01)) + scale_x_discrete(expand = c(0.01,0.01)) +
     geom_point(aes_string(size="tmp")) + labs(x="Rank position", y="Loading") +
+    geom_hline(yintercept=0, color="black", type="dashed") +
     scale_x_discrete(breaks = NULL, expand=c(0.05,0.05)) +
     ggrepel::geom_text_repel(data = W[W$group!="0",], aes_string(label = "feature", col = "group"),
                              segment.alpha=0.1, segment.color="black",

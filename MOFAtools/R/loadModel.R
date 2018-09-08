@@ -29,14 +29,16 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
     
     if (is.null(object)) object <- new("MOFAmodel")
     
-    if(.hasSlot(object,"Status") & length(object@Status) !=0)
-    if (object@Status == "trained") {
-        warning("The specified object is already trained, over-writing training output with new results!")
-        object@Expectations <- list()
-        object@FeatureIntercepts <- list()
-        object@TrainStats <- list()
-        object@ImputedData <- list()
-        object@Dimensions <- list()
+    if(.hasSlot(object,"Status") & length(object@Status) !=0) {
+      if (object@Status == "trained") {
+          warning("The specified object is already trained, over-writing training output with new results!")
+          object@Expectations <- list()
+          object@FeatureIntercepts <- list()
+          object@TrainStats <- list()
+          object@ImputedData <- list()
+          object@Dimensions <- list()
+      }
+      
     }
     
     # remove options to make sure the loaded model contains the options it was trained with
@@ -83,11 +85,9 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
         
         # Add feature names
         if (length(features)>0) {
-            for (m in names(TrainData))
-            colnames(TrainData[[m]]) <- features[[m]]
+            for (m in names(TrainData)) colnames(TrainData[[m]]) <- features[[m]]
         } else {
-            for (m in names(TrainData))
-            colnames(TrainData[[m]]) <- paste0("feature_",1:ncol(TrainData[[m]]),"_",m )
+            for (m in names(TrainData)) colnames(TrainData[[m]]) <- paste0("feature_",1:ncol(TrainData[[m]]),"_",m )
         }
         
         # Add sample names
@@ -132,24 +132,31 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
     })
     
     # make sure contain views in same order as TrainData
-    if(length(object@FeatureIntercepts) >0)
-    object@FeatureIntercepts <- object@FeatureIntercepts[names(object@TrainData)]
+    if(length(object@FeatureIntercepts)>0)
+      object@FeatureIntercepts <- object@FeatureIntercepts[names(object@TrainData)]
     
-    if(length(FeatureIntercepts) >0){
+    if (length(FeatureIntercepts)>0) {
         for (m in seq_along(object@TrainData)) {
-            if (object@ModelOptions$likelihood[m] != "gaussian") {
-                object@FeatureIntercepts[[m]] <- FeatureIntercepts[[m]]
-            }}
-    } else object@FeatureIntercepts <- list()
+          if ((length(object@FeatureIntercepts)==0) | (object@ModelOptions$likelihood[m] != "gaussian")) {
+            object@FeatureIntercepts[[m]] <- FeatureIntercepts[[m]]
+          }
+        }
+    } else {
+      object@FeatureIntercepts <- list()
+    }
+    names(object@FeatureIntercepts) <- names(TrainData)
     
     # Add feature-wise means to the gaussian data to restore uncentered data in TrainData
     if (length(object@FeatureIntercepts)>=1) {
         object@ModelOptions$learnIntercept <- NULL
         for (m in seq_along(object@TrainData)) {
-            if (object@ModelOptions$likelihood[m] == "gaussian")
-            # in new versions containing object@FeatureIntercepts this is centered and should always be TRUE, the following is just an additional rough check
-            if(max(abs(apply(object@TrainData[[m]],1, mean, na.rm=TRUE))) < 10^(-5))
-            object@TrainData[[m]] <-  object@TrainData[[m]] + object@FeatureIntercepts[[m]]
+            if (object@ModelOptions$likelihood[m] == "gaussian") {
+              # in new versions containing object@FeatureIntercepts this is centered and should always be TRUE, the following is just an additional rough check
+              if (max(abs(apply(object@TrainData[[m]],1, mean, na.rm=TRUE))) > 10^(-5))
+                print("Warning, gaussian data seems to be uncentered")
+              
+              object@TrainData[[m]] <-  object@TrainData[[m]] + as.numeric(object@FeatureIntercepts[[m]])
+            }
         }
     }
     

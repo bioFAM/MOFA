@@ -20,12 +20,9 @@ ep.set_data(data)
 #	- gaussian for continuous data
 # 	- bernoulli for binary data
 #  	- poisson for count data
-# learnIntercept: boolean indicating whether to learn an intercept term to capture the feature means. 
-# 	If you are using gaussian likelihoods, we recommend centering the data (specified in data_options) and setting learnIntercept to False. 
-# 	However, if you have non-gaussian likelihoods, learning an intercept factor is important
 # sparsity: boolean indicating whether to use sparsity. 
 # 	This is always recommended, as it will make the loadings more interpretable.
-ep.set_model_options(factors=25, likelihoods=["gaussian","bernoulli","poisson"], learnIntercept=False, sparsity=True)
+ep.set_model_options(factors=25, likelihoods=["gaussian","bernoulli","poisson"], sparsity=True)
 
 ## Set data options ##
 

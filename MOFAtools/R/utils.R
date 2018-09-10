@@ -53,6 +53,19 @@
     tmp[tmp=="learnMean"] <- "learnIntercept"
     names(object@ModelOptions) <- tmp
   }
+  
+  # Add feature-wise means to the gaussian data to restore uncentered data in TrainData
+  if (length(object@FeatureIntercepts)>=1) {
+    object@ModelOptions$learnIntercept <- NULL
+    # for (m in seq_along(object@TrainData)) {
+    #   if (object@ModelOptions$likelihood[m] == "gaussian") {
+    #     if (max(abs(apply(object@TrainData[[m]],1, mean, na.rm=TRUE))) > 10^(-5))
+    #       print("Warning, gaussian data seems to be uncentered")
+    #     object@TrainData[[m]] <- object@TrainData[[m]] + as.numeric(object@FeatureIntercepts[[m]])
+    #   }
+    # }
+  }
+  
   # update intercept to new model structure and remove intercept from pseudodata
   if(!is.null(object@ModelOptions$learnIntercept)){
     object@ModelOptions$learnIntercept <- as.logical(object@ModelOptions$learnIntercept)

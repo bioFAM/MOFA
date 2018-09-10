@@ -87,6 +87,7 @@ class entry_point():
     self.dimensionalities["N"] = data[0].shape[0]
     self.dimensionalities["D"] = [data[m].shape[1] for m in range(len(data))]
 
+    self.unprocessed_data = data.copy()
     self.data = data
 
   def parse_data(self):
@@ -416,6 +417,7 @@ class entry_point():
 
     # Sanity checks
     assert hasattr(self, 'data'), "Data has to be defined before training the model"
+    assert hasattr(self, 'unprocessed_data'), "unprocessed_data has to be defined before training the model"
     assert hasattr(self, 'model'), "No trained model found"
 
     # Create output directory
@@ -432,6 +434,7 @@ class entry_point():
 
     # Save the model
     saveModel(self.model, 
+      data=self.unprocessed_data,
       outfile=outfile, 
       view_names=self.data_opts['view_names'],
       sample_names=sample_names, 

@@ -62,10 +62,9 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
     
     
     # Load training options
-    # if (length(object@TrainOptions) == 0) {
     tryCatch(object@TrainOptions <- as.list(h5read(file, 'training_opts',read.attributes=TRUE)),
     error = function(x) { print("Training opts not found, not loading it...") })
-    # }
+    
     # different names in R and python package (drop_by_r2 in python corresponds to DropFactorThreshold in R)
     if("drop_by_r2" %in% names(object@TrainOptions)) {
         object@TrainOptions$DropFactorThreshold <- object@TrainOptions$drop_by_r2
@@ -123,42 +122,12 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
     }
     
     # Collect feature-wise intercepts (for gaussian data stored during model preparation)
-    # FIX THIS (python should return means for gaussian data as well, storing in prepareMOFA can be removed then and TrainData should remain uncentered the mean is added post-hoc now)
-    FeatureIntercepts <- tryCatch( {
-        h5read(file,"intercept")
+    object@FeatureIntercepts <- tryCatch( {
+        h5read(file,"intercept")[names(object@TrainData)]
     }, error = function(x) {
         print("Could not load the intercepts, the model you are loading might be out-dated. It will be updated to the new version.")
         list()
     })
-    
-    # make sure contain views in same order as TrainData
-    if(length(object@FeatureIntercepts)>0)
-      object@FeatureIntercepts <- object@FeatureIntercepts[names(object@TrainData)]
-    
-    if (length(FeatureIntercepts)>0) {
-        for (m in seq_along(object@TrainData)) {
-          if ((length(object@FeatureIntercepts)==0) | (object@ModelOptions$likelihood[m] != "gaussian")) {
-            object@FeatureIntercepts[[m]] <- FeatureIntercepts[[m]]
-          }
-        }
-    } else {
-      object@FeatureIntercepts <- list()
-    }
-    names(object@FeatureIntercepts) <- names(TrainData)
-    
-    # Add feature-wise means to the gaussian data to restore uncentered data in TrainData
-    if (length(object@FeatureIntercepts)>=1) {
-        object@ModelOptions$learnIntercept <- NULL
-        for (m in seq_along(object@TrainData)) {
-            if (object@ModelOptions$likelihood[m] == "gaussian") {
-              # in new versions containing object@FeatureIntercepts this is centered and should always be TRUE, the following is just an additional rough check
-              if (max(abs(apply(object@TrainData[[m]],1, mean, na.rm=TRUE))) > 10^(-5))
-                print("Warning, gaussian data seems to be uncentered")
-              
-              object@TrainData[[m]] <-  object@TrainData[[m]] + as.numeric(object@FeatureIntercepts[[m]])
-            }
-        }
-    }
     
     # Update old models
     object <- .updateOldModel(object)

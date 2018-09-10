@@ -403,7 +403,7 @@ def saveModelOpts(opts, hdf5):
         grp.create_dataset(k, data=np.asarray(v).astype('S'))
     grp[k].attrs['names'] = np.asarray(list(opts.keys())).astype('S')
 
-def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_names=None, likelihoods=None):
+def saveTrainingData(model, hdf5, data, view_names=None, sample_names=None, feature_names=None, likelihoods=None):
     """ Method to save the training data in an hdf5 file
     
     PARAMETERS
@@ -414,11 +414,11 @@ def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_na
     sample_names: list with sample names as characters. If None, no sample names will be saved
     feature_names: list with feature names as characters. If None, no feature names will be saved
     """
-    data = model.getTrainingData()
+    # data = model.getTrainingData()
 
     # Make sure that missing values are masked
-    for i in range(len(data)):
-        data[i].data[data[i].mask] = np.nan
+    # for i in range(len(data)):
+    #     data[i].data[data[i].mask] = np.nan
 
     data_grp = hdf5.create_group("data")
     samples_grp = hdf5.create_group("samples")
@@ -433,13 +433,16 @@ def saveTrainingData(model, hdf5, view_names=None, sample_names=None, feature_na
 
     for m in range(len(data)):
         view = view_names[m] if view_names is not None else str(m)
-        data_grp.create_dataset(view, data=data[m].data.T)
-        intercept_grp.create_dataset(view, data=model.getNodes()["Y"].nodes[m].means)
+        data_grp.create_dataset(view, data=data[m].T)
+        if likelihoods[m] is "gaussian":
+            intercept_grp.create_dataset(view, data=np.nanmean(data[m],axis=0))
+        else:
+            intercept_grp.create_dataset(view, data=model.getNodes()["Y"].nodes[m].means)
         if feature_names is not None:
             features_grp.create_dataset(view, data=np.array(feature_names[m], dtype='S50'))
         
 
-def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_names=None, feature_names=None):
+def saveModel(model, data, outfile, train_opts, model_opts, view_names=None, sample_names=None, feature_names=None):
     """ Method to save the model in an hdf5 file
     
     PARAMETERS
@@ -485,7 +488,7 @@ def saveModel(model, outfile, train_opts, model_opts, view_names=None, sample_na
     saveModelOpts(model_opts,hdf5)
 
     # Save training data
-    saveTrainingData(model, hdf5, view_names, sample_names, feature_names, model_opts["likelihoods"])
+    saveTrainingData(model, hdf5, data, view_names, sample_names, feature_names, model_opts["likelihoods"])
 
     # Close HDF5 file
     hdf5.close()

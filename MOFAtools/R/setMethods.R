@@ -227,6 +227,9 @@ setMethod("viewNames<-", signature(object="MOFAmodel", value="character"),
       for (node in multiview_nodes) { 
         names(object@Expectations[[node]]) <- value 
       }
+      if (methods::.hasSlot(object,"FeatureIntercepts") & length(object@FeatureIntercepts)==0) {
+        names(object@FeatureIntercepts) <- value
+      }
     }
     
     names(object@TrainData) <- value

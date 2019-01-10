@@ -6,7 +6,7 @@ import sys
 def setup_package():
   install_requires = ['pandas', 'scipy', 'numpy', 'sklearn', 'argparse', 'h5py']
   metadata = dict(
-      name = 'MOFA',
+      name = 'mofapy',
       version = '1.0',
       description = 'Multi-Omics Factor Analysis',
       url = 'https://github.com/PMBio/MOFA',

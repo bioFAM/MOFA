@@ -168,7 +168,7 @@ def qcData(data):
         # Detect features with no variance
         var = data[m].std(axis=0) 
         if np.any(var==0.):
-            print("Warning: %d features(s) on view %d have zero variance. Please, remove lowly variable features for each omic separately, they can cause numerical issues." % ( (var==0.).sum(),m) )
+            print("Error: %d features(s) on view %d have zero variance. Please, remove lowly variable features for each omic separately, they can cause numerical issues." % ( (var==0.).sum(),m) )
             sys.stdout.flush()
             exit()
 

@@ -193,15 +193,29 @@ class Poisson_PseudoY_Seeger(PseudoY_Seeger):
         # self.E[mask] = s.nan
 
     def calculateELBO(self):
-        # Compute Lower Bound using the Poisson likelihood with observed data
-        Z = self.markov_blanket["Z"].getExpectation()
-        SW = self.markov_blanket["SW"].getExpectation()
-        mask = self.getMask()
-        tmp = self.ratefn(s.dot(Z,SW.T))
-        lb = self.obs.data*s.log(tmp) - tmp
-        lb[mask] = 0.
+        """ Compute Lower Bound """
 
-        return lb.sum()
+        Wtmp = self.markov_blanket["SW"].getExpectations()
+        Ztmp = self.markov_blanket["Z"].getExpectations()
+        W, WW = Wtmp["E"], Wtmp["ESWW"]
+        Z, ZZ = Ztmp["E"], Ztmp["E2"]
+        zeta = self.params["zeta"]
+        tau = self.markov_blanket["Tau"].getValue() # to-do: not expand
+        mask = self.getMask()
+
+        # Precompute terms
+        ZW = Z.dot(W.T)
+        ZZWW = s.square(ZW) - s.dot(s.square(Z),s.square(W).T) + ZZ.dot(WW.T)
+
+        # term1 = 0.5*tau*(ZW - zeta)**2
+        term1 = 0.5*tau*(ZZWW - 2*ZW*zeta + s.square(zeta))
+        term2 = (ZW - zeta)*(sigmoid(zeta)*(1-self.obs/self.ratefn(zeta)))
+        term3 = self.ratefn(zeta) - self.obs*s.log(self.ratefn(zeta))
+
+        elbo = -(term1 + term2 + term3)
+        elbo[mask] = 0.
+
+        return elbo.sum()
 
 class Bernoulli_PseudoY_Seeger(PseudoY_Seeger):
     """

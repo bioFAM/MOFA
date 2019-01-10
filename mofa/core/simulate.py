@@ -107,12 +107,7 @@ class Simulate(object):
         """ Initialisation of noise precision"""
         return [ uniform.rvs(loc=1,scale=3,size=self.D[m]) for m in range(self.M) ]
 
-    def initMu(self):
-        """ Initialisation of hyperprior means of latent variables"""
-        # Means are initialised to zero by default
-        return [ s.zeros(self.D[m]) for m in range(self.M) ]
-
-    def generateData(self, W, Z, Tau, Mu, likelihood, missingness=0.0, missing_view=False):
+    def generateData(self, W, Z, Tau, likelihood, missingness=0.0, missing_view=False):
         """ Initialisation of observations 
 
         PARAMETERS
@@ -120,7 +115,6 @@ class Simulate(object):
         W (list of length M where each element is a np array with shape (Dm,K)): weights
         Z (np array with shape (N,K): latent variables
         Tau (list of length M where each element is a np array with shape (Dm,)): precision of the normally-distributed noise
-        Mu (list of length M where each element is a np array with shape (Dm,)): feature-wise means
         likelihood (str): type of likelihood
         missingness (float): percentage of missing values
         """
@@ -131,19 +125,13 @@ class Simulate(object):
         if likelihood == "gaussian":
             # Vectorised
             for m in range(self.M):
-                F[m] = s.dot(Z,W[m].T) + Mu[m] + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m]), size=[self.N, self.D[m]])
+                F[m] = s.dot(Z,W[m].T) + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m]), size=[self.N, self.D[m]])
                 Y[m] = F[m]
             # Non-vectorised, slow
             # for m in range(self.M):
                 # for n in range(self.N):
                     # for d in range(self.D[m]):
-                        # Y[m][n,d] = s.dot(Z[n,:],W[m][d,:].T) + Mu[m][d] + norm.rvs(loc=0,scale=1/s.sqrt(Tau[m][d]))
-
-        elif likelihood == "warp":
-            raise NotImplementedError()
-            # for m in range(self.M):
-            #     Y[m] = s.exp(s.dot(Z,W[m].T) + Mu[m] + norm.rvs(loc=0, scale=1/s.sqrt(Tau[m]), size=[self.N, self.D[m]]))
-
+                        # Y[m][n,d] = s.dot(Z[n,:],W[m][d,:].T) + norm.rvs(loc=0,scale=1/s.sqrt(Tau[m][d]))
 
         # Sample observations using a poisson likelihood
         elif likelihood == "poisson":

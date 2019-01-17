@@ -13,7 +13,9 @@ For more details you can read our paper: http://msb.embopress.org/cgi/doi/10.152
 
 
 ## News
+- 10/01/2019 Python package uploaded to PyPy
 - 21/06/2018 Beta version released
+- 20/06/2018 Paper published: http://msb.embopress.org/content/14/6/e8124
 - 10/11/2017 We created a Slack group to provide personalised help on running and interpreting MOFA, [this is the link](https://join.slack.com/t/mofahelp/shared_invite/enQtMjcxNzM3OTE3NjcxLTkyZmE5YzNiMDc4OTkxYWExYWNlZTRhMWI2OWNkNzhmYmNlZjJiMjA4MjNiYjI2YTc4NjExNzU2ZTZiYzQyNjY)
  
 
@@ -21,7 +23,11 @@ For more details you can read our paper: http://msb.embopress.org/cgi/doi/10.152
 MOFA is run exclusively from R, but it requires some python dependencies that you need to install. Here is how to do it:
 
 ### Python dependencies 
-We are on the process of uploading it to PyPI. For now, you can install it using:
+We have uploaded the package to PyPI. You can install the python dependencies by:
+```r
+pip install mofapy
+``` 
+Alternatively, you can install it directly from github by:
 ```r
 pip install git+git://github.com/bioFAM/MOFA
 ```
@@ -50,10 +56,6 @@ We currently provide three example workflows:
 * [Integration of multi-omics cancer data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_CLL.html): a cohort of 200 chronic lymphocytic leukaemia patients. This is the main data set analysed in the [paper](http://msb.embopress.org/cgi/doi/10.15252/msb.20178124). 
 * [Integration of single-cell multi-omics data](http://htmlpreview.github.io/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_scMT.html): single-cell profiling of DNA methylation and RNA expression in roughly 100 pluripotent stem cells.
 * [Model selection and robustness with simulated data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_simulated.html): this tutorial is focused only on how to perform model selection and assess robustness.
-
-We are preparing the following workflows, to be released soon:
-* Imputation.
-* Prediction of clinical covariates.
 
 If there is any tutorial that you would like us to do, or if you want to share your analysis with MOFA, please contact us.
 
@@ -140,6 +142,9 @@ Please refer to the vignettes or the paper for details on the different analysis
 
 ## Frequently asked questions
 
+**(Q) How do I normalise the data?**
+Always try to remove any technical source of variability before fitting the model. For count-based data such as RNA-seq or ATAC-seq we strongly recommend size factor normalisation + variance stabilisation. For microarray DNA methylation data, make sure that samples have no differences in the same average intensity. If this is not done correctly, the model will learn a very strong Factor 1 that will capture this variability, and more subtle sources of variation will be harder to identify.
+
 **(Q) I get the following error when installing the R package:**
 ```
 ERROR: dependencies 'pcaMethods', 'MultiAssayExperiment' are not available for package 'MOFAtools'
@@ -168,7 +173,7 @@ use_python("YOUR_PYTHON_PATH", required=TRUE)
 You can also use `use_conda` instead of `use_python` if you work with conda environments. Read more about the [reticulate](https://rstudio.github.io/reticulate/) package and [how it integrates Python and R](https://rstudio.github.io/reticulate/articles/versions.html)
 
 **(Q) I hate R, can I do MOFA only with Python?**  
-Only half of the way. You can use Python to train the model. See [this template script](https://github.com/bioFAM/MOFA/blob/master/mofa/run/python_template.py). However, we currently do not provide downstream analysis functions in Python. We strongly recommend that you use our MOFAtools R package for this.
+Nop. You can use Python to train the model, see [this template script](https://github.com/bioFAM/MOFA/blob/master/mofa/run/python_template.py). However, we currently do not provide downstream analysis functions in Python. We strongly recommend that you use our MOFAtools R package for this.
 
 **(Q) How many factors should I use?**  
 Similar to Principal Component Analysis and other factor models, this is a hard question to answer. It depends on the data set and the aim of the analysis. As a general rule, the bigger the data set, the higher the number of factors that you will retrieve, and the less the variance that will be explained per factor.
@@ -179,8 +184,7 @@ Yes, but a hyperparameter needs to be provided. The user needs to specify a mini
 If you have no idea on what to expect, it is better to start with a fixed number of factors.
 
 **(Q) Can I put known covariates in the model?**  
-Combining unknown factors learnt by the model with known covariates is technically possible, but we extensively tested this functionality and it was not yielding good results. The reason is that covariates are usually discrete labels that do not reflect the underlying continuous biology. In addition, some samples might have wrong or imperfect annotations. This could completely mess up the model. What we recommend is that you learn the factors and then relate them to the covariates via visualisation or via a simple correlation analysis. If your covariate of interest is indeed an important driver of variability, do not worry, MOFA will find it!
-
+Combining unknown factors learnt by the model with known covariates is technically possible, but we extensively tested this functionality and it was not yielding good results. The reason is that covariates are usually discrete labels that do not reflect the underlying continuous biology. In addition, some samples might have wrong or imperfect annotations. This could completely mess up the model. What we recommend is that you learn the factors in a completely unsupervised manner and then relate them to the covariates via visualisation or via a simple correlation analysis (see our vignettes). If your covariate of interest is indeed an important driver of variability, do not worry, MOFA will find it!
 
 **(Q) Should I do any filtering to the input data?**  
 You must remove features with zero variance and ideally also features with low variance, as they can cause numerical issues in the model. In practice we generally select the top N most variable features per assay

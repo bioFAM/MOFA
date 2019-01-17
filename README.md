@@ -142,7 +142,7 @@ Please refer to the vignettes or the paper for details on the different analysis
 
 ## Frequently asked questions
 
-**(Q) How do I normalise the data?**
+**(Q) How do I normalise the data?**  
 Always try to remove any technical source of variability before fitting the model. For count-based data such as RNA-seq or ATAC-seq we strongly recommend size factor normalisation + variance stabilisation. For microarray DNA methylation data, make sure that samples have no differences in the same average intensity. If this is not done correctly, the model will learn a very strong Factor 1 that will capture this variability, and more subtle sources of variation will be harder to identify.
 
 **(Q) I get the following error when installing the R package:**

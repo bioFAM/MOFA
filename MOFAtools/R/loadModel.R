@@ -125,7 +125,7 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
     object@FeatureIntercepts <- tryCatch( {
         h5read(file,"intercept")[names(object@TrainData)]
     }, error = function(x) {
-        print("Could not load the intercepts, the model you are loading might be out-dated. It will be updated to the new version.")
+        print("Could not load the feature intercepts. Your features will be centered to zero mean")
         list()
     })
     

@@ -50,7 +50,7 @@ runMOFA <- function(object, outfile=NULL) {
   mofa <- tryCatch({
     import("mofapy")
   }, error = function(err) {
-    import("mofa")}
+    import("mofa") }
   )
   mofa_entrypoint <- mofa$core.entry_point$entry_point()
   

@@ -80,15 +80,13 @@ class entry_point():
       print("Loaded view %d with %d samples and %d features..." % (m, data[m].shape[0], data[m].shape[1]))
 
     # Doing QC on the data
-    data = qcData(data)
+    self.data = qcData(data)
 
     # Save dimensionalities
-    self.dimensionalities["M"] = len(data)
-    self.dimensionalities["N"] = data[0].shape[0]
-    self.dimensionalities["D"] = [data[m].shape[1] for m in range(len(data))]
+    self.dimensionalities["M"] = len(self.data)
+    self.dimensionalities["N"] = self.data[0].shape[0]
+    self.dimensionalities["D"] = [self.data[m].shape[1] for m in range(len(self.data))]
 
-    self.unprocessed_data = data.copy()
-    self.data = data
 
   def parse_data(self):
     """ Method to parse the data """
@@ -434,7 +432,7 @@ class entry_point():
 
     # Save the model
     saveModel(self.model, 
-      data=self.unprocessed_data,
+      data=self.data,
       outfile=outfile, 
       view_names=self.data_opts['view_names'],
       sample_names=sample_names, 

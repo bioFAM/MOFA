@@ -415,7 +415,6 @@ class entry_point():
 
     # Sanity checks
     assert hasattr(self, 'data'), "Data has to be defined before training the model"
-    assert hasattr(self, 'unprocessed_data'), "unprocessed_data has to be defined before training the model"
     assert hasattr(self, 'model'), "No trained model found"
 
     # Create output directory

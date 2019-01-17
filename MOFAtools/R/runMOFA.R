@@ -47,10 +47,11 @@ runMOFA <- function(object, outfile=NULL) {
     stop("The model is already trained! If you want to retrain, create a new untrained MOFAmodel")
   
   # Initiate reticulate
-  mofa <- try(import("mofapy"))
-  if (class(mofa) == "try-error") {
-    mofa <- try(import("mofa"))
-  }
+  mofa <- tryCatch({
+    import("mofapy")
+  }, error = function(err) {
+    import("mofa")}
+  )
   mofa_entrypoint <- mofa$core.entry_point$entry_point()
   
   # Pass data

@@ -12,7 +12,7 @@ def setup_package():
       url = 'https://github.com/PMBio/MOFA',
       author = 'Ricard Argelaguet, Damien Arnol and Britta Velten',
       author_email = 'ricard.argelaguet@gmail.com',
-      license = 'MIT',
+      license = 'LGPL-3.0',
       packages = find_packages(),
       install_requires = install_requires
     )

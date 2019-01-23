@@ -4,8 +4,8 @@
 \alias{plotDataHeatmap}
 \title{Plot heatmap of relevant features}
 \usage{
-plotDataHeatmap(object, view, factor, features = 50, includeWeights = FALSE,
-  transpose = FALSE, imputed = FALSE, ...)
+plotDataHeatmap(object, view, factor, features = 50,
+  includeWeights = FALSE, transpose = FALSE, imputed = FALSE, ...)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}

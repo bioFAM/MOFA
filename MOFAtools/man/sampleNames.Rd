@@ -3,7 +3,6 @@
 \docType{methods}
 \name{sampleNames}
 \alias{sampleNames}
-\alias{sampleNames}
 \alias{sampleNames<-}
 \alias{sampleNames,MOFAmodel-method}
 \alias{sampleNames<-,MOFAmodel,vector-method}

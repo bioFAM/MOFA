@@ -3,7 +3,6 @@
 \docType{methods}
 \name{featureNames}
 \alias{featureNames}
-\alias{featureNames}
 \alias{featureNames<-}
 \alias{featureNames,MOFAmodel-method}
 \alias{featureNames<-,MOFAmodel,list-method}

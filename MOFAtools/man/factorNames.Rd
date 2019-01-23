@@ -3,7 +3,6 @@
 \docType{methods}
 \name{factorNames}
 \alias{factorNames}
-\alias{factorNames}
 \alias{factorNames<-}
 \alias{factorNames,MOFAmodel-method}
 \alias{factorNames<-,MOFAmodel,vector-method}

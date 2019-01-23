@@ -3,7 +3,6 @@
 \docType{methods}
 \name{viewNames}
 \alias{viewNames}
-\alias{viewNames}
 \alias{viewNames<-}
 \alias{viewNames,MOFAmodel-method}
 \alias{viewNames<-,MOFAmodel,character-method}

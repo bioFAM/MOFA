@@ -5,7 +5,8 @@
 \title{Pairwise scatterplots of multiple latent factors}
 \usage{
 plotFactorScatters(object, factors = "all", showMissing = TRUE,
-  color_by = NULL, name_color = "", shape_by = NULL, name_shape = "")
+  color_by = NULL, name_color = "", shape_by = NULL,
+  name_shape = "")
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}

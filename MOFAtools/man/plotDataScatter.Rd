@@ -5,7 +5,8 @@
 \title{Scatterplots of feature values against latent factors}
 \usage{
 plotDataScatter(object, view, factor, features = 10, color_by = NULL,
-  name_color = "", shape_by = NULL, name_shape = "", showMissing = TRUE)
+  name_color = "", shape_by = NULL, name_shape = "",
+  showMissing = TRUE)
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}

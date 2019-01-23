@@ -8,7 +8,7 @@ makeExampleData(n_views = 3, n_features = 100, n_samples = 50,
   n_factors = 5, likelihood = "gaussian")
 }
 \arguments{
-\item{n_views}{number of views to simulate}
+\item{n_views}{number of views}
 
 \item{n_features}{number of features in each view}
 
@@ -16,7 +16,7 @@ makeExampleData(n_views = 3, n_features = 100, n_samples = 50,
 
 \item{n_factors}{number of factors}
 
-\item{likelihood}{likelihood for each view, one of "gaussian", "bernoulli", "poisson"
+\item{likelihood}{likelihood for each view, one of "gaussian", "bernoulli", "poisson",
 or a character vector of length n_views}
 }
 \value{

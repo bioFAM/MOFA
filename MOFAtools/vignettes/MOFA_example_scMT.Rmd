@@ -21,6 +21,7 @@ The data is stored as a `MultiAssayExperiment` object.
 Notice that there are 4 views, one with normalized RNA expression assay and 3 views with DNA methylation information. Each DNA methylation view is a different genomic context (i.e. Enhancers, Promoters and CpG Islands) and each feature is an individual CpG site.
 ```{r, warning=FALSE, message=FALSE}
 library(MOFAtools)
+library(MOFAdata)
 library(ggplot2)
 ```
 
@@ -108,7 +109,7 @@ MOFAobject <- runMOFA(MOFAobject)
 ```
 
 ```{r}
-filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFAobject <- loadModel(filepath, MOFAobject)
 MOFAobject
 ```

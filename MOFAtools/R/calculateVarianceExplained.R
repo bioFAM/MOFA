@@ -33,7 +33,7 @@
 calculateVarianceExplained <- function(object, views = "all", factors = "all") {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   
   # Define views
   if (paste0(views,sep="",collapse="") =="all") { 

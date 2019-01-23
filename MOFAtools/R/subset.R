@@ -24,7 +24,7 @@
 subsetFactors <- function(object, factors) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(factors) <= object@Dimensions[["K"]])
 
     # Get factors
@@ -79,7 +79,7 @@ subsetFactors <- function(object, factors) {
 subsetSamples <- function(object, samples) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(samples) <= object@Dimensions[["N"]])
   # warning("Warning: removing samples is fine for an exploratory analysis...\nbut we recommend removing them before training!\n")
   
@@ -133,7 +133,7 @@ subsetSamples <- function(object, samples) {
 subsetViews <- function(object, views) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(views) <= object@Dimensions[["N"]])
   warning("Removing views is fine for an exploratory analysis,\n
           but we recommend removing them before training!\n")

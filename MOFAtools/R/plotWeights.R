@@ -134,7 +134,7 @@ plotWeights <- function(object, view, factor, nfeatures=10,
 
   # Get manual features to color by
   if (!is.null(manual)) { 
-    stopifnot(class(manual)=="list")
+    stopifnot(is(manual, "list"))
     stopifnot(all(Reduce(intersect,manual) %in% featureNames(object)[[view]]))  
   }
   
@@ -152,7 +152,7 @@ plotWeights <- function(object, view, factor, nfeatures=10,
   # if(nfeatures=="all") {
   #   nfeatures <- nrow(W)
   # } else {
-  #   stopifnot(class(nfeatures)=="numeric")
+  #   stopifnot(is(nfeatures, "numeric"))
   # }
   # W <- head(W[order(abs(W$value), decreasing=TRUE),], n=nfeatures)
     
@@ -166,11 +166,11 @@ plotWeights <- function(object, view, factor, nfeatures=10,
   # Define group of features to label manually
   if(!is.null(manual)) {
     if (is.null(color_manual)) {
-      color_manual <- hcl(h = seq(15, 375, length = length(manual) + 1), l = 65, c = 100)[1:length(manual)]
+      color_manual <- hcl(h = seq(15, 375, length = length(manual) + 1), l = 65, c = 100)[seq_along(manual)]
     } else {
       stopifnot(length(color_manual)==length(manual)) 
     }
-    for (m in 1:length(manual)) {
+    for (m in seq_along(manual)) {
       W$group[W$feature %in% manual[[m]]] <- as.character(m+1)
     }
   }
@@ -269,7 +269,7 @@ plotTopWeights <- function(object, view, factor, nfeatures = 10, abs = TRUE, sca
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(view %in% viewNames(object))
-  # if(!is.null(manual_features)) { stopifnot(class(manual_features)=="list")
+  # if(!is.null(manual_features)) { stopifnot(is(manual_features, "list"))
   # stopifnot(all(Reduce(intersect,manual_features) %in% featureNames(object)[[view]]))  }
   
   # Collect expectations  

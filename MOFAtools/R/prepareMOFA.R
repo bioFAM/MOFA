@@ -88,13 +88,13 @@ prepareMOFA <- function(object, DataOptions = NULL, ModelOptions = NULL, TrainOp
   }
   
   # Make sure that there are no features with zero variance
-  for (m in 1:length(object@TrainData)) {
-      if (!all(apply(object@TrainData[[m]],1,var,na.rm=T)>0, na.rm=T))
+  for (m in seq_along(object@TrainData)) {
+      if (!all(apply(object@TrainData[[m]],1,var,na.rm=TRUE)>0, na.rm=TRUE))
         sprintf("Error: there are features with zero variance in view '%s', please remove them and create a new MOFAobject",viewNames(object)[m])
   }
   
   # Store feature-wise means
-  object@FeatureIntercepts <- lapply(object@TrainData,rowMeans,na.rm=T)
+  object@FeatureIntercepts <- lapply(object@TrainData,rowMeans,na.rm=TRUE)
   
   return(object)
 }

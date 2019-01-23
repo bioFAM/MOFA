@@ -50,7 +50,7 @@ predict <- function(object, views = "all", factors = "all",
                     type = c("inRange","response", "link")) {
 
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   
   # Get views  
   if (is.numeric(views)) {

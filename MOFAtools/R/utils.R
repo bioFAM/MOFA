@@ -19,7 +19,7 @@
 
 # Function to update old models
 .updateOldModel <- function(object) {
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")  
   
   # Update node names
   if ("SW" %in% names(object@Expectations)) {
@@ -115,7 +115,7 @@
 # .detectInterceptFactors <- function(object, cor_threshold = 0.75) {
 #   
 #   # Sanity checks
-#   if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
+#   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")  
 #   
 #   # Fetch data
 #   data <- getTrainData(object)
@@ -151,7 +151,7 @@ subset_augment <- function(mat, pats) {
 .detectPassengers <- function(object, views = "all", factors = "all", r2_threshold = 0.02) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   
   # Define views
   if (paste0(views,sep="",collapse="") =="all") { 

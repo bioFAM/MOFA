@@ -86,17 +86,17 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
         if (length(features)>0) {
             for (m in names(TrainData)) colnames(TrainData[[m]]) <- features[[m]]
         } else {
-            for (m in names(TrainData)) colnames(TrainData[[m]]) <- paste0("feature_",1:ncol(TrainData[[m]]),"_",m )
+            for (m in names(TrainData)) colnames(TrainData[[m]]) <- paste0("feature_", seq_len(ncol(TrainData[[m]])),"_",m )
         }
         
         # Add sample names
         if (length(samples)>0) {
-            if(class(samples) != "list") samples <- list(samples=samples) # for compatibility with older verisons
+            if(!is(samples, "list")) samples <- list(samples=samples) # for compatibility with older verisons
             for (m in names(TrainData))
             rownames(TrainData[[m]]) <- samples[[1]]
         } else {
             for (m in names(TrainData))
-            rownames(TrainData[[m]]) <- paste0("sample_",1:nrow(TrainData[[m]]))
+            rownames(TrainData[[m]]) <- paste0("sample_",seq_len(nrow(TrainData[[m]])))
         }
         
         # Transpose the data so that rows are features and columns are samples
@@ -142,7 +142,7 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
     viewNames(object) <- as.character(names(object@TrainData))
     sampleNames(object) <- as.character(colnames(object@TrainData[[1]]))
     featureNames(object) <- lapply(object@TrainData, function(x) as.character(rownames(x)))
-    factorNames(object) <- paste0("LF",as.character(1:object@Dimensions[["K"]]))
+    factorNames(object) <- paste0("LF",as.character(seq_len(object@Dimensions[["K"]])))
     
     # Add names to likelihood vector
     names(object@ModelOptions$likelihood) <- viewNames(object)
@@ -156,7 +156,7 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
         " factors that are constant zero from the model...")
     }
     object <- subsetFactors(object, nonzero_factors)
-    factorNames(object) <- paste0("LF",as.character(1:length(nonzero_factors)))
+    factorNames(object) <- paste0("LF",as.character(seq_len(length(nonzero_factors))))
     
     
     # Parse factors: Mask passenger samples
@@ -167,8 +167,8 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
     if (sortFactors == TRUE) {
         r2 <- rowSums(calculateVarianceExplained(object)$R2PerFactor)
         order_factors <- order(r2, decreasing = TRUE)
-        object <- subsetFactors(object,order_factors)
-        factorNames(object) <- paste0("LF",c(1:object@Dimensions$K) )
+        object <- subsetFactors(object, order_factors)
+        factorNames(object) <- paste0("LF", seq_len(object@Dimensions$K))
     }
     
     # Do quality control on the model

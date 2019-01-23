@@ -21,7 +21,7 @@
 #' getDimensions(MOFAobject)
 
 getDimensions <- function(object) {
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")  
   return(object@Dimensions)
 }
 
@@ -164,8 +164,8 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
   } else { stopifnot(all(views %in% viewNames(object))) }
   
   # Get features
-  if (class(features)=="list") {
-    stopifnot(all(vapply(1:length(features),
+  if (is(features, "list")) {
+    stopifnot(all(vapply(seq_along(features),
                          function(i) all(features[[i]] %in% featureNames(object)[[views[i]]]), logical(1))))
   } else {
     if (paste0(features,collapse="") == "all") { 
@@ -177,7 +177,7 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
   
   # Fetch data
   trainData <- object@TrainData[views]
-  trainData <- lapply(1:length(trainData), function(m) trainData[[m]][features[[m]],,drop=FALSE])
+  trainData <- lapply(seq_along(trainData), function(m) trainData[[m]][features[[m]],,drop=FALSE])
   names(trainData) <- views
   
   # Convert to long data frame
@@ -238,8 +238,8 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
   }
   
   # Get features
-  if (class(features)=="list") {
-    stopifnot(all(vapply(1:length(features), function(i) all(features[[i]] %in% featureNames(object)[[views[i]]]), logical(1))))
+  if (is(features, "list")) {
+    stopifnot(all(vapply(seq_along(features), function(i) all(features[[i]] %in% featureNames(object)[[views[i]]]), logical(1))))
   } else {
     if (paste0(features,collapse="") == "all") { 
       features <- featureNames(object)[views]
@@ -250,7 +250,7 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
   
   # Fetch imputed data
   ImputedData <- object@ImputedData[views]
-  ImputedData <- lapply(1:length(ImputedData),
+  ImputedData <- lapply(seq_along(ImputedData),
                         function(m) ImputedData[[m]][features[[m]],,drop=FALSE]) 
   names(ImputedData) <- views
   
@@ -302,7 +302,7 @@ getCovariates <- function(object, covariate) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
-  if(class(object@InputData) != "MultiAssayExperiment") {
+  if(!is(object@InputData, "MultiAssayExperiment")) {
     stop("To work with covariates, InputData has to be specified in form of a MultiAssayExperiment")
   }
   
@@ -464,7 +464,7 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
 #' getELBO(MOFAobject)
 
 getELBO <- function(object) {
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")  
   return(tail(object@TrainStats$elbo,1))
 }
 

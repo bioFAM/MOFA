@@ -89,7 +89,7 @@ runEnrichmentAnalysis <- function(object, view,
   stopifnot( all(apply(Z,2,var, na.rm=TRUE)>0) )
     
   # turn feature.sets into binary membership matrices if provided as list
-  if(class(feature.sets) == "list") {
+  if(is(feature.sets, "list")) {
     features <- Reduce(union, feature.sets)
     feature.sets <- vapply(names(feature.sets), function(nm) {
       tmp <- features %in% feature.sets[[nm]]
@@ -99,7 +99,7 @@ runEnrichmentAnalysis <- function(object, view,
     feature.sets <-t(feature.sets)*1
   }
 
-  if(!(class(feature.sets)=="matrix" & all(feature.sets %in% c(0,1)))) 
+  if(!(is(feature.sets,"matrix") & all(feature.sets %in% c(0,1)))) 
     stop("feature.sets has to be a list or a binary matrix.")
   
   # Check if some features do not intersect between the feature sets and the observed data and remove them
@@ -130,7 +130,7 @@ runEnrichmentAnalysis <- function(object, view,
   if (statistical.test == "permutation") {
     doParallel::registerDoParallel(cores=cores)
     	
-    null_dist_tmp <- foreach(rnd=1:nperm) %dopar% {
+    null_dist_tmp <- foreach(rnd= seq_len(nperm)) %dopar% {
       perm <- sample(ncol(data))
       # Permute rows of the weight matrix to obtain a null distribution
       W_null <- W[perm,]
@@ -141,7 +141,7 @@ runEnrichmentAnalysis <- function(object, view,
       
       # Compute null statistic
       s.null <- .pcgse(data=data_null, prcomp.output=list(rotation=W_null, x=Z),
-                       pc.indexes=1:length(factors), feature.sets=feature.sets,
+                       pc.indexes=seq_along(factors), feature.sets=feature.sets,
                        feature.statistic=local.statistic,
                       transformation=transformation,
                       feature.set.statistic=global.statistic,
@@ -153,7 +153,7 @@ runEnrichmentAnalysis <- function(object, view,
     
     # Compute true statistics
     s.true <- .pcgse(data=data, prcomp.output=list(rotation=W, x=Z),
-                     pc.indexes=1:length(factors), feature.sets=feature.sets,
+                     pc.indexes=seq_along(factors), feature.sets=feature.sets,
                      feature.statistic=local.statistic,
                      transformation=transformation,
                      feature.set.statistic=global.statistic,
@@ -165,7 +165,7 @@ runEnrichmentAnalysis <- function(object, view,
     warning("A large number of permutations is required for the permutation approach!")
     xx <- array(unlist(null_dist_tmp),
                 dim = c(nrow(null_dist_tmp[[1]]), ncol(null_dist_tmp[[1]]), length(null_dist_tmp)))
-    ll <- lapply(1:nperm, function(i) xx[,,i] > abs(s.true))
+    ll <- lapply(seq_len(nperm), function(i) xx[,,i] > abs(s.true))
     values <- Reduce("+",ll)/nperm
     rownames(p.values) <- rownames(s.true); colnames(p.values) <- factors
 
@@ -173,7 +173,7 @@ runEnrichmentAnalysis <- function(object, view,
   } else {
     p.values <- .pcgse(data=data,
                        prcomp.output=list(rotation=W, x=Z),
-                       pc.indexes=1:length(factors),
+                       pc.indexes=seq_along(factors),
                        feature.sets=feature.sets,
                        feature.statistic=local.statistic,
                        transformation=transformation,
@@ -446,7 +446,7 @@ plotEnrichmentBars <- function(fsea.out, alpha = 0.05) {
   
   # Compute the feature-level statistics.
   feature.statistics = matrix(0, nrow=p, ncol=length(pc.indexes))
-  for (i in 1:length(pc.indexes)) {
+  for (i in seq_along(pc.indexes)) {
     pc.index = pc.indexes[i]
     feature.statistics[,i] = .computefeatureStatistics(data=data,
                                                        prcomp.output=prcomp.output,
@@ -498,7 +498,7 @@ plotEnrichmentBars <- function(fsea.out, alpha = 0.05) {
 # Turn the annotation matrix into a list of var group indexes for the valid sized var groups
 .createVarGroupList = function(var.groups) {
   var.group.indexes = list()  
-  for (i in 1:nrow(var.groups)) {
+  for (i in seq_len(nrow(var.groups))) {
     member.indexes = which(var.groups[i,]==1)
     var.group.indexes[[i]] = member.indexes    
   }
@@ -544,10 +544,10 @@ plotEnrichmentBars <- function(fsea.out, alpha = 0.05) {
   feature.set.statistics = matrix(TRUE, nrow=num.feature.sets, ncol=length(pc.indexes))    
   rownames(feature.set.statistics) = names(feature.set.indexes)    
   
-  for (i in 1:num.feature.sets) {
+  for (i in seq_len(num.feature.sets)) {
     indexes.for.feature.set = feature.set.indexes[[i]]
     m1 = length(indexes.for.feature.set)
-    not.feature.set.indexes = which(!(1:ncol(data) %in% indexes.for.feature.set))
+    not.feature.set.indexes = which(!(seq_len(ncol(data)) %in% indexes.for.feature.set))
     m2 = length(not.feature.set.indexes)
     
     if (cor.adjustment) {      
@@ -559,7 +559,7 @@ plotEnrichmentBars <- function(fsea.out, alpha = 0.05) {
       vif = 1 + (m1 -1)*mean.cor
     }
     
-    for (j in 1:length(pc.indexes)) {
+    for (j in seq_along(pc.indexes)) {
       # get the feature-level statistics for this PC
       pc.feature.stats = feature.statistics[,j]
       # compute the mean difference of the feature-level statistics
@@ -604,10 +604,10 @@ plotEnrichmentBars <- function(fsea.out, alpha = 0.05) {
   feature.set.statistics = matrix(TRUE, nrow=num.feature.sets, ncol=length(pc.indexes))    
   rownames(feature.set.statistics) = names(feature.set.indexes)    
   
-  for (i in 1:num.feature.sets) {
+  for (i in seq_len(num.feature.sets)) {
     indexes.for.feature.set = feature.set.indexes[[i]]
     m1 = length(indexes.for.feature.set)
-    not.feature.set.indexes = which(!(1:ncol(data) %in% indexes.for.feature.set))
+    not.feature.set.indexes = which(!(seq_len(ncol(data)) %in% indexes.for.feature.set))
     m2 = length(not.feature.set.indexes)
     
     if (cor.adjustment) {            
@@ -617,7 +617,7 @@ plotEnrichmentBars <- function(fsea.out, alpha = 0.05) {
       mean.cor = (sum(cor.mat) - m1)/(m1*(m1-1))    
     }
     
-    for (j in 1:length(pc.indexes)) {
+    for (j in seq_along(pc.indexes)) {
       # get the feature-level statistics for this PC
       pc.feature.stats = feature.statistics[,j]
       # compute the rank sum statistic feature-level statistics

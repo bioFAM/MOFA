@@ -31,7 +31,7 @@
 trainCurveFactors <- function(object) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") { stop("'object' has to be an instance of MOFAmodel") }
+  if (!is(object, "MOFAmodel")) { stop("'object' has to be an instance of MOFAmodel") }
   
   # Collect training statistics
   if(is.null(object@TrainOptions$freqdrop)) {
@@ -100,7 +100,7 @@ trainCurveFactors <- function(object) {
 trainCurveELBO <- function(object, logScale = FALSE) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") { 
+  if (!is(object, "MOFAmodel")) { 
     stop("'object' has to be an instance of MOFAmodel") 
     }
   if (object@Status != "trained") { 

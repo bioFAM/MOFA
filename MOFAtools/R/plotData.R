@@ -81,10 +81,10 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
   data <- data[,apply(data, 2, function(x) !all(is.na(x)))]
   
   # Define features
-  if (class(features) == "numeric") {
+  if (is(features, "numeric")) {
     features <- names(tail(sort(abs(W)), n=features))
     stopifnot(all(features %in% featureNames(object)[[view]]))
-  } else if (class(features)=="character") {
+  } else if (is(features, "character")) {
     stopifnot(all(features %in% featureNames(object)[[view]]))
   } else {
     stop("Features need to be either a numeric or character vector")
@@ -183,10 +183,10 @@ plotDataScatter <- function(object, view, factor, features = 10,
   
   
   # Get features
-  if (class(features) == "numeric") {
+  if (is(features, "numeric")) {
     features <- names(tail(sort(abs(W)), n=features))
     stopifnot(all(features %in% featureNames(object)[[view]]))
-  } else if (class(features)=="character") {
+  } else if (is(features,"character")) {
     stopifnot(all(features %in% featureNames(object)[[view]]))
   } else {
     stop("Features need to be either a numeric or character vector")
@@ -206,7 +206,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
       if(color_by %in% Reduce(union,featureNames)) {
         viewidx <- which(vapply(featureNames, function(vnm) color_by %in% vnm, logical(1)))
         color_by <- TrainData[[viewidx]][color_by,]
-      } else if(class(object@InputData) == "MultiAssayExperiment"){
+      } else if(is(object@InputData, "MultiAssayExperiment")){
         color_by <- getCovariates(object, color_by)
       }
       else stop("'color_by' was specified but it was not recognised, please read the documentation")
@@ -233,7 +233,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
       if (shape_by %in% Reduce(union,featureNames)) {
         viewidx <- which(vapply(featureNames, function(vnm) shape_by %in% vnm, logical(1)))
         shape_by <- TrainData[[viewidx]][shape_by,]
-      } else if(class(object@InputData) == "MultiAssayExperiment"){
+      } else if(is(object@InputData, "MultiAssayExperiment")){
         shape_by <- getCovariates(object, shape_by)
       }
       else stop("'shape_by' was specified but it was not recognised, please read the documentation")
@@ -268,7 +268,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
     # ggbeeswarm::geom_quasirandom() +
     stat_smooth(method="lm", color="blue", alpha=0.5) +
     facet_wrap(~feature, scales="free_y") +
-    scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))]) +
+    scale_shape_manual(values=c(19,1,2:18)[seq_along(unique(shape_by))]) +
     theme(plot.margin = margin(20, 20, 10, 10), 
           axis.text = element_text(size = rel(1), color = "black"), 
           axis.title = element_text(size = 16), 
@@ -337,7 +337,7 @@ plotTilesData <- function(object, colors = NULL) {
     palette <- c("#D95F02", "#377EB8", "#E6AB02", "#31A354", "#7570B3", "#E7298A", "#66A61E",
                  "#A6761D", "#666666", "#E41A1C", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33",
                  "#A65628", "#F781BF", "#1B9E77")
-    if (M<17) colors <- palette[1:M] else colors <- rainbow(M)
+    if (M<17) colors <- palette[seq_len(M)] else colors <- rainbow(M)
   }
   if (length(colors)!=M) stop("Length of 'colors' does not match the number of views")
   names(colors) <- viewNames(object)

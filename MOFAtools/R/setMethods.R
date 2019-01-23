@@ -28,12 +28,12 @@
       for (m in views) {
         
         # Loop over expectations
-          if (class(object@Expectations[[node]][[m]]) == "matrix") {
+          if (is(object@Expectations[[node]][[m]], "matrix")) {
             if (nrow(object@Expectations[[node]][[m]]) == dimensionality)
               rownames(object@Expectations[[node]][[m]]) <- values
             if (ncol(object@Expectations[[node]][[m]]) == dimensionality)
               colnames(object@Expectations[[node]][[m]]) <- values
-          } else if (class(object@Expectations[[node]][[m]]) == "array") {
+          } else if (is(object@Expectations[[node]][[m]], "array")) {
             if (length(object@Expectations[[node]][[m]]) == dimensionality)
               names(object@Expectations[[node]][[m]]) <- values
           }
@@ -44,12 +44,12 @@
     } else {
       
       # Loop over expectations
-        if (class(object@Expectations[[node]]) == "matrix") {
+        if (is(object@Expectations[[node]], "matrix")) {
           if (nrow(object@Expectations[[node]]) == dimensionality)
             rownames(object@Expectations[[node]]) <- values
           if (ncol(object@Expectations[[node]]) == dimensionality)
             colnames(object@Expectations[[node]]) <- values
-        } else if (class(object@Expectations[[node]]) == "array") {
+        } else if (is(object@Expectations[[node]], "array")) {
           if (length(object@Expectations[[node]]) == dimensionality)
             names(object@Expectations[[node]]) <- values
         }
@@ -180,7 +180,7 @@ setReplaceMethod("featureNames", signature(object="MOFAmodel", value="list"),
     if (!all(vapply(value, length, numeric(1)) == vapply(object@TrainData, nrow, numeric(1))))
       stop("feature names do not match the dimensionality of the data (columns)")
     
-    for (m in 1:length(object@TrainData)) {
+    for (m in seq_along(object@TrainData)) {
       object <- .setNames(object, value[[m]], object@Dimensions[["D"]][m], names(object@Dimensions[["D"]][m]))
     }
     return(object)

@@ -39,7 +39,7 @@ runMOFA <- function(object, outfile=NULL) {
   } else {
     if (!dir.exists(dirname(outfile))) {
       print("Output directory not found, creating it...")
-      dir.create(dirname(outfile), recursive = T, showWarnings = T)
+      dir.create(dirname(outfile), recursive = TRUE, showWarnings = TRUE)
     }
   }
     

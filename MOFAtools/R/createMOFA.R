@@ -38,8 +38,8 @@ createMOFAobject <- function(data) {
   
   # Set view names
   if(is.null(names(data))) {
-    warning(paste0("View names are not specified in the data, renaming them to: ", paste0("view_",1:length(data), collapse=", "), "\n"))
-    names(data) <- paste("view",1:length(data), sep="_")
+    warning(paste0("View names are not specified in the data, renaming them to: ", paste0("view_", seq_along(data), collapse=", "), "\n"))
+    names(data) <- paste("view", seq_along(data), sep="_")
   }
   
   if (is(data,"MultiAssayExperiment")) {
@@ -62,10 +62,10 @@ createMOFAobject <- function(data) {
   viewNames(object) <- names(data)
   
   # Set feature names
-  for (m in 1:object@Dimensions[["M"]]) {
+  for (m in seq_len(object@Dimensions[["M"]])) {
     if (is.null(rownames(object@TrainData[[m]]))) {
       warning(sprintf("Feature names are not specified for view %d, using default: feature1_v%d,feature2_v%d...\n",m,m,m))
-      rownames(object@TrainData[[m]]) <- paste0("feature_",1:nrow(object@TrainData[[m]]),"_v",m )
+      rownames(object@TrainData[[m]]) <- paste0("feature_", seq_len(nrow(object@TrainData[[m]])),"_v",m )
     }
   }
   
@@ -117,13 +117,13 @@ createMOFAobject <- function(data) {
     }
     warning("Sample names are not specified, using default: sample_1,sample_2...
              Make sure the columns match between data matrices or provide sample names! \n")
-    samples <- paste0("sample_",1:N)
-    for (m in 1:length(data)) { colnames(data[[m]]) <- samples }
+    samples <- paste0("sample_",seq_len(N))
+    for (m in seq_along(data)) { colnames(data[[m]]) <- samples }
   }
   
   # Create ExpressionSet for each assay
   expressionset_list <- list()
-  for (i in 1:length(data)) {
+  for (i in seq_along(data)) {
     expressionset_list[[i]] <- ExpressionSet(assayData=as.matrix(data[[i]]))
   }
   names(expressionset_list) <- names(data)
@@ -151,8 +151,8 @@ createMOFAobject <- function(data) {
 #     }
 #     warning("Sample names are not specified, using default: sample_1,sample_2...
 #              Make sure the columns match between data matrices or provide sample names! \n")
-#     samples <- paste0("sample_",1:N)
-#     for (m in 1:length(data)) { colnames(data[[m]]) <- samples }
+#     samples <- paste0("sample_", seq_len(N))
+#     for (m in seq_along(data)) { colnames(data[[m]]) <- samples }
 #   }
 #   
 #   object@TrainData <- lapply(data, function(view) .subset_augment(view, samples))

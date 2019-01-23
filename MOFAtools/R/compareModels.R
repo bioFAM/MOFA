@@ -51,13 +51,13 @@ compareFactors <- function(models, comparison = "all", show_rownames=FALSE, show
   # Sanity checks
   if(!is.list(models))
     stop("'models' has to be a list")
-  if (!all(vapply(models, function (l) class(l)=="MOFAmodel", logical(1))))
+  if (!all(vapply(models, function (l) is(l, "MOFAmodel"), logical(1))))
     stop("Each element of the the list 'models' has to be an instance of MOFAmodel")
   if (!comparison %in% c("all", "pairwise"))
     stop("'comparison' has to be either 'all' or 'pairwise'")
   
   # give generic names if no names present
-  if(is.null(names(models))) names(models) <- paste("model", 1: length(models), sep="")
+  if(is.null(names(models))) names(models) <- paste("model", seq_along(models), sep="")
   
   # get latent factors
   LFs <- lapply(seq_along(models), function(modelidx){
@@ -170,7 +170,7 @@ compareModels <- function(models, show_modelnames = FALSE) {
   # Sanity checks
   if(!is.list(models))
     stop("'models' has to be a list")
-  if (!all(vapply(models, function (l) class(l)=="MOFAmodel", logical(1))))
+  if (!all(vapply(models, function (l) is(l,"MOFAmodel"), logical(1))))
     stop("Each element of the the list 'models' has to be an instance of MOFAmodel")
 
   elbo_vals <- vapply(models, getELBO, numeric(1))
@@ -213,7 +213,7 @@ selectModel <- function(models, plotit =TRUE) {
   # Sanity checks
   if(!is.list(models))
     stop("'models' has to be a list")
-  if (!all(vapply(models, function (l) class(l)=="MOFAmodel", logical(1))))
+  if (!all(vapply(models, function (l) is(l, "MOFAmodel"), logical(1))))
     stop("Each element of the the list 'models' has to be an instance of MOFAmodel")
 
   elbo_vals <- vapply(models, getELBO, numeric(1))

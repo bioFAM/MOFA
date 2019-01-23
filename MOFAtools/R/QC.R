@@ -36,15 +36,15 @@ qualityControl <- function(object, verbose = FALSE) {
   if (verbose) message("Checking expectations...")
   stopifnot(is.matrix(object@Expectations$Z))
   stopifnot(is.list(object@Expectations$W))
-  stopifnot(all(sapply(object@Expectations$W, is.matrix)))
+  stopifnot(all(vapply(object@Expectations$W, is.matrix, logical(1))))
   stopifnot(is.list(object@Expectations$Y))
-  stopifnot(all(sapply(object@Expectations$Y, is.matrix)))
+  stopifnot(all(vapply(object@Expectations$Y, is.matrix, logical(1))))
   # stopifnot(is.list(object@Expectations$Theta))
-  # stopifnot(all(sapply(object@Expectations$Theta, is.matrix)))
+  # stopifnot(all(vapply(object@Expectations$Theta, is.matrix, logical(1))))
   stopifnot(is.list(object@Expectations$Tau))
-  stopifnot(all(sapply(object@Expectations$Tau, is.numeric)))
+  stopifnot(all(vapply(object@Expectations$Tau, is.numeric, logical(1))))
   stopifnot(is.list(object@Expectations$Alpha))
-  stopifnot(all(sapply(object@Expectations$Alpha, is.numeric)))
+  stopifnot(all(vapply(object@Expectations$Alpha, is.numeric, logical(1))))
   
   # Check that the dimensionalities match
   # TO-DO...

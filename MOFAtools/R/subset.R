@@ -35,15 +35,12 @@ subsetFactors <- function(object, factors) {
 
   # Subset relevant slots
   object@Expectations$Z <- object@Expectations$Z[,factors, drop=FALSE]
-  object@Expectations$Alpha <- sapply(object@Expectations$Alpha,
-                                      function(x) x[factors],
-                                      simplify = FALSE, USE.NAMES = TRUE)
-  object@Expectations$W <- sapply(object@Expectations$W,
-                                  function(x) x[,factors, drop=FALSE],
-                                  simplify = FALSE, USE.NAMES = TRUE)
-  object@Expectations$Theta <- sapply(object@Expectations$Theta,
-                                      function(x) x[factors],
-                                      simplify = FALSE, USE.NAMES = TRUE)
+  object@Expectations$Alpha <- lapply(object@Expectations$Alpha,
+                                      function(x) x[factors])
+  object@Expectations$W <- lapply(object@Expectations$W,
+                                  function(x) x[,factors, drop=FALSE])
+  object@Expectations$Theta <- lapply(object@Expectations$Theta,
+                                      function(x) x[factors])
 
   # Modify dimensionality
   object@Dimensions[["K"]] <- length(factors)
@@ -95,15 +92,12 @@ subsetSamples <- function(object, samples) {
   
   # Subset relevant slots
   object@Expectations$Z <- object@Expectations$Z[samples,, drop=FALSE]
-  object@Expectations$Y <- sapply(object@Expectations$Y, function(x) x[samples,],
-                                  simplify = FALSE, USE.NAMES = TRUE)
-  object@TrainData <- sapply(object@TrainData, function(x) x[,samples],
-                             simplify = FALSE, USE.NAMES = TRUE)
+  object@Expectations$Y <- lapply(object@Expectations$Y, function(x) x[samples,])
+  object@TrainData <- lapply(object@TrainData, function(x) x[,samples])
   if (length(object@InputData)>0)
     object@InputData <- object@InputData[,samples,]
   if (length(object@ImputedData)==0)
-    object@ImputedData <- sapply(object@ImputedData, function(x) x[,samples],
-                                 simplify = FALSE, USE.NAMES = TRUE)
+    object@ImputedData <- lapply(object@ImputedData, function(x) x[,samples])
 
   # Modify dimensionality
   object@Dimensions[["N"]] <- length(samples)

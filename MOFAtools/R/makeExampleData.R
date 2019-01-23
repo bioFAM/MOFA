@@ -35,18 +35,18 @@ makeExampleData <- function(n_views=3, n_features=100, n_samples = 50,
   theta <- 0.5
   
   # set ARD prior, each factor being active in at least one view
-  alpha <- sapply(1:n_factors, function(fc) {
+  alpha <- vapply(1:n_factors, function(fc) {
     active_vw <- sample(1:n_views,1)
     alpha_fc <- sample(c(1, 1000), n_views, replace = TRUE)
     if(all(alpha_fc==1000)) alpha_fc[active_vw] <- 1
     alpha_fc
-  })
+  }, numeric(n_views))
   alpha <- matrix(alpha, nrow=n_factors, ncol=n_views, byrow=T)
   
   # simulate weights 
   S <- lapply(1:n_views, function(vw) matrix(rbinom(n_features*n_factors, 1, theta),
                                              nrow=n_features, ncol=n_factors))
-  W <- lapply(1:n_views, function(vw) sapply(1:n_factors, function(fc) rnorm(n_features, 0, sqrt(1/alpha[fc,vw]))))
+  W <- lapply(1:n_views, function(vw) vapply(1:n_factors, function(fc) rnorm(n_features, 0, sqrt(1/alpha[fc,vw])), numeric(n_features)))
   
   # set noise level (for gaussian likelihood)
   tau <- 10

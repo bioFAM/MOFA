@@ -34,7 +34,12 @@ trainCurveFactors <- function(object) {
   if (class(object) != "MOFAmodel") { stop("'object' has to be an instance of MOFAmodel") }
   
   # Collect training statistics
-  idx = seq(1+object@TrainOptions$startdrop,length(object@TrainStats$activeK),object@TrainOptions$freqdrop)
+  if(is.null(object@TrainOptions$freqdrop)) {
+      freqdrop <- 1
+  } else {
+      freqdrop <- object@TrainOptions$freqdrop
+  }
+  idx = seq(1, length(object@TrainStats$activeK), freqdrop)
   stat = object@TrainStats$activeK[idx] 
   data <- data.frame(time=idx, value=stat)
   
@@ -102,7 +107,12 @@ trainCurveELBO <- function(object, logScale = FALSE) {
     stop("MOFAmodel is untrained. Use runMOFA to train it.") 
   }
   # Fetch ELBO from TrainStats  
-  idx = seq(1,length(object@TrainStats$elbo),object@TrainOptions$elbofreq)
+  if(is.null(object@TrainOptions$elbofreq)) {
+    elbofreq <- 1
+    } else {
+      elbofreq <- object@TrainOptions$elbofreq
+  }
+  idx = seq(1,length(object@TrainStats$elbo), elbofreq)
   stat = object@TrainStats$elbo[idx]
   
   # Apply log transform

@@ -55,7 +55,7 @@ createMOFAobject <- function(data) {
   # Set dimensionalities
   object@Dimensions[["M"]] <- length(object@TrainData)
   object@Dimensions[["N"]] <- ncol(object@TrainData[[1]])
-  object@Dimensions[["D"]] <- sapply(object@TrainData,nrow)
+  object@Dimensions[["D"]] <- vapply(object@TrainData, nrow, numeric(1))
   object@Dimensions[["K"]] <- 0
   
   # Set view names
@@ -110,7 +110,7 @@ createMOFAobject <- function(data) {
   # Fetch or assign sample names
   samples <- Reduce(union, lapply(data, colnames))
   if (is.null(samples)) {
-    N <- unique(sapply(data,ncol))
+    N <- unique(vapply(data, ncol, numeric(1)))
     if (length(N)>1) {
       stop("If the matrices have no column (samples) names that can be used to match the different views,
            all matrices must have the same number of columns")
@@ -144,7 +144,7 @@ createMOFAobject <- function(data) {
 #   # Fetch or assign sample names
 #   samples <- Reduce(union, lapply(data, colnames))
 #   if (is.null(samples)) {
-#     N <- unique(sapply(data,ncol))
+#     N <- unique(vapply(data, ncol, numeric(1)))
 #     if (length(N)>1) { 
 #       stop("If the matrices have no column (samples) names that can be used to match the different views,
 #            all matrices must have the same number of columns")

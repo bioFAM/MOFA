@@ -204,7 +204,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if(color_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) color_by %in% vnm, logical(1)))
         color_by <- TrainData[[viewidx]][color_by,]
       } else if(class(object@InputData) == "MultiAssayExperiment"){
         color_by <- getCovariates(object, color_by)
@@ -231,7 +231,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if (shape_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) shape_by %in% vnm, logical(1)))
         shape_by <- TrainData[[viewidx]][shape_by,]
       } else if(class(object@InputData) == "MultiAssayExperiment"){
         shape_by <- getCovariates(object, shape_by)
@@ -330,6 +330,7 @@ plotTilesData <- function(object, colors = NULL) {
   # Collect relevant data
   TrainData <- object@TrainData
   M <- getDimensions(object)[["M"]]
+  N <- getDimensions(object)[["N"]]
   
   # Define colors  
   if (is.null(colors)) {
@@ -342,7 +343,7 @@ plotTilesData <- function(object, colors = NULL) {
   names(colors) <- viewNames(object)
   
   # Define availability binary matrix to indicate whether assay j is profiled in sample i
-  ovw <- sapply(TrainData, function(dat) apply(dat,2,function(s) !all(is.na(s))))
+  ovw <- vapply(TrainData, function(dat) apply(dat, 2, function(s) !all(is.na(s))), logical(N))
   
   # Remove samples with no measurements
   ovw <- ovw[apply(ovw,1,any),, drop=FALSE]
@@ -357,7 +358,7 @@ plotTilesData <- function(object, colors = NULL) {
   # Add number of samples and features per view
   molten_ovw$combi <- ifelse(molten_ovw$value, as.character(molten_ovw$view), "missing")
   molten_ovw$ntotal <- paste("n=", colSums(ovw)[as.character(molten_ovw$view) ], sep="")
-  molten_ovw$ptotal <- paste("d=", sapply(TrainData, nrow)[as.character(molten_ovw$view) ], sep="")
+  molten_ovw$ptotal <- paste("d=", vapply(TrainData, nrow, numeric(1))[as.character(molten_ovw$view) ], sep="")
     
   # Define y-axis label
   molten_ovw$view_label = paste(molten_ovw$view, molten_ovw$ptotal, sep="\n")

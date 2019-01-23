@@ -175,9 +175,9 @@ setReplaceMethod("featureNames", signature(object="MOFAmodel", value="list"),
     if (!methods::.hasSlot(object,"Expectations")  | length(object@Expectations) == 0)
       stop("Before assigning feature names you have to assign the expectations")
     if (methods::.hasSlot(object,"Dimensions")  | length(object@Dimensions) == 0)
-      if (!all(sapply(value,length) == object@Dimensions[["D"]]))
+      if (!all(vapply(value, length, numeric(1)) == object@Dimensions[["D"]]))
         stop("Length of feature names does not match the dimensionality of the model")
-    if (!all(sapply(value,length)==sapply(object@TrainData,nrow)))
+    if (!all(vapply(value, length, numeric(1)) == vapply(object@TrainData, nrow, numeric(1))))
       stop("feature names do not match the dimensionality of the data (columns)")
     
     for (m in 1:length(object@TrainData)) {

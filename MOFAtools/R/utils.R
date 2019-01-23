@@ -78,15 +78,12 @@
 
       #remove intercept form factors and weights
       object@Expectations$Z <- object@Expectations$Z[,nonintercept_idx, drop=FALSE]
-      object@Expectations$Alpha <- sapply(object@Expectations$Alpha,
-                                          function(x) x[nonintercept_idx],
-                                          simplify = FALSE, USE.NAMES = TRUE)
-      object@Expectations$W <- sapply(object@Expectations$W,
-                                      function(x) x[,nonintercept_idx, drop=FALSE],
-                                      simplify = FALSE, USE.NAMES = TRUE)
-      object@Expectations$Theta <- sapply(object@Expectations$Theta,
-                                          function(x) x[nonintercept_idx],
-                                          simplify = FALSE, USE.NAMES = TRUE)
+      object@Expectations$Alpha <- lapply(object@Expectations$Alpha,
+                                          function(x) x[nonintercept_idx])
+      object@Expectations$W <- lapply(object@Expectations$W,
+                                      function(x) x[,nonintercept_idx, drop=FALSE])
+      object@Expectations$Theta <- lapply(object@Expectations$Theta,
+                                          function(x) x[nonintercept_idx])
       
       # sweep out intercept from pseudodata
       for(m in seq_along(object@Expectations$Y)) 
@@ -180,7 +177,7 @@ subset_augment <- function(mat, pats) {
   unique_factors <- names(which(rowSums(r2>=r2_threshold)==1))
   
   # Mask samples that are unique in the unique factors
-  missing <- sapply(getTrainData(object,views), function(view) {
+  missing <- lapply(getTrainData(object,views), function(view) {
     sampleNames(object)[apply(view, 2, function(x) all(is.na(x)))] 
     })
   names(missing) <- viewNames(object)

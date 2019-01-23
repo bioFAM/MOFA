@@ -165,8 +165,8 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
   
   # Get features
   if (class(features)=="list") {
-    stopifnot(all(sapply(1:length(features),
-                         function(i) all(features[[i]] %in% featureNames(object)[[views[i]]]))))
+    stopifnot(all(vapply(1:length(features),
+                         function(i) all(features[[i]] %in% featureNames(object)[[views[i]]]), logical(1))))
   } else {
     if (paste0(features,collapse="") == "all") { 
       features <- featureNames(object)[views]
@@ -185,7 +185,7 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
     tmp <- lapply(views, function(m) { tmp <- reshape2::melt(trainData[[m]])
     colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
     trainData <- do.call(rbind,tmp)
-    trainData[,c("view","feature","sample")] <- sapply(trainData[,c("view","feature","sample")], as.character)
+    trainData[,c("view","feature","sample")] <- vapply(trainData[,c("view","feature","sample")], as.character, character(nrow(trainData)))
   }# else if ((length(views)==1) && (as.data.frame==FALSE)) {
   #  trainData <- trainData[[views]]
   #}
@@ -239,7 +239,7 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
   
   # Get features
   if (class(features)=="list") {
-    stopifnot(all(sapply(1:length(features), function(i) all(features[[i]] %in% featureNames(object)[[views[i]]]))))
+    stopifnot(all(vapply(1:length(features), function(i) all(features[[i]] %in% featureNames(object)[[views[i]]]), logical(1))))
   } else {
     if (paste0(features,collapse="") == "all") { 
       features <- featureNames(object)[views]
@@ -259,7 +259,7 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
     tmp <- lapply(views, function(m) { tmp <- reshape2::melt(ImputedData[[m]]) 
     colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
     ImputedData <- do.call(rbind,tmp)
-    ImputedData[,c("view","feature","sample")] <- sapply(ImputedData[,c("view","feature","sample")], as.character)
+    ImputedData[,c("view","feature","sample")] <- vapply(ImputedData[,c("view","feature","sample")], as.character, character(nrow(ImputedData)))
   } 
   # else if ((length(views)==1) && (as.data.frame==FALSE)) {
   #   ImputedData <- ImputedData[[views]]
@@ -402,7 +402,7 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
         tmp <- reshape2::melt(exp[[m]])
         colnames(tmp) <- c("feature","factor","value");
         tmp$view <- m
-        tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character)
+        tmp[c("view","feature","factor")] <- vapply(tmp[c("view","feature","factor")], as.character, character(nrow(tmp)))
         return(tmp) 
       })
       tmp <- do.call(rbind.data.frame,tmp)
@@ -412,7 +412,7 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
         tmp <- reshape2::melt(exp[[m]])
         colnames(tmp) <- c("sample","feature","value")
         tmp$view <- m
-        tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character)
+        tmp[c("view","feature","factor")] <- vapply(tmp[c("view","feature","factor")], as.character, character(nrow(tmp)))
         return(tmp) 
       })
       tmp <- do.call(rbind,tmp)
@@ -421,7 +421,7 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
       stop("Not implemented")
       # tmp <- lapply(names(exp), function(m) { 
       #   data.frame(view=m, feature=names(exp[[m]]), value=unname(exp[[m]]))
-      #   tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character)
+      #   tmp[c("view","feature","factor")] <- vapply(tmp[c("view","feature","factor")], as.character, character(nrow(tmp)))
       #   return(tmp) 
       # })
       # tmp <- do.call(rbind,tmp)
@@ -429,7 +429,7 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
     else if (variable=="AlphaW") {
       tmp <- lapply(names(exp), function(m) { 
         tmp <- data.frame(view=m, factor=names(exp[[m]]), value=unname(exp[[m]]))
-        tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character)
+        tmp[c("view","feature","factor")] <- vapply(tmp[c("view","feature","factor")], as.character, character(nrow(tmp)))
         return(tmp) 
       })
       tmp <- do.call(rbind,tmp)
@@ -438,7 +438,7 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
       stop("Not implemented")
       # tmp <- lapply(names(exp), function(m) { tmp <- reshape2::melt(exp[[m]])
       # colnames(tmp) <- c("sample","feature","value")
-      # tmp$view <- m; tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character)
+      # tmp$view <- m; tmp[c("view","feature","factor")] <- vapply(tmp[c("view","feature","factor")], as.character, character(nrow(tmp)))
       # return(tmp) })
       # tmp <- do.call(rbind,tmp)
     }

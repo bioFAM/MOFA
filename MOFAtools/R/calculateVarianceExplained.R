@@ -62,8 +62,8 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all") {
   Z[is.na(Z)] <- 0 
   
   # Calculate coefficient of determination per view
-  tmp <- sapply(views, function(m) sum(Y[[m]]**2, na.rm=TRUE))
-  fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-tcrossprod(Z,W[[m]]))**2, na.rm=TRUE) / tmp[m])
+  tmp <- vapply(views, function(m) sum(Y[[m]]**2, na.rm=TRUE), numeric(1))
+  fvar_m <- vapply(views, function(m) 1 - sum((Y[[m]]-tcrossprod(Z, W[[m]]))**2, na.rm=TRUE) / tmp[m], numeric(1))
   names(fvar_m) <- views
   
   # Calculate coefficient of determination per factor and view

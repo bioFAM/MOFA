@@ -69,7 +69,7 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "",
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if (group_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) group_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) group_by %in% vnm, logical(1)))
         group_by <- TrainData[[viewidx]][group_by,]
       } else if (class(object@InputData) == "MultiAssayExperiment") {
         group_by <- getCovariates(object, group_by)
@@ -191,7 +191,7 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if(color_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) color_by %in% vnm, logical(1)))
         color_by <- TrainData[[viewidx]][color_by,]
       } else if(class(object@InputData) == "MultiAssayExperiment") {
         color_by <- getCovariates(object, color_by)
@@ -221,7 +221,7 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if(shape_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) shape_by %in% vnm, logical(1)))
         shape_by <- TrainData[[viewidx]][shape_by,]
       } else if(class(object@InputData) == "MultiAssayExperiment") {
         shape_by <- getCovariates(object, shape_by)
@@ -369,7 +369,7 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if(color_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) color_by %in% vnm, logical(1)))
         color_by <- TrainData[[viewidx]][color_by,]
       } else if(class(object@InputData) == "MultiAssayExperiment") {
         color_by <- getCovariates(object, color_by)
@@ -398,7 +398,7 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if(shape_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) shape_by %in% vnm, logical(1)))
         shape_by <- TrainData[[viewidx]][shape_by,]
       } else if(class(object@InputData) == "MultiAssayExperiment"){
         shape_by <- getCovariates(object, shape_by)
@@ -539,7 +539,7 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if(color_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) color_by %in% vnm, logical(1)))
         color_by <- TrainData[[viewidx]][color_by,]
       } else if(class(object@InputData) == "MultiAssayExperiment"){
         color_by <- getCovariates(object, color_by)
@@ -566,7 +566,7 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if (shape_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) shape_by %in% vnm, logical(1)))
         shape_by <- TrainData[[viewidx]][shape_by,]
       } else if(class(object@InputData) == "MultiAssayExperiment"){
         shape_by <- getCovariates(object, shape_by)

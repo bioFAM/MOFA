@@ -91,11 +91,11 @@ runEnrichmentAnalysis <- function(object, view,
   # turn feature.sets into binary membership matrices if provided as list
   if(class(feature.sets) == "list") {
     features <- Reduce(union, feature.sets)
-    feature.sets <- sapply(names(feature.sets), function(nm) {
+    feature.sets <- vapply(names(feature.sets), function(nm) {
       tmp <- features %in% feature.sets[[nm]]
       names(tmp) <- features
       tmp
-    })
+    }, logical(length(features)))
     feature.sets <-t(feature.sets)*1
   }
 
@@ -519,14 +519,14 @@ plotEnrichmentBars <- function(fsea.out, alpha = 0.05) {
     feature.statistics = cor(data, prcomp.output$x[,pc.index], use = "complete.obs") 
     if (feature.statistic == "z") {
       # use Fisher's Z transformation to convert to Z-statisics
-      feature.statistics = sapply(feature.statistics, function(x) {
-        return (sqrt(n-3)*atanh(x))})      
+      feature.statistics = vapply(feature.statistics, function(x) {
+        return (sqrt(n-3)*atanh(x))}, numeric(1))      
     }    
   }
   
   # Absolute value transformation of the feature-level statistics if requested
   if (transformation == "abs.value") {
-    feature.statistics = sapply(feature.statistics, abs)
+    feature.statistics = vapply(feature.statistics, abs, numeric(1))
   }  
   
   return (feature.statistics)

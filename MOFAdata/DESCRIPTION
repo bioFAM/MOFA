@@ -13,7 +13,6 @@ Date: 2018-06-26
 License: GPL (>= 2)
 Description: A collection of datasets to accompany the R package MOFA and illustrate running and analysing MOFA models.
 Encoding: UTF-8
-Depends: R (>= 3.4)
 biocViews: ReproducibleResearch
 VignetteBuilder: knitr
 LazyData: true

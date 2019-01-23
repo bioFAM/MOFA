@@ -26,7 +26,7 @@ Extract the latent factors from the model.
 }
 \examples{
 # load a trained MOFAmodel object
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFAobject <- loadModel(filepath)
 # get factors as matrix
 getFactors(MOFAobject, factors = 1:3)

@@ -21,12 +21,12 @@
 #' @export
 #' @examples
 #' # Using an existing trained model on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' plotVarianceExplained(MOFA_CLL)
 #'
 #' # Using an existing trained model on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotVarianceExplained(MOFA_scMT)
 
@@ -102,12 +102,12 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all") {
 #' @export
 #' @examples
 #' # Using an existing trained model on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' plotVarianceExplained(MOFA_CLL)
 #'
 #' # Using an existing trained model on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotVarianceExplained(MOFA_scMT)
 

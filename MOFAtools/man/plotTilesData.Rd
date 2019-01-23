@@ -29,12 +29,12 @@ It is particularly useful to visualise incomplete data sets,
 }
 \examples{
 # Example on the CLL data
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 plotTilesData(MOFA_CLL)
 
 # Example on the scMT data
-filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFA_scMT <- loadModel(filepath)
 # using customized colors
 plotTilesData(MOFA_scMT, colors= c("blue", "red", "red", "red"))

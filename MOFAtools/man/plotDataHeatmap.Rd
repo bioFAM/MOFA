@@ -51,7 +51,7 @@ A similar function for doing scatterplots rather than heatmaps is \code{\link{pl
 }
 \examples{
 # Load CLL data
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 # plot top 30 features on Factor 1 in the mRNA view
 plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30)

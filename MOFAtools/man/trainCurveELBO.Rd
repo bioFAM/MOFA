@@ -27,13 +27,13 @@ All Training statistics, including the ELBO,
 }
 \examples{
 # Example on the CLL data
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 trainCurveELBO(MOFA_CLL)
 trainCurveELBO(MOFA_CLL, logScale= TRUE)
 
 # Example on the scMT data
-filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFA_scMT <- loadModel(filepath)
 trainCurveELBO(MOFA_scMT)
 }

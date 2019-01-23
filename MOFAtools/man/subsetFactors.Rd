@@ -24,7 +24,7 @@ which are inactive in all views.
 }
 \examples{
 # Using an existing trained model on the CLL data
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 MOFA_CLL_small <- subsetFactors(MOFA_CLL, factors=c(1,2,3))
 MOFA_CLL_small <- subsetFactors(MOFA_CLL, factors=c("LF1","LF2","LF3"))

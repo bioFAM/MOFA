@@ -28,13 +28,13 @@
 #' @export
 #' @examples
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' plotWeightsHeatmap(MOFA_CLL, view="Mutations")
 #' plotWeightsHeatmap(MOFA_CLL, view="Mutations", factors=1:3)
 #'
 #' # Example on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotWeightsHeatmap(MOFA_scMT, view="RNA expression")
 plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", threshold = 0, ...) {
@@ -106,14 +106,14 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
 #' @export
 #' @examples
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' plotWeights(MOFA_CLL, view="Mutations", factor=1)
 #'plotWeights(MOFA_CLL, view="Mutations", factor=1,
 #'   manual=list("IGHV", c("TP53", "del17p13")), color_manual=c("blue", "red"))
 #'
 #' # Example on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotWeights(MOFA_scMT, view="RNA expression", factor=1)
 #' plotWeights(MOFA_scMT, view="RNA expression", factor=1, nfeatures=15)
@@ -252,14 +252,14 @@ plotWeights <- function(object, view, factor, nfeatures=10,
 #' @export
 #' @examples
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3)
 #' plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3, sign = "positive")
 #' plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3, sign = "negative")
 #'
 #' # Example on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotTopWeights(MOFA_scMT, view="RNA expression", factor=1)
 

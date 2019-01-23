@@ -39,13 +39,13 @@ To inspect the loadings of individual factors, use the functions
 }
 \examples{
 # Example on the CLL data
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 plotWeightsHeatmap(MOFA_CLL, view="Mutations")
 plotWeightsHeatmap(MOFA_CLL, view="Mutations", factors=1:3)
 
 # Example on the scMT data
-filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFA_scMT <- loadModel(filepath)
 plotWeightsHeatmap(MOFA_scMT, view="RNA expression")
 }

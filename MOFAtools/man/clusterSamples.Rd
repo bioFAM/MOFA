@@ -43,7 +43,7 @@ By default, the conflictive samples are ignored in the clustering procedure and 
 }
 \examples{
 # Example on the CLL data
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 # cluster samples based into 3 groups based on all factors
 clusterSamples(MOFA_CLL, k=3, factors="all")
@@ -53,7 +53,7 @@ clusters <- clusterSamples(MOFA_CLL, k=2, factors=1)
 plotFactorBeeswarm(MOFA_CLL, factor=1, color_by=clusters)
 
 # Example on the scMT data
-filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFA_scMT <- loadModel(filepath)
 # cluster samples based into 2 groups based on all factor 1 and 2
 clusters <- clusterSamples(MOFA_CLL, k=2, factors=1:2)

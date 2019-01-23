@@ -44,13 +44,13 @@ and \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots of single factors.
 }
 \examples{
 # Example on the CLL data
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 plotFactorHist(MOFA_CLL, factor=1)
 plotFactorHist(MOFA_CLL, factor=1, group_by= "IGHV")
 
 # Example on the scMT data
-filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFA_scMT <- loadModel(filepath)
 plotFactorHist(MOFA_scMT, factor=2)
 }

@@ -25,7 +25,7 @@ If some view(s) are not of interest we strongly recommend removing them before t
 }
 \examples{
 # Using an existing trained model on the CLL data
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 # Subset views via character vector
 MOFA_CLL_small <- subsetViews(MOFA_CLL, views=c("Drugs","Methylation"))

@@ -67,10 +67,10 @@ Based on the weights of each factor in the specified view,
 }
 \examples{
 # Example on the CLL data
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 # perform feature set enrichment analysis on mRNA data for all factors using the Reactome gene sets
-data("reactomeGS")
+data("reactomeGS", package = "MOFAdata")
 fsea.out <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
 # results can be visualized using one of the following plotting functions:
 # overview of enriched pathways per factor at an FDR of 1\%

@@ -15,7 +15,7 @@
 #' @export
 #' @examples
 #' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFAobject <- loadModel(filepath)
 #' # get dimensions 
 #' getDimensions(MOFAobject)
@@ -41,7 +41,7 @@ getDimensions <- function(object) {
 #' @export
 #' @examples
 #' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFAobject <- loadModel(filepath)
 #' # get factors as matrix
 #' getFactors(MOFAobject, factors = 1:3)
@@ -91,7 +91,7 @@ getFactors <- function(object, factors = "all", as.data.frame = FALSE) {
 #' @export
 #' @examples
 #' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFAobject <- loadModel(filepath)
 #' # get weights as a list of matrices
 #' weightList <- getWeights(MOFAobject, view = "all", factors = 1:4)
@@ -146,11 +146,11 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
 #'  returns a long-formatted data frame with columns (view,feature,sample,value).
 #' @export
 #' @examples 
-#' data("scMT_data")
+#' data("scMT_data", package = "MOFAdata")
 #' MOFAobject <- createMOFAobject(scMT_data)
 #' getTrainData(MOFAobject)
 #' 
-#' data("CLL_data")
+#' data("CLL_data", package = "MOFAdata")
 #' MOFAobject <- createMOFAobject(CLL_data)
 #' getTrainData(MOFAobject)
 
@@ -214,7 +214,7 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
 #' @export
 #' @examples
 #' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFAobject <- loadModel(filepath)
 #' # impute missing values
 #' MOFAobject <- impute(MOFAobject)
@@ -283,8 +283,8 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
 #' @examples
 #' # Example on the CLL data
 #' library(MultiAssayExperiment)
-#' data("CLL_data")
-#' data("CLL_covariates")
+#' data("CLL_data", package = "MOFAdata")
+#' data("CLL_covariates", package = "MOFAdata")
 #' # Create MultiAssayExperiment object 
 #' mae_CLL <- MultiAssayExperiment(CLL_data, colData=CLL_covariates)
 #' MOFAobject  <- createMOFAobject(mae_CLL)
@@ -292,7 +292,7 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
 #' gender <- getCovariates(MOFAobject, "Gender")
 #' diagnosis <- getCovariates(MOFAobject, "Diagnosis")
 #' # Example on the scMT data
-#' data("scMT_data")
+#' data("scMT_data", package = "MOFAdata")
 #' MOFAobject  <- createMOFAobject(scMT_data)
 #' # Extract covariates from the colData of a MultiAssayExperiment
 #' culture <- getCovariates(MOFAobject, "culture")
@@ -372,7 +372,7 @@ getCovariates <- function(object, covariate) {
 #' @export
 #' @examples
 #' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFAobject <- loadModel(filepath)
 #' # get expectations of Alpha as matrix
 #' getExpectations(MOFAobject, variable="Alpha")
@@ -458,7 +458,7 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
 #' @export
 #' @examples
 #' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFAobject <- loadModel(filepath)
 #' # get ELBO statistic
 #' getELBO(MOFAobject)

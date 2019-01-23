@@ -36,7 +36,7 @@
 #' @importFrom utils tail
 #' @examples
 #' # Load CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' # plot top 30 features on Factor 1 in the mRNA view
 #' plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30)
@@ -155,7 +155,7 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
 #' @export
 #' @examples
 #' # Load CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' # plot scatter for top 5 features on factor 1 in the view mRNA:
 #' plotDataScatter(MOFA_CLL, view="mRNA", factor=1, features=5)
@@ -312,12 +312,12 @@ plotDataScatter <- function(object, view, factor, features = 10,
 #' @export
 #' @examples
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' plotTilesData(MOFA_CLL)
 #'
 #' # Example on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' # using customized colors
 #' plotTilesData(MOFA_scMT, colors= c("blue", "red", "red", "red"))

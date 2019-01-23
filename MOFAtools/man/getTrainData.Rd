@@ -34,11 +34,11 @@ Alternatively, if \code{as.data.frame} is \code{TRUE}, the function
  returns a long-formatted data frame with columns (view,feature,sample,value).
 }
 \examples{
-data("scMT_data")
+data("scMT_data", package = "MOFAdata")
 MOFAobject <- createMOFAobject(scMT_data)
 getTrainData(MOFAobject)
 
-data("CLL_data")
+data("CLL_data", package = "MOFAdata")
 MOFAobject <- createMOFAobject(CLL_data)
 getTrainData(MOFAobject)
 }

@@ -16,7 +16,7 @@
 #' @return \code{\link{MOFAmodel}} object with a subset of factors
 #' @examples
 #' # Using an existing trained model on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' MOFA_CLL_small <- subsetFactors(MOFA_CLL, factors=c(1,2,3))
 #' MOFA_CLL_small <- subsetFactors(MOFA_CLL, factors=c("LF1","LF2","LF3"))
@@ -70,7 +70,7 @@ subsetFactors <- function(object, factors) {
 #' @export
 #' @examples
 #' # Using an existing trained model on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' # Subset samples via character vector
 #' MOFA_CLL_small <- subsetSamples(MOFA_CLL, samples=c("H045","H109","H024","H056"))
@@ -124,7 +124,7 @@ subsetSamples <- function(object, samples) {
 #' @export
 #' @examples
 #' # Using an existing trained model on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' # Subset views via character vector
 #' MOFA_CLL_small <- subsetViews(MOFA_CLL, views=c("Drugs","Methylation"))

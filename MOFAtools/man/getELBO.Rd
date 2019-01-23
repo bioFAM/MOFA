@@ -18,7 +18,7 @@ Extract the value of the ELBO statistics after model training.
 }
 \examples{
 # load a trained MOFAmodel object
-filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFAobject <- loadModel(filepath)
 # get ELBO statistic
 getELBO(MOFAobject)

@@ -28,7 +28,7 @@ character vector with the sample names
 Function to set and retrieve sample names.
 }
 \examples{
-data("CLL_data")
+data("CLL_data", package = "MOFAdata")
 MOFAobject  <- createMOFAobject(CLL_data)
 head(sampleNames(MOFAobject))
 }

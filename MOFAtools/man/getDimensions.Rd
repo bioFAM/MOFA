@@ -23,7 +23,7 @@ N indicates the (total) number of samples and M indicates the number of views.
 }
 \examples{
 # load a trained MOFAmodel object
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFAobject <- loadModel(filepath)
 # get dimensions 
 getDimensions(MOFAobject)

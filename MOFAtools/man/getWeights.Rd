@@ -30,7 +30,7 @@ Extract the weights from the model.
 }
 \examples{
 # load a trained MOFAmodel object
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFAobject <- loadModel(filepath)
 # get weights as a list of matrices
 weightList <- getWeights(MOFAobject, view = "all", factors = 1:4)

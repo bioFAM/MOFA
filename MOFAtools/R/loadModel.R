@@ -20,7 +20,7 @@
 #' @export
 #' @examples
 #' # path to the hdf5 file
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' # load the model
 #' MOFAobject <- loadModel(filepath)
 loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {

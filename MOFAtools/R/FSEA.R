@@ -42,10 +42,10 @@
 #' @export
 #' @examples 
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' # perform feature set enrichment analysis on mRNA data for all factors using the Reactome gene sets
-#' data("reactomeGS")
+#' data("reactomeGS", package = "MOFAdata")
 #' fsea.out <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
 #' # results can be visualized using one of the following plotting functions:
 #' # overview of enriched pathways per factor at an FDR of 1%
@@ -215,10 +215,10 @@ runEnrichmentAnalysis <- function(object, view,
 #' @export
 #' @examples 
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' # perform feature set enrichment analysis on mRNA data for all factors using the Reactome gene sets
-#' data("reactomeGS")
+#' data("reactomeGS", package = "MOFAdata")
 #' fsea.out <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
 #' # top 10 enriched pathwyas on factor 5:
 #' plotEnrichment(MOFA_CLL, fsea.out, factor=5,  max.pathways=10)
@@ -297,11 +297,11 @@ plotEnrichment <- function(object, fsea.out, factor, alpha=0.1, max.pathways=25,
 #' @export
 #' @examples 
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' # perform Feature Set Enrichment Analysis on mRNA data for all factors 
 #' # using the Reactome gene sets
-#' data("reactomeGS")
+#' data("reactomeGS", package = "MOFAdata")
 #' fsea.out <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
 #' # overview of enriched pathways per factor at an FDR of 1%
 #' plotEnrichmentHeatmap(fsea.out, alpha=0.01)
@@ -338,10 +338,10 @@ plotEnrichmentHeatmap <- function(fsea.out, alpha = 0.05, logScale = TRUE, ...) 
 #' @export
 #' @examples 
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' # perform feature set enrichment analysis on mRNA data for all factors using the Reactome gene sets
-#' data("reactomeGS")
+#' data("reactomeGS", package = "MOFAdata")
 #' fsea.out <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
 #' # overview of number of enriched pathways per factor at an FDR of 1%
 #' plotEnrichmentBars(fsea.out, alpha=0.01)

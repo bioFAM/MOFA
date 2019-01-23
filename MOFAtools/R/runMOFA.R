@@ -17,7 +17,7 @@
 #' @import reticulate
 #' @export
 #' @examples
-#' data("CLL_data")
+#' data("CLL_data", package = "MOFAdata")
 #' # create and prepare the MOFAmodel
 #' MOFAobject <- createMOFAobject(CLL_data)
 #' MOFAobject <- prepareMOFA(MOFAobject)

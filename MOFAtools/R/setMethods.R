@@ -72,7 +72,7 @@
 #' @export
 #' @examples
 #' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFAobject <- loadModel(filepath)
 #' factorNames(MOFAobject)
 
@@ -84,7 +84,7 @@ setMethod("factorNames", signature(object="MOFAmodel"), function(object) { colna
 #' @export
 #' @examples
 #' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFAobject <- loadModel(filepath)
 #' factorNames(MOFAobject)
 #' factorNames(MOFAobject) <- paste("Factor",1:3,sep="_")
@@ -118,7 +118,7 @@ setReplaceMethod("factorNames", signature(object="MOFAmodel", value="vector"),
 #' @return character vector with the sample names
 #' @export
 #' @examples
-#' data("CLL_data")
+#' data("CLL_data", package = "MOFAdata")
 #' MOFAobject  <- createMOFAobject(CLL_data)
 #' head(sampleNames(MOFAobject))
 setMethod("sampleNames", signature(object="MOFAmodel"), function(object) { colnames(object@TrainData[[1]]) } )
@@ -154,7 +154,7 @@ setReplaceMethod("sampleNames", signature(object="MOFAmodel", value="vector"),
 #' @return list of character vectors with the feature names for each view
 #' @export
 #' @examples
-#' data("CLL_data")
+#' data("CLL_data", package = "MOFAdata")
 #' MOFAobject  <- createMOFAobject(CLL_data)
 #' featureNames(MOFAobject)$Mutations
 #' head(featureNames(MOFAobject)$Drugs)
@@ -197,7 +197,7 @@ setReplaceMethod("featureNames", signature(object="MOFAmodel", value="list"),
 #' @rdname viewNames
 #' @export
 #' @examples
-#' data("CLL_data")
+#' data("CLL_data", package = "MOFAdata")
 #' MOFAobject  <- createMOFAobject(CLL_data)
 #' viewNames(MOFAobject)
 setMethod("viewNames", signature(object="MOFAmodel"), function(object) { names(object@TrainData) } )
@@ -208,7 +208,7 @@ setMethod("viewNames", signature(object="MOFAmodel"), function(object) { names(o
 #' @import methods
 #' @export
 #' @examples
-#' data("CLL_data")
+#' data("CLL_data", package = "MOFAdata")
 #' MOFAobject  <- createMOFAobject(CLL_data)
 #' viewNames(MOFAobject) 
 #' viewNames(MOFAobject) <- c("DrugResponses", viewNames(MOFAobject)[2:4])

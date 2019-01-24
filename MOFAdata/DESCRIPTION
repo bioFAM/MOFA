@@ -1,4 +1,4 @@
-Package: MOFAtools
+Package: MOFAdata
 Type: Package
 Maintainer: Ricard Argelaguet <ricard@ebi.ac.uk> and Britta Velten <britta.velten@embl.de>
 Title: Multi-Omics Factor Analysis (MOFA)
@@ -10,14 +10,11 @@ Authors@R: c(person("Ricard", "Argelaguet", role=c("aut", "cre"), email="ricard@
 		person("Wolfgang", "Huber", role=c("aut"), email="wolfgang.huber@embl.de"),  
 		person("Oliver", "Stegle", role=c("aut"), email="stegle@ebi.ac.uk"))
 Date: 2018-06-26
-License: LGPL-3.0
-Description: A collection of tools for running and analysing MOFA models.
+License: GPL (>= 2)
+Description: A collection of datasets to accompany the R package MOFA and illustrate running and analysing MOFA models.
 Encoding: UTF-8
-Imports: rhdf5, dplyr, reshape2, pheatmap, corrplot, ggplot2, ggbeeswarm, methods, scales, GGally, RColorBrewer, cowplot, ggrepel, MultiAssayExperiment, Biobase, doParallel, foreach, reticulate, grDevices, stats, utils
-Suggests: knitr, MOFAdata
-biocViews: DimensionReduction, Bayesian, Visualization
+biocViews: ReproducibleResearch
 VignetteBuilder: knitr
 LazyData: true
 NeedsCompilation: yes
 RoxygenNote: 6.1.1
-SystemRequirements: Python (>=2.7.0), numpy, pandas, h5py, scipy, sklearn, mofapy

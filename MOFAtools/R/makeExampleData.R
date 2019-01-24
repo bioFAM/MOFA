@@ -35,27 +35,27 @@ makeExampleData <- function(n_views=3, n_features=100, n_samples = 50,
   theta <- 0.5
   
   # set ARD prior, each factor being active in at least one view
-  alpha <- sapply(1:n_factors, function(fc) {
-    active_vw <- sample(1:n_views,1)
+  alpha <- vapply(seq_len(n_factors), function(fc) {
+    active_vw <- sample(seq_len(n_views), 1)
     alpha_fc <- sample(c(1, 1000), n_views, replace = TRUE)
     if(all(alpha_fc==1000)) alpha_fc[active_vw] <- 1
     alpha_fc
-  })
-  alpha <- matrix(alpha, nrow=n_factors, ncol=n_views, byrow=T)
+  }, numeric(n_views))
+  alpha <- matrix(alpha, nrow=n_factors, ncol=n_views, byrow=TRUE)
   
   # simulate weights 
-  S <- lapply(1:n_views, function(vw) matrix(rbinom(n_features*n_factors, 1, theta),
+  S <- lapply(seq_len(n_views), function(vw) matrix(rbinom(n_features*n_factors, 1, theta),
                                              nrow=n_features, ncol=n_factors))
-  W <- lapply(1:n_views, function(vw) sapply(1:n_factors, function(fc) rnorm(n_features, 0, sqrt(1/alpha[fc,vw]))))
+  W <- lapply(seq_len(n_views), function(vw) vapply(seq_len(n_factors), function(fc) rnorm(n_features, 0, sqrt(1/alpha[fc,vw])), numeric(n_features)))
   
   # set noise level (for gaussian likelihood)
   tau <- 10
   
   # pre-compute linear term 
-  mu <- lapply(1:n_views, function(vw) Z %*% t(S[[vw]]*W[[vw]]))
+  mu <- lapply(seq_len(n_views), function(vw) Z %*% t(S[[vw]]*W[[vw]]))
   
   # simulate data according to the likelihood
-  data <- lapply(1:n_views, function(vw){
+  data <- lapply(seq_len(n_views), function(vw){
     lk <- likelihood[vw]
     if (lk == "gaussian"){
       dd <- t(mu[[vw]] + rnorm(length(mu[[vw]]),0,sqrt(1/tau)))
@@ -68,11 +68,11 @@ makeExampleData <- function(n_views=3, n_features=100, n_samples = 50,
       term <- 1/(1+exp(-mu[[vw]]))
       dd <- t(apply(term, 2, function(tt) rbinom(length(tt),1,tt)))
     }
-    colnames(dd) <- paste0("sample_", 1:ncol(dd))
-    rownames(dd) <- paste0("feature", 1:nrow(dd))
+    colnames(dd) <- paste0("sample_", seq_len(ncol(dd)))
+    rownames(dd) <- paste0("feature", seq_len(nrow(dd)))
     dd
   })
-  names(data) <- paste0("view_", 1:n_views)
+  names(data) <- paste0("view_", seq_len(n_views))
   
   return(data)
 }

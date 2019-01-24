@@ -28,13 +28,13 @@
 #' @export
 #' @examples
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' plotWeightsHeatmap(MOFA_CLL, view="Mutations")
 #' plotWeightsHeatmap(MOFA_CLL, view="Mutations", factors=1:3)
 #'
 #' # Example on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotWeightsHeatmap(MOFA_scMT, view="RNA expression")
 plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", threshold = 0, ...) {
@@ -106,14 +106,14 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
 #' @export
 #' @examples
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' plotWeights(MOFA_CLL, view="Mutations", factor=1)
 #'plotWeights(MOFA_CLL, view="Mutations", factor=1,
 #'   manual=list("IGHV", c("TP53", "del17p13")), color_manual=c("blue", "red"))
 #'
 #' # Example on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotWeights(MOFA_scMT, view="RNA expression", factor=1)
 #' plotWeights(MOFA_scMT, view="RNA expression", factor=1, nfeatures=15)
@@ -134,7 +134,7 @@ plotWeights <- function(object, view, factor, nfeatures=10,
 
   # Get manual features to color by
   if (!is.null(manual)) { 
-    stopifnot(class(manual)=="list")
+    stopifnot(is(manual, "list"))
     stopifnot(all(Reduce(intersect,manual) %in% featureNames(object)[[view]]))  
   }
   
@@ -152,7 +152,7 @@ plotWeights <- function(object, view, factor, nfeatures=10,
   # if(nfeatures=="all") {
   #   nfeatures <- nrow(W)
   # } else {
-  #   stopifnot(class(nfeatures)=="numeric")
+  #   stopifnot(is(nfeatures, "numeric"))
   # }
   # W <- head(W[order(abs(W$value), decreasing=TRUE),], n=nfeatures)
     
@@ -166,11 +166,11 @@ plotWeights <- function(object, view, factor, nfeatures=10,
   # Define group of features to label manually
   if(!is.null(manual)) {
     if (is.null(color_manual)) {
-      color_manual <- hcl(h = seq(15, 375, length = length(manual) + 1), l = 65, c = 100)[1:length(manual)]
+      color_manual <- hcl(h = seq(15, 375, length = length(manual) + 1), l = 65, c = 100)[seq_along(manual)]
     } else {
       stopifnot(length(color_manual)==length(manual)) 
     }
-    for (m in 1:length(manual)) {
+    for (m in seq_along(manual)) {
       W$group[W$feature %in% manual[[m]]] <- as.character(m+1)
     }
   }
@@ -252,14 +252,14 @@ plotWeights <- function(object, view, factor, nfeatures=10,
 #' @export
 #' @examples
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3)
 #' plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3, sign = "positive")
 #' plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3, sign = "negative")
 #'
 #' # Example on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotTopWeights(MOFA_scMT, view="RNA expression", factor=1)
 
@@ -269,7 +269,7 @@ plotTopWeights <- function(object, view, factor, nfeatures = 10, abs = TRUE, sca
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(view %in% viewNames(object))
-  # if(!is.null(manual_features)) { stopifnot(class(manual_features)=="list")
+  # if(!is.null(manual_features)) { stopifnot(is(manual_features, "list"))
   # stopifnot(all(Reduce(intersect,manual_features) %in% featureNames(object)[[view]]))  }
   
   # Collect expectations  

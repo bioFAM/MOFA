@@ -41,7 +41,7 @@ see \code{\link{impute}} and the Methods section of the article.
 }
 \examples{
 # Example on the CLL data
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 # predict drug response data based on all factors
 predict(MOFA_CLL, view="Drugs")
@@ -53,7 +53,7 @@ predict(MOFA_CLL, view="Mutations", type="response")
 predict(MOFA_CLL, view="Mutations", type="inRange")
 
 # Example on the scMT data
-filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFA_scMT <- loadModel(filepath)
 # predict all views based on all factors (default)
 predict(MOFA_scMT)

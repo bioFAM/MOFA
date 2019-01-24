@@ -27,7 +27,7 @@ The training of MOFA is done using a Python framework, and the model output
 }
 \examples{
 # path to the hdf5 file
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 # load the model
 MOFAobject <- loadModel(filepath)
 }

@@ -16,6 +16,7 @@ For illustration we use the CLL data which is used in the MOFA publication.
 
 ```{r, warning=FALSE, message=FALSE}
 library(MOFAtools)
+library(MOFAdata)
 ```
 
 # Step 1: Load data and create MOFA object
@@ -139,7 +140,7 @@ MOFAobject <- runMOFA(MOFAobject)
 ```{r}
 # Loading an existing trained model
 filepath <- system.file("extdata", "CLL_model.hdf5",
-                        package = "MOFAtools")
+                        package = "MOFAdata")
 
 MOFAobject <- loadModel(filepath, MOFAobject)
 MOFAobject

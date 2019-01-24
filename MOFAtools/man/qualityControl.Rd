@@ -19,7 +19,7 @@ Function to do quality control on a \code{\link{MOFAmodel}} object.
 }
 \examples{
 # load a trained MOFAmodel object
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFAobject <- loadModel(filepath)
 # do quality control
 qualityControl(MOFAobject, verbose=TRUE)

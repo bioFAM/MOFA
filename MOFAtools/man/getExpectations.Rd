@@ -45,7 +45,7 @@ The priors and variational distributions of each variable are extensively
 }
 \examples{
 # load a trained MOFAmodel object
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFAobject <- loadModel(filepath)
 # get expectations of Alpha as matrix
 getExpectations(MOFAobject, variable="Alpha")

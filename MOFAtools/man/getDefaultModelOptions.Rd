@@ -31,7 +31,7 @@ The model options are the following: \cr
 }
 \examples{
 # load data
-data("CLL_Data")
+data("CLL_data", package = "MOFAdata")
 #create a MOFAmodel object
 MOFAobject <- createMOFAobject(CLL_data)
 # set model options

@@ -51,13 +51,13 @@ compareFactors <- function(models, comparison = "all", show_rownames=FALSE, show
   # Sanity checks
   if(!is.list(models))
     stop("'models' has to be a list")
-  if (!all(sapply(models, function (l) class(l)=="MOFAmodel")))
+  if (!all(vapply(models, function (l) is(l, "MOFAmodel"), logical(1))))
     stop("Each element of the the list 'models' has to be an instance of MOFAmodel")
   if (!comparison %in% c("all", "pairwise"))
     stop("'comparison' has to be either 'all' or 'pairwise'")
   
   # give generic names if no names present
-  if(is.null(names(models))) names(models) <- paste("model", 1: length(models), sep="")
+  if(is.null(names(models))) names(models) <- paste("model", seq_along(models), sep="")
   
   # get latent factors
   LFs <- lapply(seq_along(models), function(modelidx){
@@ -88,7 +88,7 @@ compareFactors <- function(models, comparison = "all", show_rownames=FALSE, show
     corLFs <- cor(LFscommon, use="complete.obs")
     
     #annotation by model
-    # modelAnnot <- data.frame(model = rep(names(models), times=sapply(LFs, ncol)))
+    # modelAnnot <- data.frame(model = rep(names(models), times=vapply(LFs, ncol, numeric(1))))
     # rownames(modelAnnot) <- colnames(LFscommon)
     
     #plot heatmap
@@ -170,14 +170,14 @@ compareModels <- function(models, show_modelnames = FALSE) {
   # Sanity checks
   if(!is.list(models))
     stop("'models' has to be a list")
-  if (!all(sapply(models, function (l) class(l)=="MOFAmodel")))
+  if (!all(vapply(models, function (l) is(l,"MOFAmodel"), logical(1))))
     stop("Each element of the the list 'models' has to be an instance of MOFAmodel")
 
-  elbo_vals <- sapply(models, getELBO)
-  n_factors <- sapply(models, function(m) {
+  elbo_vals <- vapply(models, getELBO, numeric(1))
+  n_factors <- vapply(models, function(m) {
     n_fac <- getDimensions(m)$K
     n_fac
-    })
+    }, numeric(1))
   if(is.null(names(models))) names(models) <- paste0("model_", seq_along(models))
   df <- data.frame(ELBO=elbo_vals, model = names(models), n_factors=n_factors)
   gg <- ggplot(df, aes_string(x="model",y="n_factors", fill="ELBO")) + geom_bar(stat="identity")+
@@ -213,10 +213,10 @@ selectModel <- function(models, plotit =TRUE) {
   # Sanity checks
   if(!is.list(models))
     stop("'models' has to be a list")
-  if (!all(sapply(models, function (l) class(l)=="MOFAmodel")))
+  if (!all(vapply(models, function (l) is(l, "MOFAmodel"), logical(1))))
     stop("Each element of the the list 'models' has to be an instance of MOFAmodel")
 
-  elbo_vals <- sapply(models, getELBO)
+  elbo_vals <- vapply(models, getELBO, numeric(1))
   if(plotit) print(compareModels(models))
   models[[which.max(elbo_vals)]]
 }

@@ -27,13 +27,13 @@ If matrices have no column names, all matrices must have the same number of colu
 }
 \examples{
 # Option 1: Create a MOFAobject from a list of matrices, features in rows and samples in columns.
-data("CLL_data")
+data("CLL_data", package = "MOFAdata")
 MOFAobject <- createMOFAobject(CLL_data)
 
 # Option 2: Create a MOFAobject from a MultiAssayExperiment
 library(MultiAssayExperiment)
-data("CLL_data")
-data("CLL_covariates")
+data("CLL_data", package = "MOFAdata")
+data("CLL_covariates", package = "MOFAdata")
 mae_CLL <- MultiAssayExperiment(experiments = CLL_data, colData = CLL_covariates)
 MOFAobject <- createMOFAobject(mae_CLL)
 

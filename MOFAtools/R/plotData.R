@@ -36,7 +36,7 @@
 #' @importFrom utils tail
 #' @examples
 #' # Load CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' # plot top 30 features on Factor 1 in the mRNA view
 #' plotDataHeatmap(MOFA_CLL, view="mRNA", factor=1, features=30)
@@ -81,10 +81,10 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
   data <- data[,apply(data, 2, function(x) !all(is.na(x)))]
   
   # Define features
-  if (class(features) == "numeric") {
+  if (is(features, "numeric")) {
     features <- names(tail(sort(abs(W)), n=features))
     stopifnot(all(features %in% featureNames(object)[[view]]))
-  } else if (class(features)=="character") {
+  } else if (is(features, "character")) {
     stopifnot(all(features %in% featureNames(object)[[view]]))
   } else {
     stop("Features need to be either a numeric or character vector")
@@ -155,7 +155,7 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
 #' @export
 #' @examples
 #' # Load CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' # plot scatter for top 5 features on factor 1 in the view mRNA:
 #' plotDataScatter(MOFA_CLL, view="mRNA", factor=1, features=5)
@@ -183,10 +183,10 @@ plotDataScatter <- function(object, view, factor, features = 10,
   
   
   # Get features
-  if (class(features) == "numeric") {
+  if (is(features, "numeric")) {
     features <- names(tail(sort(abs(W)), n=features))
     stopifnot(all(features %in% featureNames(object)[[view]]))
-  } else if (class(features)=="character") {
+  } else if (is(features,"character")) {
     stopifnot(all(features %in% featureNames(object)[[view]]))
   } else {
     stop("Features need to be either a numeric or character vector")
@@ -204,9 +204,9 @@ plotDataScatter <- function(object, view, factor, features = 10,
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if(color_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) color_by %in% vnm, logical(1)))
         color_by <- TrainData[[viewidx]][color_by,]
-      } else if(class(object@InputData) == "MultiAssayExperiment"){
+      } else if(is(object@InputData, "MultiAssayExperiment")){
         color_by <- getCovariates(object, color_by)
       }
       else stop("'color_by' was specified but it was not recognised, please read the documentation")
@@ -231,9 +231,9 @@ plotDataScatter <- function(object, view, factor, features = 10,
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if (shape_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) shape_by %in% vnm, logical(1)))
         shape_by <- TrainData[[viewidx]][shape_by,]
-      } else if(class(object@InputData) == "MultiAssayExperiment"){
+      } else if(is(object@InputData, "MultiAssayExperiment")){
         shape_by <- getCovariates(object, shape_by)
       }
       else stop("'shape_by' was specified but it was not recognised, please read the documentation")
@@ -268,7 +268,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
     # ggbeeswarm::geom_quasirandom() +
     stat_smooth(method="lm", color="blue", alpha=0.5) +
     facet_wrap(~feature, scales="free_y") +
-    scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))]) +
+    scale_shape_manual(values=c(19,1,2:18)[seq_along(unique(shape_by))]) +
     theme(plot.margin = margin(20, 20, 10, 10), 
           axis.text = element_text(size = rel(1), color = "black"), 
           axis.title = element_text(size = 16), 
@@ -312,12 +312,12 @@ plotDataScatter <- function(object, view, factor, features = 10,
 #' @export
 #' @examples
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' plotTilesData(MOFA_CLL)
 #'
 #' # Example on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' # using customized colors
 #' plotTilesData(MOFA_scMT, colors= c("blue", "red", "red", "red"))
@@ -330,19 +330,20 @@ plotTilesData <- function(object, colors = NULL) {
   # Collect relevant data
   TrainData <- object@TrainData
   M <- getDimensions(object)[["M"]]
+  N <- getDimensions(object)[["N"]]
   
   # Define colors  
   if (is.null(colors)) {
     palette <- c("#D95F02", "#377EB8", "#E6AB02", "#31A354", "#7570B3", "#E7298A", "#66A61E",
                  "#A6761D", "#666666", "#E41A1C", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33",
                  "#A65628", "#F781BF", "#1B9E77")
-    if (M<17) colors <- palette[1:M] else colors <- rainbow(M)
+    if (M<17) colors <- palette[seq_len(M)] else colors <- rainbow(M)
   }
   if (length(colors)!=M) stop("Length of 'colors' does not match the number of views")
   names(colors) <- viewNames(object)
   
   # Define availability binary matrix to indicate whether assay j is profiled in sample i
-  ovw <- sapply(TrainData, function(dat) apply(dat,2,function(s) !all(is.na(s))))
+  ovw <- vapply(TrainData, function(dat) apply(dat, 2, function(s) !all(is.na(s))), logical(N))
   
   # Remove samples with no measurements
   ovw <- ovw[apply(ovw,1,any),, drop=FALSE]
@@ -357,7 +358,7 @@ plotTilesData <- function(object, colors = NULL) {
   # Add number of samples and features per view
   molten_ovw$combi <- ifelse(molten_ovw$value, as.character(molten_ovw$view), "missing")
   molten_ovw$ntotal <- paste("n=", colSums(ovw)[as.character(molten_ovw$view) ], sep="")
-  molten_ovw$ptotal <- paste("d=", sapply(TrainData, nrow)[as.character(molten_ovw$view) ], sep="")
+  molten_ovw$ptotal <- paste("d=", vapply(TrainData, nrow, numeric(1))[as.character(molten_ovw$view) ], sep="")
     
   # Define y-axis label
   molten_ovw$view_label = paste(molten_ovw$view, molten_ovw$ptotal, sep="\n")

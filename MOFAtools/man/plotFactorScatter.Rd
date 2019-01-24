@@ -49,13 +49,13 @@ Similar functions are \code{\link{plotFactorScatters}} for doing multiple scatte
 }
 \examples{
 # Example on the CLL data
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 plotFactorScatter(MOFA_CLL, factors=1:2)
 plotFactorScatter(MOFA_CLL, factors=1:2, color_by= "IGHV", shape_by="trisomy12", showMissing=FALSE)
 
 # Example on the scMT data
-filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFA_scMT <- loadModel(filepath)
 plotFactorScatter(MOFA_scMT, factors=c(1,3))
 }

@@ -33,7 +33,7 @@ Function to get the imputed data. It requires the previous use of the
 }
 \examples{
 # load a trained MOFAmodel object
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFAobject <- loadModel(filepath)
 # impute missing values
 MOFAobject <- impute(MOFAobject)

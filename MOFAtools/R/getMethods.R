@@ -15,13 +15,13 @@
 #' @export
 #' @examples
 #' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFAobject <- loadModel(filepath)
 #' # get dimensions 
 #' getDimensions(MOFAobject)
 
 getDimensions <- function(object) {
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")  
   return(object@Dimensions)
 }
 
@@ -41,7 +41,7 @@ getDimensions <- function(object) {
 #' @export
 #' @examples
 #' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFAobject <- loadModel(filepath)
 #' # get factors as matrix
 #' getFactors(MOFAobject, factors = 1:3)
@@ -91,7 +91,7 @@ getFactors <- function(object, factors = "all", as.data.frame = FALSE) {
 #' @export
 #' @examples
 #' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFAobject <- loadModel(filepath)
 #' # get weights as a list of matrices
 #' weightList <- getWeights(MOFAobject, view = "all", factors = 1:4)
@@ -146,11 +146,11 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
 #'  returns a long-formatted data frame with columns (view,feature,sample,value).
 #' @export
 #' @examples 
-#' data("scMT_data")
+#' data("scMT_data", package = "MOFAdata")
 #' MOFAobject <- createMOFAobject(scMT_data)
 #' getTrainData(MOFAobject)
 #' 
-#' data("CLL_data")
+#' data("CLL_data", package = "MOFAdata")
 #' MOFAobject <- createMOFAobject(CLL_data)
 #' getTrainData(MOFAobject)
 
@@ -164,9 +164,9 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
   } else { stopifnot(all(views %in% viewNames(object))) }
   
   # Get features
-  if (class(features)=="list") {
-    stopifnot(all(sapply(1:length(features),
-                         function(i) all(features[[i]] %in% featureNames(object)[[views[i]]]))))
+  if (is(features, "list")) {
+    stopifnot(all(vapply(seq_along(features),
+                         function(i) all(features[[i]] %in% featureNames(object)[[views[i]]]), logical(1))))
   } else {
     if (paste0(features,collapse="") == "all") { 
       features <- featureNames(object)[views]
@@ -177,7 +177,7 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
   
   # Fetch data
   trainData <- object@TrainData[views]
-  trainData <- lapply(1:length(trainData), function(m) trainData[[m]][features[[m]],,drop=FALSE])
+  trainData <- lapply(seq_along(trainData), function(m) trainData[[m]][features[[m]],,drop=FALSE])
   names(trainData) <- views
   
   # Convert to long data frame
@@ -185,7 +185,7 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
     tmp <- lapply(views, function(m) { tmp <- reshape2::melt(trainData[[m]])
     colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
     trainData <- do.call(rbind,tmp)
-    trainData[,c("view","feature","sample")] <- sapply(trainData[,c("view","feature","sample")], as.character)
+    trainData[,c("view","feature","sample")] <- vapply(trainData[,c("view","feature","sample")], as.character, character(nrow(trainData)))
   }# else if ((length(views)==1) && (as.data.frame==FALSE)) {
   #  trainData <- trainData[[views]]
   #}
@@ -214,7 +214,7 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
 #' @export
 #' @examples
 #' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFAobject <- loadModel(filepath)
 #' # impute missing values
 #' MOFAobject <- impute(MOFAobject)
@@ -238,8 +238,8 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
   }
   
   # Get features
-  if (class(features)=="list") {
-    stopifnot(all(sapply(1:length(features), function(i) all(features[[i]] %in% featureNames(object)[[views[i]]]))))
+  if (is(features, "list")) {
+    stopifnot(all(vapply(seq_along(features), function(i) all(features[[i]] %in% featureNames(object)[[views[i]]]), logical(1))))
   } else {
     if (paste0(features,collapse="") == "all") { 
       features <- featureNames(object)[views]
@@ -250,7 +250,7 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
   
   # Fetch imputed data
   ImputedData <- object@ImputedData[views]
-  ImputedData <- lapply(1:length(ImputedData),
+  ImputedData <- lapply(seq_along(ImputedData),
                         function(m) ImputedData[[m]][features[[m]],,drop=FALSE]) 
   names(ImputedData) <- views
   
@@ -259,7 +259,7 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
     tmp <- lapply(views, function(m) { tmp <- reshape2::melt(ImputedData[[m]]) 
     colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
     ImputedData <- do.call(rbind,tmp)
-    ImputedData[,c("view","feature","sample")] <- sapply(ImputedData[,c("view","feature","sample")], as.character)
+    ImputedData[,c("view","feature","sample")] <- vapply(ImputedData[,c("view","feature","sample")], as.character, character(nrow(ImputedData)))
   } 
   # else if ((length(views)==1) && (as.data.frame==FALSE)) {
   #   ImputedData <- ImputedData[[views]]
@@ -283,8 +283,8 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
 #' @examples
 #' # Example on the CLL data
 #' library(MultiAssayExperiment)
-#' data("CLL_data")
-#' data("CLL_covariates")
+#' data("CLL_data", package = "MOFAdata")
+#' data("CLL_covariates", package = "MOFAdata")
 #' # Create MultiAssayExperiment object 
 #' mae_CLL <- MultiAssayExperiment(CLL_data, colData=CLL_covariates)
 #' MOFAobject  <- createMOFAobject(mae_CLL)
@@ -292,7 +292,7 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
 #' gender <- getCovariates(MOFAobject, "Gender")
 #' diagnosis <- getCovariates(MOFAobject, "Diagnosis")
 #' # Example on the scMT data
-#' data("scMT_data")
+#' data("scMT_data", package = "MOFAdata")
 #' MOFAobject  <- createMOFAobject(scMT_data)
 #' # Extract covariates from the colData of a MultiAssayExperiment
 #' culture <- getCovariates(MOFAobject, "culture")
@@ -302,7 +302,7 @@ getCovariates <- function(object, covariate) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
-  if(class(object@InputData) != "MultiAssayExperiment") {
+  if(!is(object@InputData, "MultiAssayExperiment")) {
     stop("To work with covariates, InputData has to be specified in form of a MultiAssayExperiment")
   }
   
@@ -372,7 +372,7 @@ getCovariates <- function(object, covariate) {
 #' @export
 #' @examples
 #' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFAobject <- loadModel(filepath)
 #' # get expectations of Alpha as matrix
 #' getExpectations(MOFAobject, variable="Alpha")
@@ -402,7 +402,7 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
         tmp <- reshape2::melt(exp[[m]])
         colnames(tmp) <- c("feature","factor","value");
         tmp$view <- m
-        tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character)
+        tmp[c("view","feature","factor")] <- vapply(tmp[c("view","feature","factor")], as.character, character(nrow(tmp)))
         return(tmp) 
       })
       tmp <- do.call(rbind.data.frame,tmp)
@@ -412,7 +412,7 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
         tmp <- reshape2::melt(exp[[m]])
         colnames(tmp) <- c("sample","feature","value")
         tmp$view <- m
-        tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character)
+        tmp[c("view","feature","factor")] <- vapply(tmp[c("view","feature","factor")], as.character, character(nrow(tmp)))
         return(tmp) 
       })
       tmp <- do.call(rbind,tmp)
@@ -421,7 +421,7 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
       stop("Not implemented")
       # tmp <- lapply(names(exp), function(m) { 
       #   data.frame(view=m, feature=names(exp[[m]]), value=unname(exp[[m]]))
-      #   tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character)
+      #   tmp[c("view","feature","factor")] <- vapply(tmp[c("view","feature","factor")], as.character, character(nrow(tmp)))
       #   return(tmp) 
       # })
       # tmp <- do.call(rbind,tmp)
@@ -429,7 +429,7 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
     else if (variable=="AlphaW") {
       tmp <- lapply(names(exp), function(m) { 
         tmp <- data.frame(view=m, factor=names(exp[[m]]), value=unname(exp[[m]]))
-        tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character)
+        tmp[c("view","feature","factor")] <- vapply(tmp[c("view","feature","factor")], as.character, character(nrow(tmp)))
         return(tmp) 
       })
       tmp <- do.call(rbind,tmp)
@@ -438,7 +438,7 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
       stop("Not implemented")
       # tmp <- lapply(names(exp), function(m) { tmp <- reshape2::melt(exp[[m]])
       # colnames(tmp) <- c("sample","feature","value")
-      # tmp$view <- m; tmp[c("view","feature","factor")] <- sapply(tmp[c("view","feature","factor")], as.character)
+      # tmp$view <- m; tmp[c("view","feature","factor")] <- vapply(tmp[c("view","feature","factor")], as.character, character(nrow(tmp)))
       # return(tmp) })
       # tmp <- do.call(rbind,tmp)
     }
@@ -458,13 +458,13 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
 #' @export
 #' @examples
 #' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFAobject <- loadModel(filepath)
 #' # get ELBO statistic
 #' getELBO(MOFAobject)
 
 getELBO <- function(object) {
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")  
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")  
   return(tail(object@TrainStats$elbo,1))
 }
 

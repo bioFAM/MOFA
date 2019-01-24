@@ -19,22 +19,27 @@
 #' @export
 #' @examples 
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' trainCurveFactors(MOFA_CLL)
 
 #' # Example on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' trainCurveFactors(MOFA_scMT)
 
 trainCurveFactors <- function(object) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") { stop("'object' has to be an instance of MOFAmodel") }
+  if (!is(object, "MOFAmodel")) { stop("'object' has to be an instance of MOFAmodel") }
   
   # Collect training statistics
-  idx = seq(1+object@TrainOptions$startdrop,length(object@TrainStats$activeK),object@TrainOptions$freqdrop)
+  if(is.null(object@TrainOptions$freqdrop)) {
+      freqdrop <- 1
+  } else {
+      freqdrop <- object@TrainOptions$freqdrop
+  }
+  idx = seq(1, length(object@TrainStats$activeK), freqdrop)
   stat = object@TrainStats$activeK[idx] 
   data <- data.frame(time=idx, value=stat)
   
@@ -82,27 +87,32 @@ trainCurveFactors <- function(object) {
 #' @export
 #' @examples
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' trainCurveELBO(MOFA_CLL)
 #' trainCurveELBO(MOFA_CLL, logScale= TRUE)
 #'
 #' # Example on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' trainCurveELBO(MOFA_scMT)
 
 trainCurveELBO <- function(object, logScale = FALSE) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") { 
+  if (!is(object, "MOFAmodel")) { 
     stop("'object' has to be an instance of MOFAmodel") 
     }
   if (object@Status != "trained") { 
     stop("MOFAmodel is untrained. Use runMOFA to train it.") 
   }
   # Fetch ELBO from TrainStats  
-  idx = seq(1,length(object@TrainStats$elbo),object@TrainOptions$elbofreq)
+  if(is.null(object@TrainOptions$elbofreq)) {
+    elbofreq <- 1
+    } else {
+      elbofreq <- object@TrainOptions$elbofreq
+  }
+  idx = seq(1,length(object@TrainStats$elbo), elbofreq)
   stat = object@TrainStats$elbo[idx]
   
   # Apply log transform

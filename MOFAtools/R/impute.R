@@ -29,13 +29,13 @@
 #' @export
 #' @examples 
 #' # Load CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' # impute missing data in all views using all factors
 #' MOFA_CLL <- impute(MOFA_CLL)
 #' 
 #' # Load scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' # impute missing data in the RNA view using Factor 1
 #' MOFA_scMT <- impute(MOFA_scMT, views="RNA expression", factors="LF1")

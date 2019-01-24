@@ -16,7 +16,7 @@
 #' @return \code{\link{MOFAmodel}} object with a subset of factors
 #' @examples
 #' # Using an existing trained model on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' MOFA_CLL_small <- subsetFactors(MOFA_CLL, factors=c(1,2,3))
 #' MOFA_CLL_small <- subsetFactors(MOFA_CLL, factors=c("LF1","LF2","LF3"))
@@ -24,7 +24,7 @@
 subsetFactors <- function(object, factors) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(factors) <= object@Dimensions[["K"]])
 
     # Get factors
@@ -35,15 +35,12 @@ subsetFactors <- function(object, factors) {
 
   # Subset relevant slots
   object@Expectations$Z <- object@Expectations$Z[,factors, drop=FALSE]
-  object@Expectations$Alpha <- sapply(object@Expectations$Alpha,
-                                      function(x) x[factors],
-                                      simplify = FALSE, USE.NAMES = TRUE)
-  object@Expectations$W <- sapply(object@Expectations$W,
-                                  function(x) x[,factors, drop=FALSE],
-                                  simplify = FALSE, USE.NAMES = TRUE)
-  object@Expectations$Theta <- sapply(object@Expectations$Theta,
-                                      function(x) x[factors],
-                                      simplify = FALSE, USE.NAMES = TRUE)
+  object@Expectations$Alpha <- lapply(object@Expectations$Alpha,
+                                      function(x) x[factors])
+  object@Expectations$W <- lapply(object@Expectations$W,
+                                  function(x) x[,factors, drop=FALSE])
+  object@Expectations$Theta <- lapply(object@Expectations$Theta,
+                                      function(x) x[factors])
 
   # Modify dimensionality
   object@Dimensions[["K"]] <- length(factors)
@@ -73,7 +70,7 @@ subsetFactors <- function(object, factors) {
 #' @export
 #' @examples
 #' # Using an existing trained model on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' # Subset samples via character vector
 #' MOFA_CLL_small <- subsetSamples(MOFA_CLL, samples=c("H045","H109","H024","H056"))
@@ -82,7 +79,7 @@ subsetFactors <- function(object, factors) {
 subsetSamples <- function(object, samples) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(samples) <= object@Dimensions[["N"]])
   # warning("Warning: removing samples is fine for an exploratory analysis...\nbut we recommend removing them before training!\n")
   
@@ -95,15 +92,12 @@ subsetSamples <- function(object, samples) {
   
   # Subset relevant slots
   object@Expectations$Z <- object@Expectations$Z[samples,, drop=FALSE]
-  object@Expectations$Y <- sapply(object@Expectations$Y, function(x) x[samples,],
-                                  simplify = FALSE, USE.NAMES = TRUE)
-  object@TrainData <- sapply(object@TrainData, function(x) x[,samples],
-                             simplify = FALSE, USE.NAMES = TRUE)
+  object@Expectations$Y <- lapply(object@Expectations$Y, function(x) x[samples,])
+  object@TrainData <- lapply(object@TrainData, function(x) x[,samples])
   if (length(object@InputData)>0)
     object@InputData <- object@InputData[,samples,]
   if (length(object@ImputedData)==0)
-    object@ImputedData <- sapply(object@ImputedData, function(x) x[,samples],
-                                 simplify = FALSE, USE.NAMES = TRUE)
+    object@ImputedData <- lapply(object@ImputedData, function(x) x[,samples])
 
   # Modify dimensionality
   object@Dimensions[["N"]] <- length(samples)
@@ -130,7 +124,7 @@ subsetSamples <- function(object, samples) {
 #' @export
 #' @examples
 #' # Using an existing trained model on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' # Subset views via character vector
 #' MOFA_CLL_small <- subsetViews(MOFA_CLL, views=c("Drugs","Methylation"))
@@ -139,7 +133,7 @@ subsetSamples <- function(object, samples) {
 subsetViews <- function(object, views) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(views) <= object@Dimensions[["N"]])
   warning("Removing views is fine for an exploratory analysis,\n
           but we recommend removing them before training!\n")

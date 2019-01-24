@@ -28,12 +28,12 @@
       for (m in views) {
         
         # Loop over expectations
-          if (class(object@Expectations[[node]][[m]]) == "matrix") {
+          if (is(object@Expectations[[node]][[m]], "matrix")) {
             if (nrow(object@Expectations[[node]][[m]]) == dimensionality)
               rownames(object@Expectations[[node]][[m]]) <- values
             if (ncol(object@Expectations[[node]][[m]]) == dimensionality)
               colnames(object@Expectations[[node]][[m]]) <- values
-          } else if (class(object@Expectations[[node]][[m]]) == "array") {
+          } else if (is(object@Expectations[[node]][[m]], "array")) {
             if (length(object@Expectations[[node]][[m]]) == dimensionality)
               names(object@Expectations[[node]][[m]]) <- values
           }
@@ -44,12 +44,12 @@
     } else {
       
       # Loop over expectations
-        if (class(object@Expectations[[node]]) == "matrix") {
+        if (is(object@Expectations[[node]], "matrix")) {
           if (nrow(object@Expectations[[node]]) == dimensionality)
             rownames(object@Expectations[[node]]) <- values
           if (ncol(object@Expectations[[node]]) == dimensionality)
             colnames(object@Expectations[[node]]) <- values
-        } else if (class(object@Expectations[[node]]) == "array") {
+        } else if (is(object@Expectations[[node]], "array")) {
           if (length(object@Expectations[[node]]) == dimensionality)
             names(object@Expectations[[node]]) <- values
         }
@@ -72,7 +72,7 @@
 #' @export
 #' @examples
 #' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFAobject <- loadModel(filepath)
 #' factorNames(MOFAobject)
 
@@ -84,7 +84,7 @@ setMethod("factorNames", signature(object="MOFAmodel"), function(object) { colna
 #' @export
 #' @examples
 #' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFAobject <- loadModel(filepath)
 #' factorNames(MOFAobject)
 #' factorNames(MOFAobject) <- paste("Factor",1:3,sep="_")
@@ -118,7 +118,7 @@ setReplaceMethod("factorNames", signature(object="MOFAmodel", value="vector"),
 #' @return character vector with the sample names
 #' @export
 #' @examples
-#' data("CLL_data")
+#' data("CLL_data", package = "MOFAdata")
 #' MOFAobject  <- createMOFAobject(CLL_data)
 #' head(sampleNames(MOFAobject))
 setMethod("sampleNames", signature(object="MOFAmodel"), function(object) { colnames(object@TrainData[[1]]) } )
@@ -154,7 +154,7 @@ setReplaceMethod("sampleNames", signature(object="MOFAmodel", value="vector"),
 #' @return list of character vectors with the feature names for each view
 #' @export
 #' @examples
-#' data("CLL_data")
+#' data("CLL_data", package = "MOFAdata")
 #' MOFAobject  <- createMOFAobject(CLL_data)
 #' featureNames(MOFAobject)$Mutations
 #' head(featureNames(MOFAobject)$Drugs)
@@ -175,12 +175,12 @@ setReplaceMethod("featureNames", signature(object="MOFAmodel", value="list"),
     if (!methods::.hasSlot(object,"Expectations")  | length(object@Expectations) == 0)
       stop("Before assigning feature names you have to assign the expectations")
     if (methods::.hasSlot(object,"Dimensions")  | length(object@Dimensions) == 0)
-      if (!all(sapply(value,length) == object@Dimensions[["D"]]))
+      if (!all(vapply(value, length, numeric(1)) == object@Dimensions[["D"]]))
         stop("Length of feature names does not match the dimensionality of the model")
-    if (!all(sapply(value,length)==sapply(object@TrainData,nrow)))
+    if (!all(vapply(value, length, numeric(1)) == vapply(object@TrainData, nrow, numeric(1))))
       stop("feature names do not match the dimensionality of the data (columns)")
     
-    for (m in 1:length(object@TrainData)) {
+    for (m in seq_along(object@TrainData)) {
       object <- .setNames(object, value[[m]], object@Dimensions[["D"]][m], names(object@Dimensions[["D"]][m]))
     }
     return(object)
@@ -197,7 +197,7 @@ setReplaceMethod("featureNames", signature(object="MOFAmodel", value="list"),
 #' @rdname viewNames
 #' @export
 #' @examples
-#' data("CLL_data")
+#' data("CLL_data", package = "MOFAdata")
 #' MOFAobject  <- createMOFAobject(CLL_data)
 #' viewNames(MOFAobject)
 setMethod("viewNames", signature(object="MOFAmodel"), function(object) { names(object@TrainData) } )
@@ -208,7 +208,7 @@ setMethod("viewNames", signature(object="MOFAmodel"), function(object) { names(o
 #' @import methods
 #' @export
 #' @examples
-#' data("CLL_data")
+#' data("CLL_data", package = "MOFAdata")
 #' MOFAobject  <- createMOFAobject(CLL_data)
 #' viewNames(MOFAobject) 
 #' viewNames(MOFAobject) <- c("DrugResponses", viewNames(MOFAobject)[2:4])

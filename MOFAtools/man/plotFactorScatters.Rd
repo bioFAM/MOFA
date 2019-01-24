@@ -5,7 +5,8 @@
 \title{Pairwise scatterplots of multiple latent factors}
 \usage{
 plotFactorScatters(object, factors = "all", showMissing = TRUE,
-  color_by = NULL, name_color = "", shape_by = NULL, name_shape = "")
+  color_by = NULL, name_color = "", shape_by = NULL,
+  name_shape = "")
 }
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
@@ -49,13 +50,13 @@ Similar functions are \code{\link{plotFactorScatter}} for doing single scatter p
 }
 \examples{
 # Example on the CLL data
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 plotFactorScatters(MOFA_CLL, factors=1:3)
 plotFactorScatters(MOFA_CLL, factors=1:3, color_by= "IGHV")
 
 # Example on the scMT data
-filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFA_scMT <- loadModel(filepath)
 plotFactorScatters(MOFA_scMT)
 }

@@ -23,11 +23,11 @@ All training statistics, including the number of active factors, can be fetch fr
 }
 \examples{
 # Example on the CLL data
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 trainCurveFactors(MOFA_CLL)
 # Example on the scMT data
-filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFA_scMT <- loadModel(filepath)
 trainCurveFactors(MOFA_scMT)
 }

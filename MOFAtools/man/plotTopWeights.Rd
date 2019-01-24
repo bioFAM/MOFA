@@ -43,14 +43,14 @@ Therefore, for interpretability purposes we always recommend to scale the weight
 }
 \examples{
 # Example on the CLL data
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3)
 plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3, sign = "positive")
 plotTopWeights(MOFA_CLL, view="Mutations", factor=1, nfeatures=3, sign = "negative")
 
 # Example on the scMT data
-filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFA_scMT <- loadModel(filepath)
 plotTopWeights(MOFA_scMT, view="RNA expression", factor=1)
 }

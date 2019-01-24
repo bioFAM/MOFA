@@ -21,19 +21,19 @@
 #' @export
 #' @examples
 #' # Using an existing trained model on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' plotVarianceExplained(MOFA_CLL)
 #'
 #' # Using an existing trained model on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotVarianceExplained(MOFA_scMT)
 
 calculateVarianceExplained <- function(object, views = "all", factors = "all") {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   
   # Define views
   if (paste0(views,sep="",collapse="") =="all") { 
@@ -62,8 +62,8 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all") {
   Z[is.na(Z)] <- 0 
   
   # Calculate coefficient of determination per view
-  tmp <- sapply(views, function(m) sum(Y[[m]]**2, na.rm=TRUE))
-  fvar_m <- sapply(views, function(m) 1 - sum((Y[[m]]-tcrossprod(Z,W[[m]]))**2, na.rm=TRUE) / tmp[m])
+  tmp <- vapply(views, function(m) sum(Y[[m]]**2, na.rm=TRUE), numeric(1))
+  fvar_m <- vapply(views, function(m) 1 - sum((Y[[m]]-tcrossprod(Z, W[[m]]))**2, na.rm=TRUE) / tmp[m], numeric(1))
   names(fvar_m) <- views
   
   # Calculate coefficient of determination per factor and view
@@ -102,12 +102,12 @@ calculateVarianceExplained <- function(object, views = "all", factors = "all") {
 #' @export
 #' @examples
 #' # Using an existing trained model on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' plotVarianceExplained(MOFA_CLL)
 #'
 #' # Using an existing trained model on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotVarianceExplained(MOFA_scMT)
 

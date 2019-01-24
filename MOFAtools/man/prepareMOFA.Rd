@@ -29,7 +29,7 @@ Here, data, input/output option are specified and data, model and training optio
 }
 \examples{
 # load data
-data("CLL_Data")
+data("CLL_data", package = "MOFAdata")
 #create a MOFAmodel object
 MOFAobject <- createMOFAobject(CLL_data)
 # set options

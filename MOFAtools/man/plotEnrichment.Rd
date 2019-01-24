@@ -4,8 +4,8 @@
 \alias{plotEnrichment}
 \title{Line plot of Feature Set Enrichment Analysis results}
 \usage{
-plotEnrichment(object, fsea.out, factor, alpha = 0.1, max.pathways = 25,
-  adjust = TRUE)
+plotEnrichment(object, fsea.out, factor, alpha = 0.1,
+  max.pathways = 25, adjust = TRUE)
 }
 \arguments{
 \item{object}{\code{\link{MOFAmodel}} object, on which the Feature Set Enrichment Analyisis was performed}
@@ -28,10 +28,10 @@ Line plot of the Feature Set Enrichment Analyisis results for a specific latent 
 }
 \examples{
 # Example on the CLL data
-filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 # perform feature set enrichment analysis on mRNA data for all factors using the Reactome gene sets
-data("reactomeGS")
+data("reactomeGS", package = "MOFAdata")
 fsea.out <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
 # top 10 enriched pathwyas on factor 5:
 plotEnrichment(MOFA_CLL, fsea.out, factor=5,  max.pathways=10)

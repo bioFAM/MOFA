@@ -23,8 +23,8 @@ Note that if you did not use \code{MultiAssayExperiment} to create
 \examples{
 # Example on the CLL data
 library(MultiAssayExperiment)
-data("CLL_data")
-data("CLL_covariates")
+data("CLL_data", package = "MOFAdata")
+data("CLL_covariates", package = "MOFAdata")
 # Create MultiAssayExperiment object 
 mae_CLL <- MultiAssayExperiment(CLL_data, colData=CLL_covariates)
 MOFAobject  <- createMOFAobject(mae_CLL)
@@ -32,7 +32,7 @@ MOFAobject  <- createMOFAobject(mae_CLL)
 gender <- getCovariates(MOFAobject, "Gender")
 diagnosis <- getCovariates(MOFAobject, "Diagnosis")
 # Example on the scMT data
-data("scMT_data")
+data("scMT_data", package = "MOFAdata")
 MOFAobject  <- createMOFAobject(scMT_data)
 # Extract covariates from the colData of a MultiAssayExperiment
 culture <- getCovariates(MOFAobject, "culture")

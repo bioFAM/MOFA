@@ -31,13 +31,13 @@
 #' @export
 #' @examples
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' plotFactorHist(MOFA_CLL, factor=1)
 #' plotFactorHist(MOFA_CLL, factor=1, group_by= "IGHV")
 #'
 #' # Example on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotFactorHist(MOFA_scMT, factor=2)
 
@@ -45,7 +45,7 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "",
                            alpha = 0.5, binwidth = NULL, showMissing = FALSE) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   if(length(factor)>1)  stop("Please specify a single factor!")
   
   # Collect relevant data
@@ -69,9 +69,9 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "",
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if (group_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) group_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) group_by %in% vnm, logical(1)))
         group_by <- TrainData[[viewidx]][group_by,]
-      } else if (class(object@InputData) == "MultiAssayExperiment") {
+      } else if (is(object@InputData, "MultiAssayExperiment")) {
         group_by <- getCovariates(object, group_by)
       } else {
         stop("'group_by' was specified but it was not recognised, please read the documentation")
@@ -153,13 +153,13 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "",
 #' @export
 #' @examples
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' plotFactorBeeswarm(MOFA_CLL, factor=1:3)
 #' plotFactorBeeswarm(MOFA_CLL, factor=1:2, color_by= "IGHV")
 #'
 #' # Example on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotFactorBeeswarm(MOFA_scMT)
 plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
@@ -191,9 +191,9 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if(color_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) color_by %in% vnm, logical(1)))
         color_by <- TrainData[[viewidx]][color_by,]
-      } else if(class(object@InputData) == "MultiAssayExperiment") {
+      } else if(is(object@InputData, "MultiAssayExperiment")) {
         color_by <- getCovariates(object, color_by)
     } else {
       stop("'color_by' was specified but it was not recognised, please read the documentation") 
@@ -221,9 +221,9 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if(shape_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) shape_by %in% vnm, logical(1)))
         shape_by <- TrainData[[viewidx]][shape_by,]
-      } else if(class(object@InputData) == "MultiAssayExperiment") {
+      } else if(is(object@InputData, "MultiAssayExperiment")) {
         shape_by <- getCovariates(object, shape_by)
     } else {
       stop("'shape_by' was specified but it was not recognised, please read the documentation") 
@@ -326,13 +326,13 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
 #' @export
 #' @examples
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' plotFactorScatter(MOFA_CLL, factors=1:2)
 #' plotFactorScatter(MOFA_CLL, factors=1:2, color_by= "IGHV", shape_by="trisomy12", showMissing=FALSE)
 #'
 #' # Example on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotFactorScatter(MOFA_scMT, factors=c(1,3))
 
@@ -340,7 +340,7 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
                          name_shape="", showMissing = TRUE) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   stopifnot(length(factors)==2)
   
   # Get factors
@@ -369,9 +369,9 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if(color_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) color_by %in% vnm, logical(1)))
         color_by <- TrainData[[viewidx]][color_by,]
-      } else if(class(object@InputData) == "MultiAssayExperiment") {
+      } else if(is(object@InputData, "MultiAssayExperiment")) {
         color_by <- getCovariates(object, color_by)
       } else { 
         stop("'color_by' was specified but it was not recognised, please read the documentation") 
@@ -398,9 +398,9 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if(shape_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) shape_by %in% vnm, logical(1)))
         shape_by <- TrainData[[viewidx]][shape_by,]
-      } else if(class(object@InputData) == "MultiAssayExperiment"){
+      } else if(is(object@InputData, "MultiAssayExperiment")){
         shape_by <- getCovariates(object, shape_by)
     }
     else stop("'shape_by' was specified but it was not recognised, please read the documentation")
@@ -433,7 +433,7 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
   p <- ggplot(df, aes_string(x = "x", y = "y")) + 
     geom_point(aes_string(color = "color_by", shape = "shape_by")) + 
     xlab(xlabel) + ylab(ylabel) +
-    # scale_shape_manual(values=c(19,1,2:18)[1:length(unique(shape_by))]) +
+    # scale_shape_manual(values=c(19,1,2:18)[seq_along(unique(shape_by))]) +
     theme(plot.margin = margin(20, 20, 10, 10), 
           axis.text = element_text(size = rel(1), color = "black"), 
           axis.title = element_text(size = 16), 
@@ -488,13 +488,13 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
 #' @export
 #' @examples
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' plotFactorScatters(MOFA_CLL, factors=1:3)
 #' plotFactorScatters(MOFA_CLL, factors=1:3, color_by= "IGHV")
 #'
 #' # Example on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotFactorScatters(MOFA_scMT)
 
@@ -503,7 +503,7 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
                          shape_by=NULL, name_shape="") {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
 
   # Collect relevant data
   N <- object@Dimensions[["N"]]
@@ -539,9 +539,9 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if(color_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) color_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) color_by %in% vnm, logical(1)))
         color_by <- TrainData[[viewidx]][color_by,]
-      } else if(class(object@InputData) == "MultiAssayExperiment"){
+      } else if(is(object@InputData, "MultiAssayExperiment")){
         color_by <- getCovariates(object, color_by)
     }
     else stop("'color_by' was specified but it was not recognised, please read the documentation")
@@ -566,9 +566,9 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
       TrainData <- getTrainData(object)
       featureNames <- lapply(TrainData, rownames)
       if (shape_by %in% Reduce(union,featureNames)) {
-        viewidx <- which(sapply(featureNames, function(vnm) shape_by %in% vnm))
+        viewidx <- which(vapply(featureNames, function(vnm) shape_by %in% vnm, logical(1)))
         shape_by <- TrainData[[viewidx]][shape_by,]
-      } else if(class(object@InputData) == "MultiAssayExperiment"){
+      } else if(is(object@InputData, "MultiAssayExperiment")){
         shape_by <- getCovariates(object, shape_by)
     }
     else stop("'shape_by' was specified but it was not recognised, please read the documentation")
@@ -641,8 +641,8 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
   
   # If color_by is numeric, define the default gradient
   if (is.numeric(df$color_by)) { 
-    for(i in 1:p$nrow) {
-      for(j in 1:p$ncol){
+    for(i in seq_len(p$nrow)) {
+      for(j in seq_len(p$ncol)){
         p[i,j] <- p[i,j] + scale_color_gradientn(colors=terrain.colors(10)) 
       }
     }
@@ -672,26 +672,26 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
 #' @export
 #' @examples
 #' # Example on the CLL data
-#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' plotFactorCor(MOFA_CLL)
 #'
 #' # Example on the scMT data
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAtools")
+#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotFactorCor(MOFA_scMT)
 
 plotFactorCor <- function(object, method = "pearson", ...) {
   
   # Sanity checks
-  if (class(object) != "MOFAmodel") stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   
   # Fetch factors
   Z <- getFactors(object)
   
   # Compute and plot correlation
-  rownames(Z) <- paste0("LF",1:nrow(Z))
-  colnames(Z) <- paste0("LF",1:ncol(Z))
+  rownames(Z) <- paste0("LF", seq_len(nrow(Z)))
+  colnames(Z) <- paste0("LF", seq_len(ncol(Z)))
   r <- abs(cor(x=Z, y=Z, method=method, use = "complete.obs"))
   p <- corrplot(r, tl.col="black", ...)
   

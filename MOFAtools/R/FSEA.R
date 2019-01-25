@@ -71,11 +71,13 @@ runEnrichmentAnalysis <- function(object, view,
   statistical.test <- match.arg(statistical.test)
 
   # Define factors
-  if (paste0(factors,collapse="") == "all") { factors <- factorNames(object) } 
-    else if(is.numeric(factors)) {
+  if (paste0(factors,collapse="") == "all") { 
+    factors <- factorNames(object) 
+  } else if (is.numeric(factors)) {
       factors <- factorNames(object)[factors]
-    }
-      else{ stopifnot(all(factors %in% factorNames(object))) }
+  } else { 
+    stopifnot(all(factors %in% factorNames(object))) 
+  }
   
   # Collect observed data
   data <- object@TrainData[[view]]
@@ -104,7 +106,7 @@ runEnrichmentAnalysis <- function(object, view,
   
   # Check if some features do not intersect between the feature sets and the observed data and remove them
   features <- intersect(colnames(data),colnames(feature.sets))
-  if(length(features) == 0 ) stop("Feautre names in feature.sets do not match feature names in model.")
+  if (length(features)== 0) stop("Feautre names in feature.sets do not match feature names in model.")
   data <- data[,features]
   W <- W[features,, drop=FALSE]
   feature.sets <- feature.sets[,features]

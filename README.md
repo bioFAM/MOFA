@@ -173,7 +173,7 @@ use_python("YOUR_PYTHON_PATH", required=TRUE)
 You can also use `use_conda` instead of `use_python` if you work with conda environments. Read more about the [reticulate](https://rstudio.github.io/reticulate/) package and [how it integrates Python and R](https://rstudio.github.io/reticulate/articles/versions.html)
 
 **(Q) I hate R, can I do MOFA only with Python?**  
-Nop. You can use Python to train the model, see [this template script](https://github.com/bioFAM/MOFA/blob/master/mofa/run/python_template.py). However, we currently do not provide downstream analysis functions in Python. We strongly recommend that you use our MOFA R package for this.
+Nop. You can use Python to train the model, see [this template script](https://github.com/bioFAM/MOFA/blob/master/mofapy/run/python_template.py). However, we currently do not provide downstream analysis functions in Python. We strongly recommend that you use our MOFA R package for this.
 
 **(Q) How many factors should I use?**  
 Similar to Principal Component Analysis and other factor models, this is a hard question to answer. It depends on the data set and the aim of the analysis. As a general rule, the bigger the data set, the higher the number of factors that you will retrieve, and the less the variance that will be explained per factor.

@@ -40,22 +40,22 @@ python setup.py install
 ### R package
 The easier way to install the R package is via github:
 ```r
-devtools::install_github("bioFAM/MOFA", subdir="MOFAtools")
+devtools::install_github("bioFAM/MOFA", subdir="MOFA")
 ```
 
 Alternatively, you can clone the repository and install locally:
 ```r
 git clone https://github.com/bioFAM/MOFA
-R CMD build MOFAtools
-R CMD install MOFAtools
+R CMD build MOFA
+R CMD install MOFA
 ```
 
 ## Tutorials/Vignettes
 We currently provide three example workflows:
 
-* [Integration of multi-omics cancer data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_CLL.html): a cohort of 200 chronic lymphocytic leukaemia patients. This is the main data set analysed in the [paper](http://msb.embopress.org/cgi/doi/10.15252/msb.20178124). 
-* [Integration of single-cell multi-omics data](http://htmlpreview.github.io/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_scMT.html): single-cell profiling of DNA methylation and RNA expression in roughly 100 pluripotent stem cells.
-* [Model selection and robustness with simulated data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_simulated.html): this tutorial is focused only on how to perform model selection and assess robustness.
+* [Integration of multi-omics cancer data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFA/vignettes/MOFA_example_CLL.html): a cohort of 200 chronic lymphocytic leukaemia patients. This is the main data set analysed in the [paper](http://msb.embopress.org/cgi/doi/10.15252/msb.20178124). 
+* [Integration of single-cell multi-omics data](http://htmlpreview.github.io/?https://github.com/bioFAM/MOFA/blob/master/MOFA/vignettes/MOFA_example_scMT.html): single-cell profiling of DNA methylation and RNA expression in roughly 100 pluripotent stem cells.
+* [Model selection and robustness with simulated data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFA/vignettes/MOFA_example_simulated.html): this tutorial is focused only on how to perform model selection and assess robustness.
 
 If there is any tutorial that you would like us to do, or if you want to share your analysis with MOFA, please contact us.
 
@@ -70,7 +70,7 @@ The workflow of MOFA consists of two steps:
 <img src="images/workflow.png">
 </p>
 
-A cheatsheet with all **relevant methods**, together with a short description, can be found [here](https://github.com/bioFAM/MOFA/blob/master/MOFAtools/CheatSheet.md)  
+A cheatsheet with all **relevant methods**, together with a short description, can be found [here](https://github.com/bioFAM/MOFA/blob/master/MOFA/CheatSheet.md)  
 
 ### Step 1: Fitting the model
 First you need to create the MOFA object with your input data, and subsequently you need to train the model. Everything is explained in the vignettes.  
@@ -147,7 +147,7 @@ Always try to remove any technical source of variability before fitting the mode
 
 **(Q) I get the following error when installing the R package:**
 ```
-ERROR: dependencies 'pcaMethods', 'MultiAssayExperiment' are not available for package 'MOFAtools'
+ERROR: dependencies 'pcaMethods', 'MultiAssayExperiment' are not available for package 'MOFA'
 ```
 These two packages are available from Bioconductor, not CRAN. You can install them from R as follows:
 ```
@@ -173,7 +173,7 @@ use_python("YOUR_PYTHON_PATH", required=TRUE)
 You can also use `use_conda` instead of `use_python` if you work with conda environments. Read more about the [reticulate](https://rstudio.github.io/reticulate/) package and [how it integrates Python and R](https://rstudio.github.io/reticulate/articles/versions.html)
 
 **(Q) I hate R, can I do MOFA only with Python?**  
-Nop. You can use Python to train the model, see [this template script](https://github.com/bioFAM/MOFA/blob/master/mofa/run/python_template.py). However, we currently do not provide downstream analysis functions in Python. We strongly recommend that you use our MOFAtools R package for this.
+Nop. You can use Python to train the model, see [this template script](https://github.com/bioFAM/MOFA/blob/master/mofa/run/python_template.py). However, we currently do not provide downstream analysis functions in Python. We strongly recommend that you use our MOFA R package for this.
 
 **(Q) How many factors should I use?**  
 Similar to Principal Component Analysis and other factor models, this is a hard question to answer. It depends on the data set and the aim of the analysis. As a general rule, the bigger the data set, the higher the number of factors that you will retrieve, and the less the variance that will be explained per factor.
@@ -215,7 +215,7 @@ Examples of both are shown in the vignettes.
 
 **(Q) Does MOFA always converge to the same solutions?**  
 No, as occurs in most complex Bayesian models, they are not guaranteed to always converge to the same (optimal) solution.
-In practice, however, we observed that the solutions are highly consistent, particularly for strong factors. However, one should always assess the robustness and do a proper model selection. For this we recommend to train the model multiple times and check the robustness of the factors across the different solutions. For downstream analysis a single model can be chosen based on the best value of the Evidence Lower Bound (ELBO). We provide functions for these two steps, which are explained in the vignette [Integration of simulated data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFAtools/vignettes/MOFA_example_simulated.html).
+In practice, however, we observed that the solutions are highly consistent, particularly for strong factors. However, one should always assess the robustness and do a proper model selection. For this we recommend to train the model multiple times and check the robustness of the factors across the different solutions. For downstream analysis a single model can be chosen based on the best value of the Evidence Lower Bound (ELBO). We provide functions for these two steps, which are explained in the vignette [Integration of simulated data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFA/vignettes/MOFA_example_simulated.html).
 
 **(Q) How does MOFA handle missing values?**  
 It simpy ignores them, there is no a priori imputation step required. In fact, matrix factorisation models are known to be very robust to the presence of large amounts of missing values. 

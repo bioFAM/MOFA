@@ -22,7 +22,7 @@
 #' This occurs when a factor is active in a single view and some samples are missing this data. \cr
 #' In such a case, there are several strategies to follow: \cr
 #' \itemize{
-#'  \item{}{ Use clustering approaches that deal with NAs (not implemented in MOFAtools)}
+#'  \item{}{ Use clustering approaches that deal with NAs (not implemented in MOFA)}
 #'  \item{}{ If the factor in question is not important, you can remove it with \code{\link{subsetFactors}}}
 #'  \item{}{ If the factor in question is important and just a small number of samples are conflictive, 
 #'  you can manually set them to 0 using \code{object@Expectations$Z[is.na(object@Expectations$Z)] <- 0}}

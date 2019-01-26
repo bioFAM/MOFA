@@ -12,7 +12,7 @@ vignette: >
 ---
 
 ```{r, message=FALSE}
-library(MOFAtools)
+library(MOFA)
 ```
 
 # Simulate an example data set

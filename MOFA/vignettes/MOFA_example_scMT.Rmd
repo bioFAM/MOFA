@@ -20,7 +20,7 @@ Briefly, the data set consists of 87 mouse embryonic stem cells (mESCs), compris
 The data is stored as a `MultiAssayExperiment` object.
 Notice that there are 4 views, one with normalized RNA expression assay and 3 views with DNA methylation information. Each DNA methylation view is a different genomic context (i.e. Enhancers, Promoters and CpG Islands) and each feature is an individual CpG site.
 ```{r, warning=FALSE, message=FALSE}
-library(MOFAtools)
+library(MOFA)
 library(MOFAdata)
 library(ggplot2)
 ```

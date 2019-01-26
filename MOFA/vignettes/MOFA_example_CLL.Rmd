@@ -15,7 +15,7 @@ This vignette show how to use MOFA including initialization, training and down-s
 For illustration we use the CLL data which is used in the MOFA publication.
 
 ```{r, warning=FALSE, message=FALSE}
-library(MOFAtools)
+library(MOFA)
 library(MOFAdata)
 ```
 

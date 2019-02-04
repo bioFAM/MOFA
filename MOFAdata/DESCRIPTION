@@ -10,7 +10,7 @@ Authors@R: c(person("Ricard", "Argelaguet", role=c("aut", "cre"), email="ricard@
 		person("Wolfgang", "Huber", role=c("aut"), email="wolfgang.huber@embl.de"),  
 		person("Oliver", "Stegle", role=c("aut"), email="stegle@ebi.ac.uk"))
 Date: 2018-06-26
-License: GPL (>= 2)
+License: LGPL-3
 Description: A collection of datasets to accompany the R package MOFA and illustrate running and analysing MOFA models.
 Encoding: UTF-8
 biocViews: ReproducibleResearch

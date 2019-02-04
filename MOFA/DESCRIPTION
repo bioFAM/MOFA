@@ -10,7 +10,7 @@ Authors@R: c(person("Ricard", "Argelaguet", role=c("aut", "cre"), email="ricard@
 		person("Wolfgang", "Huber", role=c("aut"), email="wolfgang.huber@embl.de"),  
 		person("Oliver", "Stegle", role=c("aut"), email="stegle@ebi.ac.uk"))
 Date: 2018-06-26
-License: LGPL-3.0
+License: LGPL-3
 Description: Multi-Omics Factor Analysis: an unsupervised framework for the integration of multi-omics data sets.
 Encoding: UTF-8
 Imports: rhdf5, dplyr, reshape2, pheatmap, corrplot, ggplot2, ggbeeswarm, methods, scales, GGally, RColorBrewer, cowplot, ggrepel, MultiAssayExperiment, Biobase, doParallel, foreach, reticulate, grDevices, stats, utils

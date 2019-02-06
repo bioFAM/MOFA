@@ -65,9 +65,9 @@ R CMD install MOFAdata
 ## Tutorials/Vignettes
 We currently provide three example workflows:
 
-* [Integration of multi-omics cancer data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFA/vignettes/MOFA_example_CLL.html): a cohort of 200 chronic lymphocytic leukaemia patients. This is the main data set analysed in the [paper](http://msb.embopress.org/cgi/doi/10.15252/msb.20178124). 
-* [Integration of single-cell multi-omics data](http://htmlpreview.github.io/?https://github.com/bioFAM/MOFA/blob/master/MOFA/vignettes/MOFA_example_scMT.html): single-cell profiling of DNA methylation and RNA expression in roughly 100 pluripotent stem cells.
-* [Model selection and robustness with simulated data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFA/vignettes/MOFA_example_simulated.html): this tutorial is focused only on how to perform model selection and assess robustness.
+* [Integration of multi-omics cancer data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/vignettes/MOFA_example_CLL.html): a cohort of 200 chronic lymphocytic leukaemia patients. This is the main data set analysed in the [paper](http://msb.embopress.org/cgi/doi/10.15252/msb.20178124).
+* [Integration of single-cell multi-omics data](http://htmlpreview.github.io/?https://github.com/bioFAM/MOFA/blob/master/vignettes/MOFA_example_scMT.html): single-cell profiling of DNA methylation and RNA expression in roughly 100 pluripotent stem cells.
+* [Model selection and robustness with simulated data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/vignettes/MOFA_example_simulated.html): this tutorial is focused only on how to perform model selection and assess robustness.
 
 If there is any tutorial that you would like us to do, or if you want to share your analysis with MOFA, please contact us.
 
@@ -82,7 +82,7 @@ The workflow of MOFA consists of two steps:
 <img src="images/workflow.png">
 </p>
 
-A cheatsheet with all **relevant methods**, together with a short description, can be found [here](https://github.com/bioFAM/MOFA/blob/master/MOFA/CheatSheet.md)  
+A cheatsheet with all **relevant methods**, together with a short description, can be found [here](https://github.com/bioFAM/MOFA/blob/master/CheatSheet.md)
 
 ### Step 1: Fitting the model
 First you need to create the MOFA object with your input data, and subsequently you need to train the model. Everything is explained in the vignettes.  
@@ -227,7 +227,7 @@ Examples of both are shown in the vignettes.
 
 **(Q) Does MOFA always converge to the same solutions?**  
 No, as occurs in most complex Bayesian models, they are not guaranteed to always converge to the same (optimal) solution.
-In practice, however, we observed that the solutions are highly consistent, particularly for strong factors. However, one should always assess the robustness and do a proper model selection. For this we recommend to train the model multiple times and check the robustness of the factors across the different solutions. For downstream analysis a single model can be chosen based on the best value of the Evidence Lower Bound (ELBO). We provide functions for these two steps, which are explained in the vignette [Integration of simulated data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/MOFA/vignettes/MOFA_example_simulated.html).
+In practice, however, we observed that the solutions are highly consistent, particularly for strong factors. However, one should always assess the robustness and do a proper model selection. For this we recommend to train the model multiple times and check the robustness of the factors across the different solutions. For downstream analysis a single model can be chosen based on the best value of the Evidence Lower Bound (ELBO). We provide functions for these two steps, which are explained in the vignette [Integration of simulated data](http://htmlpreview.github.com/?https://github.com/bioFAM/MOFA/blob/master/vignettes/MOFA_example_simulated.html).
 
 **(Q) How does MOFA handle missing values?**  
 It simpy ignores them, there is no a priori imputation step required. In fact, matrix factorisation models are known to be very robust to the presence of large amounts of missing values. 

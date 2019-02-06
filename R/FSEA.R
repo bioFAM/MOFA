@@ -131,7 +131,7 @@ runEnrichmentAnalysis <- function(object, view,
   # use own version for permutation test because of bugs in PCGSE package
   if (statistical.test == "permutation") {
     doParallel::registerDoParallel(cores=cores)
-    	
+
     null_dist_tmp <- foreach(rnd= seq_len(nperm)) %dopar% {
       perm <- sample(ncol(data))
       # Permute rows of the weight matrix to obtain a null distribution

@@ -50,6 +50,18 @@ R CMD build MOFA
 R CMD install MOFA
 ```
 
+### R data package
+For illustration purposes we provide several data sets that are used in the vignettes of the MOFA package to illustrate the use of MOFA. This data is contained in the R package MOFAdata, which can be installed via:
+```r
+devtools::install_github("bioFAM/MOFAdata")
+```
+or alternaltively by cloning the MOFAdata repository:
+```r
+git clone https://github.com/bioFAM/MOFAdata
+R CMD build MOFAdata
+R CMD install MOFAdata
+```
+
 ## Tutorials/Vignettes
 We currently provide three example workflows:
 

@@ -402,7 +402,7 @@ plotEnrichmentBars <- function(fsea.out, alpha = 0.05) {
   # if (is.na(data)) {
   #   stop("'data must' be specified!")
   # }  
-  if (is.na(feature.sets)) {
+  if (is.null(feature.sets)) {
     stop("'feature.sets' must be specified!")
   }   
   options(warn=current.warn) 

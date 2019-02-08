@@ -2,7 +2,7 @@ Package: MOFA
 Type: Package
 Maintainer: Ricard Argelaguet <ricard@ebi.ac.uk> and Britta Velten <britta.velten@embl.de>
 Title: Multi-Omics Factor Analysis (MOFA)
-Version: 0.99.2
+Version: 0.99.3
 Authors@R: c(person("Ricard", "Argelaguet", role=c("aut", "cre"), email="ricard@ebi.ac.uk"), 
 		person("Britta", "Velten", role=c("aut", "ctb"), email="britta.velten@embl.de"), 
 		person("Damien", "Arnol", role=c("aut"), email="damien.arnol@ebi.ac.uk"), 

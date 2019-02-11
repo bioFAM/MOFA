@@ -270,7 +270,8 @@ class entry_point():
 
     # Weights
     self.model_opts["priorSW"] = { 'Theta':[s.nan]*M, 'mean_S0':[s.nan]*M, 'var_S0':[s.nan]*M, 'mean_S1':[s.nan]*M, 'var_S1':[s.nan]*M } # Not required
-    self.model_opts["priorAlpha"] = { 'a':[s.ones(K)*1e-14]*M, 'b':[s.ones(K)*1e-14]*M }
+    # self.model_opts["priorAlpha"] = { 'a':[s.ones(K)*1e-14]*M, 'b':[s.ones(K)*1e-14]*M }
+    self.model_opts["priorAlpha"] = { 'a':[s.ones(K)*1e-5]*M, 'b':[s.ones(K)*1e-5]*M }
 
     # Theta
     self.model_opts["priorTheta"] = { 'a':[s.ones(K,) for m in range(M)], 'b':[s.ones(K,) for m in range(M)] }
@@ -281,7 +282,8 @@ class entry_point():
           self.model_opts["priorTheta"]["b"][m][k] = s.nan
 
     # Tau
-    self.model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-14 for m in range(M)], 'b':[s.ones(D[m])*1e-14 for m in range(M)] }
+    # self.model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-14 for m in range(M)], 'b':[s.ones(D[m])*1e-14 for m in range(M)] }
+    self.model_opts["priorTau"] = { 'a':[s.ones(D[m])*1e-5 for m in range(M)], 'b':[s.ones(D[m])*1e-5 for m in range(M)] }
 
   def define_init(self, initTheta=1.):
     """ Define Initialisations of the model

@@ -2,7 +2,7 @@ Package: MOFA
 Type: Package
 Maintainer: Ricard Argelaguet <ricard@ebi.ac.uk> and Britta Velten <britta.velten@embl.de>
 Title: Multi-Omics Factor Analysis (MOFA)
-Version: 0.99.4
+Version: 0.99.5
 Authors@R: c(person("Ricard", "Argelaguet", role=c("aut", "cre"), email="ricard@ebi.ac.uk"), 
 		person("Britta", "Velten", role=c("aut", "ctb"), email="britta.velten@embl.de"), 
 		person("Damien", "Arnol", role=c("aut"), email="damien.arnol@ebi.ac.uk"), 
@@ -13,7 +13,7 @@ Date: 2018-06-26
 License: LGPL-3
 Description: Multi-Omics Factor Analysis: an unsupervised framework for the integration of multi-omics data sets.
 Encoding: UTF-8
-Imports: rhdf5, dplyr, reshape2, pheatmap, corrplot, ggplot2, ggbeeswarm, methods, scales, GGally, RColorBrewer, cowplot, ggrepel, MultiAssayExperiment, Biobase, doParallel, foreach, reticulate, grDevices, stats, utils
+Imports: rhdf5 (>= 2.27.11), dplyr, reshape2, pheatmap, corrplot, ggplot2, ggbeeswarm, methods, scales, GGally, RColorBrewer, cowplot, ggrepel, MultiAssayExperiment, Biobase, doParallel, foreach, reticulate, grDevices, stats, utils
 Suggests: knitr, MOFAdata
 biocViews: DimensionReduction, Bayesian, Visualization
 VignetteBuilder: knitr

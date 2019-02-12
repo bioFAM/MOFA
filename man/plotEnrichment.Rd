@@ -4,35 +4,37 @@
 \alias{plotEnrichment}
 \title{Line plot of Feature Set Enrichment Analysis results}
 \usage{
-plotEnrichment(object, fsea.out, factor, alpha = 0.1,
+plotEnrichment(object, fsea.results, factor, alpha = 0.1,
   max.pathways = 25, adjust = TRUE)
 }
 \arguments{
-\item{object}{\code{\link{MOFAmodel}} object, on which the Feature Set Enrichment Analyisis was performed}
+\item{object}{\code{\link{MOFAmodel}} object on which the Feature Set Enrichment Analyisis was performed}
 
-\item{fsea.out}{output of \link{runEnrichmentAnalysis} function}
+\item{fsea.results}{output of \link{runEnrichmentAnalysis} function}
 
-\item{factor}{Factor for which to show wnriched pathways in the lineplot}
+\item{factor}{Factor}
 
 \item{alpha}{p.value threshold to filter out feature sets}
 
 \item{max.pathways}{maximum number of enriched pathways to display}
 
-\item{adjust}{use multiple testing correction}
+\item{adjust}{use adjusted p-values?}
 }
 \value{
-nothing
+a \code{ggplot2} object
 }
 \description{
-Line plot of the Feature Set Enrichment Analyisis results for a specific latent variable
+Method to plot Feature Set Enrichment Analyisis results for specific factors
 }
 \examples{
 # Example on the CLL data
 filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
-# perform feature set enrichment analysis on mRNA data for all factors using the Reactome gene sets
+
+# perform Enrichment Analysis on mRNA data using pre-build Reactome gene sets
 data("reactomeGS", package = "MOFAdata")
-fsea.out <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
-# top 10 enriched pathwyas on factor 5:
-plotEnrichment(MOFA_CLL, fsea.out, factor=5,  max.pathways=10)
+fsea.results <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
+
+# Plot top 10 enriched pathwyas on factor 5:
+plotEnrichment(MOFA_CLL, fsea.results, factor=5,  max.pathways=10)
 }

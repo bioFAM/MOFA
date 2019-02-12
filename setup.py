@@ -8,7 +8,7 @@ def setup_package():
   metadata = dict(
       name = 'mofapy',
       version = '1.1',
-      description = 'Multi-Omics Factor Analysis',
+      description = 'Multi-Omics Factor Analysis, a statistical framework for the integration of multi-omics data',
       url = 'https://github.com/PMBio/MOFA',
       author = 'Ricard Argelaguet, Damien Arnol and Britta Velten',
       author_email = 'ricard.argelaguet@gmail.com',

@@ -140,8 +140,7 @@ MOFAobject <- runMOFA(MOFAobject)
 
 ```{r}
 # Loading an existing trained model
-filepath <- system.file("extdata", "CLL_model.hdf5",
-                        package = "MOFAdata")
+filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 
 MOFAobject <- loadModel(filepath, MOFAobject)
 MOFAobject
@@ -205,13 +204,21 @@ Features with large (absolute) weight on a given factor follow the pattern of co
 If you are only interested in looking at only the top features you can use the `plotTopWeights` function.  
 For example, here we plot the mutations with largest loadings on Factor 1. The sign on the right indicates the direction of the loading (positive/negative).
 ```{r}
-plotTopWeights(MOFAobject, "Mutations", 2)
+plotTopWeights(
+  MOFAobject, 
+  view="Mutations", 
+  factor=2
+)
 ```
 Again, features with large weight in a given factor means that they follow the pattern of covariation associated with the factor. For example, here the factor is associated with the B-cell of tumour's origin, consistent with a large weight on the IGHV status (see our manuscript for more details).  
 
 From the previous plots, we can clearly see that Factor 1 is associated to IGHV status. As the variance decomposition above told us that this factor is also relevant on all the other data modalities we can investigate its weights on other modalities, e.g. mRNA, to make connections of the IGHV-linked axes of variation to other molecular layers.
 ```{r}
-plotTopWeights(MOFAobject, "mRNA", 1)
+plotTopWeights(
+  MOFAobject, 
+  view = "mRNA", 
+  factor = 1
+)
 ```
 
 Finally, instead of looking at an "abstract" weight, it is useful to observe the coordinated heterogeneity of the top features in the original data. This can be done using the `plotDataHeatmap` function. In this plot samples (in rows) are ordered according to their value on the factor (here Factor 1). Here, this shows clear patterns of the samples' gene expression in the 20 top weighted genes along the factor.
@@ -235,11 +242,10 @@ The input of this function is a MOFA trained model (MOFAmodel), the factors for 
 We illustrate the use of this function using the [reactome](http://reactome.org) annotations, which are contained in the package. Depending on your data other gene or feature sets might be useful and you can prepare your customized feature sets and specify it using the `feature.sets` argument of the function.
 ```{r}
 # Load reactome annotations
-# binary matrix with feature sets in rows and feautres in columns
-data("reactomeGS")
+data("reactomeGS") # binary matrix with feature sets in rows and features in columns
 
 # perform enrichment analysis
-fsea.out <- runEnrichmentAnalysis(
+gsea <- runEnrichmentAnalysis(
   MOFAobject,
   view = "mRNA",
   feature.sets = reactomeGS,
@@ -251,19 +257,22 @@ The next step is to visualise the results of the Gene Set Enrichment Analysis. T
 
 (a) General Overview: Barplot with number of enriched gene sets per view
 ```{r}
-plotEnrichmentBars(fsea.out, alpha=0.01)
+plotEnrichmentBars(gsea, alpha=0.01)
 ```
 From this we find enriched at a FDR of 1% gene sets on Factors 3-6 and 8. To look into which gene sets these are we can choose a factor of interest and visualize the most enriched gene sets as follows:  
 
 (b) Factor-specific:
 ```{r}
 interestingFactors <- 4:5
+
 for (factor in interestingFactors) {
-  lineplot <- plotEnrichment(MOFAobject,
-                             fsea.out,
-                             factor = factor,
-                             alpha = 0.01,
-                             max.pathways = 10)
+  lineplot <- plotEnrichment(
+    MOFAobject,
+    gsea,
+    factor = factor,
+    alpha = 0.01,
+    max.pathways = 10 # The top number of pathways to display
+  )
   print(lineplot)
 }
 ```
@@ -273,25 +282,31 @@ This shows us that Factor 4 is capturing variation related to immune response (p
 
 Samples can be visualized along factors of interest using the `plotFactorScatter` function. We can use features included in the model (such as IGHV or trisomy12) to color or shape the samples by. Alternatively, external covariates can also be used fot this purpose.
 ```{r}
-plotFactorScatter(MOFAobject,
-                  factors = 1:2,
-                  color_by = "IGHV",
-                  shape_by = "trisomy12")
+plotFactorScatter(
+  MOFAobject,
+  factors = 1:2,
+  color_by = "IGHV",      # color by the IGHV values that are part of the training data
+  shape_by = "trisomy12"  # shape by the trisomy12 values that are part of the training data
+)
 ```
 Here we find again a clear separation of samples based on their IGHV status (color) along Factor 1 and by the absence or prescence of trisomy 12 (shape) along Factor 2 as indicated by the corresponding factor weights in the Mutations view.  
 
 An overview of pair-wise sctterplots for all or a subset of factors is produced by the `plotFactorScatters` function
 ```{r}
-plotFactorScatters(MOFAobject,
-                   factors = 1:3,
-                   color_by = "IGHV")
+plotFactorScatters(
+  MOFAobject,
+  factors = 1:3,
+  color_by = "IGHV"
+)
 ```
 
 A single factor can be visualised using the `plotFactorBeeswarm` function
 ```{r}
-plotFactorBeeswarm(MOFAobject,
-                   factors = 1,
-                   color_by = "IGHV")
+plotFactorBeeswarm(
+  MOFAobject,
+  factors = 1,
+  color_by = "IGHV"
+)
 ```
 
 ## Customized analysis
@@ -301,7 +316,7 @@ MOFAweights <- getWeights(
   MOFAobject, 
   views = "all", 
   factors = "all", 
-  as.data.frame = TRUE
+  as.data.frame = TRUE    # if TRUE, it outputs a long dataframe format. If FALSE, it outputs a wide matrix format
 )
 head(MOFAweights)
 ```
@@ -310,7 +325,7 @@ head(MOFAweights)
 MOFAfactors <- getFactors(
   MOFAobject, 
   factors = c(1,2),
-  as.data.frame = FALSE
+  as.data.frame = FALSE   # if TRUE, it outputs a long dataframe format. If FALSE, it outputs a wide matrix format
 )
 head(MOFAfactors)
 ```
@@ -330,30 +345,34 @@ head(MOFAdata)
 ## Prediction of views
 With the `predict` function, full views can be predicted based on the MOFA model with all or a subset of factors
 ```{r}
-predictedDrugs <- predict(MOFAobject,
-                          view="Drugs",
-                          factors="all")
+predictedDrugs <- predict(
+  MOFAobject,
+  view = "Drugs",
+  factors = "all"
+)
 ```
 
 ## Imputation of missing observations
 With the `impute` function all missing values are imputed based on the MOFA model. The imputed data is then stored in the `ImputedData slot` of the MOFAobject and can be accessed via the `getImputedData` function.
 ```{r}
 MOFAobject <- impute(MOFAobject)
-
-imputedDrugs <- getImputedData(MOFAobject,
-                               view="Drugs")
+imputedDrugs <- getImputedData(MOFAobject, view="Drugs")
 ```
 
 ## Clustering of samples based on latent factors
 Samples can be clustered according to their values on some or all latent factors using the `clusterSamples` function. Clusters can for example be visualised using the `plotFactorScatters` function
 ```{r}
-clusters <- clusterSamples(MOFAobject,
-                           k=2,
-                           factors=1)
+clusters <- clusterSamples(
+  MOFAobject, 
+  k = 2,        # Number of clusters for the k-means function
+  factors = 1   # factors to use for the clustering
+)
 
-plotFactorScatter(MOFAobject,
-                   factors=1:2,
-                   color_by=clusters)
+plotFactorScatter(
+  MOFAobject, 
+  factors = 1:2, 
+  color_by = clusters
+)
 ```
 
 

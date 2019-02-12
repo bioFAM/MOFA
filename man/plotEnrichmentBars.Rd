@@ -4,26 +4,28 @@
 \alias{plotEnrichmentBars}
 \title{Barplot of Feature Set Enrichment Analysis results}
 \usage{
-plotEnrichmentBars(fsea.out, alpha = 0.05)
+plotEnrichmentBars(fsea.results, alpha = 0.05)
 }
 \arguments{
-\item{fsea.out}{output of \link{runEnrichmentAnalysis} function}
+\item{fsea.results}{output of \link{runEnrichmentAnalysis} function}
 
 \item{alpha}{FDR threshold for calling enriched feature sets. Default is 0.05}
 }
 \value{
-\link{ggplot} object
+a \link{ggplot2} object
 }
 \description{
-this method generates a barplot with the number of enriched feature sets per factor
+Method to generate a barplot with the number of enriched feature sets per factor
 }
 \examples{
 # Example on the CLL data
 filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
-# perform feature set enrichment analysis on mRNA data for all factors using the Reactome gene sets
+
+# perform Enrichment Analysis on mRNA data using pre-build Reactome gene sets
 data("reactomeGS", package = "MOFAdata")
-fsea.out <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
-# overview of number of enriched pathways per factor at an FDR of 1\%
-plotEnrichmentBars(fsea.out, alpha=0.01)
+fsea.results <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
+
+# Plot overview of number of enriched pathways per factor at an FDR of 1\%
+plotEnrichmentBars(fsea.results, alpha=0.01)
 }

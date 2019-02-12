@@ -31,6 +31,12 @@ runMOFA <- function(object, outfile=NULL) {
   # Sanity checks on the model
   if (!is(object, "MOFAmodel")) 
     stop("'object' has to be an instance of MOFAmodel")
+  if (length(object@ModelOptions)==0)
+    stop("Can't find the model options, did you run prepareMOFA?")
+  if (length(object@TrainOptions)==0)
+    stop("Can't find the training options, did you run prepareMOFA?")
+  if (length(object@DataOptions)==0)
+    stop("Can't find the data options, did you run prepareMOFA?")
   
   # Sanity checks on the output file
   if (is.null(outfile)) {

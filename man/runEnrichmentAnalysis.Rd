@@ -15,24 +15,30 @@ runEnrichmentAnalysis(object, view, feature.sets, factors = "all",
 \arguments{
 \item{object}{a \code{\link{MOFAmodel}} object.}
 
-\item{view}{name of the view}
+\item{view}{name of the view to perform enrichment on. Make sure that the feature names of the feature set file match the feature names in the MOFA model.}
 
 \item{feature.sets}{data structure that holds feature set membership information.
 Must be either a binary membership matrix (rows are feature sets and columns are features) or
  a list of feature set indexes (see vignette for details).}
 
-\item{factors}{character vector with the factor names, or numeric vector with the index
-of the factors for which to perform the enrichment.}
+\item{factors}{character vector with the factor names to perform enrichment on. Alternatively, a numeric vector with the index
+of the factors. Default is all factors.}
 
 \item{local.statistic}{the feature statistic used to quantify the association
-between each feature and each factor. Must be one of the following: loading (default), cor, z.}
+between each feature and each factor. Must be one of the following: 
+loading (the output from MOFA, default), 
+cor (the correlation coefficient between the factor and each feature), 
+z (a z-scored derived from the correlation coefficient).}
 
-\item{global.statistic}{the feature set statisic computed from the feature statistics.
-Must be one of the following: "mean.diff" (default) or "rank.sum".}
+\item{global.statistic}{the feature set statisic computed from the feature statistics. Must be one of the following: 
+"mean.diff" (difference in means between the foreground set and the background set, default) or
+"rank.sum" (difference in rank sums between the foreground set and the background set).}
 
 \item{statistical.test}{the statistical test used to compute the significance of the feature
-set statistics under a competitive null hypothesis.
-Must be one of the following: "parametric" (default), "cor.adj.parametric", "permutation".}
+set statistics under a competitive null hypothesis. Must be one of the following: 
+"parametric" (very liberal, default), 
+"cor.adj.parametric" (very conservative, adjusts for the inter-gene correlation), 
+"permutation" (non-parametric, the recommended one if you can do sufficient number of permutations)}
 
 \item{transformation}{optional transformation to apply to the feature-level statistics.
 Must be one of the following "none" or "abs.value" (default).}
@@ -40,10 +46,10 @@ Must be one of the following "none" or "abs.value" (default).}
 \item{min.size}{Minimum size of a feature set (default is 10).}
 
 \item{nperm}{number of permutations. Only relevant if statistical.test is set to "permutation".
-Default is 1000}
+Default is 1000.}
 
 \item{cores}{number of cores to run the permutation analysis in parallel.
-Only relevant if statistical.test is set to "permutation". Default is 1}
+Only relevant if statistical.test is set to "permutation". Default is 1.}
 
 \item{p.adj.method}{Method to adjust p-values factor-wise for multiple testing.
 Can be any method in p.adjust.methods(). Default uses Benjamini-Hochberg procedure.}
@@ -51,32 +57,41 @@ Can be any method in p.adjust.methods(). Default uses Benjamini-Hochberg procedu
 \item{alpha}{FDR threshold to generate lists of significant pathways. Default is 0.1}
 }
 \value{
-a list with three components: pval and pval.adj contain matrices with p-values and
- adjusted p-values, repectively. sigPathways contains a list with significant pathwayd at
- FDR alpha per factor.
+a list with the following elements:
+\item{feature.statistics}{feature statistics}
+\item{set.statistics}{feature-set statistics}
+\item{pval}{raw p-values}
+\item{pval.adj}{adjusted p-values}
+\item{sigPathways}{a list with enriched pathways}
 }
 \description{
-Method to perform feature set enrichment analysis.
- Here we use a slightly modified version of the \link[PCGSE]{pcgse} function.
+Method to perform feature set enrichment analysis on the feature loadings. \cr
+The input is a data structure containing the feature set membership, usually relating biological pathways to genes. \cr
+The output is a matrix of dimensions (number_gene_sets,number_factors) with p-values and other statistics.
 }
 \details{
-Based on the weights of each factor in the specified view,
- this function calculates the enrichment of the feature sets by comparing the weights of features
- in a set with those outside the set.  
- This function is based upon the \link[PCGSE]{pcgse} function with small modifications.
+This function relates the factors to pre-defined biological pathways by performing a gene set enrichment analysis on the loadings.
+ The general idea is to compute an activity score for every pathway in each factor based on its corresponding gene loadings.\cr
+ This function is particularly useful when a factor is difficult to characterise based only on the genes with the highest loading. \cr
+ We provide several pre-build gene set matrices in the MOFAdata package. See \code{https://github.com/bioFAM/MOFAdata} for details. \cr
+ The function we implemented is based on the \code{\link[PCGSE]{pcgse}} function with some modifications. 
+ Please read this paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4543476 for details on the math.
 }
 \examples{
 # Example on the CLL data
 filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
-# perform feature set enrichment analysis on mRNA data for all factors using the Reactome gene sets
+
+# perform Enrichment Analysis on mRNA data using pre-build Reactome gene sets
 data("reactomeGS", package = "MOFAdata")
-fsea.out <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
-# results can be visualized using one of the following plotting functions:
-# overview of enriched pathways per factor at an FDR of 1\%
-plotEnrichmentHeatmap(fsea.out, alpha=0.01)
-# overview of number of enriched pathways per factor at an FDR of 1\%
-plotEnrichmentBars(fsea.out, alpha=0.01)
-# e.g. top 10 enriched pathwyas on factor 5:
-plotEnrichment(MOFA_CLL, fsea.out, factor=5,  max.pathways=10)
+fsea.results <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
+
+# heatmap of enriched pathways per factor at 1\% FDR
+plotEnrichmentHeatmap(fsea.results, alpha=0.01)
+
+# plot number of enriched pathways per factor at 1\% FDR
+plotEnrichmentBars(fsea.results, alpha=0.01)
+
+# plot top 10 enriched pathways on factor 5:
+plotEnrichment(MOFA_CLL, fsea.results, factor=5,  max.pathways=10)
 }

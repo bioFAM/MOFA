@@ -253,15 +253,15 @@ gsea <- runEnrichmentAnalysis(
 )
 ```
 
-The next step is to visualise the results of the Gene Set Enrichment Analysis. There are two default plots:  
+The next step is to visualise the results of the Gene Set Enrichment Analysis. There are several ways:  
 
-(a) General Overview: Barplot with number of enriched gene sets per view
+(a) Plot the number of enriched gene sets per factor
 ```{r}
 plotEnrichmentBars(gsea, alpha=0.01)
 ```
 From this we find enriched at a FDR of 1% gene sets on Factors 3-6 and 8. To look into which gene sets these are we can choose a factor of interest and visualize the most enriched gene sets as follows:  
 
-(b) Factor-specific:
+(b) Plot the top enriched pathways for every factor
 ```{r}
 interestingFactors <- 4:5
 
@@ -277,6 +277,7 @@ for (factor in interestingFactors) {
 }
 ```
 This shows us that Factor 4 is capturing variation related to immune response (possibly due to T-cell contamination of the samples) and Factor 5 is related to differences in stress response, as discussed in our paper.
+
 
 ## Ordination of samples by factors to reveal clusters and gradients in the sample space
 

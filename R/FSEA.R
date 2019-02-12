@@ -207,8 +207,9 @@ runEnrichmentAnalysis <- function(object, view,
   }
   
   # Parse results
+  pathways <- rownames(feature.sets)
   colnames(results[["p.values"]]) <- colnames(results[["statistics"]]) <- colnames(results[["feature.statistics"]]) <- factors
-  rownames(results[["p.values"]]) <- rownames(results[["statistics"]]) <- rownames(feature.sets)  
+  rownames(results[["p.values"]]) <- rownames(results[["statistics"]]) <- pathways
   rownames(results[["feature.statistics"]]) <- colnames(data)
 
   # adjust for multiple testing
@@ -219,12 +220,22 @@ runEnrichmentAnalysis <- function(object, view,
   # obtain list of significant pathways
   sigPathways <- lapply(factors, function(j) rownames(adj.p.values)[adj.p.values[,j] <= alpha])
   
+  # # Compute an activity score per pathway and sample
+  # tmp <- matrix(nrow=nrow(data), ncol=length(pathways))
+  # rownames(tmp) <- rownames(data); colnames(tmp) <- pathways
+  # for (i in pathways) {
+  #   features <- names(which(feature.sets[i,]==1))
+  #   tmp[,i] <- apply(data[,features],1,mean,na.rm=T)
+  # }
+  
+  results[["feature.statistics"]]
   # prepare output
   output <- list(
     pval = results[["p.values"]], 
     pval.adj = adj.p.values, 
     feature.statistics = results[["feature.statistics"]],
     set.statistics = results[["statistics"]],
+    # pathway.activity = tmp,
     sigPathways = sigPathways
   )
   return(output)
@@ -290,7 +301,7 @@ plotEnrichment <- function(object, fsea.results, factor, alpha=0.1, max.pathways
   if (nrow(tmp) > max.pathways)
     tmp <- head(tmp[order(tmp$pvalue),],n=max.pathways)
   
-  # Convert pvalues to log scale (add a small regulariser to avoid numerical errors)
+  # Convert pvalues to log scale
   tmp$logp <- -log10(tmp$pvalue)
   
   # Annotate significcant pathways
@@ -420,7 +431,7 @@ plotEnrichmentBars <- function(fsea.results, alpha = 0.05) {
       axis.text.y = element_text(size=rel(1.2), hjust=1, color='black'),
       axis.text.x = element_text(size=rel(1.2), vjust=0.5, color='black'),
       panel.background = element_blank()
-      )
+    )
 }
 
 
@@ -494,7 +505,7 @@ plotEnrichmentBars <- function(fsea.results, alpha = 0.05) {
     )
   }
   
-  # Compute the feature set statistics.
+  # Compute the feature-set statistics.
   if (feature.set.test == "parametric" | feature.set.test == "cor.adj.parametric") {
     if (feature.set.statistic == "mean.diff") {
       results = .pcgseViaTTest(
@@ -514,7 +525,7 @@ plotEnrichmentBars <- function(fsea.results, alpha = 0.05) {
         feature.statistics = feature.statistics,
         cor.adjustment = (feature.set.test == "cor.adj.parametric")
       )
-    }     
+    }
   }
   
   # Add feature.statistics to the results
@@ -664,7 +675,8 @@ plotEnrichmentBars <- function(fsea.results, alpha = 0.05) {
         var.rank.sum = m1*m2*(m1+m2+1)/12
       }
       z.stat = (rank.sum - (m1*m2)/2)/sqrt(var.rank.sum)
-      feature.set.statistics[i,j] = z.stat      
+      feature.set.statistics[i,j] = z.stat
+      
       # compute the p-value via a two-sided z-test
       lower.p = pnorm(z.stat, lower.tail=TRUE)
       upper.p = pnorm(z.stat, lower.tail=FALSE)        

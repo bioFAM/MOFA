@@ -62,9 +62,9 @@ MOFAobject
 
 
 ## Overview of training data
-The function `plotTilesData` can be used to obtain an overview of the data stored in the object for training. For each sample it shows in which views data are available. The rows are the different views and columns are samples. Missing values are indicated by a grey bar.
+The function `plotDataOverview` can be used to obtain an overview of the data stored in the object for training. For each sample it shows in which views data are available. The rows are the different views and columns are samples. Missing values are indicated by a grey bar.
 ```{r}
-plotTilesData(MOFAobject)
+plotDataOverview(MOFAobject)
 ```
 
 # Step 2: Fit the MOFA model

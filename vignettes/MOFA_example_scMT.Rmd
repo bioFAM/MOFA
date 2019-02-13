@@ -36,9 +36,9 @@ MOFAobject <- createMOFAobject(scMT_data)
 MOFAobject
 ```
 
-The function `plotTilesData` can be used to obtain an overview of the structure of the data:
+The function `plotDataOverview` can be used to obtain an overview of the structure of the data:
 ```{r}
-plotTilesData(MOFAobject, colors=c("#31A354","#377EB8","#377EB8","#377EB8"))
+plotDataOverview(MOFAobject, colors=c("#31A354","#377EB8","#377EB8","#377EB8"))
 ```
 
 # Fit the MOFA model

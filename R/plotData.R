@@ -293,7 +293,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
 
 
 #' @title Tile plot of the multi-omics data
-#' @name plotTilesData
+#' @name plotDataOverview
 #' @description Function to do a tile plot showing the dimensionality and 
 #' the missing value structure of the multi-omics data.
 #' @param object a \code{\link{MOFAmodel}} object.
@@ -314,15 +314,15 @@ plotDataScatter <- function(object, view, factor, features = 10,
 #' # Example on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
-#' plotTilesData(MOFA_CLL)
+#' plotDataOverview(MOFA_CLL)
 #'
 #' # Example on the scMT data
 #' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' # using customized colors
-#' plotTilesData(MOFA_scMT, colors= c("blue", "red", "red", "red"))
+#' plotDataOverview(MOFA_scMT, colors= c("blue", "red", "red", "red"))
 
-plotTilesData <- function(object, colors = NULL) {
+plotDataOverview <- function(object, colors = NULL) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")

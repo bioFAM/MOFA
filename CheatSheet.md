@@ -47,7 +47,7 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 * **plotFactorBeeswarm**: beeswarm plot for a single factor  
 
 ## Inspect the data
-* **plotTilesData**: plot overview of the input data, including the number of samples, views, features, and the missing assays.
+* **plotDataOverview**: plot overview of the input data, including the number of samples, views, features, and the missing assays.
 * **plotDataHeatmap**: heatmap of the training data using only top features for a given factor. This is very useful to map the factors and features back to the original data  
 * **plotDataScatter**: scatterplot of the data using only top features for a given factor  
 

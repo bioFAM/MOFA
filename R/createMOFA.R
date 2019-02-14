@@ -27,7 +27,7 @@
 #' mae_CLL <- MultiAssayExperiment(experiments = CLL_data, colData = CLL_covariates)
 #' MOFAobject <- createMOFAobject(mae_CLL)
 #'
-#' # next, this object can be passer to prepareMOFA and runMOFA
+#' # next, this object can be passed to prepareMOFA and runMOFA
 #' # (training in runMOFA can take some time):
 #' \dontrun{
 #' # MOFAobject <- prepareMOFA(MOFAobject)

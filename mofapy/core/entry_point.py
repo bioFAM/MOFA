@@ -92,12 +92,13 @@ class entry_point():
     """ Method to parse the data """
 
     # Parsing the data: centering, scaling, etc.
-    self.data = parseData(self.data, self.data_opts)
+    self.parsed_data = parseData(self.data, self.data_opts)
 
     # Remove samples with missing views
     if self.data_opts['RemoveIncompleteSamples']:
       self.data = removeIncompleteSamples(self.data)
-      self.dimensionalities["N"] = self.data[0].shape[0] # Update dimensionalities
+      self.parsed_data = removeIncompleteSamples(self.parsed_data)
+      self.dimensionalities["N"] = self.parsed_data[0].shape[0] # Update dimensionalities
 
   def set_train_options(self, iter=5000, elbofreq=1, startSparsity=100, tolerance=0.01, 
     startDrop=5, freqDrop=1, endDrop=9999, dropR2=0, nostop=False, verbose=False, seed=None
@@ -385,7 +386,7 @@ class entry_point():
 
         # Weights
         # if self.model_opts["likelihoods"][m]=="gaussian":
-        self.model_opts["initSW"]["mean_S1"][m][:,0] = s.nanmean(self.data[m], axis=0)
+        self.model_opts["initSW"]["mean_S1"][m][:,0] = s.nanmean(self.parsed_data[m], axis=0)
         self.model_opts["initSW"]["var_S1"][m][:,0] = 1e-10
 
         # Theta
@@ -409,7 +410,7 @@ class entry_point():
       print("\t%s: %s" % (a,b))
 
     sys.stdout.flush()
-    self.model = runMOFA(self.data, self.data_opts, self.model_opts, self.train_opts, self.train_opts['seed'])
+    self.model = runMOFA(self.parsed_data, self.data_opts, self.model_opts, self.train_opts, self.train_opts['seed'])
     sys.stdout.flush()
 
   def save_model(self, outfile, sample_names=None, feature_names=None):
@@ -433,7 +434,7 @@ class entry_point():
 
     # Save the model
     saveModel(self.model, 
-      data=self.data,
+      data=self.data,      # Uncentered data
       outfile=outfile, 
       view_names=self.data_opts['view_names'],
       sample_names=sample_names, 

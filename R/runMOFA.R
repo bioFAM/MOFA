@@ -6,11 +6,11 @@
 #' @title train a MOFA model
 #' @name runMOFA
 #' @description Function to train an untrained \code{\link{MOFAmodel}} object.
-#' @details In this step the R package is calling the \code{mofa} Python package,
+#' @details In this step the R package is calling the \code{mofapy} Python package,
 #'  where the the training is performed. \cr
 #' The interface with Python is done with the \code{\link{reticulate}} package. 
 #' If you have several versions of Python installed and Rstudio is not detecting
-#'  the correct one, you can change it using' \code{reticulate::use_python}.
+#'  the correct one, you can change it using \code{reticulate::use_python}.
 #' @param object an untrained \code{\link{MOFAmodel}} object
 #' @param outfile output .hdf5 file
 #' @return a trained \code{\link{MOFAmodel}} object

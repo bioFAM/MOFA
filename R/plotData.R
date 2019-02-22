@@ -368,7 +368,7 @@ plotDataOverview <- function(object, colors = NULL) {
   
   # Plot
   p <- ggplot(molten_ovw, aes_string(x="sample", y="view_label", fill="combi")) +
-    geom_tile(width=0.7, height=0.9, col="black") +
+    geom_raster(width=0.7, height=0.9, col="black") +
     geom_text(data=filter(molten_ovw, sample==levels(molten_ovw$sample)[1]),
               aes_string(x="label_pos", label="ntotal"), size=6) +
     scale_fill_manual(values = c('missing'="grey", colors)) +
@@ -376,13 +376,12 @@ plotDataOverview <- function(object, colors = NULL) {
     xlab(paste0("Samples (n=",n,")")) + ylab("") +
     guides(fill=FALSE) + 
     theme(
-      axis.text.x =element_blank(),
       panel.background = element_rect(fill="white"),
       text = element_text(size=16),
-      axis.ticks.y = element_blank(),
-      axis.ticks.x= element_blank(),
+      axis.ticks = element_blank(),
+      axis.text.x =element_blank(),
       axis.text.y = element_text(color="black"),
-      panel.grid = element_line(colour = "black"),
+      panel.grid = element_blank(),
       plot.margin = unit(c(5.5,2,5.5,5.5), "pt")
     ) 
   

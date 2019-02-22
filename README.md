@@ -191,12 +191,18 @@ Nop. You can use Python to train the model, see [this template script](https://g
 Similar to Principal Component Analysis and other factor models, this is a hard question to answer. It depends on the data set and the aim of the analysis. As a general rule, the bigger the data set, the higher the number of factors that you will retrieve, and the less the variance that will be explained per factor.
 If you want to get an overview on the major sources of variability then use a small number of factors (K<=15). If you want to capture small sources of variability, for example to improve imputation performance or for eQTL mapping, then go for a large number of factors (K>=50)
 
+**(Q) How many samples do I need?**  
+At least more than 15. Otherwise the model will not generate meaningful results.
+
 **(Q) Can MOFA automatically learn the number of factors?**  
-Yes, but a hyperparameter needs to be provided. The user needs to specify a minimum value of fraction of variance explained that is considered meaningful. Then, MOFA will actively remove factors (during training) that explain less than the specified amount of variance.
-If you have no idea on what to expect, it is better to start with a fixed number of factors.
+Yes, but the user needs to specify a minimum value of % variance explained. Then, MOFA will actively remove factors (during training) that explain less than the specified amount of variance.
+If you have no idea on what to expect, it is better to start with a fixed number of factors and set the % variance threshold to 0.
 
 **(Q) Can I put known covariates in the model?**  
-Combining unknown factors learnt by the model with known covariates is technically possible, but we extensively tested this functionality and it was not yielding good results. The reason is that covariates are usually discrete labels that do not reflect the underlying continuous biology. In addition, some samples might have wrong or imperfect annotations. This could completely mess up the model. What we recommend is that you learn the factors in a completely unsupervised manner and then relate them to the covariates via visualisation or via a simple correlation analysis (see our vignettes). If your covariate of interest is indeed an important driver of variability, do not worry, MOFA will find it!
+Combining known covariates with latent factors is technically possible, but we extensively tested this functionality and it was not yielding good results. The reason is that covariates are usually discrete labels that do not reflect the underlying molecular biology. For example, if you introduce age as a covariate, but the actual age is different from the “molecular age”, the model will simply learn a new factor that corresponds to this “latent” molecular age, and it will drop the covariate from the model. What we recommend is that you learn the factors in a completely unsupervised manner and then relate them to the covariates via visualisation or via a simple correlation analysis (see our vignettes). If your covariate of interest is indeed an important driver of variability, do not worry, MOFA will find it!
+
+**(Q) Should I remove undesired sources of variability (i.e. batch effects) before fitting the model?**  
+Yes, if you have clear technical factors, we strongly encourage to regress it out a priori using a simple linear model. The reason for this is that the model will "focus" on the huge variability driven by the technical factors, and smaller sources of variability could be missed.
 
 **(Q) Should I do any filtering to the input data?**  
 You must remove features with zero variance and ideally also features with low variance, as they can cause numerical issues in the model. In practice we generally select the top N most variable features per assay

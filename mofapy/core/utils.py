@@ -434,10 +434,10 @@ def saveTrainingData(model, hdf5, data, view_names=None, sample_names=None, feat
     for m in range(len(data)):
         view = view_names[m] if view_names is not None else str(m)
         data_grp.create_dataset(view, data=data[m].T)
-        if likelihoods[m] is "gaussian":
-            intercept_grp.create_dataset(view, data=np.nanmean(data[m],axis=0))
-        else:
-            intercept_grp.create_dataset(view, data=model.getNodes()["Y"].nodes[m].means)
+        intercept_grp.create_dataset(view, data=np.nanmean(data[m],axis=0))
+        # if likelihoods[m] is "gaussian":
+        # else:
+            # intercept_grp.create_dataset(view, data=model.getNodes()["Y"].nodes[m].means)
         if feature_names is not None:
             features_grp.create_dataset(view, data=np.array(feature_names[m], dtype='S50'))
         

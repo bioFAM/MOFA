@@ -4,11 +4,12 @@
 ####################################################
 
 #' @title regress out a covariate from the training data
-#' @name regressOut
-#' @description Function to regress out a covariate from the training data.
-#' Many people asked whether they should remove undesired sources of variability (i.e. batch effects) before fitting the model.
-#' The answer is yes, if you have clear technical factors, we strongly encourage to regress it out a priori using a simple linear model.\cr
-#' If important technical factors exist, the model will "focus" on capturing the variability driven by the technical factors, and smaller sources of variability could be missed. \cr
+#' @name regressCovariate
+#' @description Function to regress out a covariate from the training data.\cr
+#' If you have technical sources of variability (i.e. batch effects) that you do not want to be captured by factors in the model, 
+#' you should regress them out before fitting MOFA. This function performs a simple linear regression model, extracts the residuals,
+#' and replaces the original data in the TrainingData slot. \cr
+#' Why is this important? If big technical factors exist, the model will "focus" on capturing the variability driven by these factors, and smaller sources of variability could be missed. \cr
 #' But... can we not simply add those covariates to the model? Technically yes, but we extensively tested this functionality and it was not yielding good results. \cr 
 #' The reason is that covariates are usually discrete labels that do not reflect the underlying molecular biology. 
 #' For example, if you introduce age as a covariate, but the actual age is different from the "molecular age", 
@@ -19,18 +20,21 @@
 #' @param covariates a vector (one covariate) or a data.frame (for multiple covariates) where each row corresponds to one sample, sorted in the same order as in the input data matrices. 
 #' You can check the order by doing sampleNames(MOFAobject). If required, fill missing values with \code{NA}, which will be ignored when fitting the linear model.
 #' @return Returns an untrained \code{\link{MOFAmodel}} where the specified covariates have been regressed out in the training data.
+#' @importFrom stats lm
 #' @export
-regressCovariate <- function(object, views, covariates, min_observations=5) {
+regressCovariate <- function(object, views, covariates, min_observations = 5) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) 
     stop("'object' has to be an instance of MOFAmodel")
+  if (length(object@ModelOptions$likelihood)==0) 
+    stop("Run prepareMOFA before regressing out covariates") 
   if (any(object@ModelOptions$likelihood[views]!="gaussian")) 
     stop("Some of the specified views contains discrete data. \nRegressing out covariates only works in views with continuous (gaussian) data")
   
   # Fetch data
   Y <- getTrainData(object, views=views)
-  all_samples <- MOFAtools::sampleNames(object)
+  all_samples <- sampleNames(object)
   
   # Prepare data.frame with covariates
   if (!is(covariates,"data.frame"))
@@ -96,9 +100,9 @@ prepareMOFA <- function(object, DataOptions = NULL, ModelOptions = NULL, TrainOp
   # Sanity checks
   if (!is(object, "MOFAmodel")) 
     stop("'object' has to be an instance of MOFAmodel")
-  if (MOFAobject@Dimensions$N<15) warning("This model is not appropriate for data sets with less than ~15 samples")
-  if (MOFAobject@Dimensions$N<MOFAobject@Dimensions$K) warning("There are less samples than factors, likely to generate numerical errors")
-  if (min(MOFAobject@Dimensions$D)<MOFAobject@Dimensions$K) warning("There are less factors than features, likely to generate numerical errors")
+  if (object@Dimensions$N<15) warning("This model is not appropriate for data sets with less than ~15 samples")
+  if (object@Dimensions$N<object@Dimensions$K) warning("There are less samples than factors, likely to generate numerical errors")
+  if (min(object@Dimensions$D)<object@Dimensions$K) warning("There are less factors than features, likely to generate numerical errors")
   
   # Get data options
   message("Checking data options...")
@@ -110,6 +114,8 @@ prepareMOFA <- function(object, DataOptions = NULL, ModelOptions = NULL, TrainOp
       stop("DataOptions are incorrectly specified, please read the documentation in getDefaultDataOptions")
     object@DataOptions <- DataOptions
   }
+  if (any(nchar(sampleNames(object))>50))
+    warning("Due to string size limitations in the HDF5 format, sample names will be trimmed to less than 50 characters")
   
   # Get training options
   message("Checking training options...")

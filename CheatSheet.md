@@ -15,6 +15,7 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 # List of relevant functions
 
 ## Prepare and run MOFA
+* **regressCovariate**: regress out (technical) covariates before training the model
 * **createMOFAobject**: first function to create an untrained MOFA model from input multi-omics data  
 * **prepareMOFA**: prepare an untrained MOFA, always run it after createMOFAobject and before runMOFA  
 * **runMOFA**: function to train an untrained MOFA model. This calls the Python framework  
@@ -54,6 +55,7 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 ## Feature set enrichment analysis
 * **runEnrichmentAnalysis**: do feature set enrichment analysis. Takes a bit amount of options, check the example on the vignette
 * **plotEnrichment**: plot the top most enriched feature sets per factor
+* **plotEnrichmentDetailed**: plot a more detailed output of the top most enriched feature sets per factor
 * **plotEnrichmentBars**: plot the number of enriched feature sets per factor as a barplot
 
 ## Clustering
@@ -68,7 +70,7 @@ MOFAmodel it is the main S4 class used to store all relevant data to analyse a M
 * **prediction**: predict observations
 * **impute**: impute missing data
 
-## Subset
+## Subset (after training the model)
 * **subsetSamples**: subset samples
 * **subsetViews**:  subset views
 * **subsetFactors**: subset factors

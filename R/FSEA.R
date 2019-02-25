@@ -56,11 +56,11 @@
 #' @examples 
 #' # Example on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
-#' MOFA_CLL <- loadModel(filepath)
+#' MOFAobject <- loadModel(filepath)
 #' 
 #' # perform Enrichment Analysis on mRNA data using pre-build Reactome gene sets
 #' data("reactomeGS", package = "MOFAdata")
-#' fsea.results <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
+#' fsea.results <- runEnrichmentAnalysis(MOFAobject, view="mRNA", feature.sets=reactomeGS)
 #' 
 #' # heatmap of enriched pathways per factor at 1% FDR
 #' plotEnrichmentHeatmap(fsea.results, alpha=0.01)
@@ -69,7 +69,7 @@
 #' plotEnrichmentBars(fsea.results, alpha=0.01)
 #' 
 #' # plot top 10 enriched pathways on factor 5:
-#' plotEnrichment(MOFA_CLL, fsea.results, factor=5,  max.pathways=10)
+#' plotEnrichment(MOFAobject, fsea.results, factor=5,  max.pathways=10)
 
 runEnrichmentAnalysis <- function(object, view,
                                   feature.sets, factors = "all",
@@ -247,12 +247,12 @@ runEnrichmentAnalysis <- function(object, view,
 ########################
 
 
-#' @title Line plot of Feature Set Enrichment Analysis results
+#' @title Plot output of Feature Set Enrichment Analysis
 #' @name plotEnrichment
-#' @description Method to plot Feature Set Enrichment Analyisis results for specific factors
-#' @param object \code{\link{MOFAmodel}} object on which the Feature Set Enrichment Analyisis was performed
+#' @description Method to plot the results of the Feature Set Enrichment Analyisis (FSEA)
+#' @param object \code{\link{MOFAmodel}} object on which FSEA was performed
 #' @param fsea.results output of \link{runEnrichmentAnalysis} function
-#' @param factor Factor
+#' @param factor string with factor name or numeric with factor index
 #' @param alpha p.value threshold to filter out feature sets
 #' @param max.pathways maximum number of enriched pathways to display
 #' @param adjust use adjusted p-values?
@@ -263,14 +263,14 @@ runEnrichmentAnalysis <- function(object, view,
 #' @examples 
 #' # Example on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
-#' MOFA_CLL <- loadModel(filepath)
+#' MOFAobject <- loadModel(filepath)
 #' 
 #' # perform Enrichment Analysis on mRNA data using pre-build Reactome gene sets
 #' data("reactomeGS", package = "MOFAdata")
-#' fsea.results <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
+#' fsea.results <- runEnrichmentAnalysis(MOFAobject, view="mRNA", feature.sets=reactomeGS)
 #' 
 #' # Plot top 10 enriched pathwyas on factor 5:
-#' plotEnrichment(MOFA_CLL, fsea.results, factor=5,  max.pathways=10)
+#' plotEnrichment(MOFAobject, fsea.results, factor=5,  max.pathways=10)
 
 plotEnrichment <- function(object, fsea.results, factor, alpha=0.1, max.pathways=25, adjust=TRUE) {
   
@@ -347,11 +347,11 @@ plotEnrichment <- function(object, fsea.results, factor, alpha=0.1, max.pathways
 #' @examples 
 #' # Example on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
-#' MOFA_CLL <- loadModel(filepath)
+#' MOFAobject <- loadModel(filepath)
 #' 
 #' # perform Enrichment Analysis on mRNA data using pre-build Reactome gene sets
 #' data("reactomeGS", package = "MOFAdata")
-#' fsea.results <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
+#' fsea.results <- runEnrichmentAnalysis(MOFAobject, view="mRNA", feature.sets=reactomeGS)
 #' 
 #' # overview of enriched pathways per factor at an FDR of 1%
 #' plotEnrichmentHeatmap(fsea.results, alpha=0.01)
@@ -389,11 +389,11 @@ plotEnrichmentHeatmap <- function(fsea.results, alpha = 0.05, logScale = TRUE, .
 #' @examples 
 #' # Example on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
-#' MOFA_CLL <- loadModel(filepath)
+#' MOFAobject <- loadModel(filepath)
 #' 
 #' # perform Enrichment Analysis on mRNA data using pre-build Reactome gene sets
 #' data("reactomeGS", package = "MOFAdata")
-#' fsea.results <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
+#' fsea.results <- runEnrichmentAnalysis(MOFAobject, view="mRNA", feature.sets=reactomeGS)
 #' 
 #' # Plot overview of number of enriched pathways per factor at an FDR of 1%
 #' plotEnrichmentBars(fsea.results, alpha=0.01)
@@ -432,6 +432,130 @@ plotEnrichmentBars <- function(fsea.results, alpha = 0.05) {
       axis.text.x = element_text(size=rel(1.2), vjust=0.5, color='black'),
       panel.background = element_blank()
     )
+}
+
+#' @title Plot detailed output of the Feature Set Enrichment Analysis
+#' @name plotEnrichmentDetailed
+#' @description Method to plot a detailed output of the Feature Set Enrichment Analyisis (FSEA). \cr
+#' Each row corresponds to a significant pathway, sorted by statistical significance, and each dot corresponds to a gene. \cr
+#' For each pathway, we display the top genes of the pathway sorted by the corresponding feature statistic (by default, the absolute value of the loading)
+#' The top genes with the highest statistic (max.genes argument) are displayed and labeled in black. The remaining genes are colored in grey.
+#' @param object \code{\link{MOFAmodel}} object on which FSEA was performed
+#' @param factor string with factor name or numeric with factor index
+#' @param fsea.results output of \link{runEnrichmentAnalysis} function
+#' @param feature.sets data structure that holds feature set membership information, as used in the \link{runEnrichmentAnalysis} function.
+#' @param alpha p.value threshold to filter out feature sets
+#' @param max.pathways maximum number of enriched pathways to display
+#' @param max.genes maximum number of genes to display, per pathway
+#' @param text_size size of the text to label the top genes
+#' @param adjust use adjusted p-values?
+#' @return a \code{ggplot2} object
+#' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom dplyr top_n
+#' @importFrom ggrepel geom_text_repel
+#' @export
+#' @examples 
+#' # Example on the CLL data
+#' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
+#' MOFAobject <- loadModel(filepath)
+#' 
+#' # perform Enrichment Analysis on mRNA data using pre-build Reactome gene sets
+#' data("reactomeGS", package = "MOFAdata")
+#' fsea.results <- runEnrichmentAnalysis(MOFAobject, view="mRNA", feature.sets=reactomeGS)
+#' 
+#' # Plot detailed output of the enrichment analysis results
+#' plotEnrichmentDetailed(
+#' object = MOFAobject, 
+#' factor = 5,
+#' feature.sets = reactomeGS,
+#' fsea.results = fsea.results,
+#' 
+#' )
+
+plotEnrichmentDetailed <- function(object, factor, feature.sets, fsea.results, 
+                                   adjust = TRUE, alpha = 0.1, max.genes = 5, max.pathways = 10, text_size = 3) {
+  
+  # Sanity checks
+  stopifnot(length(factor)==1) 
+  if(is.numeric(factor)) factor <- factorNames(object)[factor]
+  if(!factor %in% colnames(fsea.results$pval)) 
+    stop(paste0("No feature set enrichment calculated for factor ", factor, ".\n Use runEnrichmentAnalysis first."))
+  
+  # Fetch and prepare data  
+  
+  # foo
+  foo <- melt(fsea.results$feature.statistics, factorsAsStrings=T)
+  colnames(foo) <- c("feature","factor","feature.statistic")
+  foo <- foo[foo$factor==factor,]
+  foo$feature <- as.character(foo$feature)
+  
+  # bar
+  bar <- melt(feature.sets)
+  bar <- bar[bar$value==1,c(1,2)]
+  colnames(bar) <- c("pathway","feature")
+  bar$pathway <- as.character(bar$pathway)
+  bar$feature <- as.character(bar$feature)
+  
+  # baz
+  if (adjust) {
+    baz <- melt(fsea.results$pval.adj)
+  } else {
+    baz <- melt(fsea.results$pval)
+  }
+  colnames(baz) <- c("pathway","factor","pvalue")
+  baz$pathway <- as.character(baz$pathway)
+  baz <- baz[baz$factor==factor,]
+  
+  # Filter out pathways by p-values
+  baz <- baz[baz$pvalue<=alpha,,drop=FALSE]
+  if(nrow(baz)==0) {
+    stop("No siginificant pathways at the specified alpha threshold. \n
+         For an overview use plotEnrichmentHeatmap() or plotEnrichmentBars().")
+  }
+  if (nrow(baz) > max.pathways)
+    baz <- head(baz[order(baz$pvalue),],n=max.pathways)
+  
+  # order pathways according to significance
+  baz$pathway <- factor(baz$pathway, levels = baz$pathway[order(baz$pvalue, decreasing = TRUE)])
+  
+  # Merge
+  foobar <- merge(foo, bar, by="feature")
+  tmp <- merge(foobar, baz, by=c("pathway","factor"))
+  
+  # Select the top N features with the largest feature.statistic (per pathway)
+  tmp_filt <- top_n(group_by(tmp, pathway), n=max.genes, abs(feature.statistic))
+  
+  # Add number of features and p-value per pathway
+  pathways <- unique(tmp_filt$pathway)
+  
+  # Add Ngenes and p-values to the pathway name
+  df <- data.frame(pathway=pathways, nfeatures=rowSums(feature.sets)[pathways])
+  df <- merge(df, baz, by="pathway")
+  df$pathway_long_name <- sprintf("%s\n (Ngenes = %d) \n (p-val = %0.2g)",df$pathway, df$nfeatures, df$pvalue)
+  tmp <- merge(tmp, df[,c("pathway","pathway_long_name")], by="pathway")
+  tmp_filt <- merge(tmp_filt, df[,c("pathway","pathway_long_name")], by="pathway")
+  
+  # sort pathways by p-value
+  order_pathways <- df$pathway_long_name[order(df$pvalue,decreasing=T) ]
+  tmp$pathway_long_name <- factor(tmp$pathway_long_name, levels=order_pathways)
+  tmp_filt$pathway_long_name <- factor(tmp_filt$pathway_long_name, levels=order_pathways)
+  
+  p <- ggplot(tmp, aes_string(x="pathway_long_name", y="feature.statistic")) +
+    geom_text_repel(aes_string(x="pathway_long_name", y="feature.statistic", label="feature"), size=text_size, color="black", force=1, data=tmp_filt) +
+    geom_point(size=0.5, color="lightgrey") +
+    geom_point(aes_string(x="pathway_long_name", y="feature.statistic"), size=1, color="black", data=tmp_filt) +
+    labs(x="", y="Feature statistic", title="") +
+    coord_flip() +
+    theme(
+      axis.line = element_line(color="black"),
+      axis.text.y = element_text(size=rel(1.2), hjust=1, color='black'),
+      axis.text.x = element_text(size=rel(1.2), vjust=0.5, color='black'),
+      axis.title.y=element_blank(),
+      legend.position='none',
+      panel.background = element_blank()
+    )
+  return(p)
 }
 
 

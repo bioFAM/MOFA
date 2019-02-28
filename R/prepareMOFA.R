@@ -4,7 +4,7 @@
 ####################################################
 
 #' @title regress out a covariate from the training data
-#' @name regressCovariate
+#' @name regressCovariates
 #' @description Function to regress out a covariate from the training data.\cr
 #' If you have technical sources of variability (i.e. batch effects) that you do not want to be captured by factors in the model, 
 #' you should regress them out before fitting MOFA. This function performs a simple linear regression model, extracts the residuals,
@@ -22,11 +22,14 @@
 #' @return Returns an untrained \code{\link{MOFAmodel}} where the specified covariates have been regressed out in the training data.
 #' @importFrom stats lm
 #' @export
-regressCovariate <- function(object, views, covariates, min_observations = 5) {
+
+regressCovariates <- function(object, views, covariates, min_observations = 5) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) 
     stop("'object' has to be an instance of MOFAmodel")
+  if (object@Status=="trained")
+    stop("object@Status is 'trained'. regressCovariates has to be done before training the model")
   if (length(object@ModelOptions$likelihood)==0) 
     stop("Run prepareMOFA before regressing out covariates") 
   if (any(object@ModelOptions$likelihood[views]!="gaussian")) 

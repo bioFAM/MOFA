@@ -292,7 +292,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
 
 
 
-#' @title Tile plot of the multi-omics data
+#' @title Plot overview of the input data
 #' @name plotDataOverview
 #' @description Function to do a tile plot showing the dimensionality and 
 #' the missing value structure of the multi-omics data.

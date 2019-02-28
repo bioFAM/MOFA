@@ -208,6 +208,16 @@ plotWeights(
   factor = 1, 
   nfeatures = 5
 )
+
+plotWeights(
+  MOFAobject, 
+  view = "Mutations", 
+  factor = 1, 
+  nfeatures = 5,
+  manual = list(c("BRAF"),c("MED12")),
+  color_manual = c("red","blue")
+  
+)
 ```
 Features with large (absolute) weight on a given factor follow the pattern of covariation associated with the factor.  In our case, this reveals a strong link to the IGHV status, hence recovering an important clinical marker in CLL (see our paper for details on the biological interpretation.) Note that the sign of the weight can only be interpreted relative to the signs of other weights and the factor values.  
 

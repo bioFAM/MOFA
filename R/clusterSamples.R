@@ -17,6 +17,7 @@
 #' @param factors character vector with the factor name(s), 
 #' or numeric vector with the index of the factor(s) to use. 
 #' Default is 'all'
+#' @param seed seed to be set for the k-means clustering
 #' @param ... extra arguments  passed to \code{\link{kmeans}}
 #' @details In some cases, samples can have missing values in the factor space. 
 #' This occurs when a factor is active in a single view and some samples are missing this data. \cr
@@ -52,7 +53,7 @@
 #' plotFactorScatter(MOFA_CLL, factors=1:2, color_by=clusters)
 
 
-clusterSamples <- function(object, k, factors = "all", ...) {
+clusterSamples <- function(object, k, factors = "all", seed = 9876, ...) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
@@ -75,6 +76,7 @@ clusterSamples <- function(object, k, factors = "all", ...) {
   Z_sub <- Z[haveAllZ,]
 
   # Perform k-means clustering
+  set.seed(seed)
   kmeans.out <- kmeans(Z_sub, centers=k,  ...)
   clusters <- rep(NA, length(sampleNames(object)))
   names(clusters) <- sampleNames(object)

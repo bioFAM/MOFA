@@ -377,8 +377,8 @@ predictedDrugs <- predict(
 
 
 # training data (incl. missing values)
-DrugData4Training <- getTrainData(MOFAobject, view="Drugs")[[1]]
-pheatmap::pheatmap(DrugData4Training[1:40,1:20],
+drugData4Training <- getTrainData(MOFAobject, view="Drugs")[[1]]
+pheatmap::pheatmap(drugData4Training[1:40,1:20],
          cluster_rows = FALSE, cluster_cols = FALSE,
          show_rownames = FALSE, show_colnames = FALSE)
 
@@ -395,7 +395,7 @@ MOFAobject <- impute(MOFAobject)
 imputedDrugs <- getImputedData(MOFAobject, view="Drugs")[[1]]
 
 # training data (incl. missing values)
-pheatmap::pheatmap(DrugData4Training[1:40,1:20],
+pheatmap::pheatmap(drugData4Training[1:40,1:20],
          cluster_rows = FALSE, cluster_cols = FALSE,
          show_rownames = FALSE, show_colnames = FALSE)
 

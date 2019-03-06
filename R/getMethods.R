@@ -349,7 +349,7 @@ getCovariates <- function(object, covariate) {
 #' 'Y' for pseudodata, 'Theta' for feature-wise spike-and-slab sparsity,
 #'  'Alpha' for view and factor-wise ARD sparsity
 #' @param as.data.frame logical indicating whether to output the result as a long data frame,
-#'  default is \code{FALSE}.
+#'  default is \code{FALSE}. 
 #' @details Technical note: MOFA is a Bayesian model where each variable has a prior distribution
 #'  and a posterior distribution. In particular, to achieve scalability we used the 
 #'  variational inference framework, thus true posterior distributions are replaced
@@ -386,17 +386,14 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
   
   # Get expectations in single matrix or list of matrices (for multi-view nodes)
   exp <- object@Expectations[[variable]]
-  # if (variable=="Z") {
-  #   exp <- object@Expectations$Z
-  # } else {
-  #   exp <- lapply(object@Expectations[[variable]], function(x) x$E)
-  # }
-  
+
   # Convert to long data frame
   if (as.data.frame==TRUE) {
     if (variable=="Z") {
       tmp <- reshape2::melt(exp)
       colnames(tmp) <- c("sample","factor","value")
+      tmp[c("sample","factor")] <- vapply(tmp[c("sample","factor")], as.character, character(nrow(tmp)))
+      return(tmp) 
     }
     else if (variable=="W") {
       tmp <- lapply(names(exp), function(m) { 
@@ -413,35 +410,36 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
         tmp <- reshape2::melt(exp[[m]])
         colnames(tmp) <- c("sample","feature","value")
         tmp$view <- m
-        tmp[c("view","feature","factor")] <- vapply(tmp[c("view","feature","factor")], as.character, character(nrow(tmp)))
+        tmp[c("view","feature","sample")] <- vapply(tmp[c("view","feature","sample")], as.character, character(nrow(tmp)))
         return(tmp) 
       })
       tmp <- do.call(rbind,tmp)
     }
     else if (variable=="Tau") {
-      stop("Not implemented")
-      # tmp <- lapply(names(exp), function(m) { 
-      #   data.frame(view=m, feature=names(exp[[m]]), value=unname(exp[[m]]))
-      #   tmp[c("view","feature","factor")] <- vapply(tmp[c("view","feature","factor")], as.character, character(nrow(tmp)))
-      #   return(tmp) 
-      # })
-      # tmp <- do.call(rbind,tmp)
+      tmp <- lapply(names(exp), function(m) {
+        tmp <- reshape2::melt(exp[[m]])
+        colnames(tmp) <- c("sample","feature","value")
+        tmp$view <- m
+        tmp[c("view","feature","sample")] <- vapply(tmp[c("view","feature","sample")], as.character, character(nrow(tmp)))
+        return(tmp) 
+      })
+      tmp <- do.call(rbind,tmp)
     }
     else if (variable=="Alpha") {
       tmp <- lapply(names(exp), function(m) { 
         tmp <- data.frame(view=m, factor=names(exp[[m]]), value=unname(exp[[m]]))
-        tmp[c("view","feature","factor")] <- vapply(tmp[c("view","feature","factor")], as.character, character(nrow(tmp)))
+        tmp[c("view","factor")] <- vapply(tmp[c("view","factor")], as.character, character(nrow(tmp)))
         return(tmp) 
       })
       tmp <- do.call(rbind,tmp)
     }
     else if (variable=="Theta") {
-      stop("Not implemented")
-      # tmp <- lapply(names(exp), function(m) { tmp <- reshape2::melt(exp[[m]])
-      # colnames(tmp) <- c("sample","feature","value")
-      # tmp$view <- m; tmp[c("view","feature","factor")] <- vapply(tmp[c("view","feature","factor")], as.character, character(nrow(tmp)))
-      # return(tmp) })
-      # tmp <- do.call(rbind,tmp)
+      tmp <- lapply(names(exp), function(m) { 
+        tmp <- data.frame(view=m, factor=names(exp[[m]]), value=unname(exp[[m]]))
+        tmp[c("view","factor")] <- vapply(tmp[c("view","factor")], as.character, character(nrow(tmp)))
+        return(tmp) 
+      })
+      tmp <- do.call(rbind,tmp)
     }
     exp <- tmp
   }

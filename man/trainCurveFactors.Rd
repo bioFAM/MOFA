@@ -29,5 +29,5 @@ trainCurveFactors(MOFA_CLL)
 # Example on the scMT data
 filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFA_scMT <- loadModel(filepath)
-trainCurveFactors(MOFA_scMT)
+trainCurveFactors(MOFA_scMT) 
 }

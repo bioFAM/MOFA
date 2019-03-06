@@ -39,7 +39,8 @@ or a vector of the same length as the number of samples specifying discrete grou
 \code{ggplot2} object
 }
 \description{
-Scatterplots of the sample values for pair-wise combinations of multiple latent factors.
+Scatterplots of the sample values for pair-wise
+combinations of multiple latent factors.
 }
 \details{
 One of the first steps for the annotation of factors is to visualise and

@@ -44,18 +44,25 @@ see \code{\link{impute}} and the Methods section of the article.
 filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 # predict drug response data based on all factors
-predict(MOFA_CLL, view="Drugs")
+predictedDrugs <- predict(MOFA_CLL, view="Drugs")
 # predict all views based on all factors
-predict(MOFA_CLL)
+predictedAll <- predict(MOFA_CLL)
 # predict mutation data based on all factors returning Bernoulli probabilities
-predict(MOFA_CLL, view="Mutations", type="response")
+predictedMutations <- predict(MOFA_CLL, view="Mutations", type="response")
 # predict mutation data based on all factors returning binary classes
-predict(MOFA_CLL, view="Mutations", type="inRange")
+predictedMutationsBinary <- predict(MOFA_CLL, view="Mutations", type="inRange")
+# We can compare the predicitons made by the model with the training data for non-missing samples, e.g.
+trainData <- getTrainData(MOFA_CLL)
+qplot(predictedAll$Drugs, trainData$Drugs) + geom_hex(bins=100) +
+ coord_equal() + geom_abline(intercept = 0, slope = 1, col = "red")
 
 # Example on the scMT data
 filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFA_scMT <- loadModel(filepath)
 # predict all views based on all factors (default)
-predict(MOFA_scMT)
-
+ predictedAll <-predict(MOFA_scMT)
+# We can compare the predicitons made by the model with the training data for non-missing samples, e.g.
+trainData <- getTrainData(MOFA_scMT)
+qplot(predictedAll[["RNA expression"]], trainData[["RNA expression"]]) + geom_hex(bins=100) +
+ coord_equal() + geom_abline(intercept = 0, slope = 1, col = "red") 
 }

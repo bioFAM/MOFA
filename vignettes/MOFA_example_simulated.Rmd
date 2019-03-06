@@ -11,12 +11,12 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+# Simulate an example data set
+To illustrate the MOFA workflow we simulate a small example data set with 3 different views. `makeExampleData` generates an untrained MOFAobject containing the simulated data. If you work on your own data use `createMOFAobject` to create the untrained MOFA object (see our vignettes for CLL and scMT data). 
 ```{r, message=FALSE}
 library(MOFA)
 ```
-
-# Simulate an example data set
-To illustrate the MOFA workflow we simulate a small example data set with 3 different views. `makeExampleData` generates an untrained MOFAobject containing the simulated data. If you work on your own data use `createMOFAobject` to create the untrained MOFA object (see our vignettes for CLL and scMT data).
+By default the function `makeExampleData` produces a small data set containing 3 views with 100 features each and 50 samples. These parameters can be varied using the arguments `n_views`, `n_features` and `n_samples`.
 ```{r}
 set.seed(1234)
 data <- makeExampleData()
@@ -40,7 +40,7 @@ TrainOptions$DropFactorThreshold <- 0.01
 Once the MOFAobject is set up we can use `runMOFA` to train the model. As depending on the random initilization the results might differ, we recommend to use runMOFA multiple times (e.g. ten times, here we use a smaller number for illustration as the model training can take some time). As a next step we will compare the different fits and select the best model for downstream analyses.
 ```{r}
 n_inits <- 3
-MOFAlist <- lapply(1:n_inits, function(it) {
+MOFAlist <- lapply(seq_len(n_inits), function(it) {
   
   TrainOptions$seed <- 2018 + it
   
@@ -80,5 +80,9 @@ On the trained MOFAobject we can now start looking into the inferred factors, it
 plotVarianceExplained(MOFAobject)
 ```
 
-For details on down-stream analyses please have a look at the vignettes on the CLL data and scMT data.
+For details on downstream analyses please have a look at the vignettes on the CLL data and scMT data.
 
+# SessionInfo
+```{r}
+sessionInfo()
+```

@@ -22,8 +22,9 @@ library(MOFAdata)
 
 # Step 1: Load data and create MOFA object
 There are two options to input data to MOFA:
-- Option 1: base R approach using a list of matrices
-- Option 2: Bioconductor approach using the MultiAssayExperiment framework
+
+* Option 1: base R approach using a list of matrices
+* Option 2: Bioconductor approach using the MultiAssayExperiment framework
 
 ## Option 1: base R approach
 If using the base R approach, you simply need to provide a list of matrices where features are rows and samples are columns. Importantly, the samples need to be aligned. Missing values/assays should be filled with NAs.
@@ -33,7 +34,7 @@ MOFAobject <- createMOFAobject(CLL_data)
 MOFAobject
 ```
 
-## Option 2: bioconductor approach
+## Option 2: Bioconductor approach
 If using the Bioconductor approach, you need to provide or create a [MultiAssayExperiment](https://bioconductor.org/packages/release/bioc/html/MultiAssayExperiment.html) object and then use it to build the MOFA object. For example, starting from a list of matrices where features are rows and samples are columns, this can be easily constructed as follows:
 ```{r, warning=FALSE, message=FALSE}
 
@@ -164,13 +165,13 @@ After training, we can explore the results from MOFA. Here we provide a semi-aut
 
 Calculation of variance explained by each factor in each view. This is probably the most important plot that MOFA generates, as it summarises the entire heterogeneity of the dataset in a single figure. Here we can see in which view a factor explains variation which can guide further characterisation of the factors by investigating the weights in those views. 
 
-**Part 2: Characterisation of individual factors**    
+**Part 2: Characterization of individual factors**    
 
 * Inspection of top features with highest loadings: the loading is a measure of feature importance, so features with high loading are the ones driving the heterogeneity captured by the factor.  
 * Feature set enrichment analysis (where set annotations are present, e.g. gene sets for mRNA views).  
-* Ordination of samples by factors to reveal clusters and/or graadients: this is similar to what is traditionally done with Principal Component Analysis or t-SNE.  
+* Ordination of samples by factors to reveal clusters and/or gradients: this is similar to what is traditionally done with Principal Component Analysis or t-SNE.  
 
-Other analysis, including imputation of missing values and clustering of samples are also available. See below for a short illustration of these functionalities. In addition, the factors can be used in further analyses, for example as predictors, e.g. for predicting clinical outcome or classifying patients, or to control for unwanted sources of variation. Vignettes illustrating this are coming soon. 
+Other analyses, including imputation of missing values and clustering of samples are also available. See below for a short illustration of these functionalities. In addition, the factors can be used in further analyses, for example as predictors, e.g. for predicting clinical outcome or classifying patients, or to control for unwanted sources of variation. Vignettes illustrating this are coming soon. 
 
 ## Part 1: Disentangling the heterogeneity: calculation of variance explained by each factor in each view
 This is done by `calculateVarianceExplained` (to get the numerical values) and `plotVarianceExplained` (to get the plot). The resulting figure gives an overview of which factors are active in which view(s). If a factor is active in more than one view, this means that is capturing shared signal (co-variation) between features of different data modalities.  
@@ -227,7 +228,7 @@ For example, here we plot the mutations with largest loadings on Factor 1. The s
 plotTopWeights(
   MOFAobject, 
   view="Mutations", 
-  factor=2
+  factor=1
 )
 ```
 Again, features with large weight in a given factor means that they follow the pattern of covariation associated with the factor. For example, here the factor is associated with the B-cell of tumour's origin, consistent with a large weight on the IGHV status (see our manuscript for more details).  
@@ -285,23 +286,25 @@ From this we find enriched at a FDR of 1% gene sets on Factors 3-6 and 8. To loo
 ```{r}
 interestingFactors <- 4:5
 
-for (factor in interestingFactors) {
-  lineplot <- plotEnrichment(
+fseaplots <- lapply(interestingFactors, function(factor) {
+  plotEnrichment(
     MOFAobject,
     gsea,
     factor = factor,
     alpha = 0.01,
     max.pathways = 10 # The top number of pathways to display
   )
-  print(lineplot)
-}
+})
+
+cowplot::plot_grid(fseaplots[[1]], fseaplots[[2]],
+                   ncol = 1, labels = paste("Factor", interestingFactors))
 ```
 This shows us that Factor 4 is capturing variation related to immune response (possibly due to T-cell contamination of the samples) and Factor 5 is related to differences in stress response, as discussed in our paper.
 
 
 ## Ordination of samples by factors to reveal clusters and gradients in the sample space
 
-Samples can be visualized along factors of interest using the `plotFactorScatter` function. We can use features included in the model (such as IGHV or trisomy12) to color or shape the samples by. Alternatively, external covariates can also be used fot this purpose.
+Samples can be visualized along factors of interest using the `plotFactorScatter` function. We can use features included in the model (such as IGHV or trisomy12) to color or shape the samples by. Alternatively, external covariates can also be used for this purpose.
 ```{r}
 plotFactorScatter(
   MOFAobject,
@@ -352,19 +355,19 @@ head(MOFAfactors)
 ```
 
 ```{r}
-MOFAdata <- getTrainData(
+MOFAtrainData <- getTrainData(
   MOFAobject,
   as.data.frame = TRUE, 
   views = "Mutations"
 )
-head(MOFAdata)
+head(MOFAtrainData)
 ```
 
 
 # Further functionalities 
 
 ## Prediction of views
-With the `predict` function, full views can be predicted based on the MOFA model with all or a subset of factors
+With the `predict` function, full views can be predicted based on the MOFA model with all or a subset of factors.
 ```{r}
 predictedDrugs <- predict(
   MOFAobject,
@@ -397,3 +400,7 @@ plotFactorScatter(
 ```
 
 
+# SessionInfo
+```{r}
+sessionInfo()
+```

@@ -4,14 +4,14 @@ author: "Ricard Argelaguet and Britta Velten"
 date: "`r Sys.Date()`"
 output:
   BiocStyle::html_document:
-    toc: false
+    toc: true
 vignette: >
   %\VignetteIndexEntry{Example_scMT}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-This vignette show how to MOFA can be used to disentangle the heterogeneity in single-cell DNA methylation and RNA expression (scMT) data.  
+This vignette shows how MOFA can be used to disentangle the heterogeneity in single-cell DNA methylation and RNA expression (scMT) data.  
 
 Briefly, the data set consists of 87 mouse embryonic stem cells (mESCs), comprising of 16 cells cultured in ‘2i’ media, which induces a naive pluripotency state, and 71 serum-grown cells, which commits cells to a primed pluripotency state poised for cellular differentiation (Angermueller, 2016). 
 
@@ -122,13 +122,13 @@ After training, we can explore the results from MOFA. Here we provide a semi-aut
 
 Calculation of variance explained by each factor in each view. This is probably the most important plot that MOFA generates, as it summarises the entire heterogeneity of the dataset in a single figure.  
 
-**Part 2: Characterisation of individual factors**    
+**Part 2: Characterization of individual factors**    
 
 * Inspection of top features with highest loadings: the loading is a measure of feature importance, so features with high loading are the ones driving the heterogeneity captured by the factor.  
 * Feature set enrichment analysis (where set annotations are present, e.g. gene sets for mRNA views).  
-* Ordination of samples by factors to reveal clusters and/or graadients: this is similar to what is traditionally done with Principal Component Analysis or t-SNE.  
+* Ordination of samples by factors to reveal clusters and/or gradients: this is similar to what is traditionally done with Principal Component Analysis or t-SNE.  
 
-Other analysis, including imputation of missing values and prediction of clinical data are also available. See below for a short guid on how to impute data. Detailed vignettes will follow soon.
+Other analyses, including imputation of missing values and prediction of clinical data are also available. See below for a short guide on how to impute data. Detailed vignettes will follow soon.
 
 ## Disentangling the heterogeneity, calculation of variance explained by each factor in each view
 This is done by `calculateVarianceExplained` (to get the numerical values) and `plotVarianceExplained` (to get the plot).  
@@ -195,7 +195,7 @@ plotDataHeatmap(
 )
 ```
 
-We can now connect these transcriptomic changes to coordinated changes on the DNA methylation. As *Factor 1* is active in all genomic contexts, it suggests that there is a massive genome-wide DNA methylation remodelling. This can confirmed by inspecting the weights in the DNA methylation views: notice that most features (CpG sites) have a negative weight, which suggests that  their DNA methylation decrease in a manner that is inversely proportional to the direction of *Factor 1*.
+We can now connect these transcriptomic changes to coordinated changes on the DNA methylation. As *Factor 1* is active in all genomic contexts, it suggests that there is a massive genome-wide DNA methylation remodelling. This can confirmed by inspecting the weights in the DNA methylation views, as we do here for the CpG sites in enhancers: Notice that most features (CpG sites) have a negative weight, which suggests that their DNA methylation decrease in a manner that is inversely proportional to the direction of *Factor 1*.
 ```{r}
 plotWeights(
   object = MOFAobject,
@@ -206,6 +206,7 @@ plotWeights(
   scale = FALSE
 )
 ```
+Similar observations can be made for the CpG sites in other genomic contexts, here CpG Islands or Promotors, by plotting the weights of the respective views (i.e. "Met CpG Islands" or "Met Promoters").
 
 As done before, let's observe the heterogeneity captured by *Factor 1* in the original data space. This clearly confirms that most of the CpG sites are getting methylated as cells progress in *Factor 1* from naive to primed pluripotent stem cells
 ```{r}
@@ -301,7 +302,7 @@ plotFactorBeeswarm(
 
 
 ## Customized analysis
-For customized exploration of weights and factors, you can directly fetch the variables from the `MOFAobject using 'get' functions: `getWeights`, `getFactors` and `getTrainData`. As an example, here we do a scatterplot between Factor 3 and the true Cellular Detection Rate values
+For customized exploration of weights and factors, you can directly fetch the variables from the `MOFAobject` using 'get' functions: `getWeights`, `getFactors` and `getTrainData`. As an example, here we do a scatterplot between Factor 3 and the true Cellular Detection Rate values
 ```{r, message=FALSE}
 cdr <- colMeans(getTrainData(MOFAobject)$`RNA expression`>0,na.rm=TRUE)
 factor3 <- getFactors(MOFAobject,
@@ -353,3 +354,9 @@ plotFactorScatter(
   shape_by = "culture"
 )
 ```
+
+# SessionInfo
+```{r}
+sessionInfo()
+```
+

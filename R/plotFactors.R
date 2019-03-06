@@ -342,7 +342,9 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
                          name_shape="", showMissing = TRUE) {
   
   # Sanity checks
-  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
+  if (!is(object, "MOFAmodel")) {
+      stop("'object' has to be an instance of MOFAmodel")
+  }
   stopifnot(length(factors)==2)
   
   # Get factors
@@ -421,7 +423,9 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
   df = data.frame(x = Z[, factors[1]], y = Z[, factors[2]], shape_by = shape_by, color_by = color_by)
   
   # remove values missing color or shape annotation
-  if (!showMissing) df <- df[!(is.na(df$shape_by) | is.na(df$color_by)),]
+  if (!showMissing) {
+      df <- df[!(is.na(df$shape_by) | is.na(df$color_by)),]
+  }
 
    #turn into factors
    df$shape_by[is.na(df$shape_by)] <- "NA"
@@ -451,15 +455,25 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
           legend.text = element_text(size = 16),
           legend.title = element_text(size =16)
             )
-  if (colorLegend) { p <- p + labs(color = name_color) } else { p <- p + guides(color = FALSE) }
-  if (shapeLegend) { p <- p + labs(shape = name_shape) }  else { p <- p + guides(shape = FALSE) }
+  if (colorLegend) {
+      p <- p + labs(color = name_color) 
+  } else { 
+          p <- p + guides(color = FALSE) 
+  }
+  if (shapeLegend) {
+      p <- p + labs(shape = name_shape) 
+  }  else {
+          p <- p + guides(shape = FALSE) 
+  }
+  
   return(p)
 }
   
   
 #' @title Pairwise scatterplots of multiple latent factors
 #' @name plotFactorScatters
-#' @description Scatterplots of the sample values for pair-wise combinations of multiple latent factors.
+#' @description Scatterplots of the sample values for pair-wise
+#' combinations of multiple latent factors.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param factors character vector with the factor name(s), or
 #'  numeric vector with the index of the factor(s) to use. 

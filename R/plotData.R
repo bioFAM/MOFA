@@ -368,7 +368,7 @@ plotDataOverview <- function(object, colors = NULL) {
   
   # Plot
   p <- ggplot(molten_ovw, aes_string(x="sample", y="view_label", fill="combi")) +
-    geom_raster(width=0.7, height=0.9, col="black") +
+    geom_raster() +
     geom_text(data=filter(molten_ovw, sample==levels(molten_ovw$sample)[1]),
               aes_string(x="label_pos", label="ntotal"), size=6) +
     scale_fill_manual(values = c('missing'="grey", colors)) +

@@ -31,8 +31,6 @@ Function to set and retrieve view names.
 data("CLL_data", package = "MOFAdata")
 MOFAobject  <- createMOFAobject(CLL_data)
 viewNames(MOFAobject)
-data("CLL_data", package = "MOFAdata")
-MOFAobject  <- createMOFAobject(CLL_data)
-viewNames(MOFAobject) 
 viewNames(MOFAobject) <- c("DrugResponses", viewNames(MOFAobject)[2:4])
+viewNames(MOFAobject) 
 }

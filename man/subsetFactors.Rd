@@ -19,7 +19,7 @@ or numeric vector with the index of the factors.}
 Method to subset (or sort) factors. \cr
 Some factors might not be interesting for the downstream analysis and the user can choose to remove them.
 This has no effect on the values of the other factors.
-For example, this could be done it the model contains factors
+For example, this could be done if the model contains factors
 which are inactive in all views.
 }
 \examples{
@@ -27,5 +27,7 @@ which are inactive in all views.
 filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 MOFA_CLL_small <- subsetFactors(MOFA_CLL, factors=c(1,2,3))
+MOFA_CLL_small
 MOFA_CLL_small <- subsetFactors(MOFA_CLL, factors=c("LF1","LF2","LF3"))
+MOFA_CLL_small
 }

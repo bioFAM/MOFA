@@ -126,13 +126,13 @@ plotDataHeatmap <- function(object, view, factor, features = 50, includeWeights 
 #' @param color_by specifies groups or values used to color the samples. 
 #' This can be either: 
 #' (a) a character giving the name of a feature, 
-#' (b) a character giving the same of a covariate (only if using MultiAssayExperiment as input), or
+#' (b) a character giving the name of a covariate (only if using MultiAssayExperiment as input), or
 #' (c) a vector of the same length as the number of samples
 #'  specifying discrete groups or continuous numeric values.
 #' @param shape_by specifies groups or values used to shape the samples. 
 #' This can be either: 
 #' (a) a character giving the name of a feature present in the training data, 
-#' (b) a character giving the same of a covariate (only if using MultiAssayExperiment as input), or 
+#' (b) a character giving the name of a covariate (only if using MultiAssayExperiment as input), or 
 #' (c) a vector of the same length as the number of samples specifying discrete groups.
 #' @param name_color name for the color legend
 #' @param name_shape name for the shape legend
@@ -320,7 +320,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
 #' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' # using customized colors
-#' plotDataOverview(MOFA_scMT, colors= c("blue", "red", "red", "red"))
+#' plotDataOverview(MOFA_scMT, colors= c("red", "red", "red", "blue"))
 
 plotDataOverview <- function(object, colors = NULL) {
   

@@ -21,7 +21,7 @@ If a character vector, a set of manually-defined features.}
 \item{color_by}{specifies groups or values used to color the samples. 
 This can be either: 
 (a) a character giving the name of a feature, 
-(b) a character giving the same of a covariate (only if using MultiAssayExperiment as input), or
+(b) a character giving the name of a covariate (only if using MultiAssayExperiment as input), or
 (c) a vector of the same length as the number of samples
  specifying discrete groups or continuous numeric values.}
 
@@ -30,7 +30,7 @@ This can be either:
 \item{shape_by}{specifies groups or values used to shape the samples. 
 This can be either: 
 (a) a character giving the name of a feature present in the training data, 
-(b) a character giving the same of a covariate (only if using MultiAssayExperiment as input), or 
+(b) a character giving the name of a covariate (only if using MultiAssayExperiment as input), or 
 (c) a vector of the same length as the number of samples specifying discrete groups.}
 
 \item{name_shape}{name for the shape legend}

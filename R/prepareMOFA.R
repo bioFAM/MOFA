@@ -95,8 +95,8 @@ regressCovariates <- function(object, views, covariates, min_observations = 5) {
 #' ModelOptions = ModelOptions,
 #' TrainOptions = TrainOptions
 #' )
-#' # as a next step runMOFA can be used to train the model (can take some time)
-#' # MOFAobject <- runMOFA(MOFAobject, outfile=tempfile())
+#' MOFAobject
+
 
 prepareMOFA <- function(object, DataOptions = NULL, ModelOptions = NULL, TrainOptions = NULL) {
   

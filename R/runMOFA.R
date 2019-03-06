@@ -17,13 +17,14 @@
 #' @import reticulate
 #' @export
 #' @examples
-#' data("CLL_data", package = "MOFAdata")
+#' data <- makeExampleData()
 #' # create and prepare the MOFAmodel
-#' MOFAobject <- createMOFAobject(CLL_data)
+#' MOFAobject <- createMOFAobject(data)
 #' MOFAobject <- prepareMOFA(MOFAobject)
 #' # fit the model (takes some time)
 #' \dontrun{
 #' # MOFAobject <- runMOFA(MOFAobject)
+#' # MOFAobject
 #' }
 
 runMOFA <- function(object, outfile=NULL) {

@@ -33,7 +33,7 @@ Returns a list with data predictions.
 This function uses the factors and the corresponding weights to do data predictions.
 }
 \details{
-the denoised and condensed low-dimensional representation of the data
+The denoised and condensed low-dimensional representation of the data
  captures the main sources of heterogeneity of the data. 
 These representation can be used to do predictions using the equation Y = WX. 
 This is the key step underlying imputation, 

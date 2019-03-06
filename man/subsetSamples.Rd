@@ -31,6 +31,8 @@ filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 # Subset samples via character vector
 MOFA_CLL_small <- subsetSamples(MOFA_CLL, samples=c("H045","H109","H024","H056"))
+MOFA_CLL_small
 # Subset samples via numeric vector
 MOFA_CLL_small <- subsetSamples(MOFA_CLL, samples=1:10)
+MOFA_CLL_small
 }

@@ -6,9 +6,9 @@
 #' @rdname trainCurveFactors
 #' @name trainCurveFactors
 #' @title Training curve for the number of active factors
-#' @description the MOFA model starts with an initial number of factors and inactive factors
+#' @description The MOFA model starts with an initial number of factors and inactive factors
 #'  can be dropped during training if they explain small amounts of variation 
-#'  (as defined in \code{\link{getDefaultModelOptions}}. 
+#'  (as defined in \code{\link{getDefaultModelOptions}}). 
 #' This allows the model to automatically infer the dimensionality of the latent space.
 #' The corresponding hyperparameters are defined in \code{\link{prepareMOFA}}. \cr
 #' All training statistics, including the number of active factors, can be fetch from the
@@ -26,7 +26,7 @@
 #' # Example on the scMT data
 #' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
-#' trainCurveFactors(MOFA_scMT)
+#' trainCurveFactors(MOFA_scMT) 
 
 trainCurveFactors <- function(object) {
   
@@ -78,7 +78,7 @@ trainCurveFactors <- function(object) {
 #'  which maximises a quantity called the Evidence Lower Bound (ELBO).
 #' The ELBO is supposed to increase monotonically up to convergence,
 #'  but it can decrease substantially when dropping inactive factors.
-#' For more details read the supplementary methods
+#' For more details read the supplementary methods.
 #' The frequency of ELBO computation as well as the convergence criteria are defined
 #'  as hyperparameters in \code{\link{prepareMOFA}}. \cr
 #' All Training statistics, including the ELBO,

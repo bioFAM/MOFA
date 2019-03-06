@@ -13,9 +13,9 @@ trainCurveFactors(object)
 plot of number of active factors during training
 }
 \description{
-the MOFA model starts with an initial number of factors and inactive factors
+The MOFA model starts with an initial number of factors and inactive factors
  can be dropped during training if they explain small amounts of variation 
- (as defined in \code{\link{getDefaultModelOptions}}. 
+ (as defined in \code{\link{getDefaultModelOptions}}). 
 This allows the model to automatically infer the dimensionality of the latent space.
 The corresponding hyperparameters are defined in \code{\link{prepareMOFA}}. \cr
 All training statistics, including the number of active factors, can be fetch from the

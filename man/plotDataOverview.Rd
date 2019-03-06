@@ -37,5 +37,5 @@ plotDataOverview(MOFA_CLL)
 filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFA_scMT <- loadModel(filepath)
 # using customized colors
-plotDataOverview(MOFA_scMT, colors= c("blue", "red", "red", "red"))
+plotDataOverview(MOFA_scMT, colors= c("red", "red", "red", "blue"))
 }

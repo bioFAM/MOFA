@@ -29,6 +29,9 @@ filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 # Subset views via character vector
 MOFA_CLL_small <- subsetViews(MOFA_CLL, views=c("Drugs","Methylation"))
+MOFA_CLL_small
 # Subset views via numeric vector
 MOFA_CLL_small <- subsetViews(MOFA_CLL, views=2:3)
+MOFA_CLL_small
+
 }

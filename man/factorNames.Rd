@@ -32,10 +32,6 @@ Function to set and retrieve factor names.
 filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFAobject <- loadModel(filepath)
 factorNames(MOFAobject)
-# load a trained MOFAmodel object
-filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
-MOFAobject <- loadModel(filepath)
-factorNames(MOFAobject)
 factorNames(MOFAobject) <- paste("Factor",1:3,sep="_")
 factorNames(MOFAobject)
 }

@@ -25,12 +25,13 @@ If you have several versions of Python installed and Rstudio is not detecting
  the correct one, you can change it using \code{reticulate::use_python}.
 }
 \examples{
-data("CLL_data", package = "MOFAdata")
+data <- makeExampleData()
 # create and prepare the MOFAmodel
-MOFAobject <- createMOFAobject(CLL_data)
+MOFAobject <- createMOFAobject(data)
 MOFAobject <- prepareMOFA(MOFAobject)
 # fit the model (takes some time)
 \dontrun{
 # MOFAobject <- runMOFA(MOFAobject)
+# MOFAobject
 }
 }

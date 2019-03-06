@@ -42,6 +42,5 @@ DataOptions = DataOptions,
 ModelOptions = ModelOptions,
 TrainOptions = TrainOptions
 )
-# as a next step runMOFA can be used to train the model (can take some time)
-# MOFAobject <- runMOFA(MOFAobject, outfile=tempfile())
+MOFAobject
 }

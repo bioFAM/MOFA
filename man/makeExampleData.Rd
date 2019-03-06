@@ -29,5 +29,5 @@ Function to simulate an example multi-view data set according to the generative 
 
 # Generate a data set
 MOFAexample <- makeExampleData()
-MOFAexample
+str(MOFAexample)
 }

@@ -75,6 +75,8 @@
 #' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFAobject <- loadModel(filepath)
 #' factorNames(MOFAobject)
+#' factorNames(MOFAobject) <- paste("Factor",1:3,sep="_")
+#' factorNames(MOFAobject)
 
 setMethod("factorNames", signature(object="MOFAmodel"), function(object) { colnames(object@Expectations$Z) } )
 
@@ -82,13 +84,6 @@ setMethod("factorNames", signature(object="MOFAmodel"), function(object) { colna
 #' @param value a character vector of factor names
 #' @import methods
 #' @export
-#' @examples
-#' # load a trained MOFAmodel object
-#' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
-#' MOFAobject <- loadModel(filepath)
-#' factorNames(MOFAobject)
-#' factorNames(MOFAobject) <- paste("Factor",1:3,sep="_")
-#' factorNames(MOFAobject)
 
 
 setReplaceMethod("factorNames", signature(object="MOFAmodel", value="vector"), 
@@ -200,6 +195,9 @@ setReplaceMethod("featureNames", signature(object="MOFAmodel", value="list"),
 #' data("CLL_data", package = "MOFAdata")
 #' MOFAobject  <- createMOFAobject(CLL_data)
 #' viewNames(MOFAobject)
+#' viewNames(MOFAobject) <- c("DrugResponses", viewNames(MOFAobject)[2:4])
+#' viewNames(MOFAobject) 
+
 setMethod("viewNames", signature(object="MOFAmodel"), function(object) { names(object@TrainData) } )
 
 
@@ -207,12 +205,7 @@ setMethod("viewNames", signature(object="MOFAmodel"), function(object) { names(o
 #' @param value character vector with the names for each view
 #' @import methods
 #' @export
-#' @examples
-#' data("CLL_data", package = "MOFAdata")
-#' MOFAobject  <- createMOFAobject(CLL_data)
-#' viewNames(MOFAobject) 
-#' viewNames(MOFAobject) <- c("DrugResponses", viewNames(MOFAobject)[2:4])
-setMethod("viewNames<-", signature(object="MOFAmodel", value="character"), 
+setReplaceMethod("viewNames", signature(object="MOFAmodel", value="character"), 
   function(object,value) {
     if (!methods::.hasSlot(object,"TrainData") | length(object@TrainData) == 0)
       stop("Before assigning view names you have to assign the training data")

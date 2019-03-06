@@ -20,7 +20,7 @@
 #'  (Poisson and Bernoulli) to the next integer.
 #'  This is the default option.}
 #' }
-#' @details the denoised and condensed low-dimensional representation of the data
+#' @details The denoised and condensed low-dimensional representation of the data
 #'  captures the main sources of heterogeneity of the data. 
 #' These representation can be used to do predictions using the equation Y = WX. 
 #' This is the key step underlying imputation, 

@@ -8,7 +8,7 @@
 #' @description Method to subset (or sort) factors. \cr
 #' Some factors might not be interesting for the downstream analysis and the user can choose to remove them.
 #' This has no effect on the values of the other factors.
-#' For example, this could be done it the model contains factors
+#' For example, this could be done if the model contains factors
 #' which are inactive in all views.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param factors character vector with the factor names (LF1,LF2,...),
@@ -19,7 +19,9 @@
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
 #' MOFA_CLL_small <- subsetFactors(MOFA_CLL, factors=c(1,2,3))
+#' MOFA_CLL_small
 #' MOFA_CLL_small <- subsetFactors(MOFA_CLL, factors=c("LF1","LF2","LF3"))
+#' MOFA_CLL_small
 #' @export
 subsetFactors <- function(object, factors) {
   
@@ -74,8 +76,10 @@ subsetFactors <- function(object, factors) {
 #' MOFA_CLL <- loadModel(filepath)
 #' # Subset samples via character vector
 #' MOFA_CLL_small <- subsetSamples(MOFA_CLL, samples=c("H045","H109","H024","H056"))
+#' MOFA_CLL_small
 #' # Subset samples via numeric vector
 #' MOFA_CLL_small <- subsetSamples(MOFA_CLL, samples=1:10)
+#' MOFA_CLL_small
 subsetSamples <- function(object, samples) {
   
   # Sanity checks
@@ -128,8 +132,11 @@ subsetSamples <- function(object, samples) {
 #' MOFA_CLL <- loadModel(filepath)
 #' # Subset views via character vector
 #' MOFA_CLL_small <- subsetViews(MOFA_CLL, views=c("Drugs","Methylation"))
+#' MOFA_CLL_small
 #' # Subset views via numeric vector
 #' MOFA_CLL_small <- subsetViews(MOFA_CLL, views=2:3)
+#' MOFA_CLL_small
+#' 
 subsetViews <- function(object, views) {
   
   # Sanity checks

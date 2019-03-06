@@ -19,7 +19,7 @@ MOFA inference is done using the variational Bayes algorithm,
  which maximises a quantity called the Evidence Lower Bound (ELBO).
 The ELBO is supposed to increase monotonically up to convergence,
  but it can decrease substantially when dropping inactive factors.
-For more details read the supplementary methods
+For more details read the supplementary methods.
 The frequency of ELBO computation as well as the convergence criteria are defined
  as hyperparameters in \code{\link{prepareMOFA}}. \cr
 All Training statistics, including the ELBO,

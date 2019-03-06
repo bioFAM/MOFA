@@ -11,7 +11,7 @@ getExpectations(object, variable, as.data.frame = FALSE)
 
 \item{variable}{variable name: 'Z' for factors, 'W' for weights, 'Tau' for noise,
 'Y' for pseudodata, 'Theta' for feature-wise spike-and-slab sparsity,
- 'AlphaW' for view and factor-wise ARD sparsity}
+ 'Alpha' for view and factor-wise ARD sparsity}
 
 \item{as.data.frame}{logical indicating whether to output the result as a long data frame,
 default is \code{FALSE}.}
@@ -19,14 +19,15 @@ default is \code{FALSE}.}
 \value{
 the output varies depending on the variable of interest: \cr
 \itemize{
- \item{"Z"}{a matrix with dimensions (samples,factors). 
+ \item{"Z":} {a matrix with dimensions (samples,factors). 
  If \code{as.data.frame} is \code{TRUE}, a long-formatted data frame with columns (sample,factor,value)}
- \item{"W"}{a list of length (views) where each element is a matrix with dimensions (features,factors).
+ \item{"W":} {a list of length (views) where each element is a matrix with dimensions (features,factors).
   If \code{as.data.frame} is \code{TRUE}, a long-formatted data frame with columns (view,feature,factor,value)}
- \item{"Y"}{a list of length (views) where each element is a matrix with dimensions (features,samples).
+ \item{"Y":} {a list of length (views) where each element is a matrix with dimensions (features,samples).
   If \code{as.data.frame} is \code{TRUE}, a long-formatted data frame with columns (view,feature,sample,value)}
- \item{"Theta"}{}
- \item{"Tau"}{}
+ \item{"Theta":} {a list of length (views) where each element is a vector of containing the values for each factor}
+ \item{"Alpha":} {a list of length (views) where each element is a vector of containing the values for each factor}
+ \item{"Tau":} {a list of length (views) where each element is a matrix with dimensions (samples, features)}
 }
 }
 \description{

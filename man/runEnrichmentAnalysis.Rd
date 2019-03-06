@@ -80,11 +80,11 @@ This function relates the factors to pre-defined biological pathways by performi
 \examples{
 # Example on the CLL data
 filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
-MOFA_CLL <- loadModel(filepath)
+MOFAobject <- loadModel(filepath)
 
 # perform Enrichment Analysis on mRNA data using pre-build Reactome gene sets
 data("reactomeGS", package = "MOFAdata")
-fsea.results <- runEnrichmentAnalysis(MOFA_CLL, view="mRNA", feature.sets=reactomeGS)
+fsea.results <- runEnrichmentAnalysis(MOFAobject, view="mRNA", feature.sets=reactomeGS)
 
 # heatmap of enriched pathways per factor at 1\% FDR
 plotEnrichmentHeatmap(fsea.results, alpha=0.01)
@@ -93,5 +93,5 @@ plotEnrichmentHeatmap(fsea.results, alpha=0.01)
 plotEnrichmentBars(fsea.results, alpha=0.01)
 
 # plot top 10 enriched pathways on factor 5:
-plotEnrichment(MOFA_CLL, fsea.results, factor=5,  max.pathways=10)
+plotEnrichment(MOFAobject, fsea.results, factor=5,  max.pathways=10)
 }

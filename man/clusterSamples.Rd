@@ -4,7 +4,7 @@
 \alias{clusterSamples}
 \title{clusterSamples: K-means clustering on samples based on latent factors}
 \usage{
-clusterSamples(object, k, factors = "all", ...)
+clusterSamples(object, k, factors = "all", seed = 9876, ...)
 }
 \arguments{
 \item{object}{a trained \code{\link{MOFAmodel}} object.}
@@ -14,6 +14,8 @@ clusterSamples(object, k, factors = "all", ...)
 \item{factors}{character vector with the factor name(s), 
 or numeric vector with the index of the factor(s) to use. 
 Default is 'all'}
+
+\item{seed}{seed to be set for the k-means clustering}
 
 \item{...}{extra arguments  passed to \code{\link{kmeans}}}
 }

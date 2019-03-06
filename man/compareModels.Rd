@@ -33,6 +33,6 @@ MOFAobject <- createMOFAobject(data)
 MOFAobject <- prepareMOFA(MOFAobject)
 # Train several instances of MOFA models
 n_inits <- 3 
-MOFAlist <- lapply(1:n_inits, function(i) runMOFA(MOFAobject, outfile=tempfile()))
+MOFAlist <- lapply(seq_len(n_inits), function(i) runMOFA(MOFAobject, outfile=tempfile()))
 compareModels(MOFAlist)
 }

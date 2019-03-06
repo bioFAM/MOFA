@@ -37,6 +37,13 @@ This is useful to visualize the overall pattern of the weights
 To inspect the loadings of individual factors, use the functions
  \code{\link{plotWeights}} and \code{\link{plotTopWeights}}
 }
+\details{
+The weights, or the loadings, provide the mapping between the high-dimensional space (the genes) and the low-dimensional space (the factors). \cr
+They define a score for each gene on each factor, such that genes with no association with the factor are expected to 
+have values close to zero, whereas genes with strong association with the factor are expected to have large absolute values. \cr
+The sign of the loading indicates the direction of the effect: A positive loading indicates that the feature is more active 
+in the cells with positive factor values, while a negative loading indicates that the feature is more active in the cells with negative factor values.
+}
 \examples{
 # Example on the CLL data
 filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")

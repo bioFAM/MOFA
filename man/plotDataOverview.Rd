@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotData.R
 \name{plotDataOverview}
 \alias{plotDataOverview}
-\title{Tile plot of the multi-omics data}
+\title{Plot overview of the input data}
 \usage{
 plotDataOverview(object, colors = NULL)
 }

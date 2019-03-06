@@ -10,7 +10,7 @@ compareFactors(models, comparison = "all", show_rownames = FALSE,
 \arguments{
 \item{models}{a list containing \code{\link{MOFAmodel}} objects.}
 
-\item{comparison}{tye of comparison, either 'pairwise', i.e. compare one model
+\item{comparison}{type of comparison, either 'pairwise', i.e. compare one model
 with another one at a time, or 'all', i.e. calculate correlation between factors from all model.
 By default, all models are compared.}
 
@@ -29,7 +29,7 @@ The corresponding correlation matrix or list or pairwise correlation matrices is
 Different objects of \code{\link{MOFAmodel}} are compared in terms of correlation between 
 their latent factors. The correlation is calculated only on those samples which are present in all models.
 Ideally, the output should look like a block diagonal matrix, suggesting that
- all detected factors are robust under different initialisations.
+ all detected factors are robust under different initializations.
 If not, it suggests that some factors are weak and not captured by all models.
 }
 \details{
@@ -48,10 +48,7 @@ MOFAobject <- createMOFAobject(data)
 MOFAobject <- prepareMOFA(MOFAobject)
 # Train several instances of MOFA models
 n_inits <- 3 
-MOFAlist <- lapply(1:n_inits, function(i) runMOFA(MOFAobject, outfile=tempfile()))
+MOFAlist <- lapply(seq_len(n_inits), function(i) runMOFA(MOFAobject, outfile=tempfile()))
 compareFactors(MOFAlist, comparison="all")
 compareFactors(MOFAlist, comparison="pairwise")
-}
-\references{
-fill this
 }

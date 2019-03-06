@@ -18,9 +18,11 @@ plotWeights(object, view, factor, nfeatures = 10, abs = FALSE,
 
 \item{abs}{logical indicating whether to use the absolute value of the weights.}
 
-\item{manual}{A nested list of character vectors with features to be manually labelled.}
+\item{manual}{A list of character vectors with features to be manually labelled 
+(i.e. list(c("feature1","feature2"), c("feature3","feature4")). 
+Each character vector specifies a set of features that will be highlighted with the same color, as specified in \code{color_manual}.}
 
-\item{color_manual}{a character vector with colors, one for each element of 'manual'}
+\item{color_manual}{a character vector with colors, one for each character vector of \code{manual}}
 
 \item{scale}{logical indicating whether to scale all loadings from 0 to 1.}
 }
@@ -33,21 +35,26 @@ This function plots all loadings for a given latent factor and view, labeling th
 In contrast, the function \code{\link{plotTopWeights}} displays only the top features with highest loading.
 }
 \details{
-The weights of the features within a view are relative and
- they should not be interpreted in an absolute scale.
-For interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
+The weights, or the loadings, provide the mapping between the high-dimensional space (the genes) and the low-dimensional space (the factors). \cr
+They define a score for each gene on each factor, such that genes with no association with the factor are expected to 
+have values close to zero, whereas genes with strong association with the factor are expected to have large absolute values. \cr
+The sign of the loading indicates the direction of the effect: A positive loading indicates that the feature is more active 
+in the cells with positive factor values, while a negative loading indicates that the feature is more active in the cells with negative factor values.
 }
 \examples{
 # Example on the CLL data
 filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
 plotWeights(MOFA_CLL, view="Mutations", factor=1)
+
+# Highlight specific features
 plotWeights(MOFA_CLL, view="Mutations", factor=1,
-  manual=list("IGHV", c("TP53", "del17p13")), color_manual=c("blue", "red"))
+  manual=list(c("IGHV"), c("TP53", "del17p13")), 
+  color_manual=c("blue","red")
+ )
 
 # Example on the scMT data
 filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFA_scMT <- loadModel(filepath)
-plotWeights(MOFA_scMT, view="RNA expression", factor=1)
 plotWeights(MOFA_scMT, view="RNA expression", factor=1, nfeatures=15)
 }

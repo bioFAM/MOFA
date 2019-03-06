@@ -37,10 +37,10 @@ In case of non-Gaussian data the variance explained on the Gaussian pseudo-data 
 # Using an existing trained model on the CLL data
 filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 MOFA_CLL <- loadModel(filepath)
-plotVarianceExplained(MOFA_CLL)
+calculateVarianceExplained(MOFA_CLL)
 
 # Using an existing trained model on the scMT data
 filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 MOFA_scMT <- loadModel(filepath)
-plotVarianceExplained(MOFA_scMT)
+calculateVarianceExplained(MOFA_scMT)
 }

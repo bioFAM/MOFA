@@ -9,10 +9,10 @@
 #' @description Different objects of \code{\link{MOFAmodel}} are compared in terms of correlation between 
 #' their latent factors. The correlation is calculated only on those samples which are present in all models.
 #' Ideally, the output should look like a block diagonal matrix, suggesting that
-#'  all detected factors are robust under different initialisations.
+#'  all detected factors are robust under different initializations.
 #' If not, it suggests that some factors are weak and not captured by all models.
 #' @param models a list containing \code{\link{MOFAmodel}} objects.
-#' @param comparison tye of comparison, either 'pairwise', i.e. compare one model
+#' @param comparison type of comparison, either 'pairwise', i.e. compare one model
 #'  with another one at a time, or 'all', i.e. calculate correlation between factors from all model.
 #'  By default, all models are compared.
 #' @param show_rownames logical indicating whether to show rownames in heatmap (see also pheatmap documentation)
@@ -25,7 +25,6 @@
 #' @return Plots a heatmap of correlation of Latent Factors in all models when 'comparison' is 'all'. 
 #' Otherwise, for each pair of models, a seperate heatmap is produced comparing one model againt the other.
 #' The corresponding correlation matrix or list or pairwise correlation matrices is returned
-#' @references fill this
 #' @importFrom stats cor
 #' @importFrom stats var
 #' @importFrom pheatmap pheatmap
@@ -41,7 +40,7 @@
 #' MOFAobject <- prepareMOFA(MOFAobject)
 #' # Train several instances of MOFA models
 #' n_inits <- 3 
-#' MOFAlist <- lapply(1:n_inits, function(i) runMOFA(MOFAobject, outfile=tempfile()))
+#' MOFAlist <- lapply(seq_len(n_inits), function(i) runMOFA(MOFAobject, outfile=tempfile()))
 #' compareFactors(MOFAlist, comparison="all")
 #' compareFactors(MOFAlist, comparison="pairwise")
 
@@ -163,7 +162,7 @@ compareFactors <- function(models, comparison = "all", show_rownames=FALSE, show
 #' MOFAobject <- prepareMOFA(MOFAobject)
 #' # Train several instances of MOFA models
 #' n_inits <- 3 
-#' MOFAlist <- lapply(1:n_inits, function(i) runMOFA(MOFAobject, outfile=tempfile()))
+#' MOFAlist <- lapply(seq_len(n_inits), function(i) runMOFA(MOFAobject, outfile=tempfile()))
 #' compareModels(MOFAlist)
 
 compareModels <- function(models, show_modelnames = FALSE) {
@@ -206,7 +205,7 @@ compareModels <- function(models, show_modelnames = FALSE) {
 #' MOFAobject <- prepareMOFA(MOFAobject)
 #' # Train several instances of MOFA models
 #' n_inits <- 3 
-#' MOFAlist <- lapply(1:n_inits, function(i) runMOFA(MOFAobject, outfile=tempfile()))
+#' MOFAlist <- lapply(seq_len(n_inits), function(i) runMOFA(MOFAobject, outfile=tempfile()))
 #' selectModel(MOFAlist)
 
 selectModel <- function(models, plotit =TRUE) {

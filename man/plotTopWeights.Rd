@@ -34,12 +34,11 @@ Returns a \code{ggplot2} object
 Plot top weights for a given latent factor in a given view.
 }
 \details{
-An important step to annotate factors is to visualise the corresponding feature loadings. \cr
-This function displays the top features with highest loading
-whereas the function \code{\link{plotTopWeights}} plots all loadings for a given latent factor and view. \cr
-Importantly, the weights of the features within a view have relative values and 
-they should not be interpreted in an absolute scale.
-Therefore, for interpretability purposes we always recommend to scale the weights with \code{scale=TRUE}.
+The weights, or the loadings, provide the mapping between the high-dimensional space (the genes) and the low-dimensional space (the factors). \cr
+They define a score for each gene on each factor, such that genes with no association with the factor are expected to 
+have values close to zero, whereas genes with strong association with the factor are expected to have large absolute values. \cr
+The sign of the loading indicates the direction of the effect: A positive loading indicates that the feature is more active 
+in the cells with positive factor values, while a negative loading indicates that the feature is more active in the cells with negative factor values.
 }
 \examples{
 # Example on the CLL data

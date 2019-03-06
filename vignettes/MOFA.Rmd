@@ -51,9 +51,12 @@ devtools::install_github("bioFAM/MOFAdata")
 
 
 # Using MOFA
+To load the package and the accompanying data package you can use:
 ```{r, eval=FALSE}
 library(MOFA)
+library(MOFAdata)
 ```
+
 The workflow of MOFA consists of two steps:  
 
 1. **Fitting step:** train the model with the multi-omics data to disentangle the heterogeneity into a small number of latent factors. 

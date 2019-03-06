@@ -373,14 +373,36 @@ predictedDrugs <- predict(
   MOFAobject,
   view = "Drugs",
   factors = "all"
-)
+)[[1]]
+
+
+# training data (incl. missing values)
+DrugData4Training <- getTrainData(MOFAobject, view="Drugs")[[1]]
+pheatmap::pheatmap(DrugData4Training[1:40,1:20],
+         cluster_rows = FALSE, cluster_cols = FALSE,
+         show_rownames = FALSE, show_colnames = FALSE)
+
+# predicted data
+pheatmap::pheatmap(predictedDrugs[1:40,1:20],
+         cluster_rows = FALSE, cluster_cols = FALSE,
+         show_rownames = FALSE, show_colnames = FALSE)
 ```
 
 ## Imputation of missing observations
 With the `impute` function all missing values are imputed based on the MOFA model. The imputed data is then stored in the `ImputedData slot` of the MOFAobject and can be accessed via the `getImputedData` function.
 ```{r}
 MOFAobject <- impute(MOFAobject)
-imputedDrugs <- getImputedData(MOFAobject, view="Drugs")
+imputedDrugs <- getImputedData(MOFAobject, view="Drugs")[[1]]
+
+# training data (incl. missing values)
+pheatmap::pheatmap(DrugData4Training[1:40,1:20],
+         cluster_rows = FALSE, cluster_cols = FALSE,
+         show_rownames = FALSE, show_colnames = FALSE)
+
+# imputed data
+pheatmap::pheatmap(imputedDrugs[1:40,1:20],
+         cluster_rows = FALSE, cluster_cols = FALSE,
+         show_rownames = FALSE, show_colnames = FALSE)
 ```
 
 ## Clustering of samples based on latent factors

@@ -206,6 +206,7 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
     }
   } else {
     color_by <- rep(TRUE,N)
+    names(color_by) <- sampleNames(object)
     colorLegend <- FALSE
   }
   
@@ -236,6 +237,7 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
     }
   } else {
     shape_by <- rep(TRUE,N)
+    names(shape_by) <- sampleNames(object)
     shapeLegend <- FALSE
   }
   if(length(unique(shape_by)) < 7) shape_by <- as.factor(shape_by)

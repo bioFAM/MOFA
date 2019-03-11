@@ -44,7 +44,44 @@ setClass("MOFAmodel", slots=c(
 )
 
 setValidity("MOFAmodel", function(object) {
+    if(!Status(object) %in% c("trained", "untrained")){
+        return("Status(object) needs to be trained or untrained")
+    }
+    if(Status(object) == "trained"){
+        
+    if(length(Expectations(object)) == 0)
+        return("Status(object) = trained but no expectations present")
+        
+    if(!identical(sort(c("W","Z","Theta","Tau","Alpha","Y")), sort(names(Expectations(object)))))
+        return("Expectation names need to be W, Z, Theta, Tau, Alpha,Y.")
+  
+    if( !is.matrix(Expectations(object)[["Z"]]) |
+        !is.list(Expectations(object)[["W"]]) |
+        !(all(vapply(Expectations(object)[["W"]], is.matrix, logical(1)))) |
+        !(is.list(Expectations(object)[["Y"]])) |
+        ! (all(vapply(Expectations(object)[["Y"]], is.matrix, logical(1)))) |
+        ! (is.list(Expectations(object)[["Tau"]])) |
+        ! (all(vapply(Expectations(object)[["Tau"]], is.numeric, logical(1)))) |
+        ! (is.list(Expectations(object)[["Alpha"]])) |
+        ! (all(vapply(Expectations(object)[["Alpha"]], is.numeric, logical(1))))
+    ) return("Expectations need to be a list of matrices Z and lists W, Y, Tau and Alpha of matrices")
+        
+    if(!(length(Expectations(object)[["Alpha"]]) == getDimensions(object)[["M"]])|
+        !(length(Expectations(object)[["W"]]) == getDimensions(object)[["M"]]) |
+        !(length(Expectations(object)[["Y"]]) == getDimensions(object)[["M"]]) |
+        !(length(Expectations(object)[["Theta"]]) == getDimensions(object)[["M"]]) |
+        !(sapply(Expectations(object)[["W"]], dim) == rbind(getDimensions(object)[["D"]],
+                                                                getDimensions(object)[["K"]])) |
+        !(sapply(Expectations(object)[["Y"]], dim) == rbind(getDimensions(object)[["N"]],
+                                                                getDimensions(object)[["D"]])) |
+        !(sapply(Expectations(object)[["Alpha"]], length) == getDimensions(object)[["K"]]) |
+        !(sapply(Expectations(object)[["Theta"]], length) == getDimensions(object)[["K"]]) |
+        !(ncol(Expectations(object)[["Z"]]) == getDimensions(object)[["K"]]) |
+        !(nrow(Expectations(object)[["Z"]]) == getDimensions(object)[["N"]]))
+            return("Dimensions of Expectations do not match model dimensions")
 
+    }
+        TRUE
 })
 
 # Printing method
@@ -74,6 +111,7 @@ setMethod("show", "MOFAmodel", function(object) {
                 paste(as.character(dims[["D"]]),collapse=" "),
                 dims[["N"]], nfactors))
   } else {
+    dims <- getDimensions(object)
     cat(sprintf("Untrained MOFA model with the following characteristics: 
   Number of views: %d 
   View names: %s 

@@ -50,9 +50,6 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
     # Load expectations
     Expectations(object) <- h5read(file,"expectations")
     
-    # Change model status from "untrained" to "trained"
-    Status(object) <- "trained"
-    
     # Load training statistics
     tryCatch( {
         TrainStats(object) <- h5read(file, 'training_stats',read.attributes=TRUE);
@@ -171,6 +168,9 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
         object <- subsetFactors(object, order_factors)
         factorNames(object) <- paste0("LF", seq_len(Dimensions(object)[["K"]]))
     }
+    
+    # Change model status from "untrained" to "trained"
+    Status(object) <- "trained"
     
     # Do quality control on the model
     qualityControl(object)

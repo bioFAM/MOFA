@@ -14,7 +14,7 @@
 
 qualityControl <- function(object, verbose = FALSE) {
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
-  if (Statu(object) != "trained") stop("This function only works in a trained MOFAmodel")
+  if (Status(object) != "trained") stop("This function only works in a trained MOFAmodel")
   
   # Check that the model has view names
   if (verbose) message("Checking view names...")
@@ -28,37 +28,38 @@ qualityControl <- function(object, verbose = FALSE) {
   if (verbose) message("Checking feature names...")
   stopifnot(!is.null(featureNames(object)))
 
-  # Check that the model has the right node names
-  if (verbose) message("Checking nodes...")
-  stopifnot(identical(sort(c("W","Z","Theta","Tau","Alpha","Y")), sort(names(Expectations(object)))))
-  
-  # Check that all expectations are the correct object
-  if (verbose) message("Checking expectations...")
-  stopifnot(is.matrix(Expectations(object)[["Z"]]))
-  stopifnot(is.list(Expectations(object)[["W"]]))
-  stopifnot(all(vapply(Expectations(object)[["W"]], is.matrix, logical(1))))
-  stopifnot(is.list(Expectations(object)[["Y"]]))
-  stopifnot(all(vapply(Expectations(object)[["Y"]], is.matrix, logical(1))))
-  stopifnot(is.list(Expectations(object)[["Tau"]]))
-  stopifnot(all(vapply(Expectations(object)[["Tau"]], is.numeric, logical(1))))
-  stopifnot(is.list(Expectations(object)[["Alpha"]]))
-  stopifnot(all(vapply(Expectations(object)[["Alpha"]], is.numeric, logical(1))))
-  
-  # Check that the dimensionalities match
-  if (verbose) message("Checking dimensionalities...")
-    stopifnot(length(Expectations(object)[["Alpha"]]) == getDimensions(object)[["M"]])
-    stopifnot(length(Expectations(object)[["W"]]) == getDimensions(object)[["M"]])
-    stopifnot(length(Expectations(object)[["Y"]]) == getDimensions(object)[["M"]])
-    stopifnot(length(Expectations(object)[["Theta"]]) == getDimensions(object)[["M"]])
-    stopifnot(sapply(Expectations(object)[["W"]], dim) == rbind(getDimensions(object)[["D"]],
-                                                                getDimensions(object)[["K"]]))
-     stopifnot(sapply(Expectations(object)[["Y"]], dim) == rbind(getDimensions(object)[["N"]],
-                                                                getDimensions(object)[["D"]]))
-     stopifnot(sapply(Expectations(object)[["Alpha"]], length) == getDimensions(object)[["K"]])
-     stopifnot(sapply(Expectations(object)[["Theta"]], length) == getDimensions(object)[["K"]])
-     stopifnot(ncol(Expectations(object)[["Z"]]) == getDimensions(object)[["K"]])
-     stopifnot(nrow(Expectations(object)[["Z"]]) == getDimensions(object)[["N"]])
-
+  # NOW DONE IN CLASS VALIDITY CHECK
+  # # Check that the model has the right node names
+  # if (verbose) message("Checking nodes...")
+  # stopifnot(identical(sort(c("W","Z","Theta","Tau","Alpha","Y")), sort(names(Expectations(object)))))
+  # 
+  # # Check that all expectations are the correct object
+  # if (verbose) message("Checking expectations...")
+  # stopifnot(is.matrix(Expectations(object)[["Z"]]))
+  # stopifnot(is.list(Expectations(object)[["W"]]))
+  # stopifnot(all(vapply(Expectations(object)[["W"]], is.matrix, logical(1))))
+  # stopifnot(is.list(Expectations(object)[["Y"]]))
+  # stopifnot(all(vapply(Expectations(object)[["Y"]], is.matrix, logical(1))))
+  # stopifnot(is.list(Expectations(object)[["Tau"]]))
+  # stopifnot(all(vapply(Expectations(object)[["Tau"]], is.numeric, logical(1))))
+  # stopifnot(is.list(Expectations(object)[["Alpha"]]))
+  # stopifnot(all(vapply(Expectations(object)[["Alpha"]], is.numeric, logical(1))))
+  # 
+  # # Check that the dimensionalities match
+  # if (verbose) message("Checking dimensionalities...")
+  #   stopifnot(length(Expectations(object)[["Alpha"]]) == getDimensions(object)[["M"]])
+  #   stopifnot(length(Expectations(object)[["W"]]) == getDimensions(object)[["M"]])
+  #   stopifnot(length(Expectations(object)[["Y"]]) == getDimensions(object)[["M"]])
+  #   stopifnot(length(Expectations(object)[["Theta"]]) == getDimensions(object)[["M"]])
+  #   stopifnot(sapply(Expectations(object)[["W"]], dim) == rbind(getDimensions(object)[["D"]],
+  #                                                               getDimensions(object)[["K"]]))
+  #    stopifnot(sapply(Expectations(object)[["Y"]], dim) == rbind(getDimensions(object)[["N"]],
+  #                                                               getDimensions(object)[["D"]]))
+  #    stopifnot(sapply(Expectations(object)[["Alpha"]], length) == getDimensions(object)[["K"]])
+  #    stopifnot(sapply(Expectations(object)[["Theta"]], length) == getDimensions(object)[["K"]])
+  #    stopifnot(ncol(Expectations(object)[["Z"]]) == getDimensions(object)[["K"]])
+  #    stopifnot(nrow(Expectations(object)[["Z"]]) == getDimensions(object)[["N"]])
+  # 
 
   # Check that there are no features with complete missing values
   if (verbose) message("Checking there are no features with complete missing values...")

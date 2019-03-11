@@ -52,6 +52,7 @@ predictedMutations <- predict(MOFA_CLL, view="Mutations", type="response")
 # predict mutation data based on all factors returning binary classes
 predictedMutationsBinary <- predict(MOFA_CLL, view="Mutations", type="inRange")
 # We can compare the predicitons made by the model with the training data for non-missing samples, e.g.
+library(ggplot2)
 trainData <- getTrainData(MOFA_CLL)
 qplot(predictedAll$Drugs, trainData$Drugs) + geom_hex(bins=100) +
  coord_equal() + geom_abline(intercept = 0, slope = 1, col = "red")
@@ -62,6 +63,7 @@ MOFA_scMT <- loadModel(filepath)
 # predict all views based on all factors (default)
  predictedAll <-predict(MOFA_scMT)
 # We can compare the predicitons made by the model with the training data for non-missing samples, e.g.
+library(ggplot2)
 trainData <- getTrainData(MOFA_scMT)
 qplot(predictedAll[["RNA expression"]], trainData[["RNA expression"]]) + geom_hex(bins=100) +
  coord_equal() + geom_abline(intercept = 0, slope = 1, col = "red") 

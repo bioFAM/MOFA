@@ -225,7 +225,7 @@ runEnrichmentAnalysis <- function(object, view,
   # rownames(tmp) <- rownames(data); colnames(tmp) <- pathways
   # for (i in pathways) {
   #   features <- names(which(feature.sets[i,]==1))
-  #   tmp[,i] <- apply(data[,features],1,mean,na.rm=T)
+  #   tmp[,i] <- apply(data[,features],1,mean,na.rm=TRUE)
   # }
   
   results[["feature.statistics"]]
@@ -485,7 +485,7 @@ plotEnrichmentDetailed <- function(object, factor, feature.sets, fsea.results,
   # Fetch and prepare data  
   
   # foo
-  foo <- melt(fsea.results$feature.statistics, factorsAsStrings=T)
+  foo <- melt(fsea.results$feature.statistics, factorsAsStrings=TRUE)
   colnames(foo) <- c("feature","factor","feature.statistic")
   foo <- foo[foo$factor==factor,]
   foo$feature <- as.character(foo$feature)
@@ -537,7 +537,7 @@ plotEnrichmentDetailed <- function(object, factor, feature.sets, fsea.results,
   tmp_filt <- merge(tmp_filt, df[,c("pathway","pathway_long_name")], by="pathway")
   
   # sort pathways by p-value
-  order_pathways <- df$pathway_long_name[order(df$pvalue,decreasing=T) ]
+  order_pathways <- df$pathway_long_name[order(df$pvalue,decreasing=TRUE) ]
   tmp$pathway_long_name <- factor(tmp$pathway_long_name, levels=order_pathways)
   tmp_filt$pathway_long_name <- factor(tmp_filt$pathway_long_name, levels=order_pathways)
   

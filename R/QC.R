@@ -45,21 +45,21 @@ qualityControl <- function(object, verbose = FALSE) {
   # stopifnot(is.list(Expectations(object)[["Alpha"]]))
   # stopifnot(all(vapply(Expectations(object)[["Alpha"]], is.numeric, logical(1))))
   # 
-  # # Check that the dimensionalities match
-  # if (verbose) message("Checking dimensionalities...")
-  #   stopifnot(length(Expectations(object)[["Alpha"]]) == getDimensions(object)[["M"]])
-  #   stopifnot(length(Expectations(object)[["W"]]) == getDimensions(object)[["M"]])
-  #   stopifnot(length(Expectations(object)[["Y"]]) == getDimensions(object)[["M"]])
-  #   stopifnot(length(Expectations(object)[["Theta"]]) == getDimensions(object)[["M"]])
-  #   stopifnot(sapply(Expectations(object)[["W"]], dim) == rbind(getDimensions(object)[["D"]],
-  #                                                               getDimensions(object)[["K"]]))
-  #    stopifnot(sapply(Expectations(object)[["Y"]], dim) == rbind(getDimensions(object)[["N"]],
-  #                                                               getDimensions(object)[["D"]]))
-  #    stopifnot(sapply(Expectations(object)[["Alpha"]], length) == getDimensions(object)[["K"]])
-  #    stopifnot(sapply(Expectations(object)[["Theta"]], length) == getDimensions(object)[["K"]])
-  #    stopifnot(ncol(Expectations(object)[["Z"]]) == getDimensions(object)[["K"]])
-  #    stopifnot(nrow(Expectations(object)[["Z"]]) == getDimensions(object)[["N"]])
-  # 
+  # Check that the dimensionalities match
+  if (verbose) message("Checking dimensionalities...")
+    stopifnot(length(Expectations(object)[["Alpha"]]) == getDimensions(object)[["M"]])
+    stopifnot(length(Expectations(object)[["W"]]) == getDimensions(object)[["M"]])
+    stopifnot(length(Expectations(object)[["Y"]]) == getDimensions(object)[["M"]])
+    stopifnot(length(Expectations(object)[["Theta"]]) == getDimensions(object)[["M"]])
+    stopifnot(all(sapply(Expectations(object)[["W"]], dim) == rbind(getDimensions(object)[["D"]],
+                                                                getDimensions(object)[["K"]])))
+     stopifnot(all(sapply(Expectations(object)[["Y"]], dim) == rbind(getDimensions(object)[["N"]],
+                                                                getDimensions(object)[["D"]])))
+     stopifnot(all(sapply(Expectations(object)[["Alpha"]], length) == getDimensions(object)[["K"]]))
+     stopifnot(all(sapply(Expectations(object)[["Theta"]], length) == getDimensions(object)[["K"]]))
+     stopifnot(ncol(Expectations(object)[["Z"]]) == getDimensions(object)[["K"]])
+     stopifnot(nrow(Expectations(object)[["Z"]]) == getDimensions(object)[["N"]])
+
 
   # Check that there are no features with complete missing values
   if (verbose) message("Checking there are no features with complete missing values...")

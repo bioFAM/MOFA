@@ -65,20 +65,6 @@ setValidity("MOFAmodel", function(object) {
         ! (is.list(Expectations(object)[["Alpha"]])) |
         ! (all(vapply(Expectations(object)[["Alpha"]], is.numeric, logical(1))))
     ) return("Expectations need to be a list of matrices Z and lists W, Y, Tau and Alpha of matrices")
-        
-    if(!(length(Expectations(object)[["Alpha"]]) == getDimensions(object)[["M"]])|
-        !(length(Expectations(object)[["W"]]) == getDimensions(object)[["M"]]) |
-        !(length(Expectations(object)[["Y"]]) == getDimensions(object)[["M"]]) |
-        !(length(Expectations(object)[["Theta"]]) == getDimensions(object)[["M"]]) |
-        !all(sapply(Expectations(object)[["W"]], dim) == rbind(getDimensions(object)[["D"]],
-                                                                getDimensions(object)[["K"]])) |
-        !all(sapply(Expectations(object)[["Y"]], dim) == rbind(getDimensions(object)[["N"]],
-                                                                getDimensions(object)[["D"]])) |
-        !all(sapply(Expectations(object)[["Alpha"]], length) == getDimensions(object)[["K"]]) |
-        !all(sapply(Expectations(object)[["Theta"]], length) == getDimensions(object)[["K"]]) |
-        !(ncol(Expectations(object)[["Z"]]) == getDimensions(object)[["K"]]) |
-        !(nrow(Expectations(object)[["Z"]]) == getDimensions(object)[["N"]]))
-            return("Dimensions of Expectations do not match model dimensions")
 
     }
         TRUE

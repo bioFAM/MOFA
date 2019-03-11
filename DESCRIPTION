@@ -2,12 +2,8 @@ Package: MOFA
 Type: Package
 Title: Multi-Omics Factor Analysis (MOFA)
 Version: 0.99.7
-Authors@R: c(person("Ricard", "Argelaguet", role=c("aut", "cre"), email="ricard@ebi.ac.uk"), 
-		person("Britta", "Velten", role=c("aut", "ctb"), email="britta.velten@embl.de"), 
-		person("Damien", "Arnol", role=c("aut"), email="damien.arnol@ebi.ac.uk"), 
-		person("Florian", "Buettner", role=c("aut"), email="fbuettner.phys@gmail.com"),
-		person("Wolfgang", "Huber", role=c("aut"), email="wolfgang.huber@embl.de"),  
-		person("Oliver", "Stegle", role=c("aut"), email="stegle@ebi.ac.uk"))
+Maintainer: Ricard Argelaguet <ricard@ebi.ac.uk> and Britta Velten <britta.velten@embl.de>
+Author: Ricard Argelaguet, Britta Velten, Damien Arnol, Florian Buettner, Wolfgang Huber, Oliver Stegle
 Date: 2018-06-26
 License: LGPL-3 | file LICENSE
 Description: Multi-Omics Factor Analysis: an unsupervised framework for the integration of multi-omics data sets.

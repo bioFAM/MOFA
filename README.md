@@ -40,7 +40,7 @@ python setup.py install
 ### R package
 The easier way to install the R package is via github:
 ```r
-devtools::install_github("bioFAM/MOFA")
+devtools::install_github("bioFAM/MOFA", build_opts = c("--no-resave-data"))
 ```
 
 Alternatively, you can clone the repository and install locally:
@@ -53,7 +53,7 @@ R CMD install MOFA
 ### R data package
 For illustration purposes we provide several data sets that are used in the vignettes of the MOFA package to illustrate the use of MOFA. This data is contained in the R package MOFAdata, which can be installed via:
 ```r
-devtools::install_github("bioFAM/MOFAdata")
+devtools::install_github("bioFAM/MOFAdata", build_opts = c("--no-resave-data"))
 ```
 or alternaltively by cloning the MOFAdata repository:
 ```r

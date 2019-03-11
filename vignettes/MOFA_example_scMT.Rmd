@@ -327,7 +327,9 @@ nonImputedMethylation <- getTrainData(MOFAobject,
                                       view="Met CpG Islands")[[1]]
 imputedMethylation <- getImputedData(MOFAobject,
                                      view="Met CpG Islands")[[1]]
+```
 
+```{r}
 # non-imputed data
 pheatmap::pheatmap(nonImputedMethylation[1:100,1:20],
          cluster_rows = FALSE, cluster_cols = FALSE,

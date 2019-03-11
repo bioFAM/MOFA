@@ -28,11 +28,11 @@ regressCovariates <- function(object, views, covariates, min_observations = 5) {
   # Sanity checks
   if (!is(object, "MOFAmodel")) 
     stop("'object' has to be an instance of MOFAmodel")
-  if (object@Status=="trained")
-    stop("object@Status is 'trained'. regressCovariates has to be done before training the model")
-  if (length(object@ModelOptions$likelihood)==0) 
+  if (Status(object)=="trained")
+    stop("Status(object) is 'trained'. regressCovariates has to be done before training the model")
+  if (length(ModelOptions(object)$likelihood)==0) 
     stop("Run prepareMOFA before regressing out covariates") 
-  if (any(object@ModelOptions$likelihood[views]!="gaussian")) 
+  if (any(ModelOptions(object)$likelihood[views]!="gaussian")) 
     stop("Some of the specified views contains discrete data. \nRegressing out covariates only works in views with continuous (gaussian) data")
   
   # Fetch data
@@ -42,7 +42,7 @@ regressCovariates <- function(object, views, covariates, min_observations = 5) {
   # Prepare data.frame with covariates
   if (!is(covariates,"data.frame"))
     covariates <- data.frame(x=covariates)
-  stopifnot(nrow(covariates)==object@Dimensions$N)
+  stopifnot(nrow(covariates)==Dimensions(object)$N)
   
   Y_regressed <- list()
   for (m in views) {
@@ -60,7 +60,7 @@ regressCovariates <- function(object, views, covariates, min_observations = 5) {
       residuals[all_samples]
     }))
   }
-  object@TrainData[views] <- Y_regressed
+  TrainData(object)[views] <- Y_regressed
   
   return(object)
 }
@@ -117,11 +117,11 @@ prepareMOFA <- function(object, DataOptions = NULL, ModelOptions = NULL, TrainOp
   message("Checking data options...")
   if (is.null(DataOptions)) {
     message("No data options specified, using default...")
-    object@DataOptions <- getDefaultDataOptions()
+    DataOptions(object) <- getDefaultDataOptions()
   } else {
     if (!is(TrainOptions,"list") & !all(names(TrainOptions) == names(getDefaultTrainOptions())))
       stop("DataOptions are incorrectly specified, please read the documentation in getDefaultDataOptions")
-    object@DataOptions <- DataOptions
+    DataOptions(object) <- DataOptions
   }
   if (any(nchar(sampleNames(object))>50))
     warning("Due to string size limitations in the HDF5 format, sample names will be trimmed to less than 50 characters")
@@ -130,45 +130,45 @@ prepareMOFA <- function(object, DataOptions = NULL, ModelOptions = NULL, TrainOp
   message("Checking training options...")
   if (is.null(TrainOptions)) {
     message("No training options specified, using default...")
-    object@TrainOptions <- getDefaultTrainOptions()
+    TrainOptions(object) <- getDefaultTrainOptions()
   } else {
     if(!is(TrainOptions,"list") & !all(names(TrainOptions) == names(getDefaultTrainOptions())))
       stop("TrainOptions are incorrectly specified, please read the documentation in getDefaultTrainOptions")
-    object@TrainOptions <- TrainOptions
+    TrainOptions(object) <- TrainOptions
   }
   
   # Get model options
   message("Checking model options...")
   if(is.null(ModelOptions)) {
     message("No model options specified, using default...")
-    object@ModelOptions <- getDefaultModelOptions(object)
+    ModelOptions(object) <- getDefaultModelOptions(object)
   } else {
     # (To-do) Check that ModelOptions is correct
     if(!is(ModelOptions,"list") & !all(names(ModelOptions) == names(getDefaultModelOptions(object))))
       stop("ModelOptions are incorrectly specified, please read the documentation in getDefaultModelOptions")
-    object@ModelOptions <- ModelOptions
+    ModelOptions(object) <- ModelOptions
   }
   
   # Convert binary data to numeric
-  idx <- names(which(object@ModelOptions$likelihood == "bernoulli"))
+  idx <- names(which(ModelOptions(object)$likelihood == "bernoulli"))
   if (length(idx)>0) {
     for (i in idx) {
-      foo <- object@TrainData[[i]]
-      object@TrainData[[i]] <- as.numeric(object@TrainData[[i]])
-      dim(object@TrainData[[i]]) <- dim(foo)
-      rownames(object@TrainData[[i]]) <- rownames(foo)
-      colnames(object@TrainData[[i]]) <- colnames(foo)
+      foo <- TrainData(object)[[i]]
+      TrainData(object)[[i]] <- as.numeric(TrainData(object)[[i]])
+      dim(TrainData(object)[[i]]) <- dim(foo)
+      rownames(TrainData(object)[[i]]) <- rownames(foo)
+      colnames(TrainData(object)[[i]]) <- colnames(foo)
     }
   }
   
   # Make sure that there are no features with zero variance
-  for (m in seq_along(object@TrainData)) {
-      if (!all(apply(object@TrainData[[m]],1,var,na.rm=TRUE)>0, na.rm=TRUE))
+  for (m in seq_along(TrainData(object))) {
+      if (!all(apply(TrainData(object)[[m]],1,var,na.rm=TRUE)>0, na.rm=TRUE))
         sprintf("Error: there are features with zero variance in view '%s', please remove them and create a new MOFAobject",viewNames(object)[m])
   }
   
   # Store feature-wise means
-  # object@FeatureIntercepts <- lapply(object@TrainData,rowMeans,na.rm=TRUE)
+  # FeatureIntercepts(object) <- lapply(TrainData(object),rowMeans,na.rm=TRUE)
   
   return(object)
 }
@@ -273,7 +273,7 @@ getDefaultModelOptions <- function(object) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
-  if (!.hasSlot(object,"Dimensions") | length(object@Dimensions) == 0) 
+  if (!.hasSlot(object,"Dimensions") | length(Dimensions(object)) == 0) 
     stop("Dimensions of object need to be defined before getting ModelOptions")
   if (!.hasSlot(object,"InputData")) 
     stop("InputData slot needs to be specified before getting ModelOptions")

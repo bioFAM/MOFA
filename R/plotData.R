@@ -206,7 +206,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
       if(color_by %in% Reduce(union,featureNames)) {
         viewidx <- which(vapply(featureNames, function(vnm) color_by %in% vnm, logical(1)))
         color_by <- TrainData[[viewidx]][color_by,]
-      } else if(is(object@InputData, "MultiAssayExperiment")){
+      } else if(is(InputData(object), "MultiAssayExperiment")){
         color_by <- getCovariates(object, color_by)
       }
       else stop("'color_by' was specified but it was not recognised, please read the documentation")
@@ -233,7 +233,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
       if (shape_by %in% Reduce(union,featureNames)) {
         viewidx <- which(vapply(featureNames, function(vnm) shape_by %in% vnm, logical(1)))
         shape_by <- TrainData[[viewidx]][shape_by,]
-      } else if(is(object@InputData, "MultiAssayExperiment")){
+      } else if(is(InputData(object), "MultiAssayExperiment")){
         shape_by <- getCovariates(object, shape_by)
       }
       else stop("'shape_by' was specified but it was not recognised, please read the documentation")

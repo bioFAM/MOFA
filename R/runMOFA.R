@@ -32,11 +32,11 @@ runMOFA <- function(object, outfile=NULL) {
   # Sanity checks on the model
   if (!is(object, "MOFAmodel")) 
     stop("'object' has to be an instance of MOFAmodel")
-  if (length(object@ModelOptions)==0)
+  if (length(ModelOptions(object))==0)
     stop("Can't find the model options, did you run prepareMOFA?")
-  if (length(object@TrainOptions)==0)
+  if (length(TrainOptions(object))==0)
     stop("Can't find the training options, did you run prepareMOFA?")
-  if (length(object@DataOptions)==0)
+  if (length(DataOptions(object))==0)
     stop("Can't find the data options, did you run prepareMOFA?")
   
   # Sanity checks on the output file
@@ -50,7 +50,7 @@ runMOFA <- function(object, outfile=NULL) {
     }
   }
     
-  if (object@Status=="trained") 
+  if (Status(object)=="trained") 
     stop("The model is already trained! If you want to retrain, create a new untrained MOFAmodel")
   
   # Initiate reticulate
@@ -66,21 +66,21 @@ runMOFA <- function(object, outfile=NULL) {
   
   # Pass model options 
   mofa_entrypoint$set_model_options(
-    factors        = object@ModelOptions$numFactors,
-    likelihoods    = unname(object@ModelOptions$likelihood),
+    factors        = ModelOptions(object)$numFactors,
+    likelihoods    = unname(ModelOptions(object)$likelihood),
     learnIntercept = FALSE,
-    sparsity       = object@ModelOptions$sparsity
+    sparsity       = ModelOptions(object)$sparsity
   )
   
   #TO BE FIXED: This should also be saved along with ModelOptions.
-  numFactors <- object@ModelOptions$numFactors
+  numFactors <- ModelOptions(object)$numFactors
   
   # Pass data processing options
   mofa_entrypoint$set_data_options(
     view_names              = viewNames(object), 
     center_features         = TRUE,
-    scale_views             = object@DataOptions$scaleViews,
-    RemoveIncompleteSamples = object@DataOptions$removeIncompleteSamples
+    scale_views             = DataOptions(object)$scaleViews,
+    RemoveIncompleteSamples = DataOptions(object)$removeIncompleteSamples
   )
   
   # Parse data
@@ -88,11 +88,11 @@ runMOFA <- function(object, outfile=NULL) {
   
   # Pass training options  
   mofa_entrypoint$set_train_options(
-    iter       = object@TrainOptions$maxiter,
-    tolerance  = object@TrainOptions$tolerance,
-    dropR2     = object@TrainOptions$DropFactorThreshold,
-    seed       = object@TrainOptions$seed, 
-    verbose    = object@TrainOptions$verbose
+    iter       = TrainOptions(object)$maxiter,
+    tolerance  = TrainOptions(object)$tolerance,
+    dropR2     = TrainOptions(object)$DropFactorThreshold,
+    seed       = TrainOptions(object)$seed, 
+    verbose    = TrainOptions(object)$verbose
   )
   
 
@@ -119,7 +119,7 @@ runMOFA <- function(object, outfile=NULL) {
   object <- loadModel(outfile, object)
   
   #TO BE FIXED: Workaround as numFactors is not saved in ModelOpts
-  object@ModelOptions$numFactors <- numFactors
+  ModelOptions(object)$numFactors <- numFactors
   
   return(object)
 }

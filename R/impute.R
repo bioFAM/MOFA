@@ -70,7 +70,7 @@ impute <- function(object, views = "all", factors = "all", type = c("inRange","r
   names(imputedData) <- viewNames(object)
 
   # Save imputed data in the corresponding slot  
-  object@ImputedData <- imputedData
+  ImputedData(object) <- imputedData
   
   return(object)
 }

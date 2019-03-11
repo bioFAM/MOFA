@@ -36,16 +36,16 @@ subsetFactors <- function(object, factors) {
       else{ stopifnot(all(factors %in% factorNames(object))) }
 
   # Subset relevant slots
-  object@Expectations$Z <- object@Expectations$Z[,factors, drop=FALSE]
-  object@Expectations$Alpha <- lapply(object@Expectations$Alpha,
+  Expectations(object)$Z <- Expectations(object)$Z[,factors, drop=FALSE]
+  Expectations(object)$Alpha <- lapply(Expectations(object)$Alpha,
                                       function(x) x[factors])
-  object@Expectations$W <- lapply(object@Expectations$W,
+  Expectations(object)$W <- lapply(Expectations(object)$W,
                                   function(x) x[,factors, drop=FALSE])
-  object@Expectations$Theta <- lapply(object@Expectations$Theta,
+  Expectations(object)$Theta <- lapply(Expectations(object)$Theta,
                                       function(x) x[factors])
 
   # Modify dimensionality
-  object@Dimensions[["K"]] <- length(factors)
+  Dimensions(object)[["K"]] <- length(factors)
   
   # Modify factor names
   factorNames(object) <- as.character(factors)
@@ -84,7 +84,7 @@ subsetSamples <- function(object, samples) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
-  stopifnot(length(samples) <= object@Dimensions[["N"]])
+  stopifnot(length(samples) <= Dimensions(object)[["N"]])
   # warning("Warning: removing samples is fine for an exploratory analysis...\nbut we recommend removing them before training!\n")
   
   # Get samples
@@ -95,16 +95,16 @@ subsetSamples <- function(object, samples) {
   }
   
   # Subset relevant slots
-  object@Expectations$Z <- object@Expectations$Z[samples,, drop=FALSE]
-  object@Expectations$Y <- lapply(object@Expectations$Y, function(x) x[samples,])
-  object@TrainData <- lapply(object@TrainData, function(x) x[,samples])
-  if (length(object@InputData)>0)
-    object@InputData <- object@InputData[,samples,]
-  if (length(object@ImputedData)==0)
-    object@ImputedData <- lapply(object@ImputedData, function(x) x[,samples])
+  Expectations(object)$Z <- Expectations(object)$Z[samples,, drop=FALSE]
+  Expectations(object)$Y <- lapply(Expectations(object)$Y, function(x) x[samples,])
+  TrainData(object) <- lapply(TrainData(object), function(x) x[,samples])
+  if (length(InputData(object))>0)
+    InputData(object) <- InputData(object)[,samples,]
+  if (length(ImputedData(object))==0)
+    ImputedData(object) <- lapply(ImputedData(object), function(x) x[,samples])
 
   # Modify dimensionality
-  object@Dimensions[["N"]] <- length(samples)
+  Dimensions(object)[["N"]] <- length(samples)
   
   # Modify sample names in the MOFAobject
   sampleNames(object) <- samples
@@ -141,7 +141,7 @@ subsetViews <- function(object, views) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
-  stopifnot(length(views) <= object@Dimensions[["N"]])
+  stopifnot(length(views) <= Dimensions(object)[["N"]])
   warning("Removing views is fine for an exploratory analysis,\n
           but we recommend removing them before training!\n")
   
@@ -153,13 +153,13 @@ subsetViews <- function(object, views) {
   }
   
   # Subset relevant slots
-  object@Expectations$Y <- object@Expectations$Y[views]
-  object@Expectations$W <- object@Expectations$W[views]
-  object@TrainData <- object@TrainData[views]
-  if (length(object@ImputedData)==0) { object@ImputedData <- object@ImputedData[views] }
+  Expectations(object)$Y <- Expectations(object)$Y[views]
+  Expectations(object)$W <- Expectations(object)$W[views]
+  TrainData(object) <- TrainData(object)[views]
+  if (length(ImputedData(object))==0) { ImputedData(object) <- ImputedData(object)[views] }
   
   # Modify dimensionality
-  object@Dimensions[["M"]] <- length(views)
+  Dimensions(object)[["M"]] <- length(views)
   
   # Modify sample names in the MOFAobject
   viewNames(object) <- views

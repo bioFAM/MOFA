@@ -97,10 +97,10 @@ predict <- function(object, views = "all", factors = "all",
   predictedData <- lapply(views, function(i){
     
     # calculate terms based on linear model
-    predictedView <- sweep(t(Z%*% t(W[[i]])),1, -object@FeatureIntercepts[[i]]) # add intercept row-wise
+    predictedView <- sweep(t(Z%*% t(W[[i]])),1, -FeatureIntercepts(object)[[i]]) # add intercept row-wise
     
     # make predicitons based on underlying likelihood
-    lks <- object@ModelOptions$likelihood
+    lks <- ModelOptions(object)[["likelihood"]]
     names(lks) <- viewNames(object)
     if (type!="link") {
       lk <- lks[i]

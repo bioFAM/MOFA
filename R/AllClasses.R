@@ -43,40 +43,45 @@ setClass("MOFAmodel", slots=c(
   Status = "character")
 )
 
+setValidity("MOFAmodel", function(object) {
+
+})
+
 # Printing method
 setMethod("show", "MOFAmodel", function(object) {
   
-  if(!.hasSlot(object,"Dimensions") | length(object@Dimensions) == 0)
+  if(!.hasSlot(object,"Dimensions") | length(getDimensions(object)) == 0)
     stop("Error: Dimensions not defined")
-  if(!.hasSlot(object,"Status") | length(object@Status) == 0)
+  if(!.hasSlot(object,"Status") | length(Status(object)) == 0)
     stop("Error: Status not defined")
   
-  if (object@Status == "trained") {
+  if (Status(object) == "trained") {
     # check whether the intercept was learnt (depreciated, included for compatibility with old models)
-    if(is.null(object@ModelOptions$learnIntercept)) {
+    if(is.null(ModelOptions(object)[["learnIntercept"]])) {
       learnIntercept <- FALSE
       } else {
-        learnIntercept <- object@ModelOptions$learnIntercept
+        learnIntercept <- ModelOptions(object)[["learnIntercept"]]
       }
-    nfactors <- object@Dimensions[["K"]]
+    dims <- getDimensions(object)
+    nfactors <- dims[["K"]]
     if (learnIntercept) { nfactors <- nfactors-1 }
     cat(sprintf("Trained MOFA model with the following characteristics:
   Number of views: %d \n View names: %s 
   Number of features per view: %s 
   Number of samples: %d 
   Number of factors: %d ",
-                object@Dimensions[["M"]], paste(viewNames(object),collapse=" "),
-                paste(as.character(object@Dimensions[["D"]]),collapse=" "),
-                object@Dimensions[["N"]], nfactors))
+                dims[["M"]], paste(viewNames(object),collapse=" "),
+                paste(as.character(dims[["D"]]),collapse=" "),
+                dims[["N"]], nfactors))
   } else {
     cat(sprintf("Untrained MOFA model with the following characteristics: 
   Number of views: %d 
   View names: %s 
   Number of features per view: %s
   Number of samples: %d ",
-                object@Dimensions[["M"]], paste(viewNames(object),collapse=" "),
-                paste(as.character(object@Dimensions[["D"]]),collapse=" "),
-                object@Dimensions[["N"]]))
+                dims[["M"]], paste(viewNames(object),collapse=" "),
+                paste(as.character(dims[["D"]]),collapse=" "),
+                dims[["N"]]))
     cat("\n")
   }
 })

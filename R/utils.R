@@ -22,91 +22,91 @@
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")  
   
   # Update node names
-  if ("SW" %in% names(object@Expectations)) {
-    names(object@Expectations)[names(object@Expectations)=="SW"] <- "W"
-    colnames(object@TrainStats$elbo_terms)[colnames(object@TrainStats$elbo_terms)=="SW"] <- "W"
+  if ("SW" %in% names(Expectations(object))) {
+    names(Expectations(object))[names(Expectations(object))=="SW"] <- "W"
+    colnames(TrainStats(object)$elbo_terms)[colnames(TrainStats(object)$elbo_terms)=="SW"] <- "W"
   }
   
-  if ("AlphaW" %in% names(object@Expectations)) {
-    names(object@Expectations)[names(object@Expectations) == "AlphaW"] <- "Alpha"
-    colnames(object@TrainStats$elbo_terms)[colnames(object@TrainStats$elbo_terms)=="AlphaW"] <- "Alpha"
+  if ("AlphaW" %in% names(Expectations(object))) {
+    names(Expectations(object))[names(Expectations(object)) == "AlphaW"] <- "Alpha"
+    colnames(TrainStats(object)$elbo_terms)[colnames(TrainStats(object)$elbo_terms)=="AlphaW"] <- "Alpha"
   }
   
   # Update expectations
-  if (is.list(object@Expectations$Z)) {
-    object@Expectations$Z <- object@Expectations$Z$E
+  if (is.list(Expectations(object)$Z)) {
+    Expectations(object)$Z <- Expectations(object)$Z$E
     for (view in viewNames(object)) {
-      object@Expectations$Alpha[[view]] <- object@Expectations$Alpha[[view]]$E
-      object@Expectations$W[[view]] <- object@Expectations$W[[view]]$E
-      object@Expectations$Tau[[view]] <- object@Expectations$Tau[[view]]$E
-      object@Expectations$Theta[[view]] <- object@Expectations$Theta[[view]]$E
-      object@Expectations$Y[[view]] <- object@Expectations$Y[[view]]$E
+      Expectations(object)$Alpha[[view]] <- Expectations(object)$Alpha[[view]]$E
+      Expectations(object)$W[[view]] <- Expectations(object)$W[[view]]$E
+      Expectations(object)$Tau[[view]] <- Expectations(object)$Tau[[view]]$E
+      Expectations(object)$Theta[[view]] <- Expectations(object)$Theta[[view]]$E
+      Expectations(object)$Y[[view]] <- Expectations(object)$Y[[view]]$E
     }
   }
   
   # update model dimensions
-  object@Dimensions[["K"]] <- ncol(object@Expectations$Z)
+  Dimensions(object)[["K"]] <- ncol(Expectations(object)$Z)
   
   # update learnMean to learnIntercept
-  if ("learnMean" %in% names(object@ModelOptions)) {
-    tmp <- names(object@ModelOptions)
+  if ("learnMean" %in% names(ModelOptions(object))) {
+    tmp <- names(ModelOptions(object))
     tmp[tmp=="learnMean"] <- "learnIntercept"
-    names(object@ModelOptions) <- tmp
+    names(ModelOptions(object)) <- tmp
   }
   
   # Add feature-wise means to the gaussian data to restore uncentered data in TrainData
-  if (length(object@FeatureIntercepts)>=1) {
-    object@ModelOptions$learnIntercept <- NULL
-    # for (m in seq_along(object@TrainData)) {
-    #   if (object@ModelOptions$likelihood[m] == "gaussian") {
-    #     if (max(abs(apply(object@TrainData[[m]],1, mean, na.rm=TRUE))) > 10^(-5))
+  if (length(FeatureIntercepts(object))>=1) {
+    ModelOptions(object)$learnIntercept <- NULL
+    # for (m in seq_along(TrainData(object))) {
+    #   if (ModelOptions(object)$likelihood[m] == "gaussian") {
+    #     if (max(abs(apply(TrainData(object)[[m]],1, mean, na.rm=TRUE))) > 10^(-5))
     #       print("Warning, gaussian data seems to be uncentered")
-    #     object@TrainData[[m]] <- object@TrainData[[m]] + as.numeric(object@FeatureIntercepts[[m]])
+    #     TrainData(object)[[m]] <- TrainData(object)[[m]] + as.numeric(FeatureIntercepts(object)[[m]])
     #   }
     # }
   }
   
   # update intercept to new model structure and remove intercept from pseudodata
-  if(!is.null(object@ModelOptions$learnIntercept)){
-    object@ModelOptions$learnIntercept <- as.logical(object@ModelOptions$learnIntercept)
-    if(object@ModelOptions$learnIntercept){
-      nonintercept_idx <- which(!apply(object@Expectations$Z==1,2,all))
-      intercept_idx <- which(apply(object@Expectations$Z==1,2,all))
+  if(!is.null(ModelOptions(object)$learnIntercept)){
+    ModelOptions(object)$learnIntercept <- as.logical(ModelOptions(object)$learnIntercept)
+    if(ModelOptions(object)$learnIntercept){
+      nonintercept_idx <- which(!apply(Expectations(object)$Z==1,2,all))
+      intercept_idx <- which(apply(Expectations(object)$Z==1,2,all))
       if(length(intercept_idx)!=1) stop("No or multiple intercepts were learn despite using learnIntercept.")
       # save intercepts in FeatureIntercepts slot
-      object@FeatureIntercepts  <- lapply(object@Expectations$W, function(w) w[,intercept_idx])
+      FeatureIntercepts(object)  <- lapply(Expectations(object)$W, function(w) w[,intercept_idx])
 
       #remove intercept form factors and weights
-      object@Expectations$Z <- object@Expectations$Z[,nonintercept_idx, drop=FALSE]
-      object@Expectations$Alpha <- lapply(object@Expectations$Alpha,
+      Expectations(object)$Z <- Expectations(object)$Z[,nonintercept_idx, drop=FALSE]
+      Expectations(object)$Alpha <- lapply(Expectations(object)$Alpha,
                                           function(x) x[nonintercept_idx])
-      object@Expectations$W <- lapply(object@Expectations$W,
+      Expectations(object)$W <- lapply(Expectations(object)$W,
                                       function(x) x[,nonintercept_idx, drop=FALSE])
-      object@Expectations$Theta <- lapply(object@Expectations$Theta,
+      Expectations(object)$Theta <- lapply(Expectations(object)$Theta,
                                           function(x) x[nonintercept_idx])
       
       # sweep out intercept from pseudodata
-      for(m in seq_along(object@Expectations$Y)) 
-        object@Expectations$Y[[m]] <- sweep(object@Expectations$Y[[m]],2, object@FeatureIntercepts[[m]])
+      for(m in seq_along(Expectations(object)$Y)) 
+        Expectations(object)$Y[[m]] <- sweep(Expectations(object)$Y[[m]],2, FeatureIntercepts(object)[[m]])
       
-    } else object@FeatureIntercepts  <- lapply(object@Dimensions$D, function(d) rep(0,d))
-    object@ModelOptions$learnIntercept <- NULL
+    } else FeatureIntercepts(object)  <- lapply(Dimensions(object)$D, function(d) rep(0,d))
+    ModelOptions(object)$learnIntercept <- NULL
   }
 
   # Add DataOptions
-  if (length(object@DataOptions)==0)
-    object@DataOptions <- list(scaleViews = FALSE, removeIncompleteSamples = FALSE)
+  if (length(DataOptions(object))==0)
+    DataOptions(object) <- list(scaleViews = FALSE, removeIncompleteSamples = FALSE)
   
   # Remove depreciated and detailed model and training options
-  object@TrainOptions <- list(maxiter = object@TrainOptions$maxiter,
-                              tolerance = object@TrainOptions$tolerance,
-                              DropFactorThreshold = object@TrainOptions$DropFactorThreshold,
-                              verbose = object@TrainOptions$verbose,
-                              seed = object@TrainOptions$seed)
+  TrainOptions(object) <- list(maxiter = TrainOptions(object)$maxiter,
+                              tolerance = TrainOptions(object)$tolerance,
+                              DropFactorThreshold = TrainOptions(object)$DropFactorThreshold,
+                              verbose = TrainOptions(object)$verbose,
+                              seed = TrainOptions(object)$seed)
   
-  object@ModelOptions <- list(likelihood = object@ModelOptions$likelihood,
-                              numFactors = object@ModelOptions$numFactors,
-                              sparsity = object@ModelOptions$sparsity)
+  ModelOptions(object) <- list(likelihood = ModelOptions(object)$likelihood,
+                              numFactors = ModelOptions(object)$numFactors,
+                              sparsity = ModelOptions(object)$sparsity)
   
   return(object)
 }
@@ -191,16 +191,16 @@ subset_augment <- function(mat, pats) {
   }
   
   # Replace the latent matrix
-  object@Expectations$Z <- Z
+  Expectations(object)$Z <- Z
   
   return(object)
   
 }
 
 flip_factor <- function(model, factor){
-  model@Expectations$Z[,factor] <- - model@Expectations$Z[,factor]
-  for(viewnm in names(model@Expectations$W)) {
-    model@Expectations$W[[viewnm]][,factor] <- -model@Expectations$W[[viewnm]][,factor]
+  Expectations(model)$Z[,factor] <- - Expectations(model)$Z[,factor]
+  for(viewnm in names(Expectations(model)$W)) {
+    Expectations(model)$W[[viewnm]][,factor] <- -Expectations(model)$W[[viewnm]][,factor]
   }
 return(model)
 }

@@ -53,19 +53,20 @@ createMOFAobject <- function(data) {
   object <- .createMOFAobjectFromMAE(data)
   
   # Set dimensionalities
-  object@Dimensions[["M"]] <- length(object@TrainData)
-  object@Dimensions[["N"]] <- ncol(object@TrainData[[1]])
-  object@Dimensions[["D"]] <- vapply(object@TrainData, nrow, numeric(1))
-  object@Dimensions[["K"]] <- 0
+  Dimensions(object) <- list()
+  Dimensions(object)[["M"]] <- length(TrainData(object))
+  Dimensions(object)[["N"]] <- ncol(TrainData(object)[[1]])
+  Dimensions(object)[["D"]] <- vapply(TrainData(object), nrow, numeric(1))
+  Dimensions(object)[["K"]] <- 0
   
   # Set view names
   viewNames(object) <- names(data)
   
   # Set feature names
-  for (m in seq_len(object@Dimensions[["M"]])) {
-    if (is.null(rownames(object@TrainData[[m]]))) {
+  for (m in seq_len(Dimensions(object)[["M"]])) {
+    if (is.null(rownames(TrainData(object)[[m]]))) {
       warning(sprintf("Feature names are not specified for view %d, using default: feature1_v%d,feature2_v%d...\n",m,m,m))
-      rownames(object@TrainData[[m]]) <- paste0("feature_", seq_len(nrow(object@TrainData[[m]])),"_v",m )
+      rownames(TrainData(object)[[m]]) <- paste0("feature_", seq_len(nrow(TrainData(object)[[m]])),"_v",m )
     }
   }
   
@@ -80,11 +81,11 @@ createMOFAobject <- function(data) {
 
   # Initialise MOFA object
   object <- new("MOFAmodel")
-  object@Status <- "untrained"
-  object@InputData <- data
+  Status(object) <- "untrained"
+  InputData(object) <- data
   
   # Re-arrange data for training in MOFA to matrices, fill in NAs and store in TrainData slot
-  object@TrainData <- lapply(names(data), function(m) {
+  TrainData(object) <- lapply(names(data), function(m) {
     
     # Extract general sample names
     primary <- unique(sampleMap(data)[,"primary"])
@@ -139,7 +140,7 @@ createMOFAobject <- function(data) {
 #   
 #   # Initialise MOFA object
 #   object <- new("MOFAmodel")
-#   object@Status <- "untrained"
+#   Status(object) <- "untrained"
 #   
 #   # Fetch or assign sample names
 #   samples <- Reduce(union, lapply(data, colnames))
@@ -155,7 +156,7 @@ createMOFAobject <- function(data) {
 #     for (m in seq_along(data)) { colnames(data[[m]]) <- samples }
 #   }
 #   
-#   object@TrainData <- lapply(data, function(view) .subset_augment(view, samples))
+#   TrainData(object) <- lapply(data, function(view) .subset_augment(view, samples))
 #   
 #   return(object)
 # }

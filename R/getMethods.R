@@ -22,7 +22,7 @@
 
 getDimensions <- function(object) {
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")  
-  return(object@Dimensions)
+  return(Dimensions(object))
 }
 
 
@@ -178,7 +178,7 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
   }
   
   # Fetch data
-  trainData <- object@TrainData[views]
+  trainData <- TrainData(object)[views]
   trainData <- lapply(seq_along(trainData), function(m) trainData[[m]][features[[m]],,drop=FALSE])
   names(trainData) <- views
   
@@ -228,7 +228,7 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
-  if (length(object@ImputedData)==0) {
+  if (length(ImputedData(object))==0) {
     stop("No imputed data found. Please run impute(MOFAobject) first")
   }
   
@@ -251,7 +251,7 @@ getImputedData <- function(object, views = "all", features = "all", as.data.fram
   }
   
   # Fetch imputed data
-  ImputedData <- object@ImputedData[views]
+  ImputedData <- ImputedData(object)[views]
   ImputedData <- lapply(seq_along(ImputedData),
                         function(m) ImputedData[[m]][features[[m]],,drop=FALSE]) 
   names(ImputedData) <- views
@@ -304,16 +304,16 @@ getCovariates <- function(object, covariate) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
-  if(!is(object@InputData, "MultiAssayExperiment")) {
+  if(!is(InputData(object), "MultiAssayExperiment")) {
     stop("To work with covariates, InputData has to be specified in form of a MultiAssayExperiment")
   }
   
   # Check that samples from MOFAobject and MultiAssayExperiment are consistent.
   samples <- sampleNames(object)
-  if (!all(samples %in% rownames(colData(object@InputData)))) {
+  if (!all(samples %in% rownames(colData(InputData(object))))) {
     stop("There are samples in the model which are not detected in the MultiAssayExperiment object")
   } else {
-    mae <- object@InputData[,samples]
+    mae <- InputData(object)[,samples]
   }
   
   # Extract the covariate from colData or in the phenoData of specific assays
@@ -384,10 +384,10 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
-  stopifnot(variable %in% names(object@Expectations))
+  stopifnot(variable %in% names(Expectations(object)))
   
   # Get expectations in single matrix or list of matrices (for multi-view nodes)
-  exp <- object@Expectations[[variable]]
+  exp <- Expectations(object)[[variable]]
 
   # Convert to long data frame
   if (as.data.frame==TRUE) {
@@ -466,6 +466,6 @@ getExpectations <- function(object, variable, as.data.frame = FALSE) {
 
 getELBO <- function(object) {
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")  
-  return(tail(object@TrainStats$elbo,1))
+  return(tail(TrainStats(object)[["elbo"]],1))
 }
 

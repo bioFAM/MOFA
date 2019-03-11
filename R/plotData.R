@@ -179,7 +179,7 @@ plotDataScatter <- function(object, view, factor, features = 10,
   N <- getDimensions(object)[["N"]]
   Z <- getFactors(object)[,factor]
   W <- getWeights(object, views=view, factors=factor)[[1]][,1]
-  Y <- object@TrainData[[view]]
+  Y <- getTrainData(object)[[view]]
   
   
   # Get features
@@ -328,7 +328,7 @@ plotDataOverview <- function(object, colors = NULL) {
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   
   # Collect relevant data
-  TrainData <- object@TrainData
+  TrainData <- getTrainData(object)
   M <- getDimensions(object)[["M"]]
   N <- getDimensions(object)[["N"]]
   

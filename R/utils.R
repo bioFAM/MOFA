@@ -1,7 +1,7 @@
 
 # Function to automatically infer the likelihoods from the data
 .inferLikelihoods <- function(object) {
-  likelihood <- rep(x="gaussian", times=object@Dimensions$M)
+  likelihood <- rep(x="gaussian", times=(getDimensions(object))$M)
   names(likelihood) <- viewNames(object)
   
   for (view in viewNames(object)) {

@@ -27,7 +27,7 @@ subsetFactors <- function(object, factors) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
-  stopifnot(length(factors) <= object@Dimensions[["K"]])
+  stopifnot(length(factors) <= getDimensions(object)[["K"]])
 
     # Get factors
    if(is.numeric(factors)) {

@@ -103,9 +103,15 @@ prepareMOFA <- function(object, DataOptions = NULL, ModelOptions = NULL, TrainOp
   # Sanity checks
   if (!is(object, "MOFAmodel")) 
     stop("'object' has to be an instance of MOFAmodel")
-  if (object@Dimensions$N<15) warning("This model is not appropriate for data sets with less than ~15 samples")
-  if (object@Dimensions$N<object@Dimensions$K) warning("There are less samples than factors, likely to generate numerical errors")
-  if (min(object@Dimensions$D)<object@Dimensions$K) warning("There are less factors than features, likely to generate numerical errors")
+  if (getDimensions(object)[["N"]] < 15) {
+      warning("This model is not appropriate for data sets with less than ~15 samples")
+  }
+  if (getDimensions(object)[["N"]] < getDimensions(object)[["K"]]) {
+      warning("There are less samples than factors, likely to generate numerical errors")
+  }
+  if (min(getDimensions(object)[["D"]]) < getDimensions(object)[["K"]]) {
+      warning("There are less factors than features, likely to generate numerical errors")
+  }
   
   # Get data options
   message("Checking data options...")

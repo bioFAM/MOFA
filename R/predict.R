@@ -62,7 +62,7 @@ predict <- function(object, views = "all", factors = "all",
   
   # Get views  
   if (is.numeric(views)) {
-    stopifnot(all(views<=object@Dimensions$M))
+    stopifnot(all(views <= getDimensions(object)[["M"]]))
     views <- viewNames(object)[views] 
   } else {
     if (paste0(views,sep="",collapse="") =="all") { 

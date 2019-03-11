@@ -59,7 +59,7 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "",
   }
   
   # get groups
-  N <- object@Dimensions[["N"]]
+  N <- getDimensions(object)[["N"]]
   groupLegend <- TRUE
   if (!is.null(group_by)) {
     
@@ -182,7 +182,7 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
   Z$factor <- as.factor(Z$factor)
   
   # Set color
-  N <- object@Dimensions[["N"]]
+  N <- getDimensions(object)[["N"]]
   colorLegend <- TRUE
   if (!is.null(color_by)) {
     # It is the name of a covariate or a feature in the TrainData
@@ -362,7 +362,7 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
   
   # Get samples
   samples <- sampleNames(object)
-  N <- object@Dimensions[["N"]]
+  N <- getDimensions(object)[["N"]]
   
   # Set color
   colorLegend <- TRUE
@@ -522,7 +522,7 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
 
   # Collect relevant data
-  N <- object@Dimensions[["N"]]
+  N <- getDimensions(object)[["N"]]
   Z <- getFactors(object, factors = factors)
   factors <- colnames(Z)
   

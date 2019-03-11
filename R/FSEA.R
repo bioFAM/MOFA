@@ -96,7 +96,7 @@ runEnrichmentAnalysis <- function(object, view,
   }
   
   # Collect observed data
-  data <- object@TrainData[[view]]
+  data <- getTrainData(object)[[view]]
   data <- t(data)
   
   # Collect relevant expectations

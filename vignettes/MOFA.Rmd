@@ -35,7 +35,7 @@ For more details on the methods you can read our paper at \url{http://msb.embopr
 
 Currently, `MOFA` can be installed from github using
 ```{r, eval = FALSE}
-devtools::install_github("bioFAM/MOFA")
+devtools::install_github("bioFAM/MOFA", build_opts = c("--no-resave-data"))
 # install.packages("BiocManager")
 # BiocManager::install("MOFA", version = "3.9")
 ```
@@ -44,7 +44,7 @@ As the package depends on the Pyhton package `mofapy`, this needs to be installe
 
 For illustration of MOFA and gene set enrichment analyses we make use of data contained in the accompanying data package `MOFAdata`. This can be installed using
 ```{r, eval = FALSE}
-devtools::install_github("bioFAM/MOFAdata")
+devtools::install_github("bioFAM/MOFAdata", build_opts = c("--no-resave-data"))
 # install.packages("BiocManager")
 # BiocManager::install("MOFAdata", version = "3.9")
 ```

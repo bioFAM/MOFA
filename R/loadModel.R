@@ -27,7 +27,10 @@ loadModel <- function(file, object = NULL, sortFactors = TRUE, minR2 = 0.01) {
     
     # message(paste0("Loading the following MOFA model: ", file))
     
-    if (is.null(object)) object <- new("MOFAmodel")
+    if (is.null(object)) {
+        object <- new("MOFAmodel")
+        Status(object) <- "untrained"
+    }
     
     if(.hasSlot(object,"Status") & length(Status(object)) !=0) {
       if (Status(object) == "trained") {

@@ -19,6 +19,7 @@
 #' @param views the view(s) to regress out the covariates.
 #' @param covariates a vector (one covariate) or a data.frame (for multiple covariates) where each row corresponds to one sample, sorted in the same order as in the input data matrices. 
 #' You can check the order by doing sampleNames(MOFAobject). If required, fill missing values with \code{NA}, which will be ignored when fitting the linear model.
+#' @param min_observations number of non-missing observations required
 #' @return Returns an untrained \code{\link{MOFAmodel}} where the specified covariates have been regressed out in the training data.
 #' @importFrom stats lm
 #' @export

@@ -36,11 +36,11 @@ Alternatively, if \code{as.data.frame} is \code{TRUE}, the function
 \examples{
 data("scMT_data", package = "MOFAdata")
 MOFAobject <- createMOFAobject(scMT_data)
-trainData <- getTrainData(MOFAobject, as.data.frame = FALSE)
-(trainData[["RNA expression"]])[1:10,1:10]
+trainData_scMT <- getTrainData(MOFAobject, as.data.frame = FALSE)
+(trainData_scMT[["RNA expression"]])[1:10,1:10]
 
 data("CLL_data", package = "MOFAdata")
 MOFAobject <- createMOFAobject(CLL_data)
-trainData <- getTrainData(MOFAobject, as.data.frame = TRUE)
-head(trainData)
+trainData_CLL <- getTrainData(MOFAobject, as.data.frame = TRUE)
+head(trainData_CLL)
 }

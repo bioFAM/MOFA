@@ -148,13 +148,13 @@ getWeights <- function(object, views = "all", factors = "all", as.data.frame = F
 #' @examples 
 #' data("scMT_data", package = "MOFAdata")
 #' MOFAobject <- createMOFAobject(scMT_data)
-#' trainData <- getTrainData(MOFAobject, as.data.frame = FALSE)
-#' (trainData[["RNA expression"]])[1:10,1:10]
+#' trainData_scMT <- getTrainData(MOFAobject, as.data.frame = FALSE)
+#' (trainData_scMT[["RNA expression"]])[1:10,1:10]
 #' 
 #' data("CLL_data", package = "MOFAdata")
 #' MOFAobject <- createMOFAobject(CLL_data)
-#' trainData <- getTrainData(MOFAobject, as.data.frame = TRUE)
-#' head(trainData)
+#' trainData_CLL <- getTrainData(MOFAobject, as.data.frame = TRUE)
+#' head(trainData_CLL)
 
 getTrainData <- function(object, views = "all", features = "all", as.data.frame = FALSE) {
   
@@ -178,21 +178,21 @@ getTrainData <- function(object, views = "all", features = "all", as.data.frame 
   }
   
   # Fetch data
-  trainData <- TrainData(object)[views]
-  trainData <- lapply(seq_along(trainData), function(m) trainData[[m]][features[[m]],,drop=FALSE])
-  names(trainData) <- views
+  trainDataList <- TrainData(object)[views]
+  trainDataList <- lapply(seq_along(trainDataList), function(m) trainDataList[[m]][features[[m]],,drop=FALSE])
+  names(trainDataList) <- views
   
   # Convert to long data frame
   if (as.data.frame==TRUE) {
-    tmp <- lapply(views, function(m) { tmp <- reshape2::melt(trainData[[m]])
+    tmp <- lapply(views, function(m) { tmp <- reshape2::melt(trainDataList[[m]])
     colnames(tmp) <- c("feature","sample","value"); tmp <- cbind(view=m,tmp); return(tmp) })
-    trainData <- do.call(rbind,tmp)
-    trainData[,c("view","feature","sample")] <- vapply(trainData[,c("view","feature","sample")], as.character, character(nrow(trainData)))
+    trainDataList <- do.call(rbind,tmp)
+    trainDataList[,c("view","feature","sample")] <- vapply(trainDataList[,c("view","feature","sample")], as.character, character(nrow(trainDataList)))
   }# else if ((length(views)==1) && (as.data.frame==FALSE)) {
-  #  trainData <- trainData[[views]]
+  #  trainDataList <- trainDataList[[views]]
   #}
   
-  return(trainData)
+  return(trainDataList)
 }
 
 

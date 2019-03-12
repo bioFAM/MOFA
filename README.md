@@ -35,16 +35,11 @@ devtools::install_github("bioFAM/MOFAdata", build_opts = c("--no-resave-data"))
 ```
 
 ### Python dependencies 
-After installing the MOFA R package, you can do
-```r
-library(reticulate)
-py_install("mofapy")
-```
-
-Alternatively, you can install the package from PyPI:
+After installing the MOFA R package, you can install the `mofapy` python package using pip (from the terminal)
 ```r
 pip install mofapy
 ```
+
 
 ## Tutorials/Vignettes
 We currently provide three example workflows:

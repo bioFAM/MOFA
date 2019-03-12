@@ -49,6 +49,7 @@ git clone https://github.com/bioFAM/MOFA
 R CMD build MOFA
 R CMD install MOFA
 ```
+If you are using Rstudio do restart the R session after installing the mofa python package.
 
 ### R data package
 For illustration purposes we provide several data sets that are used in the vignettes of the MOFA package to illustrate the use of MOFA. This data is contained in the R package MOFAdata, which can be installed via:

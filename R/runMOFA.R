@@ -57,7 +57,9 @@ runMOFA <- function(object, outfile=NULL) {
   mofa <- tryCatch({
     import("mofapy")
   }, error = function(err) {
-    import("mofa") }
+    stop("mofapy package not found. Make sure that Reticulate is pointing to the right Python binary.\
+         Please read the instructions here: https://github.com/bioFAM/MOFA#installation")
+    }
   )
   mofa_entrypoint <- mofa$core.entry_point$entry_point()
   

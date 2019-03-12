@@ -35,11 +35,45 @@ devtools::install_github("bioFAM/MOFAdata", build_opts = c("--no-resave-data"))
 ```
 
 ### Python dependencies 
-After installing the MOFA R package, you can install the `mofapy` python package using pip (from the terminal)
+After installing the MOFA R package, you can install the `mofapy` python package in two ways:
+
+Using pip (from the terminal)
 ```r
 pip install mofapy
 ```
 
+From R itself, the connection with Python is made via the `reticulate` package:
+```r
+library(reticulate)
+
+# DEFAULT: if you are not familiar with conda or virtual environments, just try the following:
+# 	On Linux and OS X the "virtualenv" method will be used by default.
+# 	On Windows, the "conda" method is always used.
+py_install("mofapy", envname = "r-reticulate", method="auto")
+
+# Use the conda environment "r-reticulate"
+py_install("mofapy", envname = "r-reticulate", method = "conda", pip = TRUE, pip_ignore_installed = TRUE)
+
+# Use the virtual environment "r-reticulate"
+py_install("mofapy", envname = "r-reticulate", method = "virtualenv")
+
+```
+Before running MOFa, you need to make sure that reticulate is pointing to the correct python binary or conda environment.  
+This can become tricky when you have multiple conda environments and versions of Python installed:
+```r
+library(reticulate)
+
+# Using a specific python binary
+use_python("/home/user/python", required = TRUE)
+
+# Using a conda enviroment called "r-reticulate"
+use_condaenv("r-reticulate", required = TRUE)
+
+# Using a virtual environment called "r-reticulate"
+use_virtualenv("r-reticulate", required = TRUE)
+```
+
+For more details on how to set up the reticulate connection, see: https://rstudio.github.io/reticulate/
 
 ## Tutorials/Vignettes
 We currently provide three example workflows:

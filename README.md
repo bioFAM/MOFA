@@ -22,44 +22,28 @@ For more details you can read our paper: http://msb.embopress.org/cgi/doi/10.152
 ## Installation
 MOFA is run exclusively from R, but it requires some python dependencies that you need to install. Here is how to do it:
 
-### Python dependencies 
-We have uploaded the package to PyPI. You can install the python dependencies by:
-```r
-pip install mofapy
-``` 
-Alternatively, you can install it directly from github by:
-```r
-pip install git+git://github.com/bioFAM/MOFA
-```
-Or clone the repository and then install it using the setup.py:
-```r
-git clone https://github.com/bioFAM/MOFA
-python setup.py install
-```
-
-### R package
+### MOFA R package
 The easier way to install the R package is via github:
 ```r
 devtools::install_github("bioFAM/MOFA", build_opts = c("--no-resave-data"))
 ```
 
-Alternatively, you can clone the repository and install locally:
-```r
-git clone https://github.com/bioFAM/MOFA
-R CMD build MOFA
-R CMD install MOFA
-```
-
-### R data package
+### MOFAdata R data package
 For illustration purposes we provide several data sets that are used in the vignettes of the MOFA package to illustrate the use of MOFA. This data is contained in the R package MOFAdata, which can be installed via:
 ```r
 devtools::install_github("bioFAM/MOFAdata", build_opts = c("--no-resave-data"))
 ```
-or alternaltively by cloning the MOFAdata repository:
+
+### Python dependencies 
+After installing the MOFA R package, you can do
 ```r
-git clone https://github.com/bioFAM/MOFAdata
-R CMD build MOFAdata
-R CMD install MOFAdata
+library(reticulate)
+py_install("mofapy")
+```
+
+Alternatively, you can install the package from PyPI:
+```r
+pip install mofapy
 ```
 
 ## Tutorials/Vignettes

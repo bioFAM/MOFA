@@ -58,7 +58,10 @@ py_install("mofapy", envname = "r-reticulate", method = "conda", pip = TRUE, pip
 py_install("mofapy", envname = "r-reticulate", method = "virtualenv")
 
 ```
-Before running MOFa, you need to make sure that reticulate is pointing to the correct python binary or conda environment.  
+
+## Reticulate configuration
+
+Before running MOFA, you need to make sure that `reticulate` is pointing to the correct python binary or conda environment.  
 This can become tricky when you have multiple conda environments and versions of Python installed:
 ```r
 library(reticulate)

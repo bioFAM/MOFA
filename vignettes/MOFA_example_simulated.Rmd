@@ -1,12 +1,12 @@
 ---
 title: "Vignette illustrating the use of MOFA on simulated data"
 author: "Britta Velten and Ricard Argelaguet"
-date: "`r Sys.Date()`"
 output:
   BiocStyle::html_document:
     toc: true
+package: MOFA
 vignette: >
-  %\VignetteIndexEntry{Example_simulated}
+  %\VignetteIndexEntry{MOFA: How to do assess model robustness and do model selection}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

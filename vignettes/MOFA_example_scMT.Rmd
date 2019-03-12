@@ -1,12 +1,12 @@
 ---
 title: " Vignette illustrating the use of MOFA on single-cell multi-omics data"
 author: "Ricard Argelaguet and Britta Velten"
-date: "`r Sys.Date()`"
 output:
   BiocStyle::html_document:
     toc: true
+package: MOFA
 vignette: >
-  %\VignetteIndexEntry{Example_scMT}
+  %\VignetteIndexEntry{MOFA: Application to a single-cell multi-omics data set}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

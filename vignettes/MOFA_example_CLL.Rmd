@@ -1,12 +1,12 @@
 ---
 title: " Vignette illustrating the use of MOFA on the CLL data"
 author: "Britta Velten and Ricard Argelaguet"
-date: "`r Sys.Date()`"
 output:
   BiocStyle::html_document:
     toc: true
+package: MOFA
 vignette: >
-  %\VignetteIndexEntry{Example_CLL}
+  %\VignetteIndexEntry{MOFA: applications to a multi-omics data set of CLL patients}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

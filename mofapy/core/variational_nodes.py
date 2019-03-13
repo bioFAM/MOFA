@@ -80,7 +80,7 @@ class Unobserved_Variational_Node(Variational_Node):
     def removeFactors(self, idx, axis=None):
         # Method to remove entire factors from the nodes
         if hasattr(self,"factors_axis"): axis = self.factors_axis
-        if hasattr(self,"covariates"): self.covariates = self.covariates[s.arange(len(self.covariates)) != idx]
+        if hasattr(self,"covariates"): self.covariates = self.covariates[np.isin(s.arange(len(self.covariates)), idx, invert=True)]
         if axis is not None:
             self.P.removeDimensions(axis=axis, idx=idx)
             self.Q.removeDimensions(axis=axis, idx=idx)

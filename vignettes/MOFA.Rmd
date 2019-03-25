@@ -166,8 +166,9 @@ ERROR: dependencies 'pcaMethods', 'MultiAssayExperiment' are not available for p
 ```
 These two packages are available from Bioconductor, not CRAN. You can install them from R as follows:
 ```
-source("https://bioconductor.org/biocLite.R")
-biocLite(c('pcaMethods', 'MultiAssayExperiment'))
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install(c("MultiAssayExperiment", "pcaMethods"))
 ```
 
 **(Q) I get one of the following errors when running MOFA:**  

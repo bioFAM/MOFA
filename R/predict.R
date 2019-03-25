@@ -42,7 +42,7 @@
 #' # We can compare the predicitons made by the model with the training data for non-missing samples, e.g.
 #' library(ggplot2)
 #' trainData <- getTrainData(MOFA_CLL)
-#' qplot(predictedAll$Drugs, trainData$Drugs) + geom_hex(bins=100) +
+#' qplot(as.numeric(predictedAll$Drugs), as.numeric(trainData$Drugs)) + geom_hex(bins=100) +
 #'  coord_equal() + geom_abline(intercept = 0, slope = 1, col = "red")
 #' 
 #' # Example on the scMT data

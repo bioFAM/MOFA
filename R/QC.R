@@ -51,12 +51,12 @@ qualityControl <- function(object, verbose = FALSE) {
     stopifnot(length(Expectations(object)[["W"]]) == getDimensions(object)[["M"]])
     stopifnot(length(Expectations(object)[["Y"]]) == getDimensions(object)[["M"]])
     stopifnot(length(Expectations(object)[["Theta"]]) == getDimensions(object)[["M"]])
-    stopifnot(all(sapply(Expectations(object)[["W"]], dim) == rbind(getDimensions(object)[["D"]],
+    stopifnot(all(vapply(Expectations(object)[["W"]], dim, numeric(2)) == rbind(getDimensions(object)[["D"]],
                                                                 getDimensions(object)[["K"]])))
-     stopifnot(all(sapply(Expectations(object)[["Y"]], dim) == rbind(getDimensions(object)[["N"]],
+     stopifnot(all(vapply(Expectations(object)[["Y"]], dim, numeric(2)) == rbind(getDimensions(object)[["N"]],
                                                                 getDimensions(object)[["D"]])))
-     stopifnot(all(sapply(Expectations(object)[["Alpha"]], length) == getDimensions(object)[["K"]]))
-     stopifnot(all(sapply(Expectations(object)[["Theta"]], length) == getDimensions(object)[["K"]]))
+     stopifnot(all(vapply(Expectations(object)[["Alpha"]], length, numeric(1)) == getDimensions(object)[["K"]]))
+     stopifnot(all(vapply(Expectations(object)[["Theta"]], length, numeric(1)) == getDimensions(object)[["K"]]))
      stopifnot(ncol(Expectations(object)[["Z"]]) == getDimensions(object)[["K"]])
      stopifnot(nrow(Expectations(object)[["Z"]]) == getDimensions(object)[["N"]])
 

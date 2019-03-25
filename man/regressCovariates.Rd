@@ -45,5 +45,6 @@ object = MOFAobject,
 views = c("Drugs","Methylation","mRNA"),
 covariates = MOFAobject@InputData$Gender
 )
-MOFAobject_reg
+# MOFA object with training data after regressing out the specified covariate
+MOFAobject_reg 
 }

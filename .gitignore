@@ -1,14 +1,13 @@
+Meta
+doc
 # Resilio Sync
 .sync
 
 # MAC
 *Icon*
 .DS_Store
-
 # Rstudio projects
-Rproj*
-
-
+*Rproj
 # Distribution / packaging
 .Python
 env/

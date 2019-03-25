@@ -427,12 +427,17 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
       df <- df[!(is.na(df$shape_by) | is.na(df$color_by)),]
   }
 
-   #turn into factors
-   df$shape_by[is.na(df$shape_by)] <- "NA"
-   df$shape_by <- as.factor(df$shape_by)
-   if(length(unique(df$color_by)) < 5) df$color_by <- as.factor(df$color_by)
- 
+  # turn shape_by into factors
+  if (any(is.na(df$shape_by))) {
+    df$shape_by <- factor(df$shape_by, levels=c(as.character(unique(df$shape_by)),"NA"))
+    df$shape_by[is.na(df$shape_by)] <- "NA"
+  }
   
+  # turn color_by into factors
+  if (length(unique(df$color_by)) < 5) df$color_by <- as.factor(df$color_by)
+ 
+  # Remove missing values
+  df <- df[!(is.na(df$x) | is.na(df$y)),]
   xlabel <- factors[1]
   ylabel <- factors[2]
                                 

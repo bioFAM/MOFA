@@ -408,6 +408,7 @@ pheatmap::pheatmap(imputedDrugs[1:40,1:20],
 ## Clustering of samples based on latent factors
 Samples can be clustered according to their values on some or all latent factors using the `clusterSamples` function. Clusters can for example be visualised using the `plotFactorScatters` function
 ```{r}
+set.seed(1234)
 clusters <- clusterSamples(
   MOFAobject, 
   k = 2,        # Number of clusters for the k-means function

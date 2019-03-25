@@ -53,7 +53,7 @@
 #' # We can compare the predicitons made by the model with the training data for non-missing samples, e.g.
 #' library(ggplot2)
 #' trainData <- getTrainData(MOFA_scMT)
-#' qplot(predictedAll[["RNA expression"]], trainData[["RNA expression"]]) + geom_hex(bins=100) +
+#' qplot(as.numeric(predictedAll[["RNA expression"]]), as.numeric(trainData[["RNA expression"]])) + geom_hex(bins=100) +
 #'  coord_equal() + geom_abline(intercept = 0, slope = 1, col = "red") 
 
 predict <- function(object, views = "all", factors = "all", 

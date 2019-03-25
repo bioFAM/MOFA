@@ -34,6 +34,7 @@ We recommend factors to be learnt in a completely unsupervised manner and subseq
 \examples{
 data("CLL_data", package = "MOFAdata")
 data("CLL_covariates", package = "MOFAdata")
+library(MultiAssayExperiment)
 mae_CLL <- MultiAssayExperiment(
 experiments = CLL_data, 
 colData = CLL_covariates

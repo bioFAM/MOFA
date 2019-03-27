@@ -36,7 +36,7 @@
 #' MOFAobject_reg <- regressCovariates(
 #' object = MOFAobject,
 #' views = c("Drugs","Methylation","mRNA"),
-#' covariates = MOFAobject@InputData$Gender
+#' covariates = InputData(MOFAobject)$Gender
 #' )
 #' # MOFA object with training data after regressing out the specified covariate
 #' MOFAobject_reg 

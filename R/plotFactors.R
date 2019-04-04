@@ -185,6 +185,7 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
   N <- getDimensions(object)[["N"]]
   colorLegend <- TRUE
   if (!is.null(color_by)) {
+    
     # It is the name of a covariate or a feature in the TrainData
     if (length(color_by) == 1 & is.character(color_by)) {
       if(name_color=="") name_color <- color_by
@@ -198,6 +199,7 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
     } else {
       stop("'color_by' was specified but it was not recognised, please read the documentation") 
     }
+      
     # It is a vector of length N
     } else if (length(color_by) > 1) {
       stopifnot(length(color_by) == N)
@@ -206,10 +208,9 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
     }
   } else {
     color_by <- rep(TRUE,N)
-    names(color_by) <- sampleNames(object)
     colorLegend <- FALSE
   }
-  
+  names(color_by) <- sampleNames(object)
   if(length(unique(color_by)) < 5) color_by <- as.factor(color_by)
   Z$color_by <- color_by[Z$sample]
   
@@ -314,10 +315,12 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
 #' a character giving the name of a feature present in the training data, 
 #' a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
 #' or a vector of the same length as the number of samples specifying discrete groups.
-#' @param name_color name for color legend (usually only used if color_by is not a character itself)
-#' @param name_shape name for shape legend (usually only used if shape_by is not a character itself)
+#' @param name_color name for color legend.
+#' @param name_shape name for shape legend.
+#' @param dot_size dot size (default is 1.5).
+#' @param dot_alpha dot transparency (default is 1.0, no transparency).
 #' @param showMissing logical indicating whether to include samples for which
-#'  \code{shape_by} or \code{color_by} is missing
+#'  \code{shape_by} or \code{color_by} is missing.
 #' @details One of the first steps for the annotation of factors is to
 #'  visualise and group/color them using known covariates such as phenotypic or clinical data.
 #' This method generates a single scatterplot for the combination of two latent factors.
@@ -339,7 +342,7 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
 #' plotFactorScatter(MOFA_scMT, factors=c(1,3))
 
 plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL, name_color="",
-                         name_shape="", showMissing = TRUE) {
+                         name_shape="", dot_size=1.5, dot_alpha=1.0, showMissing = TRUE) {
   
   # Sanity checks
   if (!is(object, "MOFAmodel")) {
@@ -442,7 +445,7 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
   ylabel <- factors[2]
                                 
   p <- ggplot(df, aes_string(x = "x", y = "y")) + 
-    geom_point(aes_string(color = "color_by", shape = "shape_by")) + 
+    geom_point(aes_string(color = "color_by", shape = "shape_by"), size=dot_size, alpha=dot_alpha) + 
     xlab(xlabel) + ylab(ylabel) +
     # scale_shape_manual(values=c(19,1,2:18)[seq_along(unique(shape_by))]) +
     theme(plot.margin = margin(20, 20, 10, 10), 

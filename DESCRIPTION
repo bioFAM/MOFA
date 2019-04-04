@@ -1,8 +1,8 @@
 Package: MOFA
 Type: Package
 Title: Multi-Omics Factor Analysis (MOFA)
-Version: 0.99.12
-Maintainer: Ricard Argelaguet <ricard@ebi.ac.uk> and Britta Velten <britta.velten@embl.de>
+Version: 0.99.14
+Maintainer: Britta Velten <britta.velten@embl.de>
 Author: Ricard Argelaguet, Britta Velten, Damien Arnol, Florian Buettner, Wolfgang Huber, Oliver Stegle
 Date: 2018-06-26
 License: LGPL-3 | file LICENSE

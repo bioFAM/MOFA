@@ -134,7 +134,7 @@ MOFAobject <- prepareMOFA(
 Optionally, we can choose to regress out some (technical) covariates before training, using a simple linear model. For example, here we can choose to remove the effect of sex. Ideally, all undesired sources of variation should be removed a priori from the model. The reason ebing that, if strong technical factors exist, the model will "focus" on capturing the variability driven by the technical factors, and small sources of biological variability could be missed.  
 (Note: uncomment and running the function below will lead to a slight modification of the results)
 ```{r}
-# MOFAobject <- regressCovariate(
+# MOFAobject <- regressCovariates(
 #   object = MOFAobject,
 #   views = c("Drugs","Methylation","mRNA"),
 #   covariates = MOFAobject@InputData$Gender
@@ -408,6 +408,7 @@ pheatmap::pheatmap(imputedDrugs[1:40,1:20],
 ## Clustering of samples based on latent factors
 Samples can be clustered according to their values on some or all latent factors using the `clusterSamples` function. Clusters can for example be visualised using the `plotFactorScatters` function
 ```{r}
+set.seed(1234)
 clusters <- clusterSamples(
   MOFAobject, 
   k = 2,        # Number of clusters for the k-means function

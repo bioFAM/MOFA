@@ -23,6 +23,23 @@
 #' @return Returns an untrained \code{\link{MOFAmodel}} where the specified covariates have been regressed out in the training data.
 #' @importFrom stats lm
 #' @export
+#' @examples 
+#' data("CLL_data", package = "MOFAdata")
+#' data("CLL_covariates", package = "MOFAdata")
+#' library(MultiAssayExperiment)
+#' mae_CLL <- MultiAssayExperiment(
+#' experiments = CLL_data, 
+#' colData = CLL_covariates
+#' )
+#' MOFAobject <- createMOFAobject(mae_CLL)
+#' MOFAobject <- prepareMOFA(MOFAobject)
+#' MOFAobject_reg <- regressCovariates(
+#' object = MOFAobject,
+#' views = c("Drugs","Methylation","mRNA"),
+#' covariates = InputData(MOFAobject)$Gender
+#' )
+#' # MOFA object with training data after regressing out the specified covariate
+#' MOFAobject_reg 
 
 regressCovariates <- function(object, views, covariates, min_observations = 5) {
   

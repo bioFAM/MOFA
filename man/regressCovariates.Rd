@@ -31,3 +31,21 @@ For example, if you introduce age as a covariate, but the actual age is differen
 the model will simply learn a new factor that corresponds to this "latent" molecular age, and it will drop the covariate from the model.\cr
 We recommend factors to be learnt in a completely unsupervised manner and subsequently relate them to the covariates via visualisation or via a simple correlation analysis (see our vignettes for more details).
 }
+\examples{
+data("CLL_data", package = "MOFAdata")
+data("CLL_covariates", package = "MOFAdata")
+library(MultiAssayExperiment)
+mae_CLL <- MultiAssayExperiment(
+experiments = CLL_data, 
+colData = CLL_covariates
+)
+MOFAobject <- createMOFAobject(mae_CLL)
+MOFAobject <- prepareMOFA(MOFAobject)
+MOFAobject_reg <- regressCovariates(
+object = MOFAobject,
+views = c("Drugs","Methylation","mRNA"),
+covariates = InputData(MOFAobject)$Gender
+)
+# MOFA object with training data after regressing out the specified covariate
+MOFAobject_reg 
+}

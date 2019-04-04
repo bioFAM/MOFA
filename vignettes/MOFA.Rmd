@@ -30,31 +30,41 @@ the automatic annotation of factors using (gene set) enrichment analysis,
 the identification of outliers (e.g. due to sample swaps) and
 the imputation of missing values.  
 
-For more details on the methods you can read our paper at \url{http://msb.embopress.org/cgi/doi/10.15252/msb.20178124}.
+For more details on the methods you can read our paper at http://msb.embopress.org/cgi/doi/10.15252/msb.20178124.
 
 # Installation
 
-Currently, `MOFA` can be installed from github using
+`MOFA` can be installed from Bioconductor using
+```{r, eval = FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("MOFA", version = "3.9")
+```
+
+The development version of the package can be installed from github using
 ```{r, eval = FALSE}
 devtools::install_github("bioFAM/MOFA", build_opts = c("--no-resave-data"))
-# install.packages("BiocManager")
-# BiocManager::install("MOFA", version = "3.9")
 ```
 
 As the package depends on the Pyhton package `mofapy`, this needs to be installed alongside with the R package. For this you can use the command `pip install mofapy`.
 
-For illustration of MOFA and gene set enrichment analyses we make use of data contained in the accompanying data package `MOFAdata`. This can be installed using
+For illustration of MOFA and gene set enrichment analyses we make use of data contained in the accompanying data package `MOFAdata`. This can be installed from Bioconductor using
+```{r, eval = FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("MOFAdata", version = "3.9")
+```
+
+The development version of the package can be installed from github using
 ```{r, eval = FALSE}
 devtools::install_github("bioFAM/MOFAdata", build_opts = c("--no-resave-data"))
-# install.packages("BiocManager")
-# BiocManager::install("MOFAdata", version = "3.9")
 ```
 
 # Reticulate configuration
 
 Before running MOFA, you need to make sure that `reticulate` is pointing to the correct python binary or conda environment.  
 This can become tricky when you have multiple conda environments and versions of Python installed:
-```r
+```{r, eval = FALSE}
 library(reticulate)
 
 # Using a specific python binary
@@ -66,38 +76,13 @@ use_condaenv("r-reticulate", required = TRUE)
 # Using a virtual environment called "r-reticulate"
 use_virtualenv("r-reticulate", required = TRUE)
 ```
+See also our FAQ section and read more about the [reticulate](https://rstudio.github.io/reticulate/) package and [how it integrates Python and R](https://rstudio.github.io/reticulate/articles/versions.html).
 
 # Using MOFA
 To load the package and the accompanying data package you can use:
 ```{r, eval=FALSE}
 library(MOFA)
 library(MOFAdata)
-```
-
-The workflow of MOFA consists of two steps:  
-
-1. **Fitting step:** train the model with the multi-omics data to disentangle the heterogeneity into a small number of latent factors. 
-
-2. **Downstream analysis:** once the factors are inferred they need to be characterised as technical or biological sources of variation by looking at the corresponding weights, doing (gene set) enrichment analysis, plotting the factors, correlating factors with known covariates, etc. Also, one can impute missing values and predict clinical outcomes using the latent factors.
-
-## Vignettes illustrating the use of MOFA on example data sets
-We illustrate the use of MOFA on various example data sets:
-
-* A small simulated data set, where the training is very fast and different ways to perform model selection and compare different fits can be tested.
-```{r, eval = FALSE}
-vignette("MOFA_example_simulated")
-```
-
-* A multi-omics data set of 200 leukemia samples comprised of mRNA, methylation, drug response and mutation data, as contained in the R package MOFAdata. Here, we illustrate how to train MOFA on the data and explore the results via various downstream analyses.
-```{r, eval = FALSE}
-vignette("MOFA_example_CLL")
-```
-
-* A multi-omics single cell data set of 87 single cells profiled using single-cell
-methylation and transcriptome sequencing. Here, we illustrate how to train MOFA on the data and explore the results via various downstream analyses.
-
-```{r, eval=FALSE}
-vignette("MOFA_example_scMT")
 ```
 
 ## General MOFA workflow
@@ -158,7 +143,7 @@ We have built a semi-automated pipeline based on our experience annotating facto
 (2) **Inspection of top weighted features**: for example, if a factor is associated to the sex of the individual, the mRNA data will have very high loadings for genes located in the X and Y chromosomes.  
 (3) **Feature set enrichment analysis**: particularly when having large amounts of features, the inspection of loadings is challenging, and doing gene ontology enrichment analysis can be useful.  
 
-Please refer to the vignettes or the paper for details on the different analysis.  
+Please refer to the vignettes or the [paper](http://msb.embopress.org/content/14/6/e8124) for details on the different analysis.  
 
 ### Step 4: Using the factors to get biological insights in downstream analysis
 The latent factors can be used for several purposes, such as:  
@@ -168,6 +153,28 @@ The latent factors can be used for several purposes, such as:
 (4) **Regressing out technical effects**: if a factor is capturing an undesired technical effect, its effect can be regressed out from your original data matrix.  
 
 Please refer to the vignettes or the [paper](http://msb.embopress.org/content/14/6/e8124) for details on the different analysis.  
+
+
+## Vignettes illustrating the use of MOFA on example data sets
+We illustrate the use of MOFA on various example data sets:
+
+* A small simulated data set, where the training is very fast and different ways to perform model selection and compare different fits can be tested.
+```{r, eval = FALSE}
+vignette("MOFA_example_simulated")
+```
+
+* A multi-omics data set of 200 leukemia samples comprised of mRNA, methylation, drug response and mutation data, as contained in the R package MOFAdata. Here, we illustrate how to train MOFA on the data and explore the results via various downstream analyses.
+```{r, eval = FALSE}
+vignette("MOFA_example_CLL")
+```
+
+* A multi-omics single cell data set of 87 single cells profiled using single-cell
+methylation and transcriptome sequencing. Here, we illustrate how to train MOFA on the data and explore the results via various downstream analyses.
+
+```{r, eval=FALSE}
+vignette("MOFA_example_scMT")
+```
+
 
 # Frequently asked questions 
 
@@ -182,9 +189,10 @@ We have implemented a function called `regressCovariates` that allows the user t
 ERROR: dependencies 'pcaMethods', 'MultiAssayExperiment' are not available for package 'MOFA'
 ```
 These two packages are available from Bioconductor, not CRAN. You can install them from R as follows:
-```
-source("https://bioconductor.org/biocLite.R")
-biocLite(c('pcaMethods', 'MultiAssayExperiment'))
+```{r, eval = FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install(c("MultiAssayExperiment", "pcaMethods"))
 ```
 
 **(Q) I get one of the following errors when running MOFA:**  
@@ -207,7 +215,7 @@ use_python("YOUR_PYTHON_PATH", required=TRUE) # fill in YOUR_PYTHON_PATH
 You can also use `use_conda` instead of `use_python` if you work with conda environments. Read more about the [reticulate](https://rstudio.github.io/reticulate/) package and [how it integrates Python and R](https://rstudio.github.io/reticulate/articles/versions.html)
 
 **(Q) I hate R, can I do MOFA only with Python?**  
-Nop. You can use Python to train the model, see [this template script](https://github.com/bioFAM/MOFA/blob/master/mofapy/run/python_template.py). However, we currently do not provide downstream analysis functions in Python. We strongly recommend that you use our MOFA R package for this.
+Nope. You can use Python to train the model, see [this template script](https://github.com/bioFAM/MOFA/blob/master/mofapy/run/python_template.py). However, we currently do not provide downstream analysis functions in Python. We strongly recommend that you use our MOFA R package for this.
 
 **(Q) How many factors should I use?**  
 Similar to Principal Component Analysis and other latent variable models, this is a hard question to answer. It depends on the data set and the aim of the analysis. As a general rule, the bigger the data set, the higher the number of factors that you will retrieve, and the less the variance that will be explained per factor.  
@@ -271,7 +279,8 @@ Then, you will have to choose a local statistic per feature (the loading, by def
 
 # List of relevant functions and classes
 ## MOFAmodel object
-MOFAmodel it is the main S4 class used to store all relevant data to analyse a MOFA model. Its slots are the following (accessible using @ or the correspon):
+MOFAmodel it is the main S4 class used to store all relevant data to analyse a MOFA model. Its slots are the following (accessible using @ or the corresponding accessor function):
+
 * **InputData**: input data, either a list of matrices or a MultiAssayExperiment
 * **TrainData**: training data, a list of matrices with processed data (centered, scaled, etc.)
 * **TrainOptions**: training options

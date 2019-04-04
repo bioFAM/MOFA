@@ -434,6 +434,8 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
   if (any(is.na(df$shape_by))) {
     df$shape_by <- factor(df$shape_by, levels=c(as.character(unique(df$shape_by)),"NA"))
     df$shape_by[is.na(df$shape_by)] <- "NA"
+  } else {
+      df$shape_by <- as.factor(df$shape_by)
   }
   
   # turn color_by into factors

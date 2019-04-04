@@ -346,6 +346,7 @@ pheatmap::pheatmap(imputedMethylation[1:100,1:20],
 Samples can be clustered according to their values on the latent factors using the `clusterSamples` function.
 ```{r, message=FALSE}
 # kmeans clustering with K=3 using Factor 1
+set.seed(1234)
 clusters <- clusterSamples(MOFAobject, k=3, factors=1)
 
 # Scatterplot colored by the predicted cluster labels,

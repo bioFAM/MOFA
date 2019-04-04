@@ -340,7 +340,7 @@ plotDataOverview <- function(object, colors = NULL) {
     if (M<17) colors <- palette[seq_len(M)] else colors <- rainbow(M)
   }
   if (length(colors)!=M) stop("Length of 'colors' does not match the number of views")
-  names(colors) <- viewNames(object)
+  names(colors) <- sort(viewNames(object))
   
   # Define availability binary matrix to indicate whether assay j is profiled in sample i
   ovw <- vapply(TrainData, function(dat) apply(dat, 2, function(s) !all(is.na(s))), logical(N))

@@ -7,7 +7,7 @@ def setup_package():
   install_requires = ['pandas', 'scipy', 'numpy', 'sklearn', 'argparse', 'h5py']
   metadata = dict(
       name = 'mofapy',
-      version = '1.1',
+      version = '1.2',
       description = 'Multi-Omics Factor Analysis, a statistical framework for the integration of multi-omics data',
       url = 'https://github.com/PMBio/MOFA',
       author = 'Ricard Argelaguet, Damien Arnol and Britta Velten',

@@ -162,7 +162,7 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "",
 #' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
 #' plotFactorBeeswarm(MOFA_scMT)
-plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
+plotFactorBeeswarm <- function(object, factors = "all", color_by = NULL,
                                shape_by = NULL, name_color = "", name_shape = "", showMissing = FALSE) {
 
   # Sanity checks
@@ -203,6 +203,7 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
     # It is a vector of length N
     } else if (length(color_by) > 1) {
       stopifnot(length(color_by) == N)
+      names(color_by) <- sampleNames(object)
     } else {
       stop("'color_by' was specified but it was not recognised, please read the documentation")
     }
@@ -210,7 +211,6 @@ plotFactorBeeswarm <- function(object, factors="all", color_by = NULL,
     color_by <- rep(TRUE,N)
     colorLegend <- FALSE
   }
-  names(color_by) <- sampleNames(object)
   if(length(unique(color_by)) < 5) color_by <- as.factor(color_by)
   Z$color_by <- color_by[Z$sample]
   

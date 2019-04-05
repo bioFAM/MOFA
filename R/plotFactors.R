@@ -233,12 +233,12 @@ plotFactorBeeswarm <- function(object, factors = "all", color_by = NULL,
     # It is a vector of length N
     } else if (length(shape_by) > 1) {
       stopifnot(length(shape_by) == N)
+      names(shape_by) <- sampleNames(object)
     } else {
       stop("'color_by' was specified but it was not recognised, please read the documentation")
     }
   } else {
     shape_by <- rep(TRUE,N)
-    names(shape_by) <- sampleNames(object)
     shapeLegend <- FALSE
   }
   if(length(unique(shape_by)) < 7) shape_by <- as.factor(shape_by)

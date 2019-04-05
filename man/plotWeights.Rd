@@ -30,9 +30,9 @@ Each character vector specifies a set of features that will be highlighted with 
 a plot of all feature loadings for the given factor
 }
 \description{
-An important step to annotate factors is to visualise the corresponding feature loadings. \cr
-This function plots all loadings for a given latent factor and view, labeling the top ones. \cr
-In contrast, the function \code{\link{plotTopWeights}} displays only the top features with highest loading.
+An important step to annotate factors is to visualise the feature loadings. \cr
+This function plots all loadings for a given latent factor and view, optionally labeling the top ones. \cr
+A similar function is \code{\link{plotTopWeights}}, which displays only the top features with highest loading.
 }
 \details{
 The weights, or the loadings, provide the mapping between the high-dimensional space (the genes) and the low-dimensional space (the factors). \cr

@@ -22,10 +22,10 @@
 #' @return a \code{\link{MOFAmodel}} object with imputed data in the \code{ImputedData} slot
 #' @details Matrix factorization models generate a denoised and condensed low-dimensional representation 
 #' of the data which capture the main sources of heterogeneity of the data. 
-#' These representation can be used to do predictions via the equation \code{Y = WZ}. 
-#' For more details read the supplementary methods of the manuscript. \cr
+#' Such representation can be used to do predictions via the equation \code{Y = WZ}. \cr
 #' This method fills the \code{ImputedData} slot by replacing the missing values 
-#' in the training data with the model predictions.
+#' in the training data with the model predictions.\cr
+#' For more details see the Methods section of the MOFA article.
 #' @export
 #' @examples 
 #' # Load CLL data

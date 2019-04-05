@@ -155,8 +155,8 @@ plotFactorHist <- function(object, factor, group_by = NULL, group_names = "",
 #' # Example on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
-#' plotFactorBeeswarm(MOFA_CLL, factor=1:3)
-#' plotFactorBeeswarm(MOFA_CLL, factor=1:2, color_by= "IGHV")
+#' plotFactorBeeswarm(MOFA_CLL, factors=1:3)
+#' plotFactorBeeswarm(MOFA_CLL, factors=1:2, color_by= "IGHV")
 #'
 #' # Example on the scMT data
 #' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
@@ -209,6 +209,7 @@ plotFactorBeeswarm <- function(object, factors = "all", color_by = NULL,
     }
   } else {
     color_by <- rep(TRUE,N)
+    names(color_by) <- sampleNames(object)
     colorLegend <- FALSE
   }
   if(length(unique(color_by)) < 5) color_by <- as.factor(color_by)
@@ -239,11 +240,14 @@ plotFactorBeeswarm <- function(object, factors = "all", color_by = NULL,
     }
   } else {
     shape_by <- rep(TRUE,N)
+    names(shape_by) <- sampleNames(object)
     shapeLegend <- FALSE
   }
-  if(length(unique(shape_by)) < 7) shape_by <- as.factor(shape_by)
-    else stop("'shape_by' was specified but has too many values.\n
-              The shape argument can take a maximum of 6 values")
+  if(length(unique(shape_by)) < 7) {
+    shape_by <- as.factor(shape_by)
+  } else {
+    stop("'shape_by' was specified but has too many values.\n The shape argument can take a maximum of 6 values")
+  }
   Z$shape_by <- shape_by[Z$sample]
 
 
@@ -393,6 +397,7 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
     }
   } else {
     color_by <- rep(TRUE,N)
+    names(color_by) <- sampleNames(object)
     colorLegend <- FALSE
   }
 
@@ -419,6 +424,7 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
     }
   } else {
     shape_by <- rep(TRUE,N)
+    names(shape_by) <- sampleNames(object)
     shapeLegend <- FALSE
   }
   
@@ -504,7 +510,7 @@ plotFactorScatter <- function (object, factors, color_by = NULL, shape_by = NULL
 #' @param showMissing logical indicating whether to include samples for which
 #'  \code{shape_by} or \code{color_by} is missing
 #' @details One of the first steps for the annotation of factors is to visualise and
-#'  group/color them using known covariates such as phenotypic or clinical data.
+#'  overlap them with known covariates such as phenotypic or clinical data.
 #' This method generates multiple scatterplots for pairwise combinations of several latent factors.
 #' Similar functions are \code{\link{plotFactorScatter}} for doing single scatter plots and 
 #' \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots for single factors.
@@ -580,6 +586,7 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
     }
   } else {
     color_by <- rep(TRUE,N)
+    names(color_by) <- sampleNames(object)
     colorLegend <- FALSE
   }
 
@@ -607,6 +614,7 @@ plotFactorScatters <- function(object, factors = "all", showMissing=TRUE,
     }
   } else {
     shape_by <- rep(TRUE,N)
+    names(shape_by) <- sampleNames(object)
     shapeLegend <- FALSE
   }
 

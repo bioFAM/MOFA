@@ -5,7 +5,8 @@
 \title{Scatterplot of two latent factors}
 \usage{
 plotFactorScatter(object, factors, color_by = NULL, shape_by = NULL,
-  name_color = "", name_shape = "", showMissing = TRUE)
+  name_color = "", name_shape = "", dot_size = 1.5, dot_alpha = 1,
+  showMissing = TRUE)
 }
 \arguments{
 \item{object}{a trained \code{\link{MOFAmodel}} object.}
@@ -27,12 +28,16 @@ a character giving the name of a feature present in the training data,
 a character giving the same of a covariate (only if using \code{\link{MultiAssayExperiment}} as input), 
 or a vector of the same length as the number of samples specifying discrete groups.}
 
-\item{name_color}{name for color legend (usually only used if color_by is not a character itself)}
+\item{name_color}{name for color legend.}
 
-\item{name_shape}{name for shape legend (usually only used if shape_by is not a character itself)}
+\item{name_shape}{name for shape legend.}
+
+\item{dot_size}{dot size (default is 1.5).}
+
+\item{dot_alpha}{dot transparency (default is 1.0, no transparency).}
 
 \item{showMissing}{logical indicating whether to include samples for which
-\code{shape_by} or \code{color_by} is missing}
+\code{shape_by} or \code{color_by} is missing.}
 }
 \value{
 Returns a \code{ggplot2} object

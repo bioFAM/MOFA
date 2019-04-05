@@ -92,9 +92,9 @@ plotWeightsHeatmap <- function(object, view, features = "all", factors = "all", 
 
 #' @title Plot Weights
 #' @name plotWeights
-#' @description An important step to annotate factors is to visualise the corresponding feature loadings. \cr
-#' This function plots all loadings for a given latent factor and view, labeling the top ones. \cr
-#' In contrast, the function \code{\link{plotTopWeights}} displays only the top features with highest loading.
+#' @description An important step to annotate factors is to visualise the feature loadings. \cr
+#' This function plots all loadings for a given latent factor and view, optionally labeling the top ones. \cr
+#' A similar function is \code{\link{plotTopWeights}}, which displays only the top features with highest loading.
 #' @param object a \code{\link{MOFAmodel}} object.
 #' @param view character vector with the view name, or numeric vector with the index of the view to use.
 #' @param factor character vector with the factor name, or numeric vector with the index of the factor to use.

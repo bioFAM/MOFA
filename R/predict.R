@@ -20,41 +20,50 @@
 #'  (Poisson and Bernoulli) to the next integer.
 #'  This is the default option.}
 #' }
-#' @details The denoised and condensed low-dimensional representation of the data
-#'  captures the main sources of heterogeneity of the data. 
-#' These representation can be used to do predictions using the equation Y = WX. 
-#' This is the key step underlying imputation, 
-#' see \code{\link{impute}} and the Methods section of the article.
+#' @details Matrix factorization models generate a denoised and condensed low-dimensional representation 
+#' of the data which capture the main sources of heterogeneity of the data. 
+#' Such representation can be used to do predictions (data reconstruction) and imputation (see \code{\link{impute}}). \cr
+#' For mathematical details, see the Methods section of the MOFA article.
 #' @return Returns a list with data predictions.
 #' @export
 #' @examples 
+#' library(ggplot2)
+#' 
 #' # Example on the CLL data
 #' filepath <- system.file("extdata", "CLL_model.hdf5", package = "MOFAdata")
 #' MOFA_CLL <- loadModel(filepath)
-#' # predict drug response data based on all factors
+#' 
+#' # predict drug response data using all factors
 #' predictedDrugs <- predict(MOFA_CLL, view="Drugs")
-#' # predict all views based on all factors
+#' 
+#' # predict all views using all factors (default)
 #' predictedAll <- predict(MOFA_CLL)
-#' # predict mutation data based on all factors returning Bernoulli probabilities
+#' 
+#' # predict Mutation data using all factors, returning Bernoulli probabilities
 #' predictedMutations <- predict(MOFA_CLL, view="Mutations", type="response")
-#' # predict mutation data based on all factors returning binary classes
+#' 
+#' # predict Mutation data using all factors, returning binary classes
 #' predictedMutationsBinary <- predict(MOFA_CLL, view="Mutations", type="inRange")
-#' # We can compare the predicitons made by the model with the training data for non-missing samples, e.g.
-#' library(ggplot2)
-#' trainData <- getTrainData(MOFA_CLL)
-#' qplot(as.numeric(predictedAll$Drugs), as.numeric(trainData$Drugs)) + geom_hex(bins=100) +
-#'  coord_equal() + geom_abline(intercept = 0, slope = 1, col = "red")
+#' 
+#' # Compare the predictions with the true data
+#' pred <- as.numeric(predictedAll$Drugs)
+#' true <- as.numeric(getTrainData(MOFA_CLL)$Drugs)
+#' qplot(pred,true) + geom_hex(bins=100) + coord_equal() + 
+#'    geom_abline(intercept=0, slope=1, col="red")
 #' 
 #' # Example on the scMT data
 #' filepath <- system.file("extdata", "scMT_model.hdf5", package = "MOFAdata")
 #' MOFA_scMT <- loadModel(filepath)
-#' # predict all views based on all factors (default)
-#'  predictedAll <-predict(MOFA_scMT)
-#' # We can compare the predicitons made by the model with the training data for non-missing samples, e.g.
-#' library(ggplot2)
-#' trainData <- getTrainData(MOFA_scMT)
-#' qplot(as.numeric(predictedAll[["RNA expression"]]), as.numeric(trainData[["RNA expression"]])) + geom_hex(bins=100) +
-#'  coord_equal() + geom_abline(intercept = 0, slope = 1, col = "red") 
+#' 
+#' # Predict all views using all factors (default)
+#' predictedAll <- predict(MOFA_scMT)
+#'  
+#' # Compare the predictions with the true data
+#' view <- "RNA expression"
+#' pred <- as.numeric(predictedAll[[view]])
+#' true <- as.numeric(getTrainData(MOFA_scMT)[[view]])
+#' qplot(pred,true) + geom_hex(bins=100) + coord_equal() + 
+#'    geom_abline(intercept=0, slope=1, col="red") 
 
 predict <- function(object, views = "all", factors = "all", 
                     type = c("inRange","response", "link")) {

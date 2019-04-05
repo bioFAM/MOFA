@@ -44,7 +44,7 @@ combinations of multiple latent factors.
 }
 \details{
 One of the first steps for the annotation of factors is to visualise and
- group/color them using known covariates such as phenotypic or clinical data.
+ overlap them with known covariates such as phenotypic or clinical data.
 This method generates multiple scatterplots for pairwise combinations of several latent factors.
 Similar functions are \code{\link{plotFactorScatter}} for doing single scatter plots and 
 \code{\link{plotFactorBeeswarm}} for doing Beeswarm plots for single factors.

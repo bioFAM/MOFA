@@ -373,7 +373,7 @@ plotEnrichmentHeatmap <- function(fsea.results, alpha = 0.05, logScale = TRUE, .
   
   # Generate heatmap
   # if (ncol(p.values)==1) cluster_cols <-FALSE
-  pheatmap::pheatmap(p.values, color = col)
+  pheatmap::pheatmap(p.values, color = col, ...)
 }
 
 

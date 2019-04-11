@@ -57,10 +57,13 @@ impute <- function(object, views = "all", factors = "all", type = c("inRange","r
 
   # replace NAs with predicted values
   imputedData <- getTrainData(object, views = views)
-  imputedData <- lapply(names(imputedData), function(viewnm) {
-      view <- imputedData[[viewnm]]
+  stopifnot(all(names(predData)==names(imputedData)))
+  stopifnot(all(views==names(imputedData)))
+  
+  imputedData <- lapply(names(imputedData), function(m) {
+      view <- imputedData[[m]]
       non_observed <- which(is.na(view), arr.ind = TRUE)
-      if(viewnm %in% names(predData)) view[non_observed] <- predData[[viewnm]][non_observed]
+      if(m %in% names(predData)) view[non_observed] <- predData[[m]][non_observed]
       view
   })
 

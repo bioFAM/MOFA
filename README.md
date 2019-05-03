@@ -13,6 +13,7 @@ For more details you can read our paper: http://msb.embopress.org/cgi/doi/10.152
 
 
 ## News
+- 03/05/2019 MOFA is [available](https://bioconductor.org/packages/devel/bioc/html/MOFA.html) from the developmental version of Bioconductor (only for R>=3.6): 
 - 10/01/2019 Python package uploaded to PyPy
 - 21/06/2018 Beta version released
 - 20/06/2018 Paper published: http://msb.embopress.org/content/14/6/e8124
@@ -22,46 +23,34 @@ For more details you can read our paper: http://msb.embopress.org/cgi/doi/10.152
 ## Installation
 MOFA is run exclusively from R, but it requires some python dependencies that you need to install. Here is how to do it:
 
-### MOFA R package
-The easier way to install the R package is via github:
-```r
-devtools::install_github("bioFAM/MOFA", build_opts = c("--no-resave-data"))
-```
-
-### MOFAdata R data package
-For illustration purposes we provide several data sets that are used in the vignettes of the MOFA package to illustrate the use of MOFA. This data is contained in the R package MOFAdata, which can be installed via:
-```r
-devtools::install_github("bioFAM/MOFAdata", build_opts = c("--no-resave-data"))
-```
-
 ### Python dependencies 
-After installing the MOFA R package, you can install the `mofapy` python package in two ways:
-
-Using pip (from the terminal)
+Python dependency can be installed using pip (from the Unix terminal)
 ```r
 pip install mofapy
 ```
 
-From R itself, the connection with Python is made via the `reticulate` package:
+Alternatively, they can also be installed from R itself using the reticulate package:
 ```r
 library(reticulate)
-
-# DEFAULT: if you are not familiar with conda or virtual environments, just try the following:
-# 	On Linux and OS X the "virtualenv" method will be used by default.
-# 	On Windows, the "conda" method is always used.
 py_install("mofapy", envname = "r-reticulate", method="auto")
-
-# Use the conda environment "r-reticulate"
-py_install("mofapy", envname = "r-reticulate", method = "conda", pip = TRUE, pip_ignore_installed = TRUE)
-
-# Use the virtual environment "r-reticulate"
-py_install("mofapy", envname = "r-reticulate", method = "virtualenv")
-
 ```
 
-## Reticulate configuration
+### MOFAdata R data package
+For illustration purposes we provide several data sets that are used in the vignettes of the MOFA package. This data can be installed in R:
+```r
+devtools::install_github("bioFAM/MOFAdata", build_opts = c("--no-resave-data"))
+```
 
-Before running MOFA, you need to make sure that `reticulate` is pointing to the correct python binary or conda environment.  
+### MOFA R package
+This is the core software itself. Can be installed in R:
+```r
+devtools::install_github("bioFAM/MOFA", build_opts = c("--no-resave-data"))
+```
+
+
+### Reticulate configuration
+
+Before running MOFA, you need to make sure that `reticulate` is pointing to the correct python binary (or conda environment).  
 This can become tricky when you have multiple conda environments and versions of Python installed:
 ```r
 library(reticulate)
@@ -71,9 +60,6 @@ use_python("/home/user/python", required = TRUE)
 
 # Using a conda enviroment called "r-reticulate"
 use_condaenv("r-reticulate", required = TRUE)
-
-# Using a virtual environment called "r-reticulate"
-use_virtualenv("r-reticulate", required = TRUE)
 ```
 
 For more details on how to set up the reticulate connection, see: https://rstudio.github.io/reticulate/
@@ -81,27 +67,27 @@ For more details on how to set up the reticulate connection, see: https://rstudi
 ## Tutorials/Vignettes
 We currently provide three example workflows:
 
-* **Integration of multi-omics cancer data** (`vignette("MOFA_example_CLL")`): a cohort of 200 chronic lymphocytic leukaemia patients. This is the main data set analysed in the [paper](http://msb.embopress.org/cgi/doi/10.15252/msb.20178124).
-* **Integration of single-cell multi-omics data** (`vignette("MOFA_example_scMT")`): single-cell profiling of DNA methylation and RNA expression in roughly 100 pluripotent stem cells.
-* **Model selection and robustness with simulated data** (`vignette("MOFA_example_simulated")`): this tutorial is focused only on how to perform model selection and assess robustness.
+* **Integration of multi-omics cancer data**: a cohort of 200 chronic lymphocytic leukaemia patients. This is the main data set analysed in the [paper](http://msb.embopress.org/cgi/doi/10.15252/msb.20178124). Load it using `vignette("MOFA_example_CLL")`.
+* **Integration of single-cell multi-omics data**: single-cell profiling of DNA methylation and RNA expression in roughly 100 pluripotent stem cells. This is the secondary data set analysed in the [paper](http://msb.embopress.org/cgi/doi/10.15252/msb.20178124). Load it using `vignette("MOFA_example_scMT")`.
+* **Model selection and robustness with simulated data**: this tutorial is focused only on how to perform model selection and assess robustness. Load it using `vignette("MOFA_example_simulated")`
 
-If there is any tutorial that you would like us to do, or if you want to share your analysis with MOFA, please contact us.
+If you have problems loading the vignettes, you can find the html files [here](https://bioconductor.org/packages/devel/bioc/html/MOFA.html)
 
+## Cheatsheet
+A list with all **relevant methods**, together with a short description, can be found in the introductory vignette of the R package (`vignette("MOFA")`).
 
 ## MOFA workflow
 
-The workflow of MOFA consists of two steps:  
-**(1) Fitting step**: train the model with the multi-omics data to disentangle the heterogeneity into a small number of latent factors.  
-**(2) Downstream analysis**: once the factors are inferred they need to be characterised as technical or biological sources of variation by looking at the corresponding weights, doing (gene set) enrichment analysis, plotting the factors, correlating factors with known covariates, etc. Also, one can do imputation of missing values and prediction of clinical outcomes using the latent factors.
+<!-- The workflow of MOFA consists of two steps:   -->
+<!-- **(1) Fitting step**: train the model with the multi-omics data to disentangle the heterogeneity into a small number of latent factors.   -->
+<!-- **(2) Downstream analysis**: once the factors are inferred they need to be characterised as technical or biological sources of variation by looking at the corresponding weights, doing (gene set) enrichment analysis, plotting the factors, correlating factors with known covariates, etc. Also, one can do imputation of missing values and prediction of clinical outcomes using the latent factors. -->
 
 <p align="center"> 
 <img src="images/workflow.png">
 </p>
 
-A list with all **relevant methods**, together with a short description, can be found in the introductory vignette of the R package (`vignette("MOFA")`).
-
 ### Step 1: Fitting the model
-First you need to create the MOFA object with your input data, and subsequently you need to train the model. Everything is explained in the vignettes.  
+First you need to create the MOFA object with your input data, and subsequently train the model.
 If everything is successful, you should observe an output analogous to the following:
 ```
   ###########################################################
@@ -126,7 +112,7 @@ Loaded /Users/ricard/MOFA/MOFA/test/data/500_2.txt with dim (100,500)...
 ## Running trial number 1 with seed 642034 ##
 #############################################
 
-Trial 1, Iteration 1: time=0.08 ELBO=-345954.96, Factors=10, Covariates=1
+Trial 1, Iteration 1: time=0.08 ELBO=-345954.96, Factors=10
 Trial 1, Iteration 2: time=0.10 ELBO=-283729.31, deltaELBO=62225.6421, Factors=10
 Trial 1, Iteration 3: time=0.10 ELBO=-257427.42, deltaELBO=26301.8893, Factors=10
 ...
@@ -134,57 +120,50 @@ Trial 1, Iteration 100: time=0.07 ELBO=-221171.01, deltaELBO=0.0998, Factors=10
 
 Converged!
 ```
-
-There are two important quantities to keep track of: 
-* **Number of factors**: you can choose whether to fix the number or factors or let the model automatically learn the dimensionality of the latent space.
-* **deltaELBO**: this is the convergence statistic. Once the deltaELBO decreases below a threshold (close to zero), training will end and the model will be saved as an .hdf5 file. Then, you are ready to start the downstream analysis.
+* **deltaELBO**: is the convergence statistic. Once the deltaELBO decreases below a threshold (usually between zero and one), the model will converge and it will be saved as an .hdf5 file. Then, you are ready to start the downstream analysis.
 
 ### Step 2: Downstream analysis: disentangle the variability between omics
-MOFA disentangles the heterogeneity of a high-dimensional multi-omics data set into a set of latent factors that capture global sources of variation.  
-Importantly, these factors can have different activity patterns in different omics. For example, a batch effect might be affecting the RNA data but not the Methylation data. 
-Decoupling this heterogeneity is a mandatory first step in the analysis of multi-omics data. For example, this is the variance decomposition plot for the Chronic Lymphocytic Leukemia data set analysed in the paper:
-
+MOFA disentangles the heterogeneity of a high-dimensional multi-omics data set in terms of a small number of latent factors that capture the global sources of variation. Importantly, MOFA quantififes the variance explained of each of the factors in the different omics. An example is shown in the plot below:
 <p align="center"> 
 <img src="images/varExplained.png" style="width: 50%; height: 50%"/>​
 </p>
 
 
 ### Step 3: Annotation of factors
-Once the heterogeneity of the data set is reduced into a set of factors, you need to understand what are they, and whether they capture technical or biological sources of variability. 
+The next step is to try and interpret what the factors are. We have built a semi-automated pipeline to allow the exploration of the latent space:  
+(1) **Visualisation of the samples in the factor space**: as in Principal Component Analysis, it is useful to plot the factors against each other and color the samples using known covariates such as batch, sex, clinical information, etc.  
+(2) **Correlation of factors with (clinical) covariates**
+(2) **Inspection of the loadings**: loadings provide a measure of feature importance for each factor.
+(3) **Feature set enrichment analysis**: the inspection of loadings can sometimes be challenging, particularly when having large amounts of features. Summarising genes in terms of biological pathways can be useful in such cases.  
 
-We have built a semi-automated pipeline based on our experience annotating factors:  
-(1) **Visualisation of the samples in the factor space**: similarly to what is done in Principal Component Analysis, it is useful to plot the factors against each other and color the samples using known covariates such as batch, sex, clinical information, etc.  
-(2) **Inspection of top weighted features**: for example, if a factor is associated to the sex of the individual, the mRNA data will have very high loadings for genes located in the X and Y chromosomes.  
-(3) **Feature set enrichment analysis**: particularly when having large amounts of features, the inspection of loadings is challenging, and doing gene ontology enrichment analysis can be useful.  
+Please refer to the vignettes for details on the different analysis.  
 
-Please refer to the vignettes or the paper for details on the different analysis.  
-
-### Step 4: Using the factors to get biological insights in downstream analysis
+### Step 4: Using the factors in downstream analysis
 The latent factors can be used for several purposes, such as:  
-(1) **Dimensionality reduction**: similar to PCA, dimensionality reduction visualisations can be obtained by plotting the Factors against each other.  
-(2) **Imputation**: Factors can be used to predict missing values, including entire missing assays.  
-(3) **Predicting clinical response**: if the factors capture phenotypical information, they can capture clinical covariates of interest.  
-(4) **Regressing out technical effects**: if a factor is capturing an undesired technical effect, its effect can be regressed out from your original data matrix.  
+(1) **Non-linear dimensionality reduction**: the latent factors can be feed into non-linear dimensionality reduction techniques such as UMAP or t-SNE. This is very powerful because you can detect variability or stratifications beyond the RNA expression!
+similar to PCA, dimensionality reduction visualisations can be obtained by plotting the Factors against each other.  
+(2) **Imputation**: factors can be used to predict missing values, including entire missing assays.  
+(3) **Predicting clinical response**: factors can be feed into Cox models to predict patient survival.
+(4) **Regressing out technical variability**: if a factor is capturing an undesired technical effect, its effect can be regressed out from your original data matrix.
+(5) **Clustering**: clustering in the latent space is much more robust than in the high-dimensional space.
+(6) **factor-QTL mapping**: factors are a compressed and denoised representation of your samples. This is a much better proxy for the phenotype than the expression of individual genes. Hence, a very promising area is to do eQTL's with the factors themselves! See [this paper]() for an example (https://www.nature.com/articles/ng.3624).
 
-Please refer to the vignettes or the paper for details on the different analysis.  
+Again, refer to the vignettes for details on the different analysis. Let us know if you have any questions.
 
 ## Frequently asked questions
 
 **(Q) How do I normalise the data?**  
 Always try to remove any technical source of variability before fitting the model.  
-For example, for count-based data such as RNA-seq or ATAC-seq we recommend size factor normalisation + variance stabilisation. For microarray DNA methylation data, make sure that samples have no differences in the average intensity.  
+For example, for count-based data such as RNA-seq or ATAC-seq we recommend size factor normalisation + variance stabilisation. For microarray DNA methylation data, make sure that samples have no differences in the average intensity.
+
 If this is not done correctly, the model will learn a very strong Factor 1 that will capture this variability, and more subtle sources of variation will be harder to identify.  
-We have implemented a function called `regressCovariates` that allows the user to regress out a covariate using a simple linear models. See the documentation and the CLL vignette for examples.
+We have implemented a function called `regressCovariates` that allows the user to regress out a covariate using linear models. See the documentation and the CLL vignette for examples.
 
 **(Q) I get the following error when installing the R package:**  
 ```
 ERROR: dependencies 'pcaMethods', 'MultiAssayExperiment' are not available for package 'MOFA'
 ```
-These two packages are available from Bioconductor, not CRAN. You can install them from R as follows:
-```
-source("https://bioconductor.org/biocLite.R")
-biocLite(c('pcaMethods', 'MultiAssayExperiment'))
-```
+You probably tried to install them using `install.packages()`. These packages should be installed from Bioconductor.
 
 **(Q) I get one of the following errors when running MOFA:**  
 ```
@@ -206,12 +185,11 @@ You can also use `use_conda` instead of `use_python` if you work with conda envi
 **(Q) I hate R, can I do MOFA only with Python?**  
 Nop. You can use Python to train the model, see [this template script](https://github.com/bioFAM/MOFA/blob/master/mofapy/run/python_template.py). However, we currently do not provide downstream analysis functions in Python. We strongly recommend that you use our MOFA R package for this.
 
-**(Q) How many factors should I use?**  
-Similar to Principal Component Analysis and other latent variable models, this is a hard question to answer. It depends on the data set and the aim of the analysis. As a general rule, the bigger the data set, the higher the number of factors that you will retrieve, and the less the variance that will be explained per factor.  
-If you want to get an overview on the major sources of variability then use a small number of factors (K<=15). If you want to capture small sources of variability, for example to do imputation or eQTL mapping, then go for a large number of factors (K>25).
+**(Q) How many factors should I learn?**  
+Similar to Principal Component Analysis and other latent variable models, this is a hard question to answer. It depends on the data set and the aim of the analysis. If you want to get an overview on the major sources of variability then use a small number of factors (K<=10). If you want to capture small sources of variability, for example to do imputation or eQTL mapping, then go for a large number of factors (K>25).
 
 **(Q) How many samples do I need?**  
-At least more than 15. Otherwise the model will not generate meaningful results.
+At least more than 15.
 
 **(Q) Can MOFA automatically learn the number of factors?**  
 Yes, but the user needs to specify a minimum value of % variance explained. Then, MOFA will actively remove factors (during training) that explain less than the specified amount of variance.
@@ -235,13 +213,10 @@ Yes, this is important. Bigger data modalities will tend to be overrepresent in 
 This is normal and it happens because of to two reasons. The first one is that the model does not always converge to the same exact solution (see below in the FAQ), although different model instances should be pretty similar. The second reason is that factor analysis models are rotation invariant. This means that you can rotate your factors and your weights and still find the same solution. This implies that the signs of the weight or the factors can NOT be compared across trials, only within a trial.
 
 **(Q) What data modalities can MOFA cope with?**  
-* Continuous data: should be modelled using a gaussian likelihood. For example, log normalised RNA-seq data or M-values of bulk methylation data
-* Binary data: should be modelled using a bernoulli likelihood. For example, somatic mutations or single-cell methylation data.
-* Count data: should be modelled using a poisson likelihood. For example, copy number variation or scRNA-seq UMI data.
-The use of non-gaussian likelihoods require further approximations and are not as accurate as the gaussian likelihood. Hence, if your data can be safely transformed to match the gaussian likelihood assumptions, this is always recommended. For example log-transform and variance stabilisation of bulk RNA-seq data or M-value computation in DNA methylation data.
-
-**(Q) How do I assess convergence?**  
-MOFA is trained using variational bayes, a fast inference framework that consists on optimising a statistica called the Evidence Lower Bound (ELBO). The model uses the change in ELBO (deltaELBO) to assess convergence. A model is defined to be converged when deltaELBO is close to 0. For a quick exploratory analysis, we suggest a convergence threshold between 1 to 10.
+* Continuous data: modelled using a gaussian likelihood
+* Binary data: modelled using a bernoulli likelihood
+* Count data: using a poisson likelihood.
+Importantly, the use of non-gaussian likelihoods require further approximations and are not as accurate as the gaussian likelihood. Hence, if your data can be safely transformed to match the gaussian likelihood assumptions, this is ALWAYS recommended. For example RNA-seq data is expected to be normalised and modelled with a gaussian distribution, do not input the counts directly.
 
 **(Q) The model does not converge smoothly, and it oscillates between positive and negative deltaELBO values**  
 First, check that you are using the right likelihood model (see above). Second, make sure that you have no features or samples that are full of missing values. Third, check that you have no features with zero (or very little) variance. If the problem does not disappear, please contact us via mail or the Slack group, we will provide (quick!) help.
@@ -257,7 +232,7 @@ No, as occurs in most complex Bayesian models, they are not guaranteed to always
 In practice, however, we observed that the solutions are highly consistent, particularly for strong factors. However, one should always assess the robustness and do a proper model selection. For this we recommend to train the model multiple times and check the robustness of the factors across the different solutions. For downstream analysis a single model can be chosen based on the best value of the Evidence Lower Bound (ELBO). We provide functions for these two steps, which are explained in the vignette *Integration of simulated data* (`vignette("MOFA_example_simulated")`).
 
 **(Q) How does MOFA handle missing values?**  
-It simpy ignores them, there is no a priori imputation step required. In fact, matrix factorisation models are known to be very robust to the presence of large amounts of missing values. 
+It simpy ignores them, there is no hidden imputation step. Matrix factorisation models are known to be very robust to the presence of missing values!
 
 **(Q) How can I do Gene Set Enrichment Analysis?**  
 First, you need to create your binary gene set matrix where rows are feature sets and columns are features (genes). We have manually processed some of Reactome and MSigDB gene sets for mouse and human. Contact us if you would like to use the data.  

@@ -24,12 +24,12 @@ For more details you can read our paper: http://msb.embopress.org/cgi/doi/10.152
 MOFA is run exclusively from R, but it requires some python dependencies that you need to install. Here is how to do it:
 
 ### Python dependencies 
-Python dependency can be installed using pip (from the Unix terminal)
+Python dependencies can be installed using pip (from the Unix terminal)
 ```r
 pip install mofapy
 ```
 
-Alternatively, they can also be installed from R itself using the reticulate package:
+Alternatively, they can be installed from R itself using the reticulate package:
 ```r
 library(reticulate)
 py_install("mofapy", envname = "r-reticulate", method="auto")
@@ -74,13 +74,9 @@ We currently provide three example workflows:
 If you have problems loading the vignettes, you can find the html files [here](https://bioconductor.org/packages/devel/bioc/html/MOFA.html)
 
 ## Cheatsheet
-A list with all **relevant methods**, together with a short description, can be found in the introductory vignette of the R package (`vignette("MOFA")`).
+A list with all relevant functions, together with a short description, can be found at the end of the introductory [vignette](https://bioconductor.org/packages/devel/bioc/vignettes/MOFA/inst/doc/MOFA.html) (`vignette("MOFA")`). 
 
 ## MOFA workflow
-
-<!-- The workflow of MOFA consists of two steps:   -->
-<!-- **(1) Fitting step**: train the model with the multi-omics data to disentangle the heterogeneity into a small number of latent factors.   -->
-<!-- **(2) Downstream analysis**: once the factors are inferred they need to be characterised as technical or biological sources of variation by looking at the corresponding weights, doing (gene set) enrichment analysis, plotting the factors, correlating factors with known covariates, etc. Also, one can do imputation of missing values and prediction of clinical outcomes using the latent factors. -->
 
 <p align="center"> 
 <img src="images/workflow.png">
@@ -90,23 +86,6 @@ A list with all **relevant methods**, together with a short description, can be 
 First you need to create the MOFA object with your input data, and subsequently train the model.
 If everything is successful, you should observe an output analogous to the following:
 ```
-  ###########################################################
-  ###                 __  __  ___  _____ _                ###
-  ###                |  \/  |/ _ \|  ___/ \               ###
-  ###                | |\/| | | | | |_ / _ \              ###
-  ###                | |  | | |_| |  _/ ___ \             ###
-  ###                |_|  |_|\___/|_|/_/   \_\            ###
-  ###                                                     ###
-  ###########################################################
-
-##################
-## Loading data ##
-##################
-
-Loaded /Users/ricard/MOFA/MOFA/test/data/500_0.txt with dim (100,500)...
-Loaded /Users/ricard/MOFA/MOFA/test/data/500_1.txt with dim (100,500)...
-Loaded /Users/ricard/MOFA/MOFA/test/data/500_2.txt with dim (100,500)...
- 
 
 #############################################
 ## Running trial number 1 with seed 642034 ##
@@ -236,6 +215,9 @@ It simpy ignores them, there is no hidden imputation step. Matrix factorisation 
 First, you need to create your binary gene set matrix where rows are feature sets and columns are features (genes). We have manually processed some of Reactome and MSigDB gene sets for mouse and human. Contact us if you would like to use the data.  
 Then, you will have to choose a local statistic per feature (the loading, by default), a global statistic per pathway (average loading, by default), and a statistical test. The most trustworthy one is a permutation test with a long number of iterations, but this is slow and a fast parametric tests is also available. However, note that it tends to inflate the p-values due to the correlation structure between related genes (see for example [Gatti2010](https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-11-574)).
 
+## Publications using MOFA
+- [Single cell multi-omics profiling reveals a hierarchical epigenetic landscape during mammalian germ layer specification](https://www.biorxiv.org/content/10.1101/519207v1)
+- [Multi-Omics Factor Analysis: a framework for unsupervised integration of multi‐omics data sets](http://msb.embopress.org/content/14/6/e8124)
 
 ## Contact
 The package is maintained by Ricard Argelaguet (ricard@ebi.ac.uk) and Britta Velten (britta.velten@embl.de). Please, reach us for problems, comments or suggestions. You can also contact us via a Slack group where we provide quick and personalised help, [this is the link](https://join.slack.com/t/mofahelp/shared_invite/enQtMjcxNzM3OTE3NjcxLTkyZmE5YzNiMDc4OTkxYWExYWNlZTRhMWI2OWNkNzhmYmNlZjJiMjA4MjNiYjI2YTc4NjExNzU2ZTZiYzQyNjY).  

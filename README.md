@@ -120,7 +120,6 @@ Trial 1, Iteration 100: time=0.07 ELBO=-221171.01, deltaELBO=0.0998, Factors=10
 
 Converged!
 ```
-* **deltaELBO**: is the convergence statistic. Once the deltaELBO decreases below a threshold (usually between zero and one), the model will converge and it will be saved as an .hdf5 file. Then, you are ready to start the downstream analysis.
 
 ### Step 2: Downstream analysis: disentangle the variability between omics
 MOFA disentangles the heterogeneity of a high-dimensional multi-omics data set in terms of a small number of latent factors that capture the global sources of variation. Importantly, MOFA quantififes the variance explained of each of the factors in the different omics. An example is shown in the plot below:
@@ -132,23 +131,22 @@ MOFA disentangles the heterogeneity of a high-dimensional multi-omics data set i
 ### Step 3: Annotation of factors
 The next step is to try and interpret what the factors are. We have built a semi-automated pipeline to allow the exploration of the latent space:  
 (1) **Visualisation of the samples in the factor space**: as in Principal Component Analysis, it is useful to plot the factors against each other and color the samples using known covariates such as batch, sex, clinical information, etc.  
-(2) **Correlation of factors with (clinical) covariates**
-(2) **Inspection of the loadings**: loadings provide a measure of feature importance for each factor.
+(2) **Correlation of factors with (clinical) covariates**  
+(2) **Inspection of the loadings**: loadings provide a measure of feature importance for each factor.  
 (3) **Feature set enrichment analysis**: the inspection of loadings can sometimes be challenging, particularly when having large amounts of features. Summarising genes in terms of biological pathways can be useful in such cases.  
 
 Please refer to the vignettes for details on the different analysis.  
 
 ### Step 4: Using the factors in downstream analysis
 The latent factors can be used for several purposes, such as:  
-(1) **Non-linear dimensionality reduction**: the latent factors can be feed into non-linear dimensionality reduction techniques such as UMAP or t-SNE. This is very powerful because you can detect variability or stratifications beyond the RNA expression!
-similar to PCA, dimensionality reduction visualisations can be obtained by plotting the Factors against each other.  
+(1) **Non-linear dimensionality reduction**: the latent factors can be feed into non-linear dimensionality reduction techniques such as UMAP or t-SNE. This is very powerful because you can detect variability or stratifications beyond the RNA expression!  
 (2) **Imputation**: factors can be used to predict missing values, including entire missing assays.  
-(3) **Predicting clinical response**: factors can be feed into Cox models to predict patient survival.
-(4) **Regressing out technical variability**: if a factor is capturing an undesired technical effect, its effect can be regressed out from your original data matrix.
-(5) **Clustering**: clustering in the latent space is much more robust than in the high-dimensional space.
+(3) **Predicting clinical response**: factors can be feed into Cox models to predict patient survival.  
+(4) **Regressing out technical variability**: if a factor is capturing an undesired technical effect, its effect can be regressed out from your original data matrix.  
+(5) **Clustering**: clustering in the latent space is much more robust than in the high-dimensional space.  
 (6) **factor-QTL mapping**: factors are a compressed and denoised representation of your samples. This is a much better proxy for the phenotype than the expression of individual genes. Hence, a very promising area is to do eQTL's with the factors themselves! See [this paper]() for an example (https://www.nature.com/articles/ng.3624).
 
-Again, refer to the vignettes for details on the different analysis. Let us know if you have any questions.
+Again, refer to the vignettes for details on the different analysis.
 
 ## Frequently asked questions
 

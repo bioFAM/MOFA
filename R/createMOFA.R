@@ -45,8 +45,11 @@ createMOFAobject <- function(data) {
   if (is(data,"MultiAssayExperiment")) {
     message("Creating MOFA object from a MultiAssayExperiment object...")
   } else if (is(data,"list")) {
-    message("Creating MOFA object from list of matrices,\n please make sure that samples are columns and features are rows...\n")
+    message("Creating MOFA object from a list of matrices \n please make sure that samples are stored in the columns and features in the rows...\n")
     data <- .createMAEobjectFromList(data)
+  } else if (is(data,"matrix")) {
+    message("Creating MOFA object from a single matrix \n please make sure that samples are stored in the columns and features in the rows...\n")
+    data <- .createMAEobjectFromList(list(data))
   } else {
     stop("Error: input data has to be provided either as a list of matrices or as a MultiAssayExperiment object \n")
   }
@@ -69,8 +72,6 @@ createMOFAobject <- function(data) {
       rownames(TrainData(object)[[m]]) <- paste0("feature_", seq_len(nrow(TrainData(object)[[m]])),"_v",m )
     }
   }
-  
-  # Feature names are already set in .createMOFAobjectFromList in case they are missing
   
   return(object)
 }
@@ -135,34 +136,6 @@ createMOFAobject <- function(data) {
   )
 }
   
-# (Hidden) function to initialise a MOFAmodel object using a list of matrices
-# .createMOFAobjectFromList <- function(data) {
-#   
-#   # Initialise MOFA object
-#   object <- new("MOFAmodel")
-#   Status(object) <- "untrained"
-#   
-#   # Fetch or assign sample names
-#   samples <- Reduce(union, lapply(data, colnames))
-#   if (is.null(samples)) {
-#     N <- unique(vapply(data, ncol, numeric(1)))
-#     if (length(N)>1) { 
-#       stop("If the matrices have no column (samples) names that can be used to match the different views,
-#            all matrices must have the same number of columns")
-#     }
-#     warning("Sample names are not specified, using default: sample_1,sample_2...
-#              Make sure the columns match between data matrices or provide sample names! \n")
-#     samples <- paste0("sample_", seq_len(N))
-#     for (m in seq_along(data)) { colnames(data[[m]]) <- samples }
-#   }
-#   
-#   TrainData(object) <- lapply(data, function(view) .subset_augment(view, samples))
-#   
-#   return(object)
-# }
-
-
-
 # (Hidden) function to fill NAs for missing samples
 .subset_augment<-function(mat, pats) {
   pats <- unique(pats)

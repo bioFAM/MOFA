@@ -13,6 +13,7 @@
 #' qualityControl(MOFAobject, verbose=TRUE)
 
 qualityControl <- function(object, verbose = FALSE) {
+  
   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
   if (Status(object) != "trained") stop("This function only works in a trained MOFAmodel")
   
@@ -28,23 +29,6 @@ qualityControl <- function(object, verbose = FALSE) {
   if (verbose) message("Checking feature names...")
   stopifnot(!is.null(featureNames(object)))
 
-  # NOW DONE IN CLASS VALIDITY CHECK
-  # # Check that the model has the right node names
-  # if (verbose) message("Checking nodes...")
-  # stopifnot(identical(sort(c("W","Z","Theta","Tau","Alpha","Y")), sort(names(Expectations(object)))))
-  # 
-  # # Check that all expectations are the correct object
-  # if (verbose) message("Checking expectations...")
-  # stopifnot(is.matrix(Expectations(object)[["Z"]]))
-  # stopifnot(is.list(Expectations(object)[["W"]]))
-  # stopifnot(all(vapply(Expectations(object)[["W"]], is.matrix, logical(1))))
-  # stopifnot(is.list(Expectations(object)[["Y"]]))
-  # stopifnot(all(vapply(Expectations(object)[["Y"]], is.matrix, logical(1))))
-  # stopifnot(is.list(Expectations(object)[["Tau"]]))
-  # stopifnot(all(vapply(Expectations(object)[["Tau"]], is.numeric, logical(1))))
-  # stopifnot(is.list(Expectations(object)[["Alpha"]]))
-  # stopifnot(all(vapply(Expectations(object)[["Alpha"]], is.numeric, logical(1))))
-  # 
   # Check that the dimensionalities match
   if (verbose) message("Checking dimensionalities...")
     stopifnot(length(Expectations(object)[["Alpha"]]) == getDimensions(object)[["M"]])
@@ -87,5 +71,8 @@ qualityControl <- function(object, verbose = FALSE) {
       message(sprintf("Warning, view %s should follow a %s distribution rather than %s ",
                       view, predicted_lik[view], lk))
   }
+  
+  # Check for intercept factors
+  .detectInterceptFactors(object)
   
 }

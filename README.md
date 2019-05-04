@@ -21,7 +21,7 @@ For more details you can read our paper: http://msb.embopress.org/cgi/doi/10.152
  
 
 ## Installation
-MOFA is run exclusively from R, but it requires some python dependencies that you need to install. Here is how to do it:
+MOFA is run exclusively from R, but it requires some python dependencies.
 
 ### Python dependencies 
 Python dependencies can be installed using pip (from the Unix terminal)
@@ -36,13 +36,13 @@ py_install("mofapy", envname = "r-reticulate", method="auto")
 ```
 
 ### MOFAdata R data package
-For illustration purposes we provide several data sets that are used in the vignettes of the MOFA package. This data can be installed in R:
+For illustration purposes we provide several data sets that are used in the vignettes of the MOFA package. Can be installed using R:
 ```r
 devtools::install_github("bioFAM/MOFAdata", build_opts = c("--no-resave-data"))
 ```
 
 ### MOFA R package
-This is the core software itself. Can be installed in R:
+This is the core software itself. Can be installed using R:
 ```r
 devtools::install_github("bioFAM/MOFA", build_opts = c("--no-resave-data"))
 ```

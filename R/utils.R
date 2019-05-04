@@ -111,26 +111,30 @@
   return(object)
 }
 
-# # Function to find factors that act as an intercept term for the samples,
-# .detectInterceptFactors <- function(object, cor_threshold = 0.75) {
-#   
-#   # Sanity checks
-#   if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")  
-#   
-#   # Fetch data
-#   data <- getTrainData(object)
-#   factors <- getFactors(object, include_intercept = FALSE)
-#   
-#   # Correlate the factors with global means per sample
-#   r <- lapply(data, function(x) abs(cor(apply(x,2,mean),factors, use="complete.obs")))
-#   for (i in names(r)) {
-#     if (any(r[[i]]>cor_threshold)) {
-#       message(paste0("Factor ",which(r[[i]]>cor_threshold)," is capturing an intercept effect in ",i,"\n"))
-#       message("Intercept factors arise from global differences between the samples,
-#           which could be different library size, mean methylation rates, etc.")
-#     }
-#   }
-# }
+# Function to find "intercept" factors
+.detectInterceptFactors <- function(object, cor_threshold = 0.75) {
+
+  # Sanity checks
+  if (!is(object, "MOFAmodel")) stop("'object' has to be an instance of MOFAmodel")
+
+  # Fetch data
+  data <- getTrainData(object)
+  factors <- getFactors(object)
+
+  # Correlate the factors with global means per sample
+  r <- lapply(data, function(x) abs(cor(colSums(x,na.rm=T),factors, use="pairwise.complete.obs")))
+  
+  token <- 0
+  for (i in names(r)) {
+    if (any(r[[i]]>cor_threshold)) {
+      token <- 1
+      message(paste0("Warning: Factor ",which(r[[i]]>cor_threshold)," is strongly correlated with the total expression for each sample in ",i))
+    }
+  }
+  if (token==1)
+    message("Such (strong) factors usually appear when count-based assays are not properly normalised by library size.")
+  
+}
 
 
 subset_augment <- function(mat, pats) {

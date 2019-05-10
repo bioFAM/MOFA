@@ -6,7 +6,7 @@ output:
     toc: true
 package: MOFA
 vignette: >
-  %\VignetteIndexEntry{MOFA: How to do assess model robustness and do model selection}
+  %\VignetteIndexEntry{MOFA: How to assess model robustness and do model selection}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

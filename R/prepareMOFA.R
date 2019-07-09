@@ -307,7 +307,7 @@ getDefaultModelOptions <- function(object) {
   # Define default model options
   ModelOptions <- list(
     likelihood = likelihood,          # (character vector) likelihood per view [gaussian/bernoulli/poisson]
-    numFactors = ceiling(nsamples/2), # (numeric) initial number of latent factors
+    numFactors = 10,                  # (numeric) initial number of latent factors
     sparsity = TRUE                   # (logical) use feature-wise sparsity?
   )
   

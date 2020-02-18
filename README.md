@@ -1,5 +1,7 @@
 # MOFA: Multi-Omics Factor Analysis
 
+**IMPORTANT NOTICE: MOFA v1 IS OFICIALLY DEPRECIATED, PLEASE SWITCH TO (MOFA+)[https://github.com/bioFAM/MOFA2]**.  
+
 MOFA is a factor analysis model that provides a **general framework for the integration of multi-omic data sets** in a completely unsupervised fashion.  
 Intuitively, MOFA can be viewed as a versatile and statistically rigorous generalization of principal component analysis (PCA) to multi-omics data. Given several data matrices with measurements of multiple ‘omics data types on the same or on overlapping sets of samples, MOFA infers an **interpretable low-dimensional data representation in terms of (hidden) factors**. These learnt factors represent the driving sources of variation across data modalities, thus facilitating the identification of cellular states or disease subgroups.  
 
@@ -11,9 +13,10 @@ For more details you can read our paper: http://msb.embopress.org/cgi/doi/10.152
 </p>
 
 
-
 ## News
-- 03/05/2019 MOFA is [available](https://bioconductor.org/packages/devel/bioc/html/MOFA.html) from the developmental version of Bioconductor (only for R>=3.6): 
+- 01/01/2020 Beta version of MOFA+ software is [available](https://github.com/bioFAM/MOFA2). We recommend all users to switch to MOFA+.
+- 01/12/2019 The new version of MOFA (MOFA+) manuscript is published in [bioRxiv](https://www.biorxiv.org/content/10.1101/837104v1.article-metrics) 
+- 03/05/2019 MOFA is [available](https://bioconductor.org/packages/devel/bioc/html/MOFA.html) from the developmental version of Bioconductor (only for R>=3.6):.
 - 10/01/2019 Python package uploaded to PyPy
 - 21/06/2018 Beta version released
 - 20/06/2018 Paper published: http://msb.embopress.org/content/14/6/e8124

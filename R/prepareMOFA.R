@@ -223,8 +223,8 @@ prepareMOFA <- function(object, DataOptions = NULL, ModelOptions = NULL, TrainOp
 
 getDefaultTrainOptions <- function() {
   TrainOptions <- list(
-    maxiter = 5000,               # (numeric) Maximum number of iterations
-    tolerance = 0.1,              # (numeric) Convergence threshold based on change in the evidence lower bound
+    maxiter = 2000,               # (numeric) Maximum number of iterations
+    tolerance = 0.5,              # (numeric) Convergence threshold based on change in the evidence lower bound
     DropFactorThreshold = 0.00,   # (numeric) Threshold on fraction of variance explained to drop a factor
     verbose = FALSE,              # (logical) verbosity?
     seed = NULL                   # (numeric or NULL) random seed

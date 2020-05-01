@@ -16,8 +16,8 @@ For more details you can read our paper: http://msb.embopress.org/cgi/doi/10.152
 ## News
 - 01/01/2020 Beta version of MOFA+ software is [available](https://github.com/bioFAM/MOFA2). We recommend all users to switch to MOFA+.
 - 01/12/2019 The new version of MOFA (MOFA+) manuscript is published in [bioRxiv](https://www.biorxiv.org/content/10.1101/837104v1.article-metrics) 
-- 03/05/2019 MOFA is [available](https://bioconductor.org/packages/devel/bioc/html/MOFA.html) from the developmental version of Bioconductor (only for R>=3.6):.
-- 10/01/2019 Python package uploaded to PyPy
+- 03/05/2019 MOFA is [available in Bioconductor](https://bioconductor.org/packages/devel/bioc/html/MOFA.html) (only for R>=3.6).
+- 10/01/2019 Python package uploaded to PyPI (https://pypi.org/project/mofapy/)
 - 21/06/2018 Beta version released
 - 20/06/2018 Paper published: http://msb.embopress.org/content/14/6/e8124
 - 10/11/2017 We created a Slack group to provide personalised help on running and interpreting MOFA, [this is the link](https://join.slack.com/t/mofahelp/shared_invite/enQtMjcxNzM3OTE3NjcxLWNhZmM1MDRlMTZjZWRmYWJjMGFmMDkzNDBmMDhjYmJmMzdlYzU4Y2EzYTI1OGExNzM2MmUwMzJkZmVjNDkxNGI)

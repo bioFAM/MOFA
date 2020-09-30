@@ -1,8 +1,8 @@
 # MOFA: Multi-Omics Factor Analysis
 
-## <span style="color:blue"> Important notice: [MOFA v1](https://github.com/bioFAM/MOFA) is officially depreciated, please switch to [MOFA v2](https://biofam.github.io/MOFA2/) even if you are not planning to use the novel functionalities</span>.  
+<span style="color:red; font-size: 20pt"> Important notice: MOFA v1 (this repository) is officially depreciated, please switch to [MOFA v2](https://biofam.github.io/MOFA2/)</span>.  
 
-
+<br>
 
 MOFA is a factor analysis model that provides a **general framework for the integration of multi-omic data sets** in a completely unsupervised fashion.  
 Intuitively, MOFA can be viewed as a versatile and statistically rigorous generalization of principal component analysis (PCA) to multi-omics data. Given several data matrices with measurements of multiple -omics data types on the same or on overlapping sets of samples, MOFA infers an **interpretable low-dimensional data representation in terms of (hidden) factors**. These learnt factors represent the driving sources of variation across data modalities, thus facilitating the identification of cellular states or disease subgroups.  

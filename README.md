@@ -1,6 +1,9 @@
 # MOFA: Multi-Omics Factor Analysis
 
-<span style="color:red; font-size: 20pt"> Important notice: MOFA v1 (this repository) is officially depreciated, please switch to [MOFA v2](https://biofam.github.io/MOFA2/)</span>.  
+<br>
+
+<font size="7">
+Important notice: MOFA v1 (this repository) is officially depreciated, please switch to [MOFA v2](https://biofam.github.io/MOFA2/) </font>
 
 <br>
 
